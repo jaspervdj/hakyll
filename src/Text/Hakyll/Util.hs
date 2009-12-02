@@ -1,4 +1,7 @@
-module Text.Hakyll.Util where
+module Text.Hakyll.Util 
+    ( touchDirectories,
+      getRecursiveContents
+    ) where
 
 import System.Directory
 import System.FilePath

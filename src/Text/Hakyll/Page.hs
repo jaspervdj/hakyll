@@ -1,4 +1,12 @@
-module Text.Hakyll.Page where
+module Text.Hakyll.Page 
+    ( Page,
+      addContext,
+      getURL,
+      getBody,
+      readPage,
+      pageFromList,
+      concatPages
+    ) where
 
 import qualified Data.Map as M
 import qualified Data.List as L
@@ -18,7 +26,7 @@ getBody :: Page -> String
 getBody context = fromMaybe "" $ M.lookup "body" context
 
 readConfig :: [String] -> Page
-readConfig lines = M.fromList $ map (trim . break (== ':')) lines
+readConfig = M.fromList . map (trim . break (== ':'))
     where trim (key, value) = (key, dropWhile (`elem` ": ") value)
 
 extractContext :: String -> Page
@@ -45,3 +53,8 @@ readPage path = do
         url = addExtension (dropExtension path) ".html"
     return $ addContext "url" url $ addContext "body" body $ context
 
+pageFromList :: [(String, String)] -> Page
+pageFromList = M.fromList
+
+concatPages :: [Page] -> String
+concatPages = concat . map getBody

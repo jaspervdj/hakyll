@@ -1,4 +1,9 @@
-module Text.Hakyll.Render where
+module Text.Hakyll.Render 
+    ( renderPage,
+      renderAndWrite,
+      static,
+      staticDirectory
+    ) where
 
 import Text.Template
 import qualified Data.ByteString.Lazy.Char8 as B
@@ -20,8 +25,8 @@ createContext = M.fromList . map packPair . M.toList
 
 renderPage :: FilePath -> Page -> IO Page
 renderPage templatePath page = do
-    template <- B.readFile templatePath
-    let body = substitute template (createContext page)
+    templateString <- B.readFile templatePath
+    let body = substitute templateString (createContext page)
     return $ addContext "body" (B.unpack body) page
 
 renderAndWrite :: FilePath -> Page -> IO ()
