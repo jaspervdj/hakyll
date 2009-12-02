@@ -32,7 +32,9 @@ renderPage templatePath page = do
 renderAndWrite :: FilePath -> Page -> IO ()
 renderAndWrite templatePath page = do
     rendered <- renderPage templatePath page
-    writeFile (toDestination $ getURL rendered) (getBody rendered)
+    let destination = toDestination $ getURL rendered
+    touchDirectories destination
+    writeFile destination (getBody rendered)
 
 static :: FilePath -> IO ()
 static source = do

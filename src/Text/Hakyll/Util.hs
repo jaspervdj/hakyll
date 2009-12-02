@@ -14,7 +14,7 @@ touchDirectories path = createDirectoryIfMissing True dir
 getRecursiveContents :: FilePath -> IO [FilePath]
 getRecursiveContents topdir = do
     names <- getDirectoryContents topdir
-    let properNames = filter (`notElem` [".", ".."]) names
+    let properNames = filter isProper names
     paths <- forM properNames $ \name -> do
         let path = topdir </> name
         isDirectory <- doesDirectoryExist path
@@ -22,3 +22,4 @@ getRecursiveContents topdir = do
             then getRecursiveContents path
             else return [path]
     return (concat paths)
+    where isProper = not . (== '.') . head

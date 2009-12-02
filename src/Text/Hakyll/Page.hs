@@ -17,7 +17,7 @@ import Text.Pandoc
 type Page = M.Map String String
 
 addContext :: String -> String -> Page -> Page
-addContext key value = M.insert key value
+addContext = M.insert
 
 getURL :: Page -> String
 getURL context = fromMaybe "404.html" $ M.lookup "url" context
