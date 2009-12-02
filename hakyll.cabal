@@ -1,0 +1,19 @@
+Name:           hackyll
+Version:        0.1
+
+Synopsis:       A simple static site generator.
+Description:
+  A simple static site generator, mainly aimed at creating
+  blogs.
+Author:         Jasper Van der Jeugt
+Maintainer:     jaspervdj@gmail.com
+Cabal-Version:  >= 1.2
+
+build-type:     Simple
+
+library
+  hs-source-dirs: src/
+  build-depends:   base > 4, template, filepath, directory, containers, bytestring,
+                   pandoc >= 1
+  exposed-modules: Text.Hakyll.Render
+                   Text.Hakyll.Page
