@@ -41,12 +41,6 @@ Pages can be written in html or markdown (altough it would be a trivial task
 to add anything pandoc supports, just ask me if you want anything to be added).
 They can also contain metadata, which are always key-value mappings.
 
-## Templates
-
-Templates are rendered using the Haskell `Text.Template` library. This means
-that in your template, you can use `$identifier`, and it will be replaced by
-the value of `identifier`.
-
     ---
     author: Jasper Van der Jeugt
     title: A sample markdown post
@@ -82,7 +76,11 @@ for example, cannot contain metadata.
 
     $body
 
-Is a template we could, for example, render the file we saw in the previous
+Templates are rendered using the Haskell `Text.Template` library. This means
+that in your template, you can use `$identifier`, and it will be replaced by
+the value of `identifier`.
+
+With this template we could, for example, render the file we saw in the previous
 section. It would go like this:
 
     page <- readPage "text.markdown"
