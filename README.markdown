@@ -10,6 +10,18 @@ Inspired by [xmonad](http://xmonad.org), a small Haskell program is used as
 configuration file. In this file, you give instructions on how the site should
 be generated. In the rest of this document, we will examine a small example.
 
+This is our directory layout:
+
+    |-- _site
+    |-- favicon.ico
+    |-- hakyll.hs
+    |-- images
+    |   `-- foo.png
+    |-- templates
+    |   |-- default.html
+    |   `-- sample.html
+    `-- text.markdown
+
 ## Static files
 
 Static files can be rendered using the `static` command. This command ensures
@@ -110,4 +122,58 @@ function uses to determine the file destination.
 
 Sometimes, you want to create a `Page` from scratch, without reading from a
 file. There are functions to do that for you, and I suggest you read the
-documentation of `Text.Hakyll.Page`.
+documentation of `Text.Hakyll.Page`. As a more advanced example, I will
+explain the RSS system I wrote for my website.
+
+    |-- generate.hs
+    |-- posts
+    |   `-- 2009-12-02-a-first-post.markdown
+    `-- templates
+        |-- rss.xml
+        `-- rssitem.xml
+
+Our post contains some metadata:
+
+    ---
+    title: A first post
+    date: December 2, 2009
+    ---
+
+    # A first post
+
+    A first post describing the technical setup of this blog, for that is
+
+The `templates/rssitem.xml` file is a template for rendering one post to an
+rss item:
+
+    <item>
+        <title>$title</title>
+        <link>http://jaspervdj.be/$url</link>
+        <description>New blogpost: $title</description>
+    </item>
+
+Now a template for rendering the whole rss feed, `templates/rss.xml`:
+
+    <?xml version="1.0" ?>
+    <rss version="2.0">
+        <channel>
+            <title>jaspervdj - a personal blog</title>
+            <link>http://jaspervdj.be/</link>
+            <description>Personal blog of jaspervdj</description>
+            $items
+        </channel> 
+    </rss>
+
+Alright, let's get coding.
+
+    -- Find all posts paths.
+    postPaths <- liftM (L.reverse . L.sort) $ getRecursiveContents "posts"
+    -- Read and render all posts with the rssitem.xml template
+    -- Also, only render 5 posts.
+    pages <- mapM readPage (take 5 postPaths)
+    items <- mapM (renderPage "templates/rssitem.xml") pages
+    -- Render the result
+    renderAndWrite "templates/rss.xml" $ pageFromList [ ("items", concatPages items),
+                                                        ("url", "rss.xml") ]
+
+That's that. Now we have a nice rss feed.
