@@ -1,5 +1,5 @@
 module Text.Hakyll.Util 
-    ( touchDirectories,
+    ( makeDirectories,
       getRecursiveContents
     ) where
 
@@ -7,10 +7,14 @@ import System.Directory
 import System.FilePath
 import Control.Monad
 
-touchDirectories :: FilePath -> IO ()
-touchDirectories path = createDirectoryIfMissing True dir
+-- | Given a path to a file, try to make the path writable by making
+--   all directories on the path.
+makeDirectories :: FilePath -> IO ()
+makeDirectories path = createDirectoryIfMissing True dir
     where dir = takeDirectory path
 
+-- | Get all contents of a directory. Note that files starting with a dot (.)
+--   will be ignored.
 getRecursiveContents :: FilePath -> IO [FilePath]
 getRecursiveContents topdir = do
     names <- getDirectoryContents topdir

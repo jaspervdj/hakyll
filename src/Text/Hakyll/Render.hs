@@ -33,12 +33,12 @@ renderAndWrite :: FilePath -> Page -> IO ()
 renderAndWrite templatePath page = do
     rendered <- renderPage templatePath page
     let destination = toDestination $ getURL rendered
-    touchDirectories destination
+    makeDirectories destination
     writeFile destination (getBody rendered)
 
 static :: FilePath -> IO ()
 static source = do
-    touchDirectories destination
+    makeDirectories destination
     copyFile source destination
     where destination = toDestination source
 
