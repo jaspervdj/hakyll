@@ -11,8 +11,11 @@ module Text.Hakyll.Page
 
 import qualified Data.Map as M
 import qualified Data.List as L
-import System.FilePath
 import Data.Maybe
+
+import System.FilePath
+import System.IO
+
 import Text.Pandoc
 
 -- | A Page is basically key-value mapping. Certain keys have special
@@ -57,7 +60,9 @@ markdownToHTML = writeHtmlString writerOptions .
 --   pages are not templates, so they should not contain $identifiers.
 readPage :: FilePath -> IO Page
 readPage path = do
-    content <- readFile path
+    handle <- openFile path ReadMode
+    content <- hGetContents handle
+    seq content $ hClose handle
     let context = extractContext content
         body = (if takeExtension path == ".markdown" then markdownToHTML else id)
                (getBody context)

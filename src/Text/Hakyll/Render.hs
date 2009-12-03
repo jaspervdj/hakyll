@@ -12,6 +12,7 @@ import Control.Monad
 
 import System.FilePath
 import System.Directory
+import System.IO
 
 import Text.Hakyll.Page
 import Text.Hakyll.Util
@@ -25,7 +26,9 @@ createContext = M.fromList . map packPair . M.toList
 
 renderPage :: FilePath -> Page -> IO Page
 renderPage templatePath page = do
-    templateString <- B.readFile templatePath
+    handle <- openFile templatePath ReadMode
+    templateString <- liftM B.pack $ hGetContents handle
+    seq templateString $ hClose handle
     let body = substitute templateString (createContext page)
     return $ addContext "body" (B.unpack body) page
 
