@@ -7,6 +7,9 @@ Description:
   blogs.
 Author:         Jasper Van der Jeugt
 Maintainer:     jaspervdj@gmail.com
+License:        BSD3
+License-File:   LICENSE
+Category:       Text
 Cabal-Version:  >= 1.2
 
 build-type:     Simple

@@ -37,9 +37,9 @@ recursively.
 
 ## Pages
 
-Pages can be written in html or markdown (altough it would be a trivial task
-to add anything pandoc supports, just ask me if you want anything to be added).
-They can also contain metadata, which are always key-value mappings.
+Pages can be written in html, markdown, LaTeX, and basically anything
+pandoc supports.  They can also contain metadata, which are always key-value
+mappings.
 
     ---
     author: Jasper Van der Jeugt
@@ -57,8 +57,8 @@ They can also contain metadata, which are always key-value mappings.
 Metadata is always placed in the beginning of a file, and is delimited by a
 `---` string. The metadata can only contain simple key-value pairs. We can
 now read in this page using the `Text.Hakyll.Page.readPage` function. This
-will return a `Page`, which is actually just a `Map String String`. In this
-example, the map would consist of the following key-value pairs:
+will return a `Page`, which is actually just a `Map String ByteString`. In
+this example, the map would consist of the following key-value pairs:
 
 - `author`: `Jasper Van der Jeugt`
 - `title`: `A sample markdown post`
