@@ -1,5 +1,6 @@
 module Text.Hakyll.Page 
     ( Page,
+      PageValue,
       addContext,
       getURL,
       getBody,
@@ -11,6 +12,7 @@ module Text.Hakyll.Page
 
 import qualified Data.Map as M
 import qualified Data.List as L
+import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Maybe
 
 import System.FilePath
@@ -20,40 +22,50 @@ import Text.Pandoc
 
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
-type Page = M.Map String String
+type Page = M.Map String PageValue
+
+-- | We use a ByteString for obvious reasons.
+type PageValue = B.ByteString
+
 
 -- | Add a key-value mapping to the Page.
 addContext :: String -> String -> Page -> Page
-addContext = M.insert
+addContext key value = M.insert key (B.pack value)
 
 -- | Get the URL for a certain page. This should always be defined. If
 --   not, it will return trash.html.
 getURL :: Page -> String
-getURL context = fromMaybe "trash.html" $ M.lookup "url" context
+getURL context = let result = M.lookup "url" context
+                 in case result of (Just url) -> B.unpack url
+                                   Nothing    -> error "URL is not defined."
 
 -- | Get the body for a certain page. When not defined, the body will be
 --   empty.
-getBody :: Page -> String
-getBody context = fromMaybe "" $ M.lookup "body" context
-
-readConfig :: [String] -> Page
-readConfig = M.fromList . map (trim . break (== ':'))
-    where trim (key, value) = (key, dropWhile (`elem` ": ") value)
-
-extractContext :: String -> Page
-extractContext str = M.insert "body" (unlines body) (readConfig header)
-    where allLines = lines str
-          isDelimiter = L.isPrefixOf "---"
-          (header, body) | isDelimiter (head allLines) = let (h, b) = L.break (isDelimiter) (tail allLines)
-                                                         in (h, tail b)
-                         | otherwise = ([], allLines)
+getBody :: Page -> PageValue
+getBody context = fromMaybe B.empty $ M.lookup "body" context
 
 writerOptions :: WriterOptions
 writerOptions = defaultWriterOptions
 
-markdownToHTML :: String -> String
-markdownToHTML = writeHtmlString writerOptions .
-                 readMarkdown defaultParserState
+renderFunction :: String -> (String -> String)
+renderFunction ".html" = id
+renderFunction ext = writeHtmlString writerOptions .
+                     renderFunction' ext defaultParserState
+    where renderFunction' ".markdown" = readMarkdown
+          renderFunction' ".md"       = readMarkdown
+          renderFunction' ".tex"      = readLaTeX
+          renderFunction' _           = readMarkdown
+
+readMetaData :: Handle -> IO [(String, String)]
+readMetaData handle = do
+    line <- hGetLine handle
+    if isDelimiter line then return []
+                        else do others <- readMetaData handle
+                                return $ (trim . break (== ':')) line : others
+        where trim (key, value) = (key, dropWhile (`elem` ": ") value)
+
+isDelimiter :: String -> Bool
+isDelimiter = L.isPrefixOf "---"
 
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a .markdown extension, it will be rendered using pandoc. Note that
@@ -61,24 +73,30 @@ markdownToHTML = writeHtmlString writerOptions .
 readPage :: FilePath -> IO Page
 readPage path = do
     handle <- openFile path ReadMode
-    content <- hGetContents handle
-    seq content $ hClose handle
-    let context = extractContext content
-        body = (if takeExtension path == ".markdown" then markdownToHTML else id)
-               (getBody context)
+    line <- hGetLine handle
+    (context, body) <- if isDelimiter line
+                            then do md <- readMetaData handle
+                                    c <- hGetContents handle
+                                    return (md, c)
+                            else hGetContents handle >>= \b -> return ([], line ++ b)
+
+    let rendered = B.pack $ (renderFunction $ takeExtension path) body
         url = addExtension (dropExtension path) ".html"
-    return $ addContext "url" url $ addContext "body" body $ context
+    seq rendered $ hClose handle
+    return $ M.insert "body" rendered $ addContext "url" url $ pageFromList context
 
 -- | Create a key-value mapping page from an association list.
 pageFromList :: [(String, String)] -> Page
-pageFromList = M.fromList
+pageFromList = M.fromList . map packPair
+    where packPair (k, v) = let pv = B.pack v
+                            in seq pv (k, pv)
 
 -- | Concat the bodies of pages, and return the result.
-concatPages :: [Page] -> String
+concatPages :: [Page] -> PageValue
 concatPages = concatPagesWith "body"
 
 -- | Concat certain values of pages, and return the result.
 concatPagesWith :: String -- ^ Key of which to concat the values.
                 -> [Page] -- ^ Pages to get the values from.
-                -> String -- ^ The concatenation.
-concatPagesWith key = concat . map (fromMaybe "" . M.lookup key)
+                -> PageValue -- ^ The concatenation.
+concatPagesWith key = B.concat . map (fromMaybe B.empty . M.lookup key)

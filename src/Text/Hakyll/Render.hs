@@ -22,7 +22,7 @@ toDestination path = "_site" </> path
 
 createContext :: Page -> Context
 createContext = M.fromList . map packPair . M.toList
-    where packPair (a, b) = (B.pack a, B.pack b)
+    where packPair (a, b) = (B.pack a, b)
 
 renderPage :: FilePath -> Page -> IO Page
 renderPage templatePath page = do
@@ -37,7 +37,7 @@ renderAndWrite templatePath page = do
     rendered <- renderPage templatePath page
     let destination = toDestination $ getURL rendered
     makeDirectories destination
-    writeFile destination (getBody rendered)
+    B.writeFile destination (getBody rendered)
 
 static :: FilePath -> IO ()
 static source = do
