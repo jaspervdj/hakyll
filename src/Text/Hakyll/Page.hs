@@ -14,6 +14,7 @@ import qualified Data.Map as M
 import qualified Data.List as L
 import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Maybe
+import Control.Monad
 
 import System.FilePath
 import System.IO
@@ -67,11 +68,30 @@ readMetaData handle = do
 isDelimiter :: String -> Bool
 isDelimiter = L.isPrefixOf "---"
 
+-- | Used for caching of files.
+cachePage :: Page -> IO ()
+cachePage page = do
+    let destination = toCache $ getURL page
+    makeDirectories destination
+    handle <- openFile destination WriteMode
+    hPutStrLn handle "---"
+    mapM_ (writePair handle) $ M.toList page
+    hPutStrLn handle "---"
+    B.hPut handle $ getBody page
+    hClose handle
+    where writePair _ ("body", _) = return ()
+          writePair h (k, v) = hPutStr h (k ++ ": ") >> B.hPut h v >> hPutStrLn h ""
+
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a .markdown extension, it will be rendered using pandoc. Note that
 --   pages are not templates, so they should not contain $identifiers.
 readPage :: FilePath -> IO Page
-readPage path = do
+readPage pagePath = do
+    -- Check cache.
+    getFromCache <- isCacheFileValid cacheFile pagePath
+    let path = if getFromCache then cacheFile else pagePath
+
+    -- Read file.
     handle <- openFile path ReadMode
     line <- hGetLine handle
     (context, body) <- if isDelimiter line
@@ -80,10 +100,16 @@ readPage path = do
                                     return (md, c)
                             else hGetContents handle >>= \b -> return ([], line ++ b)
 
+    -- Render file
     let rendered = B.pack $ (renderFunction $ takeExtension path) body
-        url = addExtension (dropExtension path) ".html"
     seq rendered $ hClose handle
-    return $ M.insert "body" rendered $ addContext "url" url $ pageFromList context
+    let page = M.insert "body" rendered $ addContext "url" url $ pageFromList context
+
+    -- Cache if needed
+    if getFromCache then return () else cachePage page
+    return page
+    where url = addExtension (dropExtension pagePath) ".html"
+          cacheFile = toCache url
 
 -- | Create a key-value mapping page from an association list.
 pageFromList :: [(String, String)] -> Page

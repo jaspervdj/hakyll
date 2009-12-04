@@ -10,15 +10,11 @@ import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as M
 import Control.Monad
 
-import System.FilePath
 import System.Directory
 import System.IO
 
 import Text.Hakyll.Page
 import Text.Hakyll.Util
-
-toDestination :: FilePath -> FilePath
-toDestination path = "_site" </> path
 
 createContext :: Page -> Context
 createContext = M.fromList . map packPair . M.toList
