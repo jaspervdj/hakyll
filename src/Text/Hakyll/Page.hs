@@ -18,6 +18,7 @@ import Data.Maybe
 import System.FilePath
 import System.IO
 
+import Text.Hakyll.Util
 import Text.Pandoc
 
 -- | A Page is basically key-value mapping. Certain keys have special
@@ -26,7 +27,6 @@ type Page = M.Map String PageValue
 
 -- | We use a ByteString for obvious reasons.
 type PageValue = B.ByteString
-
 
 -- | Add a key-value mapping to the Page.
 addContext :: String -> String -> Page -> Page
@@ -61,8 +61,8 @@ readMetaData handle = do
     line <- hGetLine handle
     if isDelimiter line then return []
                         else do others <- readMetaData handle
-                                return $ (trim . break (== ':')) line : others
-        where trim (key, value) = (key, dropWhile (`elem` ": ") value)
+                                return $ (trimPair . break (== ':')) line : others
+        where trimPair (key, value) = (trim key, trim $ tail value)
 
 isDelimiter :: String -> Bool
 isDelimiter = L.isPrefixOf "---"

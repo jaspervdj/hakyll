@@ -1,11 +1,13 @@
 module Text.Hakyll.Util 
     ( makeDirectories,
-      getRecursiveContents
+      getRecursiveContents,
+      trim
     ) where
 
 import System.Directory
 import System.FilePath
 import Control.Monad
+import Data.Char
 
 -- | Given a path to a file, try to make the path writable by making
 --   all directories on the path.
@@ -27,3 +29,8 @@ getRecursiveContents topdir = do
             else return [path]
     return (concat paths)
     where isProper = not . (== '.') . head
+
+-- | Trim a string (drop spaces and tabs at both sides).
+trim :: String -> String
+trim = reverse . trim' . reverse . trim'
+    where trim' = dropWhile isSpace
