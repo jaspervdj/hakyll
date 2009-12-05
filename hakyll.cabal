@@ -1,10 +1,10 @@
 Name:           hackyll
 Version:        0.1
 
-Synopsis:       A simple static site generator.
+Synopsis:       A simple static site generator library.
 Description:
-  A simple static site generator, mainly aimed at creating
-  blogs.
+  A simple static site generator library , mainly aimed at
+  creating blogs.
 Author:         Jasper Van der Jeugt
 Maintainer:     jaspervdj@gmail.com
 License:        BSD3
