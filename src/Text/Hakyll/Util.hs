@@ -4,6 +4,7 @@ module Text.Hakyll.Util
       makeDirectories,
       getRecursiveContents,
       trim,
+      split,
       isCacheFileValid
     ) where
 
