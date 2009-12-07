@@ -1,6 +1,7 @@
 module Text.Hakyll.Render 
     ( renderPage,
       renderAndWrite,
+      renderAndConcat,
       static,
       staticDirectory
     ) where
@@ -26,7 +27,7 @@ renderPage templatePath page = do
     templateString <- liftM B.pack $ hGetContents handle
     seq templateString $ hClose handle
     let body = substitute templateString (createContext page)
-    return $ addContext "body" (B.unpack body) page
+    return $ M.insert "body" body page
 
 renderAndWrite :: FilePath -> Page -> IO ()
 renderAndWrite templatePath page = do
@@ -34,6 +35,15 @@ renderAndWrite templatePath page = do
     let destination = toDestination $ getURL rendered
     makeDirectories destination
     B.writeFile destination (getBody rendered)
+
+renderAndConcat :: FilePath -> [FilePath] -> IO B.ByteString
+renderAndConcat templatePath paths = foldM concatRender' B.empty paths
+    where concatRender' :: B.ByteString -> FilePath -> IO B.ByteString
+          concatRender' chunk path = do
+              page <- readPage path
+              rendered <- renderPage templatePath page
+              let body = getBody rendered
+              return $ B.append chunk $ body
 
 static :: FilePath -> IO ()
 static source = do

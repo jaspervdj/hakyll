@@ -51,11 +51,11 @@ writerOptions = defaultWriterOptions
 renderFunction :: String -> (String -> String)
 renderFunction ".html" = id
 renderFunction ext = writeHtmlString writerOptions .
-                     renderFunction' ext defaultParserState
-    where renderFunction' ".markdown" = readMarkdown
-          renderFunction' ".md"       = readMarkdown
-          renderFunction' ".tex"      = readLaTeX
-          renderFunction' _           = readMarkdown
+                     readFunction ext defaultParserState
+    where readFunction ".markdown" = readMarkdown
+          readFunction ".md"       = readMarkdown
+          readFunction ".tex"      = readLaTeX
+          readFunction _           = readMarkdown
 
 readMetaData :: Handle -> IO [(String, String)]
 readMetaData handle = do
