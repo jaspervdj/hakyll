@@ -1,7 +1,10 @@
 module Text.Hakyll.Render 
-    ( renderPage,
+    ( depends,
+      renderPage,
       renderAndWrite,
+      writePage,
       renderAndConcat,
+      renderChain,
       static,
       staticDirectory
     ) where
@@ -17,6 +20,12 @@ import System.IO
 import Text.Hakyll.Page
 import Text.Hakyll.Util
 
+depends :: FilePath -> [FilePath] -> IO () -> IO ()
+depends file dependencies action = do
+    valid <- isCacheValid (toDestination file) dependencies
+    if valid then return ()
+             else action
+
 createContext :: Page -> Context
 createContext = M.fromList . map packPair . M.toList
     where packPair (a, b) = (B.pack a, b)
@@ -30,11 +39,14 @@ renderPage templatePath page = do
     return $ M.insert "body" body page
 
 renderAndWrite :: FilePath -> Page -> IO ()
-renderAndWrite templatePath page = do
-    rendered <- renderPage templatePath page
-    let destination = toDestination $ getURL rendered
+renderAndWrite templatePath page =
+    renderPage templatePath page >>= writePage
+
+writePage :: Page -> IO ()
+writePage page = do
+    let destination = toDestination $ getURL page
     makeDirectories destination
-    B.writeFile destination (getBody rendered)
+    B.writeFile destination (getBody page)
 
 renderAndConcat :: FilePath -> [FilePath] -> IO B.ByteString
 renderAndConcat templatePath paths = foldM concatRender' B.empty paths
@@ -44,6 +56,12 @@ renderAndConcat templatePath paths = foldM concatRender' B.empty paths
               rendered <- renderPage templatePath page
               let body = getBody rendered
               return $ B.append chunk $ body
+
+renderChain :: FilePath -> [FilePath] -> IO ()
+renderChain pagePath templates = depends (toURL pagePath) (pagePath : templates) $
+    do page <- readPage pagePath
+       result <- foldM (flip renderPage) page templates
+       writePage result
 
 static :: FilePath -> IO ()
 static source = do

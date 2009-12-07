@@ -2,6 +2,7 @@ module Text.Hakyll.Page
     ( Page,
       PageValue,
       addContext,
+      toURL,
       getURL,
       getBody,
       readPage,
@@ -32,6 +33,10 @@ type PageValue = B.ByteString
 -- | Add a key-value mapping to the Page.
 addContext :: String -> String -> Page -> Page
 addContext key value = M.insert key (B.pack value)
+
+-- | Get the url for a given page.
+toURL :: FilePath -> FilePath
+toURL = flip addExtension ".html" . dropExtension
 
 -- | Get the URL for a certain page. This should always be defined. If
 --   not, it will return trash.html.
@@ -88,7 +93,7 @@ cachePage page = do
 readPage :: FilePath -> IO Page
 readPage pagePath = do
     -- Check cache.
-    getFromCache <- isCacheFileValid cacheFile pagePath
+    getFromCache <- isCacheValid cacheFile [pagePath]
     let path = if getFromCache then cacheFile else pagePath
 
     -- Read file.
@@ -108,7 +113,7 @@ readPage pagePath = do
     -- Cache if needed
     if getFromCache then return () else cachePage page
     return page
-    where url = addExtension (dropExtension pagePath) ".html"
+    where url = toURL pagePath
           cacheFile = toCache url
 
 -- | Create a key-value mapping page from an association list.

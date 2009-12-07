@@ -5,7 +5,7 @@ module Text.Hakyll.Util
       getRecursiveContents,
       trim,
       split,
-      isCacheFileValid
+      isCacheValid
     ) where
 
 import System.Directory
@@ -56,8 +56,9 @@ split element = unfoldr splitOnce
                                                     else Just (x, tail xs)
 
 -- | Check is a cache file is still valid.
-isCacheFileValid :: FilePath -> FilePath -> IO Bool
-isCacheFileValid cache file = doesFileExist cache >>= \exists ->
+isCacheValid :: FilePath -> [FilePath] -> IO Bool
+isCacheValid cache depends = doesFileExist cache >>= \exists ->
     if not exists then return False
-                  else liftM2 (<=) (getModificationTime file)
-                                   (getModificationTime cache)
+                  else do dependsModified <- (mapM getModificationTime depends) >>= return . maximum
+                          cacheModified <- getModificationTime cache
+                          return (cacheModified >= dependsModified)
