@@ -1,7 +1,6 @@
 module Text.Hakyll.Render 
     ( depends,
       renderPage,
-      renderAndWrite,
       writePage,
       renderAndConcat,
       renderChain,
@@ -38,10 +37,6 @@ renderPage templatePath page = do
     let body = substitute templateString (createContext page)
     return $ M.insert "body" body page
 
-renderAndWrite :: FilePath -> Page -> IO ()
-renderAndWrite templatePath page =
-    renderPage templatePath page >>= writePage
-
 writePage :: Page -> IO ()
 writePage page = do
     let destination = toDestination $ getURL page
@@ -57,8 +52,8 @@ renderAndConcat templatePath paths = foldM concatRender' B.empty paths
               let body = getBody rendered
               return $ B.append chunk $ body
 
-renderChain :: FilePath -> [FilePath] -> IO ()
-renderChain pagePath templates = depends (toURL pagePath) (pagePath : templates) $
+renderChain :: [FilePath] -> FilePath -> IO ()
+renderChain templates pagePath = depends (toURL pagePath) (pagePath : templates) $
     do page <- readPage pagePath
        result <- foldM (flip renderPage) page templates
        writePage result
