@@ -22,8 +22,7 @@ import Text.Hakyll.Util
 depends :: FilePath -> [FilePath] -> IO () -> IO ()
 depends file dependencies action = do
     valid <- isCacheValid (toDestination file) dependencies
-    if valid then return ()
-             else action
+    unless valid action
 
 createContext :: Page -> Context
 createContext = M.fromList . map packPair . M.toList
