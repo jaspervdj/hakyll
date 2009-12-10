@@ -1,14 +1,10 @@
 module Text.Hakyll.Page 
-    ( Page,
+    ( Page (..),
       PageValue,
       addContext,
-      toURL,
-      getURL,
       getBody,
       readPage,
-      pageFromList,
-      concatPages,
-      concatPagesWith
+      pageFromList
     ) where
 
 import qualified Data.Map as M
@@ -16,39 +12,41 @@ import qualified Data.List as L
 import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Maybe
 import Control.Monad
+import Control.Arrow
 
 import System.FilePath
 import System.IO
 
 import Text.Hakyll.Util
+import Text.Hakyll.Renderable
 import Text.Pandoc
 
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
-type Page = M.Map String PageValue
+data Page = Page (M.Map String PageValue)
+
+getContext :: Page -> M.Map String PageValue
+getContext (Page page) = page
 
 -- | We use a ByteString for obvious reasons.
 type PageValue = B.ByteString
 
 -- | Add a key-value mapping to the Page.
 addContext :: String -> String -> Page -> Page
-addContext key value = M.insert key (B.pack value)
-
--- | Get the url for a given page.
-toURL :: FilePath -> FilePath
-toURL = flip addExtension ".html" . dropExtension
+addContext key value (Page page) = Page $ M.insert key (B.pack value) page
 
 -- | Get the URL for a certain page. This should always be defined. If
 --   not, it will return trash.html.
-getURL :: Page -> String
-getURL context = let result = M.lookup "url" context
-                 in case result of (Just url) -> B.unpack url
-                                   Nothing    -> error "URL is not defined."
+getPageURL :: Page -> String
+getPageURL page =
+    let result = M.lookup "url" $ getContext page
+    in case result of (Just url) -> B.unpack url
+                      Nothing    -> error "URL is not defined."
 
 -- | Get the body for a certain page. When not defined, the body will be
 --   empty.
 getBody :: Page -> PageValue
-getBody context = fromMaybe B.empty $ M.lookup "body" context
+getBody = fromMaybe B.empty . M.lookup "body" . getContext
 
 writerOptions :: WriterOptions
 writerOptions = defaultWriterOptions
@@ -80,7 +78,7 @@ cachePage page = do
     makeDirectories destination
     handle <- openFile destination WriteMode
     hPutStrLn handle "---"
-    mapM_ (writePair handle) $ M.toList page
+    mapM_ (writePair handle) $ M.toList $ getContext page
     hPutStrLn handle "---"
     B.hPut handle $ getBody page
     hClose handle
@@ -108,7 +106,7 @@ readPage pagePath = do
     -- Render file
     let rendered = B.pack $ (renderFunction $ takeExtension path) body
     seq rendered $ hClose handle
-    let page = M.insert "body" rendered $ addContext "url" url $ pageFromList context
+    let page = addContext "url" url $ Page $ M.fromList $ ("body", rendered) : map (second B.pack) context
 
     -- Cache if needed
     if getFromCache then return () else cachePage page
@@ -118,16 +116,12 @@ readPage pagePath = do
 
 -- | Create a key-value mapping page from an association list.
 pageFromList :: [(String, String)] -> Page
-pageFromList = M.fromList . map packPair
+pageFromList = Page . M.fromList . map packPair
     where packPair (k, v) = let pv = B.pack v
                             in seq pv (k, pv)
 
--- | Concat the bodies of pages, and return the result.
-concatPages :: [Page] -> PageValue
-concatPages = concatPagesWith "body"
-
--- | Concat certain values of pages, and return the result.
-concatPagesWith :: String -- ^ Key of which to concat the values.
-                -> [Page] -- ^ Pages to get the values from.
-                -> PageValue -- ^ The concatenation.
-concatPagesWith key = B.concat . map (fromMaybe B.empty . M.lookup key)
+-- Make pages renderable
+instance Renderable Page where
+    getDependencies = (:[]) . flip addExtension ".html" . dropExtension . getPageURL
+    getURL = getPageURL
+    toContext = return . M.mapKeys B.pack . getContext

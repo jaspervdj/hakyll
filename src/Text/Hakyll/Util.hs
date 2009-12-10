@@ -1,6 +1,7 @@
 module Text.Hakyll.Util 
     ( toDestination,
       toCache,
+      toURL,
       makeDirectories,
       getRecursiveContents,
       trim,
@@ -19,6 +20,10 @@ toDestination path = "_site" </> path
 
 toCache :: FilePath -> FilePath
 toCache path = "_cache" </> path
+
+-- | Get the url for a given page.
+toURL :: FilePath -> FilePath
+toURL = flip addExtension ".html" . dropExtension
 
 -- | Given a path to a file, try to make the path writable by making
 --   all directories on the path.

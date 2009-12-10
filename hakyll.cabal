@@ -21,5 +21,7 @@ library
   build-depends:   base >= 4 && < 5, template, filepath, directory, containers, bytestring,
                    pandoc >= 1
   exposed-modules: Text.Hakyll.Render
+                   Text.Hakyll.Renderable
                    Text.Hakyll.Page
+                   Text.Hakyll.RenderableFilePath
                    Text.Hakyll.Util
