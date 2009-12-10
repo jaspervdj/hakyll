@@ -1,6 +1,6 @@
 module Text.Hakyll.Page 
-    ( Page (..),
-      PageValue,
+    ( Page,
+      fromContext,
       addContext,
       getBody,
       readPage,
@@ -12,7 +12,6 @@ import qualified Data.List as L
 import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Maybe
 import Control.Monad
-import Control.Arrow
 
 import System.FilePath
 import System.IO
@@ -23,30 +22,30 @@ import Text.Pandoc
 
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
-data Page = Page (M.Map String PageValue)
+data Page = Page (M.Map B.ByteString B.ByteString)
 
-getContext :: Page -> M.Map String PageValue
-getContext (Page page) = page
-
--- | We use a ByteString for obvious reasons.
-type PageValue = B.ByteString
+fromContext :: (M.Map B.ByteString B.ByteString) -> Page
+fromContext = Page
 
 -- | Add a key-value mapping to the Page.
 addContext :: String -> String -> Page -> Page
-addContext key value (Page page) = Page $ M.insert key (B.pack value) page
+addContext key value (Page page) = Page $ M.insert (B.pack key) (B.pack value) page
+
+packPair :: (String, String) -> (B.ByteString, B.ByteString)
+packPair (a, b) = (B.pack a, B.pack b)
 
 -- | Get the URL for a certain page. This should always be defined. If
 --   not, it will return trash.html.
 getPageURL :: Page -> String
-getPageURL page =
-    let result = M.lookup "url" $ getContext page
+getPageURL (Page page) =
+    let result = M.lookup (B.pack "url") page
     in case result of (Just url) -> B.unpack url
                       Nothing    -> error "URL is not defined."
 
 -- | Get the body for a certain page. When not defined, the body will be
 --   empty.
-getBody :: Page -> PageValue
-getBody = fromMaybe B.empty . M.lookup "body" . getContext
+getBody :: Page -> B.ByteString
+getBody (Page page) = fromMaybe B.empty $ M.lookup (B.pack "body") page
 
 writerOptions :: WriterOptions
 writerOptions = defaultWriterOptions
@@ -73,17 +72,19 @@ isDelimiter = L.isPrefixOf "---"
 
 -- | Used for caching of files.
 cachePage :: Page -> IO ()
-cachePage page = do
+cachePage page@(Page mapping) = do
     let destination = toCache $ getURL page
     makeDirectories destination
     handle <- openFile destination WriteMode
     hPutStrLn handle "---"
-    mapM_ (writePair handle) $ M.toList $ getContext page
+    mapM_ (writePair handle) $ M.toList $ M.delete (B.pack "body") mapping
     hPutStrLn handle "---"
     B.hPut handle $ getBody page
     hClose handle
-    where writePair _ ("body", _) = return ()
-          writePair h (k, v) = hPutStr h (k ++ ": ") >> B.hPut h v >> hPutStrLn h ""
+    where writePair h (k, v) = B.hPut h k >>
+                               B.hPut h (B.pack ": ") >>
+                               B.hPut h v >>
+                               hPutStrLn h ""
 
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a .markdown extension, it will be rendered using pandoc. Note that
@@ -106,7 +107,7 @@ readPage pagePath = do
     -- Render file
     let rendered = B.pack $ (renderFunction $ takeExtension path) body
     seq rendered $ hClose handle
-    let page = addContext "url" url $ Page $ M.fromList $ ("body", rendered) : map (second B.pack) context
+    let page = addContext "url" url $ Page $ M.fromList $ (B.pack "body", rendered) : map packPair context
 
     -- Cache if needed
     if getFromCache then return () else cachePage page
@@ -117,11 +118,9 @@ readPage pagePath = do
 -- | Create a key-value mapping page from an association list.
 pageFromList :: [(String, String)] -> Page
 pageFromList = Page . M.fromList . map packPair
-    where packPair (k, v) = let pv = B.pack v
-                            in seq pv (k, pv)
 
 -- Make pages renderable
 instance Renderable Page where
     getDependencies = (:[]) . flip addExtension ".html" . dropExtension . getPageURL
     getURL = getPageURL
-    toContext = return . M.mapKeys B.pack . getContext
+    toContext (Page mapping) = return mapping

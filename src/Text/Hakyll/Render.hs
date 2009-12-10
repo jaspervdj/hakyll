@@ -32,7 +32,7 @@ render templatePath renderable = do
     seq templateString $ hClose handle
     context <- toContext renderable
     let body = substitute templateString context
-    return $ Page (M.insert "body" body $ M.mapKeys (B.unpack) context)
+    return $ fromContext (M.insert (B.pack "body") body context)
 
 writePage :: Page -> IO ()
 writePage page = do
@@ -53,7 +53,7 @@ renderChain :: Renderable a => [FilePath] -> a -> IO ()
 renderChain templates renderable =
     depends (getURL renderable) (getDependencies renderable ++ templates) $
         do initialPage <- toContext renderable
-           result <- foldM (flip render) (Page $ M.mapKeys B.unpack initialPage) templates
+           result <- foldM (flip render) (fromContext initialPage) templates
            writePage result
 
 static :: FilePath -> IO ()
