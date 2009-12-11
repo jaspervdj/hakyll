@@ -40,12 +40,11 @@ writePage page = do
     makeDirectories destination
     B.writeFile destination (getBody page)
 
-renderAndConcat :: FilePath -> [FilePath] -> IO B.ByteString
-renderAndConcat templatePath paths = foldM concatRender' B.empty paths
-    where concatRender' :: B.ByteString -> FilePath -> IO B.ByteString
-          concatRender' chunk path = do
-              page <- readPage path
-              rendered <- render templatePath page
+renderAndConcat :: Renderable a => FilePath -> [a] -> IO B.ByteString
+renderAndConcat templatePath renderables = foldM concatRender' B.empty renderables
+    where concatRender' :: Renderable a => B.ByteString -> a -> IO B.ByteString
+          concatRender' chunk renderable = do
+              rendered <- render templatePath renderable
               let body = getBody rendered
               return $ B.append chunk $ body
 
