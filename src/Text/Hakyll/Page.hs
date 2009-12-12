@@ -24,6 +24,7 @@ import Text.Pandoc
 --   meanings, like for example url, body and title.
 data Page = Page (M.Map B.ByteString B.ByteString)
 
+-- | Create a Page from a key-value mapping.
 fromContext :: (M.Map B.ByteString B.ByteString) -> Page
 fromContext = Page
 
@@ -31,6 +32,7 @@ fromContext = Page
 addContext :: String -> String -> Page -> Page
 addContext key value (Page page) = Page $ M.insert (B.pack key) (B.pack value) page
 
+-- | Auxiliary function to pack a pair.
 packPair :: (String, String) -> (B.ByteString, B.ByteString)
 packPair (a, b) = (B.pack a, B.pack b)
 
@@ -47,9 +49,11 @@ getPageURL (Page page) =
 getBody :: Page -> B.ByteString
 getBody (Page page) = fromMaybe B.empty $ M.lookup (B.pack "body") page
 
+-- | The default writer options for pandoc rendering.
 writerOptions :: WriterOptions
 writerOptions = defaultWriterOptions
 
+-- | Get a render function for a given extension.
 renderFunction :: String -> (String -> String)
 renderFunction ".html" = id
 renderFunction ext = writeHtmlString writerOptions .
@@ -59,6 +63,7 @@ renderFunction ext = writeHtmlString writerOptions .
           readFunction ".tex"      = readLaTeX
           readFunction _           = readMarkdown
 
+-- | Read metadata header from a file handle.
 readMetaData :: Handle -> IO [(String, String)]
 readMetaData handle = do
     line <- hGetLine handle
@@ -67,6 +72,7 @@ readMetaData handle = do
                                 return $ (trimPair . break (== ':')) line : others
         where trimPair (key, value) = (trim key, trim $ tail value)
 
+-- | Check if the given string is a metadata delimiter.
 isDelimiter :: String -> Bool
 isDelimiter = L.isPrefixOf "---"
 
@@ -119,7 +125,7 @@ readPage pagePath = do
 pageFromList :: [(String, String)] -> Page
 pageFromList = Page . M.fromList . map packPair
 
--- Make pages renderable
+-- Make pages renderable.
 instance Renderable Page where
     getDependencies = (:[]) . flip addExtension ".html" . dropExtension . getPageURL
     getURL = getPageURL
