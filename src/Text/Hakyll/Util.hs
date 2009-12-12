@@ -15,9 +15,11 @@ import Control.Monad
 import Data.Char
 import Data.List
 
+-- | Convert a relative filepath to a filepath in the destination (_site).
 toDestination :: FilePath -> FilePath
 toDestination path = "_site" </> path
 
+-- | Convert a relative filepath to a filepath in the cache (_cache).
 toCache :: FilePath -> FilePath
 toCache path = "_cache" </> path
 

@@ -1,7 +1,7 @@
 module Text.Hakyll.Render 
     ( depends,
-      render,
       writePage,
+      render,
       renderAndConcat,
       renderChain,
       static,
@@ -20,12 +20,27 @@ import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.Util
 
-depends :: FilePath -> [FilePath] -> IO () -> IO ()
+-- | Execute an IO action only when the cache is invalid.
+depends :: FilePath -- ^ File to be rendered or created.
+        -> [FilePath] -- ^ Files the render depends on.
+        -> IO () -- ^ IO action to execute when the file is out of date.
+        -> IO ()
 depends file dependencies action = do
     valid <- isCacheValid (toDestination file) dependencies
     unless valid action
 
-render :: Renderable a => FilePath -> a -> IO Page
+-- | Write a page to the site destination.
+writePage :: Page -> IO ()
+writePage page = do
+    let destination = toDestination $ getURL page
+    makeDirectories destination
+    B.writeFile destination (getBody page)
+
+-- | Render to a Page.
+render :: Renderable a
+       => FilePath -- ^ Template to use for rendering.
+       -> a -- ^ Renderable object to render with given template.
+       -> IO Page -- ^ The body of the result will contain the render.
 render templatePath renderable = do
     handle <- openFile templatePath ReadMode
     templateString <- liftM B.pack $ hGetContents handle
@@ -34,12 +49,8 @@ render templatePath renderable = do
     let body = substitute templateString context
     return $ fromContext (M.insert (B.pack "body") body context)
 
-writePage :: Page -> IO ()
-writePage page = do
-    let destination = toDestination $ getURL page
-    makeDirectories destination
-    B.writeFile destination (getBody page)
-
+-- | Render each renderable with the given template, then concatenate the
+--   result.
 renderAndConcat :: Renderable a => FilePath -> [a] -> IO B.ByteString
 renderAndConcat templatePath renderables = foldM concatRender' B.empty renderables
     where concatRender' :: Renderable a => B.ByteString -> a -> IO B.ByteString
@@ -48,6 +59,9 @@ renderAndConcat templatePath renderables = foldM concatRender' B.empty renderabl
               let body = getBody rendered
               return $ B.append chunk $ body
 
+-- | Chain a render action for a page with a number of templates. This will
+--   also write the result to the site destination. This is the preferred way
+--   to do general rendering.
 renderChain :: Renderable a => [FilePath] -> a -> IO ()
 renderChain templates renderable =
     depends (getURL renderable) (getDependencies renderable ++ templates) $
@@ -55,12 +69,15 @@ renderChain templates renderable =
            result <- foldM (flip render) (fromContext initialPage) templates
            writePage result
 
+-- | Mark a certain file as static, so it will just be copied when the site is
+--   generated.
 static :: FilePath -> IO ()
 static source = do
     makeDirectories destination
     copyFile source destination
     where destination = toDestination source
 
+-- | Mark a whole directory as static.
 staticDirectory :: FilePath -> IO ()
 staticDirectory dir = 
     getRecursiveContents dir >>= mapM_ static
