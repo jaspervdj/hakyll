@@ -13,14 +13,17 @@ import Text.Hakyll.Util
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 
-data CustomPage = CustomPage { url :: String,
-                               dependencies :: [FilePath],
-                               mapping :: [(String, Either String (IO B.ByteString))]
-                             }
+-- | A custom page.
+data CustomPage = CustomPage 
+    { url :: String,
+      dependencies :: [FilePath],
+      mapping :: [(String, Either String (IO B.ByteString))]
+    }
 
-createCustomPage :: String
-                 -> [FilePath]
-                 -> [(String, Either String (IO B.ByteString))]
+-- | Create a custom page.
+createCustomPage :: String -- ^ Destination of the page, relative to _site.
+                 -> [FilePath] -- ^ Dependencies of the page.
+                 -> [(String, Either String (IO B.ByteString))] -- ^ Key - value mapping for rendering.
                  -> CustomPage
 createCustomPage = CustomPage
 
@@ -32,8 +35,11 @@ instance Renderable CustomPage where
         let keys = map (B.pack . fst) (mapping page)
         return $ M.fromList $ (B.pack "url", B.pack $ url page) : zip keys values 
 
+-- | PagePath is a class that wraps a FilePath. This is used to render Pages
+--   without reading them first through use of caching.
 data PagePath = PagePath FilePath
 
+-- | Create a PagePath from a FilePath.
 createPagePath :: FilePath -> PagePath
 createPagePath = PagePath
 
