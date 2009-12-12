@@ -1,12 +1,16 @@
-module Text.Hakyll.CustomPage
+module Text.Hakyll.Renderables
     ( CustomPage,
-      createCustomPage
+      createCustomPage,
+      PagePath,
+      createPagePath
     ) where
 
 import System.FilePath
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as M
 import Control.Monad
+import Text.Hakyll.Util
+import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 
 data CustomPage = CustomPage { url :: String,
@@ -27,3 +31,14 @@ instance Renderable CustomPage where
         values <- mapM (either (return . B.pack) (>>= return) . snd) (mapping page)
         let keys = map (B.pack . fst) (mapping page)
         return $ M.fromList $ (B.pack "url", B.pack $ url page) : zip keys values 
+
+data PagePath = PagePath FilePath
+
+createPagePath :: FilePath -> PagePath
+createPagePath = PagePath
+
+-- We can render filepaths
+instance Renderable PagePath where
+    getDependencies (PagePath path) = return path
+    getURL (PagePath path) = toURL path
+    toContext (PagePath path) = readPage path >>= toContext

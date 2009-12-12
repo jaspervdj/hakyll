@@ -22,7 +22,6 @@ library
                    pandoc >= 1
   exposed-modules: Text.Hakyll.Render
                    Text.Hakyll.Renderable
+                   Text.Hakyll.Renderables
                    Text.Hakyll.Page
-                   Text.Hakyll.CustomPage
-                   Text.Hakyll.RenderableFilePath
                    Text.Hakyll.Util
