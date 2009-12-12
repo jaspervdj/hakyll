@@ -72,9 +72,8 @@ renderChain templates renderable =
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.
 static :: FilePath -> IO ()
-static source = do
-    makeDirectories destination
-    copyFile source destination
+static source = depends destination [source]
+        (makeDirectories destination >> copyFile source destination)
     where destination = toDestination source
 
 -- | Mark a whole directory as static.
