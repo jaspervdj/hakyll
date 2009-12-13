@@ -153,7 +153,7 @@ the RSS system I wrote for my website.
         |-- rss.xml
         `-- rssitem.xml
 
-Our post contains some metadata:</p
+Our post contains some metadata:
 
     ---
     title: A first post
@@ -205,8 +205,8 @@ result. Note that the concating and reading of pages is not executed yet,
 because of laziness. This helps us, since we want to use the modification
 timestamps of files, and not render everything every time.
 
-let rssPage = createCustomPage "rss.xml"
-        ("templates/rssitem.xml" : postPaths) [("items", Right recentItems)]
+    let rssPage = createCustomPage "rss.xml"
+            ("templates/rssitem.xml" : postPaths) [("items", Right recentItems)]
 
 We now created the custom rss page. The `createCustomPage` is a function that
 produces a `CustomPage`, which is an instance of `Renderable`. `"rss.xml"` is
