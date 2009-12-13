@@ -2,7 +2,8 @@ module Text.Hakyll.Page
     ( Page,
       fromContext,
       getBody,
-      readPage
+      readPage,
+      writePage
     ) where
 
 import qualified Data.Map as M
@@ -115,6 +116,13 @@ readPage pagePath = do
     return page
     where url = toURL pagePath
           cacheFile = toCache url
+
+-- | Write a page to the site destination.
+writePage :: Page -> IO ()
+writePage page = do
+    let destination = toDestination $ getURL page
+    makeDirectories destination
+    B.writeFile destination (getBody page)
 
 -- Make pages renderable.
 instance Renderable Page where

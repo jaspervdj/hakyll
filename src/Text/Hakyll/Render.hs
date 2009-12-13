@@ -1,6 +1,5 @@
 module Text.Hakyll.Render 
     ( depends,
-      writePage,
       render,
       renderAndConcat,
       renderChain,
@@ -28,13 +27,6 @@ depends :: FilePath -- ^ File to be rendered or created.
 depends file dependencies action = do
     valid <- isCacheValid (toDestination file) dependencies
     unless valid action
-
--- | Write a page to the site destination.
-writePage :: Page -> IO ()
-writePage page = do
-    let destination = toDestination $ getURL page
-    makeDirectories destination
-    B.writeFile destination (getBody page)
 
 -- | Render to a Page.
 render :: Renderable a
