@@ -1,10 +1,8 @@
 module Text.Hakyll.Page 
     ( Page,
       fromContext,
-      addContext,
       getBody,
-      readPage,
-      pageFromList
+      readPage
     ) where
 
 import qualified Data.Map as M
@@ -27,10 +25,6 @@ data Page = Page (M.Map B.ByteString B.ByteString)
 -- | Create a Page from a key-value mapping.
 fromContext :: (M.Map B.ByteString B.ByteString) -> Page
 fromContext = Page
-
--- | Add a key-value mapping to the Page.
-addContext :: String -> String -> Page -> Page
-addContext key value (Page page) = Page $ M.insert (B.pack key) (B.pack value) page
 
 -- | Auxiliary function to pack a pair.
 packPair :: (String, String) -> (B.ByteString, B.ByteString)
@@ -113,17 +107,14 @@ readPage pagePath = do
     -- Render file
     let rendered = B.pack $ (renderFunction $ takeExtension path) body
     seq rendered $ hClose handle
-    let page = addContext "url" url $ Page $ M.fromList $ (B.pack "body", rendered) : map packPair context
+    let page = fromContext $ M.fromList $
+            [(B.pack "body", rendered), packPair ("url", url)] ++ map packPair context
 
     -- Cache if needed
     if getFromCache then return () else cachePage page
     return page
     where url = toURL pagePath
           cacheFile = toCache url
-
--- | Create a key-value mapping page from an association list.
-pageFromList :: [(String, String)] -> Page
-pageFromList = Page . M.fromList . map packPair
 
 -- Make pages renderable.
 instance Renderable Page where
