@@ -6,6 +6,7 @@ module Text.Hakyll.Util
       getRecursiveContents,
       trim,
       split,
+      stripHtml,
       isCacheValid
     ) where
 
@@ -52,6 +53,16 @@ getRecursiveContents topdir = do
 trim :: String -> String
 trim = reverse . trim' . reverse . trim'
     where trim' = dropWhile isSpace
+
+-- | Strip html tags.
+stripHtml :: String -> String
+stripHtml []  = []
+stripHtml str = let (beforeTag, rest) = break (== '<') str
+                    (_, afterTag)     = break (== '>') rest
+                in beforeTag ++ (stripHtml $ tail' afterTag)
+    -- We need a failsafe tail function.
+    where tail' [] = []
+          tail' xs = tail xs
 
 -- | Split a list at a certain element.
 split :: (Eq a) => a -> [a] -> [[a]]
