@@ -9,9 +9,9 @@ import System.FilePath
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as M
 import Control.Monad
-import Text.Hakyll.Util
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
+import Text.Hakyll.File
 
 -- | A custom page.
 data CustomPage = CustomPage 

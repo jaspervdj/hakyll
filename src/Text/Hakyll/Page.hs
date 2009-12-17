@@ -15,6 +15,7 @@ import Control.Monad
 import System.FilePath
 import System.IO
 
+import Text.Hakyll.File
 import Text.Hakyll.Util
 import Text.Hakyll.Renderable
 import Text.Pandoc

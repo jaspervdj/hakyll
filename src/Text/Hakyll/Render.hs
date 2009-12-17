@@ -17,7 +17,7 @@ import System.IO
 
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
-import Text.Hakyll.Util
+import Text.Hakyll.File
 
 -- | Execute an IO action only when the cache is invalid.
 depends :: FilePath -- ^ File to be rendered or created.
