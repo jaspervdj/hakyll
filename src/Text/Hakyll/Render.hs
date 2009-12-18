@@ -4,7 +4,7 @@ module Text.Hakyll.Render
       renderAndConcat,
       renderChain,
       static,
-      staticDirectory
+      css
     ) where
 
 import Text.Template hiding (render)
@@ -18,6 +18,7 @@ import System.IO
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
+import Text.Hakyll.CompressCSS
 
 -- | Execute an IO action only when the cache is invalid.
 depends :: FilePath -- ^ File to be rendered or created.
@@ -68,7 +69,10 @@ static source = depends destination [source]
         (makeDirectories destination >> copyFile source destination)
     where destination = toDestination source
 
--- | Mark a whole directory as static.
-staticDirectory :: FilePath -> IO ()
-staticDirectory dir = 
-    getRecursiveContents dir >>= mapM_ static
+-- | Render a css file, compressing it.
+css :: FilePath -> IO ()
+css source = depends destination [source] css'
+    where destination = toDestination source
+          css' = do h <- openFile source ReadMode
+                    contents <- hGetContents h
+                    writeFile destination (compressCSS contents)

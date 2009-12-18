@@ -6,7 +6,8 @@ module Text.Hakyll.File
       toURL,
       makeDirectories,
       getRecursiveContents,
-      isCacheValid
+      isCacheValid,
+      directory
     ) where
 
 import System.Directory
@@ -45,6 +46,10 @@ getRecursiveContents topdir = do
             else return [path]
     return (concat paths)
     where isProper = not . (== '.') . head
+
+-- | Perform an IO action on every file in a given directory.
+directory :: (FilePath -> IO ()) -> FilePath -> IO ()
+directory action dir = getRecursiveContents dir >>= mapM_ action
 
 -- | Check is a cache file is still valid.
 isCacheValid :: FilePath -> [FilePath] -> IO Bool
