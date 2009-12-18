@@ -3,10 +3,21 @@ module Text.Hakyll.CompressCSS
     ) where
 
 import Data.List
+import Text.Regex
 
 -- | Compress CSS to speed up your site.
 compressCSS :: String -> String
-compressCSS = stripComments
+compressCSS = compressSeparators
+            . compressWhitespace
+            . stripComments
+
+-- | Compresses certain forms of separators.
+compressSeparators :: String -> String
+compressSeparators str = subRegex (mkRegex "\\s*([;:])\\s*") str "\\1"
+
+-- | Compresses all whitespace.
+compressWhitespace :: String -> String
+compressWhitespace str = subRegex (mkRegex "\\s\\s*") str " "
 
 -- | Function that strips CSS comments away.
 stripComments :: String -> String

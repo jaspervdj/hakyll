@@ -19,7 +19,7 @@ library
   ghc-options: -Wall
   hs-source-dirs: src/
   build-depends:   base >= 4 && < 5, template, filepath, directory, containers, bytestring,
-                   pandoc >= 1
+                   pandoc >= 1, regex-compat
   exposed-modules: Text.Hakyll.Render
                    Text.Hakyll.Renderable
                    Text.Hakyll.Renderables
