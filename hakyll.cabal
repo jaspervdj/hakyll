@@ -23,5 +23,7 @@ library
   exposed-modules: Text.Hakyll.Render
                    Text.Hakyll.Renderable
                    Text.Hakyll.Renderables
+                   Text.Hakyll.CompressCSS
+                   Text.Hakyll.File
                    Text.Hakyll.Page
                    Text.Hakyll.Util
