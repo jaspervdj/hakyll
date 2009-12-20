@@ -5,6 +5,10 @@ module Text.Hakyll.CompressCSS
 import Data.List
 import Text.Regex
 
+-- | subRegex with arguments flipped for easy function composition.
+subRegex' :: String -> String -> String -> String
+subRegex' pattern replacement str = subRegex (mkRegex pattern) str replacement
+
 -- | Compress CSS to speed up your site.
 compressCSS :: String -> String
 compressCSS = compressSeparators
@@ -13,11 +17,12 @@ compressCSS = compressSeparators
 
 -- | Compresses certain forms of separators.
 compressSeparators :: String -> String
-compressSeparators str = subRegex (mkRegex "\\s*([;:])\\s*") str "\\1"
+compressSeparators = subRegex' ";\\s*}" "}" 
+                   . subRegex' "\\s*([{};:])\\s*" "\\1"
 
 -- | Compresses all whitespace.
 compressWhitespace :: String -> String
-compressWhitespace str = subRegex (mkRegex "\\s\\s*") str " "
+compressWhitespace = subRegex' "\\s\\s*" " "
 
 -- | Function that strips CSS comments away.
 stripComments :: String -> String
