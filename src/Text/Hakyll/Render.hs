@@ -75,4 +75,5 @@ css source = depends destination [source] css'
     where destination = toDestination source
           css' = do h <- openFile source ReadMode
                     contents <- hGetContents h
+                    makeDirectories destination
                     writeFile destination (compressCSS contents)
