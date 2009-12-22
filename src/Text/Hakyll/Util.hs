@@ -6,6 +6,7 @@ module Text.Hakyll.Util
 
 import Data.Char
 import Data.List
+import Text.Regex
 
 -- | Trim a string (drop spaces and tabs at both sides).
 trim :: String -> String
@@ -23,10 +24,5 @@ stripHTML str = let (beforeTag, rest) = break (== '<') str
           tail' xs = tail xs
 
 -- | Split a list at a certain element.
-split :: (Eq a) => a -> [a] -> [[a]]
-split element = unfoldr splitOnce
-    where splitOnce l = let r = break (== element) l
-                        in case r of ([], []) -> Nothing
-                                     (x, xs) -> if null xs
-                                                    then Just (x, [])
-                                                    else Just (x, tail xs)
+split :: String -> String -> [String]
+split pattern = splitRegex (mkRegex pattern)
