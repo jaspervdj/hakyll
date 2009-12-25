@@ -1,6 +1,7 @@
 module Text.Hakyll.Page 
     ( Page,
       fromContext,
+      getValue,
       copyValueWith,
       getBody,
       readPage,
@@ -28,6 +29,11 @@ data Page = Page (M.Map B.ByteString B.ByteString)
 -- | Create a Page from a key-value mapping.
 fromContext :: (M.Map B.ByteString B.ByteString) -> Page
 fromContext = Page
+
+-- | Obtain a value from a page. Will resturn an empty string when nothing is
+--   found.
+getValue :: String -> Page -> B.ByteString
+getValue str (Page page) = fromMaybe B.empty $ M.lookup (B.pack str) page
 
 -- | Do something with a value of the page.
 copyValueWith :: String -- ^ Key of which the value should be copied.
