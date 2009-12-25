@@ -1,6 +1,7 @@
 module Text.Hakyll.Page 
     ( Page,
       fromContext,
+      copyValueWith,
       getBody,
       readPage,
       writePage
@@ -27,6 +28,17 @@ data Page = Page (M.Map B.ByteString B.ByteString)
 -- | Create a Page from a key-value mapping.
 fromContext :: (M.Map B.ByteString B.ByteString) -> Page
 fromContext = Page
+
+-- | Do something with a value of the page.
+copyValueWith :: String -- ^ Key of which the value should be copied.
+              -> String -- ^ Key the value should be copied to.
+              -> (B.ByteString -> B.ByteString) -- ^ Function to apply on the value.
+              -> Page -- ^ Page on which to apply this modification.
+              -> Page -- ^ Result.
+copyValueWith src dst f p@(Page page) = case M.lookup (B.pack src) page of
+    Nothing      -> p
+    (Just value) -> Page $ M.insert (B.pack dst) (f value) page
+
 
 -- | Auxiliary function to pack a pair.
 packPair :: (String, String) -> (B.ByteString, B.ByteString)
