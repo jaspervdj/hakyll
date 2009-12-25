@@ -19,6 +19,7 @@ compressCSS = compressSeparators
 compressSeparators :: String -> String
 compressSeparators = subRegex' ";\\s*}" "}" 
                    . subRegex' "\\s*([{};:])\\s*" "\\1"
+                   . subRegex' ";;*" ";"
 
 -- | Compresses all whitespace.
 compressWhitespace :: String -> String
