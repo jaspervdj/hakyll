@@ -25,4 +25,5 @@ stripHTML str = let (beforeTag, rest) = break (== '<') str
 
 -- | Split a list at a certain element.
 split :: String -> String -> [String]
-split pattern = splitRegex (mkRegex pattern)
+split pattern = filter (not . null)
+              . splitRegex (mkRegex pattern)
