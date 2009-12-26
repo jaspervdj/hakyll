@@ -51,12 +51,13 @@ packPair :: (String, String) -> (B.ByteString, B.ByteString)
 packPair (a, b) = (B.pack a, B.pack b)
 
 -- | Get the URL for a certain page. This should always be defined. If
---   not, it will return trash.html.
+--   not, it will error.
 getPageURL :: Page -> String
-getPageURL (Page page) =
-    let result = M.lookup (B.pack "url") page
-    in case result of (Just url) -> B.unpack url
-                      Nothing    -> error "URL is not defined."
+getPageURL (Page page) = B.unpack $ fromMaybe (error "No page url") $ M.lookup (B.pack "url") page
+
+-- | Get the original page path.
+getPagePath :: Page -> String
+getPagePath (Page page) = B.unpack $ fromMaybe (error "No page path") $ M.lookup (B.pack "path") page
 
 -- | Get the body for a certain page. When not defined, the body will be
 --   empty.
@@ -128,7 +129,10 @@ readPage pagePath = do
     let rendered = B.pack $ (renderFunction $ takeExtension path) body
     seq rendered $ hClose handle
     let page = fromContext $ M.fromList $
-            [(B.pack "body", rendered), packPair ("url", url)] ++ map packPair context
+            [ (B.pack "body", rendered)
+            , packPair ("url", url)
+            , packPair ("path", pagePath)
+            ] ++ map packPair context
 
     -- Cache if needed
     if getFromCache then return () else cachePage page
@@ -145,6 +149,6 @@ writePage page = do
 
 -- Make pages renderable.
 instance Renderable Page where
-    getDependencies = (:[]) . flip addExtension ".html" . dropExtension . getPageURL
+    getDependencies = (:[]) . getPagePath
     getURL = getPageURL
-    toContext (Page mapping) = return mapping
+    toContext (Page page) = return page
