@@ -27,3 +27,4 @@ library
                    Text.Hakyll.File
                    Text.Hakyll.Page
                    Text.Hakyll.Util
+                   Text.Hakyll.Tags
