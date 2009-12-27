@@ -45,4 +45,4 @@ help = do
              ++ name ++ " server [port]   Run a local test server.\n"
 
 server :: Integer -> IO ()
-server p = do simpleServer (fromIntegral $ p)
+server p = do simpleServer (fromIntegral $ p) "_site"

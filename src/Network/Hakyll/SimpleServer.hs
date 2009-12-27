@@ -159,14 +159,15 @@ respond handle = do
           putHeader (key, value) = B.hPutStr handle $ key `B.append` B.pack ": "
                                                         `B.append` value `B.append` B.pack "\r\n"
 
--- | Start a simple http server on the given 'PortNumber'.
-simpleServer :: PortNumber -> IO ()
-simpleServer port = do
+-- | Start a simple http server on the given 'PortNumber', serving the given
+--   directory.
+simpleServer :: PortNumber -> FilePath -> IO ()
+simpleServer port root = do
     putStrLn $ "Starting hakyll server on port " ++ show port ++ "..."
     socket <- listenOn (PortNumber port)
     forever (listen socket)
     where -- A default configuration.
-          config = ServerConfig { documentRoot = "_site"
+          config = ServerConfig { documentRoot = root
                                 , portNumber = port
                                 }
 
