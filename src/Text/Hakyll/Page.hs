@@ -1,11 +1,11 @@
 module Text.Hakyll.Page 
-    ( Page,
-      fromContext,
-      getValue,
-      copyValueWith,
-      getBody,
-      readPage,
-      writePage
+    ( Page
+    , fromContext
+    , getValue
+    , copyValueWith
+    , getBody
+    , readPage
+    , writePage
     ) where
 
 import qualified Data.Map as M

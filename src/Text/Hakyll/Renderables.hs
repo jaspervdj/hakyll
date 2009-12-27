@@ -1,14 +1,13 @@
 module Text.Hakyll.Renderables
-    ( CustomPage,
-      createCustomPage,
-      PagePath,
-      createPagePath
+    ( CustomPage
+    , createCustomPage
+    , PagePath
+    , createPagePath
     ) where
 
-import System.FilePath
+import System.FilePath (FilePath)
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as M
-import Control.Monad
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File

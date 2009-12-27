@@ -1,18 +1,18 @@
 module Text.Hakyll.Render 
-    ( depends,
-      render,
-      renderAndConcat,
-      renderChain,
-      static,
-      css
+    ( depends
+    , render
+    , renderAndConcat
+    , renderChain
+    , static
+    , css
     ) where
 
 import Text.Template hiding (render)
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as M
-import Control.Monad
+import Control.Monad (unless, liftM, foldM)
 
-import System.Directory
+import System.Directory (copyFile)
 import System.IO
 
 import Text.Hakyll.Page

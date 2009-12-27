@@ -7,11 +7,11 @@ module Text.Hakyll.Tags
 import qualified Data.Map as M
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.List as L
-import Control.Monad
+import Control.Monad (foldM)
 
 import Text.Hakyll.Util
 import Text.Hakyll.Page
-import Control.Arrow
+import Control.Arrow (second)
 
 -- | Read a tag map. This creates a map from tags to page paths. This function
 --   assumes the tags are located in the `tags` metadata field, separated by

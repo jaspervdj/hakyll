@@ -1,13 +1,13 @@
 -- | A module containing various function for manipulating and examinating
 --   files and directories.
 module Text.Hakyll.File
-    ( toDestination,
-      toCache,
-      toURL,
-      makeDirectories,
-      getRecursiveContents,
-      isCacheValid,
-      directory
+    ( toDestination
+    , toCache
+    , toURL
+    , makeDirectories
+    , getRecursiveContents
+    , isCacheValid
+    , directory
     ) where
 
 import System.Directory

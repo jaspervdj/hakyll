@@ -170,7 +170,7 @@ simpleServer port = do
                                 , portNumber = port
                                 }
 
-          -- When a clien connects, respond in a separate thread.
+          -- When a client connects, respond in a separate thread.
           listen socket = do (handle, _, _) <- accept socket
                              forkIO (runReaderT (respond handle) config)
                              return ()

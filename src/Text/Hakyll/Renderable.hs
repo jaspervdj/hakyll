@@ -2,8 +2,8 @@ module Text.Hakyll.Renderable
     ( Renderable(toContext, getDependencies, getURL)
     ) where
 
-import System.FilePath
-import Text.Template
+import System.FilePath (FilePath)
+import Text.Template (Context)
 
 -- | A class for datatypes that can be rendered to pages.
 class Renderable a where

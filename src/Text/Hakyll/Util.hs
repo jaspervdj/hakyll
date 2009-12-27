@@ -1,12 +1,11 @@
 module Text.Hakyll.Util 
-    ( trim,
-      split,
-      stripHTML
+    ( trim
+    , split
+    , stripHTML
     ) where
 
-import Data.Char
-import Data.List
-import Text.Regex
+import Data.Char (isSpace)
+import Text.Regex (splitRegex, mkRegex)
 
 -- | Trim a string (drop spaces and tabs at both sides).
 trim :: String -> String

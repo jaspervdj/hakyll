@@ -2,8 +2,8 @@ module Text.Hakyll.CompressCSS
     ( compressCSS
     ) where
 
-import Data.List
-import Text.Regex
+import Data.List (isPrefixOf)
+import Text.Regex (subRegex, mkRegex)
 
 -- | subRegex with arguments flipped for easy function composition.
 subRegex' :: String -> String -> String -> String
