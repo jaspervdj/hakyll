@@ -73,7 +73,7 @@ createGetResponse request = do
                                             else B.unpack (requestURI request)
     exists <- doesFileExist fileName
     if exists then catch (create200 fileName) create500
-              else return $ errorResponse 400 (B.pack "Not Found")
+              else return $ errorResponse 404 (B.pack "Not Found")
         where create200 fileName = do
                     body <- B.readFile fileName
                     let headers = [ (B.pack "Content-Length", B.pack $ show $ B.length body)
