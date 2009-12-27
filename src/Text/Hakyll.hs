@@ -11,11 +11,11 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 hakyll :: IO () -> IO ()
 hakyll action = do
     args <- getArgs
-    case args of []              -> action
-                 ["--clean"]     -> clean
-                 ["--server", p] -> server (read p)
-                 ["--server"]    -> server 8000
-                 _               -> help
+    case args of []            -> action
+                 ["clean"]     -> clean
+                 ["server", p] -> server (read p)
+                 ["server"]    -> server 8000
+                 _             -> help
 
 -- | Clean up directories.
 clean :: IO ()
@@ -34,9 +34,9 @@ help = do
              ++ "\n"
              ++ "Usage:\n"
              ++ name ++ "                 Generate the site.\n"
-             ++ name ++ " --clean         Clean up and remove cache.\n"
-             ++ name ++ " --help          Show this message.\n"
-             ++ name ++ " --server [port] Run a local test server.\n"
+             ++ name ++ " clean           Clean up and remove cache.\n"
+             ++ name ++ " help            Show this message.\n"
+             ++ name ++ " server [port]   Run a local test server.\n"
 
 server :: Integer -> IO ()
 server p = do simpleServer (fromIntegral $ p)
