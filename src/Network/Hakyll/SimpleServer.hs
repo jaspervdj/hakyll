@@ -16,9 +16,12 @@ import Text.Hakyll.Util
 data Request = Request { requestMethod :: B.ByteString
                        , requestURI :: B.ByteString
                        , requestVersion :: B.ByteString
-                       , requestHeaders :: M.Map B.ByteString B.ByteString
-                       , requestBody :: B.ByteString
-                       } deriving (Show, Ord, Eq)
+                       } deriving (Ord, Eq)
+
+instance Show Request where
+    show request =  (B.unpack $ requestMethod request) ++ " "
+                 ++ (B.unpack $ requestURI request) ++ " "
+                 ++ (B.unpack $ requestVersion request)
 
 readRequest :: Handle -> IO Request
 readRequest handle = do
@@ -27,8 +30,6 @@ readRequest handle = do
     return $ Request { requestMethod = B.pack method
                      , requestURI = B.pack uri
                      , requestVersion = B.pack version
-                     , requestHeaders = M.empty -- Ignore all headers for now.
-                     , requestBody = B.empty -- Ignore request body for now.
                      }
 
 data Response = Response { responseVersion :: B.ByteString
@@ -36,7 +37,12 @@ data Response = Response { responseVersion :: B.ByteString
                          , responsePhrase :: B.ByteString
                          , responseHeaders :: M.Map B.ByteString B.ByteString
                          , responseBody :: B.ByteString
-                         } deriving (Show, Ord, Eq)
+                         } deriving (Ord, Eq)
+
+instance Show Response where
+    show response =  (B.unpack $ responseVersion response) ++ " "
+                  ++ (show $ responseStatusCode response) ++ " "
+                  ++ (B.unpack $ responsePhrase response)
 
 defaultResponse :: Response
 defaultResponse = Response { responseVersion = B.pack "HTTP/1.1"
@@ -48,9 +54,17 @@ defaultResponse = Response { responseVersion = B.pack "HTTP/1.1"
 
 createResponse :: Request -> IO Response
 createResponse request | requestMethod request == B.pack "GET" = createGetResponse request
-                       | otherwise = return $ defaultResponse { responseStatusCode = 501
-                                                              , responsePhrase = B.pack "Not Implemented"
-                                                              }
+                       | otherwise = return $ errorResponse 501 (B.pack "Not Implemented")
+
+errorResponse :: Int -> B.ByteString -> Response
+errorResponse statusCode phrase = defaultResponse
+    { responseStatusCode = statusCode
+    , responsePhrase = phrase
+    , responseHeaders = M.singleton (B.pack "Content-Type") (B.pack "text/html")
+    , responseBody = B.pack $  "<html> <head> <title>" ++ show statusCode ++ "</title> </head>"
+                            ++ "<body> <h1>" ++ show statusCode ++ "</h1>\n"
+                            ++ "<p>" ++ (B.unpack phrase) ++ "</p> </body> </html>"
+    }
 
 createGetResponse :: Request -> IO Response
 createGetResponse request = do
@@ -58,13 +72,9 @@ createGetResponse request = do
     let fileName = "_site" ++ if uri == "/" then "/index.html"
                                             else B.unpack (requestURI request)
     exists <- doesFileExist fileName
-    if exists then createGet fileName
-              else create404
-        where create404 = return $ defaultResponse { responseStatusCode = 404
-                                                   , responsePhrase = B.pack "Not Found"
-                                                   }
-
-              createGet fileName = do
+    if exists then catch (create200 fileName) create500
+              else return $ errorResponse 400 (B.pack "Not Found")
+        where create200 fileName = do
                     body <- B.readFile fileName
                     let headers = [ (B.pack "Content-Length", B.pack $ show $ B.length body)
                                   ] ++ getMIMEHeader fileName
@@ -74,6 +84,9 @@ createGetResponse request = do
                                                     `M.union` M.fromList headers
                                              , responseBody = body
                                              }
+
+              create500 e = do putStrLn $ "Internal Error: " ++ show e
+                               return $ errorResponse 500 (B.pack "Internal Server Error")
 
 getMIMEHeader :: FilePath -> [(B.ByteString, B.ByteString)]
 getMIMEHeader fileName = case result of (Just x) -> [(B.pack "Content-Type", B.pack x)]
@@ -94,6 +107,7 @@ respond :: Handle -> IO ()
 respond handle = do
     request <- readRequest handle
     response <- createResponse request
+    putStrLn $ show request ++ " => " ++ show response
     B.hPutStr handle $ B.intercalate (B.pack " ") [ responseVersion response
                                                   , B.pack $ show $ responseStatusCode response
                                                   , responsePhrase response
