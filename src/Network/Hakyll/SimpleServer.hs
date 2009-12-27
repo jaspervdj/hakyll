@@ -78,16 +78,16 @@ createGetResponse request = do
 getMIMEHeader :: FilePath -> [(B.ByteString, B.ByteString)]
 getMIMEHeader fileName = case result of (Just x) -> [(B.pack "Content-Type", B.pack x)]
                                         _ -> []
-    where result = lookup (takeExtension fileName) [ (".css", "text/css")
-                                                   , (".gif", "image/gif")
-                                                   , (".htm", "text/html")
-                                                   , (".html", "text/html")
-                                                   , (".jpeg", "image/jpeg")
-                                                   , (".jpg", "image/jpeg")
-                                                   , (".js", "text/javascript")
-                                                   , (".png", "image/png")
+    where result = lookup (takeExtension fileName) [ (".css", "text/css")
+                                                   , (".gif", "image/gif")
+                                                   , (".htm", "text/html")
+                                                   , (".html", "text/html")
+                                                   , (".jpeg", "image/jpeg")
+                                                   , (".jpg", "image/jpeg")
+                                                   , (".js", "text/javascript")
+                                                   , (".png", "image/png")
                                                    , (".txt", "text/plain")
-                                                   , (".xml", "text/xml")  
+                                                   , (".xml", "text/xml")
                                                    ]
 
 respond :: Handle -> IO ()
