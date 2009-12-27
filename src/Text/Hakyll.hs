@@ -2,6 +2,8 @@ module Text.Hakyll
     ( hakyll
     ) where
 
+import Network.Hakyll.SimpleServer (simpleServer)
+
 import System.Environment (getArgs, getProgName)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 
@@ -9,10 +11,13 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 hakyll :: IO () -> IO ()
 hakyll action = do
     args <- getArgs
-    case args of []          -> action
-                 ["--clean"] -> clean
-                 _           -> showHelp
+    case args of []              -> action
+                 ["--clean"]     -> clean
+                 ["--server", p] -> server (read p)
+                 ["--server"]    -> server 8000
+                 _               -> help
 
+-- | Clean up directories.
 clean :: IO ()
 clean = do remove' "_cache"
            remove' "_site"
@@ -21,13 +26,17 @@ clean = do remove' "_cache"
                                      else return ()
 
 -- | Show usage information.
-showHelp :: IO ()
-showHelp = do
+help :: IO ()
+help = do
     name <- getProgName
-    putStrLn $  "This is a hakyll site generator program. You should always run\n"
-             ++ "it from the project root directory.\n"
+    putStrLn $  "This is a hakyll site generator program. You should always\n"
+             ++ "run it from the project root directory.\n"
              ++ "\n"
              ++ "Usage:\n"
-             ++ name ++ "           Generate the site.\n"
-             ++ name ++ " --clean   Clean up and remove cache.\n"
-             ++ name ++ " --help    Show this message.\n"
+             ++ name ++ "                 Generate the site.\n"
+             ++ name ++ " --clean         Clean up and remove cache.\n"
+             ++ name ++ " --help          Show this message.\n"
+             ++ name ++ " --server [port] Run a local test server.\n"
+
+server :: Integer -> IO ()
+server p = do simpleServer (fromIntegral $ p)
