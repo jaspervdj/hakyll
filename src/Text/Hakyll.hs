@@ -9,19 +9,25 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 
 -- | Main function to run hakyll.
 hakyll :: IO () -> IO ()
-hakyll action = do
+hakyll buildFunction = do
     args <- getArgs
-    case args of []            -> action
+    case args of []            -> build buildFunction
                  ["clean"]     -> clean
                  ["server", p] -> server (read p)
                  ["server"]    -> server 8000
                  _             -> help
 
+-- | Build the site.
+build :: IO () -> IO ()
+build buildFunction = do putStrLn "Generating..."
+                         buildFunction
+
 -- | Clean up directories.
 clean :: IO ()
 clean = do remove' "_cache"
            remove' "_site"
-    where remove' dir = do exists <- doesDirectoryExist dir
+    where remove' dir = do putStrLn $ "Removing " ++ dir ++ "..."
+                           exists <- doesDirectoryExist dir
                            if exists then removeDirectoryRecursive dir
                                      else return ()
 
