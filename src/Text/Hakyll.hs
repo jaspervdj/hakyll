@@ -11,11 +11,13 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 hakyll :: IO () -> IO ()
 hakyll buildFunction = do
     args <- getArgs
-    case args of []            -> build buildFunction
-                 ["clean"]     -> clean
-                 ["server", p] -> server (read p)
-                 ["server"]    -> server 8000
-                 _             -> help
+    case args of []             -> build buildFunction
+                 ["clean"]      -> clean
+                 ["preview", p] -> build buildFunction >> server (read p)
+                 ["preview"]    -> build buildFunction >> server 8000
+                 ["server", p]  -> server (read p)
+                 ["server"]     -> server 8000
+                 _              -> help
 
 -- | Build the site.
 build :: IO () -> IO ()
@@ -42,6 +44,7 @@ help = do
              ++ name ++ "                 Generate the site.\n"
              ++ name ++ " clean           Clean up and remove cache.\n"
              ++ name ++ " help            Show this message.\n"
+             ++ name ++ " preview [port]  Generate site, then start a server.\n"
              ++ name ++ " server [port]   Run a local test server.\n"
 
 server :: Integer -> IO ()
