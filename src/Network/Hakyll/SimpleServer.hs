@@ -8,7 +8,7 @@ import Network
 import Control.Monad (forever, mapM_)
 import Control.Monad.Reader (ReaderT, runReaderT, ask, liftIO)
 import System.IO (Handle, hClose, hGetLine, hPutStr)
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, doesDirectoryExist)
 import Control.Concurrent (forkIO)
 import System.FilePath (takeExtension)
 import qualified Data.ByteString.Char8 as B
@@ -92,8 +92,9 @@ createGetResponse request = do
     -- Construct the complete fileName of the requested resource.
     config <- ask
     let uri = B.unpack (requestURI request)
-        fileName = (documentRoot config) ++ if uri == "/" then "/index.html"
-                                            else B.unpack (requestURI request)
+    isDirectory <- liftIO $ doesDirectoryExist $ documentRoot config ++ uri
+    let fileName = (documentRoot config) ++ if isDirectory then uri ++ "/index.html"
+                                                           else uri
 
     -- Send back the page if found.
     exists <- liftIO $ doesFileExist fileName
