@@ -51,7 +51,7 @@ getRecursiveContents topdir = do
 directory :: (FilePath -> IO ()) -> FilePath -> IO ()
 directory action dir = getRecursiveContents dir >>= mapM_ action
 
--- | Check is a cache file is still valid.
+-- | Check if a cache file is still valid.
 isCacheValid :: FilePath -> [FilePath] -> IO Bool
 isCacheValid cache depends = doesFileExist cache >>= \exists ->
     if not exists then return False
