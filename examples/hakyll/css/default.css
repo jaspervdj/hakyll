@@ -1,0 +1,103 @@
+html {
+    padding: 0px;
+    margin: 0px;
+    background-color: white;
+    color: black;
+    font-family: sans-serif;
+}
+
+body {
+    padding: 0px 0px 60px 0px;
+    margin: 0px;
+}
+
+div#header {
+    height: 32px;
+    padding: 20px 0px 20px 60px;
+}
+
+div#header img {
+    display: inline;
+    vertical-align: middle;
+}
+
+div#header h1 {
+    padding-left: 10px;
+    display: inline;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+div#main {
+    margin: 0px auto 0px auto;
+    width: 760px;
+}
+
+div#sidebar {
+    margin-right: 30px;
+    width: 160px;
+    float: left;
+    text-align: right;
+}
+
+div#navigation a {
+    display: block;
+    font-size: 110%;
+    text-decoration: none;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+div#content {
+    width: 570px;
+    float: right;
+}
+
+div#footer {
+    padding-top: 30px;
+    clear: both;
+    font-size: 90%;
+    text-align: center;
+}
+
+a {
+    color: black;
+}
+
+h2 {
+    font-size: 120%;
+    text-transform: uppercase;
+}
+
+h3 {
+    font-size: 100%;
+    text-transform: uppercase;
+}
+
+div.column {
+    width: 50%;
+    float: left;
+}
+
+div.column p {
+    padding-right: 15px;
+}
+
+ul {
+    list-style-type: square;
+    list-style-position: inside;
+    padding-left: 0px;
+}
+
+code {
+    background-color: rgb(210, 210, 210);
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+pre code {
+    display: block;
+    background-color: rgb(50, 50, 50);
+    color: white;
+    padding: 8px;
+}
