@@ -1,0 +1,17 @@
+body {
+    width: 600px;
+    margin: 0px auto 0px auto;
+}
+
+div#navigation {
+    text-align: center;
+    border-bottom: 4px solid black;
+}
+
+div#navigation a {
+    color: white;
+    text-decoration: none;
+    background-color: black;
+    padding: 3px 10px 3px 10px;
+    margin: 0px 10px 0px 10px;
+}

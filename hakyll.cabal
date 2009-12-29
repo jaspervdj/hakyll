@@ -3,8 +3,8 @@ Version:        0.3.2
 
 Synopsis:       A simple static site generator library.
 Description:
-  A simple static site generator library , mainly aimed at
-  creating blogs.
+  A simple static site generator library, mainly aimed at
+  creating blogs and brochure sites.
 Author:         Jasper Van der Jeugt
 Maintainer:     jaspervdj@gmail.com
 Homepage:       http://jaspervdj.be/hakyll
