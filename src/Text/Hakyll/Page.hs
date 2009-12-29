@@ -11,23 +11,24 @@ module Text.Hakyll.Page
 import qualified Data.Map as M
 import qualified Data.List as L
 import qualified Data.ByteString.Lazy.Char8 as B
-import Data.Maybe
-import Control.Monad
+import Data.Maybe (fromMaybe)
 
-import System.FilePath
+import System.FilePath (FilePath, takeExtension)
 import System.IO
 
 import Text.Hakyll.File
-import Text.Hakyll.Util
+import Text.Hakyll.Util (trim)
 import Text.Hakyll.Renderable
 import Text.Pandoc
 
+import Text.Template (Context)
+
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
-data Page = Page (M.Map B.ByteString B.ByteString)
+data Page = Page Context
 
 -- | Create a Page from a key-value mapping.
-fromContext :: (M.Map B.ByteString B.ByteString) -> Page
+fromContext :: Context -> Page
 fromContext = Page
 
 -- | Obtain a value from a page. Will resturn an empty string when nothing is
