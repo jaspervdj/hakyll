@@ -19,7 +19,7 @@ main = hakyll $ do
     -- Render index, including recent posts.
     let recentPosts = renderAndConcat "templates/postitem.html" $ take 3 renderablePosts
     renderChain ["index.html", "templates/default.html"] $
-        createCustomPage "index.html" ("templates/postitem.html" : postPaths)
+        createCustomPage "index.html" ("templates/postitem.html" : take 3 postPaths)
             [("title", Left "Home"), ("posts", Right recentPosts)]
 
     -- Render all posts list.
