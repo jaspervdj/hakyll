@@ -4,22 +4,29 @@ module Network.Hakyll.SimpleServer
     ( simpleServer
     ) where
 
+import Prelude hiding (log)
 import Network
 import Control.Monad (forever, mapM_)
 import Control.Monad.Reader (ReaderT, runReaderT, ask, liftIO)
-import System.IO (Handle, hClose, hGetLine, hPutStr)
+import System.IO (Handle, hClose, hGetLine, hPutStr, hPutStrLn, stderr)
 import System.Directory (doesFileExist, doesDirectoryExist)
 import Control.Concurrent (forkIO)
+import Control.Concurrent.Chan (Chan, newChan, readChan, writeChan)
 import System.FilePath (takeExtension)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as M
 
 import Text.Hakyll.Util
 
+-- | Function to log from a chan.
+log :: Chan String -> IO ()
+log logChan = forever (readChan logChan >>= hPutStrLn stderr)
+
 -- | General server configuration.
 data ServerConfig = ServerConfig { documentRoot :: FilePath
                                  , portNumber :: PortNumber
-                                 } deriving (Show, Eq, Ord)
+                                 , logChannel :: Chan String
+                                 }
 
 -- | Custom monad stack.
 type Server = ReaderT ServerConfig IO
@@ -96,25 +103,27 @@ createGetResponse request = do
     let fileName = (documentRoot config) ++ if isDirectory then uri ++ "/index.html"
                                                            else uri
 
+        create200 = do
+            body <- B.readFile fileName
+            let headers = [ (B.pack "Content-Length", B.pack $ show $ B.length body)
+                          ] ++ getMIMEHeader fileName
+            return $ defaultResponse { responseStatusCode = 200
+                                     , responsePhrase = B.pack "OK"
+                                     , responseHeaders = (responseHeaders defaultResponse) 
+                                            `M.union` M.fromList headers
+                                     , responseBody = body
+                                     }
+
+        -- Called when an error occurs during the creation of a 200 response.
+        create500 e = do writeChan (logChannel config) $ "Internal Error: " ++ show e
+                         return $ createErrorResponse 500 (B.pack "Internal Server Error")
+
     -- Send back the page if found.
     exists <- liftIO $ doesFileExist fileName
-    if exists then do response <- liftIO $ catch (create200 fileName) create500
+    if exists then do response <- liftIO $ catch create200 create500
                       return response
-              else return $ createErrorResponse 404 (B.pack "Not Found")
-        where create200 fileName = do
-                    body <- B.readFile fileName
-                    let headers = [ (B.pack "Content-Length", B.pack $ show $ B.length body)
-                                  ] ++ getMIMEHeader fileName
-                    return $ defaultResponse { responseStatusCode = 200
-                                             , responsePhrase = B.pack "OK"
-                                             , responseHeaders = (responseHeaders defaultResponse) 
-                                                    `M.union` M.fromList headers
-                                             , responseBody = body
-                                             }
-
-              -- Called when an error occurs during the creation of a 200 response.
-              create500 e = do putStrLn $ "Internal Error: " ++ show e
-                               return $ createErrorResponse 500 (B.pack "Internal Server Error")
+              else do liftIO $ writeChan (logChannel config) $ "Not Found: " ++ fileName
+                      return $ createErrorResponse 404 (B.pack "Not Found")
 
 -- | Get the mime header for a certain filename. This is based on the extension
 --   of the given 'FilePath'.
@@ -141,7 +150,8 @@ respond handle = do
     response <- createResponse request
 
     -- Generate some output.
-    liftIO $ putStrLn $ show request ++ " => " ++ show response
+    config <- ask
+    liftIO $ writeChan (logChannel config) $ show request ++ " => " ++ show response
 
     -- Send the response back to the handle.
     liftIO $ putResponse response
@@ -164,15 +174,24 @@ respond handle = do
 --   directory.
 simpleServer :: PortNumber -> FilePath -> IO ()
 simpleServer port root = do
-    putStrLn $ "Starting hakyll server on port " ++ show port ++ "..."
-    socket <- listenOn (PortNumber port)
-    forever (listen socket)
-    where -- A default configuration.
-          config = ServerConfig { documentRoot = root
-                                , portNumber = port
-                                }
+    -- Channel to send logs to
+    logChan <- newChan
+
+    let config = ServerConfig { documentRoot = root
+                              , portNumber = port
+                              , logChannel = logChan
+                              }
 
           -- When a client connects, respond in a separate thread.
-          listen socket = do (handle, _, _) <- accept socket
-                             forkIO (runReaderT (respond handle) config)
-                             return ()
+        listen socket = do (handle, _, _) <- accept socket
+                           forkIO (runReaderT (respond handle) config)
+                           return ()
+
+    -- Handle logging in a separate thread
+    forkIO (log logChan)
+
+    writeChan logChan $ "Starting hakyll server on port " ++ show port ++ "..."
+    socket <- listenOn (PortNumber port)
+    forever (listen socket)
+    where 
+
