@@ -1,5 +1,6 @@
 ---
 title: Tutorial (Part III)
+what: adds an RSS feed to the blog from the previous tutorial
 ---
 
 ## Adding RSS to our simple blog

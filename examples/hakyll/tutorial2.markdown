@@ -1,5 +1,6 @@
 ---
 title: Tutorial (Part II)
+what: creates a simple blog
 ---
 
 ## Creating a simple blog with Hakyll

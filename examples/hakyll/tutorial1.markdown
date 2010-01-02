@@ -1,5 +1,6 @@
 ---
 title: Tutorial (Part I)
+what: explains how to create a simple brochure site
 ---
 
 ## Getting started
