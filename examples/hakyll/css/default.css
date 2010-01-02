@@ -85,8 +85,8 @@ div.column p {
 
 ul {
     list-style-type: square;
-    list-style-position: inside;
-    padding-left: 0px;
+    padding-left: 1em;
+    margin-left: 1em;
 }
 
 code {
@@ -100,4 +100,5 @@ pre code {
     background-color: rgb(50, 50, 50);
     color: white;
     padding: 8px;
+    margin-bottom: 2em;
 }

@@ -159,3 +159,6 @@ Note that the `index.html` in the `renderChain` list is also a template.
 
 If you have any more questions, feel free to ask them on the
 [google discussion group](http://groups.google.com/group/hakyll).
+
+There is a [next tutorial](tutorial3.html), explaining how to add an RSS feed
+to our sample blog.

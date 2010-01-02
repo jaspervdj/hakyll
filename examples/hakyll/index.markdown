@@ -22,8 +22,9 @@ It is written in a very configurable way and uses an
 
 ## Getting Started
 
-You can get the latest version from hackage using `cabal install hakyll`. A
-look in the [tutorial](tutorial1.html) is highly recommended. There are a few
+You can get the latest version from hackage using `cabal install hakyll`. I
+have written a few [tutorials](tutorials.html), and reading them is highly
+recommended if you want to get started with hakyll. Also, there are a few
 examples available in
 [the github repo](http://github.com/jaspervdj/Hakyll/tree/master/examples/),
 including this site.
