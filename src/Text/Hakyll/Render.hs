@@ -1,8 +1,11 @@
 module Text.Hakyll.Render 
     ( depends
     , render
+    , renderWith
     , renderAndConcat
+    , renderAndConcatWith
     , renderChain
+    , renderChainWith
     , static
     , css
     ) where
@@ -15,6 +18,7 @@ import Control.Monad (unless, liftM, foldM)
 import System.Directory (copyFile)
 import System.IO
 
+import Text.Hakyll.Context (ContextManipulation)
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
@@ -34,21 +38,41 @@ render :: Renderable a
        => FilePath -- ^ Template to use for rendering.
        -> a -- ^ Renderable object to render with given template.
        -> IO Page -- ^ The body of the result will contain the render.
-render templatePath renderable = do
+render = renderWith id
+
+-- | Render to a Page. This function allows you to manipulate the context
+--   first.
+renderWith :: Renderable a
+           => ContextManipulation -- ^ Manipulation to apply on the context.
+           -> FilePath -- ^ Template to use for rendering.
+           -> a -- ^ Renderable object to render with given template.
+           -> IO Page -- ^ The body of the result will contain the render.
+renderWith manipulation templatePath renderable = do
     handle <- openFile templatePath ReadMode
     templateString <- liftM B.pack $ hGetContents handle
     seq templateString $ hClose handle
-    context <- toContext renderable
+    context <- liftM manipulation $ toContext renderable
     let body = substitute templateString context
     return $ fromContext (M.insert (B.pack "body") body context)
 
 -- | Render each renderable with the given template, then concatenate the
 --   result.
 renderAndConcat :: Renderable a => FilePath -> [a] -> IO B.ByteString
-renderAndConcat templatePath renderables = foldM concatRender' B.empty renderables
+renderAndConcat = renderAndConcatWith id
+
+-- | Render each renderable with the given template, then concatenate the
+--   result. This function allows you to specify a "ContextManipulation" to
+--   apply on every "Renderable".
+renderAndConcatWith :: Renderable a
+                    => ContextManipulation
+                    -> FilePath
+                    -> [a]
+                    -> IO B.ByteString
+renderAndConcatWith manipulation templatePath renderables =
+    foldM concatRender' B.empty renderables
     where concatRender' :: Renderable a => B.ByteString -> a -> IO B.ByteString
           concatRender' chunk renderable = do
-              rendered <- render templatePath renderable
+              rendered <- renderWith manipulation templatePath renderable
               let body = getBody rendered
               return $ B.append chunk $ body
 
@@ -56,9 +80,15 @@ renderAndConcat templatePath renderables = foldM concatRender' B.empty renderabl
 --   also write the result to the site destination. This is the preferred way
 --   to do general rendering.
 renderChain :: Renderable a => [FilePath] -> a -> IO ()
-renderChain templates renderable =
+renderChain = renderChainWith id
+
+-- | A more custom render chain that allows you to specify a
+--   "ContextManipulation" which to apply on the context when it is read first.
+renderChainWith :: Renderable a
+                => ContextManipulation -> [FilePath] -> a -> IO ()
+renderChainWith manipulation templates renderable =
     depends (getURL renderable) (getDependencies renderable ++ templates) $
-        do initialPage <- toContext renderable
+        do initialPage <- liftM manipulation $ toContext renderable
            result <- foldM (flip render) (fromContext initialPage) templates
            writePage result
 

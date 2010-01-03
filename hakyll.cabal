@@ -1,5 +1,5 @@
 Name:           hakyll
-Version:        0.3.2
+Version:        0.4
 
 Synopsis:       A simple static site generator library.
 Description:
@@ -27,7 +27,9 @@ library
                    pandoc >= 1,
                    regex-compat >= 0.92,
                    network >= 2,
-                   mtl >= 1.1
+                   mtl >= 1.1,
+                   old-locale >= 1,
+                   time >= 1
   exposed-modules: Text.Hakyll
                    Text.Hakyll.Render
                    Text.Hakyll.Renderable
@@ -37,4 +39,5 @@ library
                    Text.Hakyll.Page
                    Text.Hakyll.Util
                    Text.Hakyll.Tags
+                   Text.Hakyll.Context
                    Network.Hakyll.SimpleServer

@@ -2,7 +2,6 @@ module Text.Hakyll.Page
     ( Page
     , fromContext
     , getValue
-    , copyValueWith
     , getBody
     , readPage
     , writePage
@@ -35,17 +34,6 @@ fromContext = Page
 --   found.
 getValue :: String -> Page -> B.ByteString
 getValue str (Page page) = fromMaybe B.empty $ M.lookup (B.pack str) page
-
--- | Do something with a value of the page.
-copyValueWith :: String -- ^ Key of which the value should be copied.
-              -> String -- ^ Key the value should be copied to.
-              -> (B.ByteString -> B.ByteString) -- ^ Function to apply on the value.
-              -> Page -- ^ Page on which to apply this modification.
-              -> Page -- ^ Result.
-copyValueWith src dst f p@(Page page) = case M.lookup (B.pack src) page of
-    Nothing      -> p
-    (Just value) -> Page $ M.insert (B.pack dst) (f value) page
-
 
 -- | Auxiliary function to pack a pair.
 packPair :: (String, String) -> (B.ByteString, B.ByteString)
