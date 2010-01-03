@@ -5,9 +5,12 @@ import Test.QuickCheck
 import Test.HUnit
 
 import Data.Char
+import qualified Data.Map as M
+import qualified Data.ByteString.Lazy.Char8 as B
 
 import Text.Hakyll.CompressCSS
 import Text.Hakyll.Util
+import Text.Hakyll.Context
 
 main = defaultMain tests
 
@@ -26,6 +29,10 @@ tests = [ testGroup "Util group" [ testProperty "trim length" prop_trim_length
                                         , testCase "compressCSS 2" test_compress_css2
                                         , testCase "compressCSS 3" test_compress_css3
                                         ]
+
+        , testGroup "Context group" [ testCase "renderDate 1" test_render_date1
+                                    , testCase "renderDate 2" test_render_date1
+                                    ]
         ]
 
 -- Test that a string always becomes shorter when trimmed.
@@ -57,3 +64,17 @@ prop_compress_css_length str = length str >= length (compressCSS str)
 test_compress_css1 = compressCSS "a {  \n color  : red;  }" @?= "a{color:red}"
 test_compress_css2 = compressCSS "img {border  :none;;;;  }" @?= "img{border:none}"
 test_compress_css3 = compressCSS "p {font-size  : 90%;} h1 {color  :white;;;  }" @?= "p{font-size:90%}h1{color:white}"
+
+-- Date rendering test cases.
+test_render_date1 = M.lookup (B.pack "date") rendered @?= Just (B.pack "December 30, 2009")
+    where rendered = renderDate "date"
+                                "%B %e, %Y"
+                                "Unknown date"
+                                (M.singleton (B.pack "path")
+                                             (B.pack "2009-12-30-a-title.markdown"))
+test_render_date2 = M.lookup (B.pack "date") rendered @?= Just (B.pack "Unknown date")
+    where rendered = renderDate "date"
+                                "%B %e, %Y"
+                                "Unknown date"
+                                (M.singleton (B.pack "path")
+                                             (B.pack "2009-badness-30-a-title.markdown"))
