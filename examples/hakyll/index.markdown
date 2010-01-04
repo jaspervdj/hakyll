@@ -27,4 +27,5 @@ have written a few [tutorials](tutorials.html), and reading them is highly
 recommended if you want to get started with hakyll. Also, there are a few
 examples available in
 [the github repo](http://github.com/jaspervdj/Hakyll/tree/master/examples/),
-including this site.
+including this site. For any questions you might have, there is also a
+[google discussion group](http://groups.google.com/group/hakyll).
