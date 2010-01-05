@@ -6,6 +6,7 @@ module Text.Hakyll.File
     , toURL
     , makeDirectories
     , getRecursiveContents
+    , havingExtension
     , isCacheValid
     , directory
     ) where
@@ -46,6 +47,12 @@ getRecursiveContents topdir = do
             else return [path]
     return (concat paths)
     where isProper = not . (== '.') . head
+
+-- | A filter that takes all file names with a given extension. Prefix the
+--   extension with a dot:
+--   > havingExtension ".markdown" ["index.markdown", "style.css"] == ["index.markdown"]
+havingExtension :: String -> [FilePath] -> [FilePath]
+havingExtension extension = filter ((==) extension . takeExtension)
 
 -- | Perform an IO action on every file in a given directory.
 directory :: (FilePath -> IO ()) -> FilePath -> IO ()

@@ -11,6 +11,7 @@ import qualified Data.ByteString.Lazy.Char8 as B
 import Text.Hakyll.CompressCSS
 import Text.Hakyll.Util
 import Text.Hakyll.Context
+import Text.Hakyll.File
 
 main = defaultMain tests
 
@@ -33,6 +34,11 @@ tests = [ testGroup "Util group" [ testProperty "trim length" prop_trim_length
         , testGroup "Context group" [ testCase "renderDate 1" test_render_date1
                                     , testCase "renderDate 2" test_render_date1
                                     ]
+
+        , testGroup "File group" [ testProperty "havingExtension count" prop_having_extension_count
+                                 , testCase "havingExtension 1" test_having_extension1
+                                 , testCase "havingExtension 2" test_having_extension2
+                                 ]
         ]
 
 -- Test that a string always becomes shorter when trimmed.
@@ -78,3 +84,14 @@ test_render_date2 = M.lookup (B.pack "date") rendered @?= Just (B.pack "Unknown 
                                 "Unknown date"
                                 (M.singleton (B.pack "path")
                                              (B.pack "2009-badness-30-a-title.markdown"))
+
+-- Add an extension, and test that they have that extension
+prop_having_extension_count names extension =
+    not (any ('.' `elem`) names || any (`elem` extension) "./\\")
+    ==> havingExtension fullExtension withExtensions == withExtensions
+    where fullExtension = '.' : extension
+          withExtensions = map (++ fullExtension) names
+
+-- Having extension test cases
+test_having_extension1 = havingExtension ".foo" ["file.bar", "file.txt"] @?= []
+test_having_extension2 = havingExtension ".foo" ["file.foo", "file.txt"] @?= ["file.foo"]
