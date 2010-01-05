@@ -12,6 +12,7 @@ main = hakyll $ do
     directory css "css"
     directory static "images"
     directory static "examples"
+    directory static "reference"
 
     tutorials <- liftM (sort . filter (=~ "tutorial[0-9]*.markdown")) $ getRecursiveContents "."
     let tutorialList = renderAndConcat "templates/tutorialitem.html"
@@ -25,6 +26,8 @@ main = hakyll $ do
 
     mapM_ render' $ [ "about.markdown"
                     , "index.markdown"
+                    , "philosophy.markdown"
+                    , "reference.markdown"
                     ] ++ tutorials
 
     where render' = renderChain ["templates/default.html"] . createPagePath

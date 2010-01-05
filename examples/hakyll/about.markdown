@@ -1,6 +1,7 @@
 ---
 title: About
 ---
+
 ## Code
 
 The code for Hakyll is freely available on
@@ -21,3 +22,7 @@ following awesome projects:
 Hakyll is available under a BSD license. Note, however, that pandoc is
 released under a GPL license. Since you'll probably use Hakyll with pandoc,
 you will have to license your code under a GPL-compatible license.
+
+## Authors
+
+Hakyll was written by [Jasper Van der Jeugt](http://jaspervdj.be).
