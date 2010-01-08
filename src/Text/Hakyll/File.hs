@@ -50,6 +50,7 @@ getRecursiveContents topdir = do
 
 -- | A filter that takes all file names with a given extension. Prefix the
 --   extension with a dot:
+--
 --   > havingExtension ".markdown" ["index.markdown", "style.css"] == ["index.markdown"]
 havingExtension :: String -> [FilePath] -> [FilePath]
 havingExtension extension = filter ((==) extension . takeExtension)

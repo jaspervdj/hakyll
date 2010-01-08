@@ -23,6 +23,8 @@ tests = [ testGroup "Util group" [ testProperty "trim length" prop_trim_length
                                  , testCase "stripHTML 3" test_strip_html3
                                  , testCase "split 1" test_split1
                                  , testCase "split 2" test_split2
+                                 , testCase "link 1" test_link1
+                                 , testCase "link 2" test_link2
                                  ]
 
         , testGroup "CompressCSS group" [ testProperty "compressCSS length" prop_compress_css_length
@@ -62,6 +64,10 @@ test_strip_html3 = stripHTML "<b>Hakyll</b> is an <i>awesome</i> web framework <
 -- Split test cases.
 test_split1 = split "," "1,2,3" @?= ["1", "2", "3"]
 test_split2 = split "," ",1,2," @?= ["1", "2"]
+
+-- Link test cases.
+test_link1 = link "foo bar" "/foo/bar.html" @?= "<a href=\"/foo/bar.html\">foo bar</a>"
+test_link2 = link "back home" "/" @?= "<a href=\"/\">back home</a>"
 
 -- CSS compression should always decrease the text length.
 prop_compress_css_length str = length str >= length (compressCSS str)

@@ -2,6 +2,7 @@ module Text.Hakyll.Util
     ( trim
     , split
     , stripHTML
+    , link
     ) where
 
 import Data.Char (isSpace)
@@ -26,3 +27,10 @@ stripHTML str = let (beforeTag, rest) = break (== '<') str
 split :: String -> String -> [String]
 split pattern = filter (not . null)
               . splitRegex (mkRegex pattern)
+
+-- | Make a HTML link.
+--
+--   > link "foo" "bar.html" == "<a href='bar.html'>foo</a>"
+link :: String -> String -> String
+link text destination = "<a href=\"" ++ destination ++ "\">"
+                      ++ text ++ "</a>"

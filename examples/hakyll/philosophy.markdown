@@ -18,7 +18,7 @@ never exceed a 100 lines of code.
 Hakyll tries to provide as many high-level functions as possible for common
 tasks, while the lower-level functions should also be accessible. If you think
 you're writing something that can be used for many sites, please send a patch,
-our your `hakyll.hs`, and we will see what we can do.
+or your `hakyll.hs`, and we will see what we can do.
 
 ## Well-documented
 
