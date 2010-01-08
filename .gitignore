@@ -1,0 +1,9 @@
+##
+## gitignore(5) -- specify ignored files
+##
+
+*.swo
+*.swp
+*~
+.DS_Store
+/dist/
