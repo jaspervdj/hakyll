@@ -35,7 +35,8 @@ main = hakyll $ do
                                           (take 3 renderablePosts)
     renderChain ["index.html", "templates/default.html"] $
         createCustomPage "index.html" ("templates/postitem.html" : take 3 postPaths)
-            [("title", Left "Home"), ("posts", Right recentPosts)]
+            [("title", Left "Home"), ("posts", Right recentPosts),
+             ("tagcloud", Left $ renderTagCloud tagMap tagToURL 100 200)]
 
     -- Render all posts.
     mapM_ (renderChainWith postManipulation
