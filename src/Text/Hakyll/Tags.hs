@@ -1,14 +1,17 @@
 -- | Module containing some specialized functions to deal with tags.
+--   This Module follows certain conventions. Stick with them.
 module Text.Hakyll.Tags
     ( readTagMap
     , renderTagCloud
+    , renderTagLinks
     ) where
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Lazy.Char8 as B
-import qualified Data.List as L
+import Data.List (intercalate)
 import Control.Monad (foldM)
 
+import Text.Hakyll.Context (ContextManipulation, renderValue)
 import Text.Hakyll.Util
 import Text.Hakyll.Page
 import Control.Arrow (second)
@@ -30,7 +33,7 @@ renderTagCloud :: M.Map String [FilePath] -- ^ A tag map as produced by 'readTag
                -> Float -- ^ Biggest font size, in percent.
                -> String -- ^ Result of the render.
 renderTagCloud tagMap urlFunction minSize maxSize =
-    L.intercalate " " $ map renderTag tagCount
+    intercalate " " $ map renderTag tagCount
     where renderTag :: (String, Float) -> String
           renderTag (tag, count) =  "<a style=\"font-size: "
                                  ++ sizeTag count ++ "\" href=\""
@@ -49,3 +52,9 @@ renderTagCloud tagMap urlFunction minSize maxSize =
           tagCount :: [(String, Float)]
           tagCount = map (second $ fromIntegral . length) $ M.toList tagMap
 
+-- Render all tags to links.
+renderTagLinks :: (String -> String) -- ^ Function that produces an url for a tag.
+               -> ContextManipulation
+renderTagLinks urlFunction = renderValue "tags" "tags" renderTagLinks'
+    where renderTagLinks' = B.pack . intercalate ", " . map urlFunction
+                          . map trim . split "," . B.unpack
