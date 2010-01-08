@@ -8,12 +8,17 @@ Description:
 Author:         Jasper Van der Jeugt
 Maintainer:     jaspervdj@gmail.com
 Homepage:       http://jaspervdj.be/hakyll
+Bug-Reports:    http://github.com/jaspervdj/Hakyll/issues
 License:        BSD3
 License-File:   LICENSE
 Category:       Text
 Cabal-Version:  >= 1.2
 
 build-type:     Simple
+
+source-repository head
+  type: git
+  location: git://github.com/jaspervdj/Hakyll.git
 
 library
   ghc-options: -Wall
