@@ -4,6 +4,7 @@ module Text.Hakyll.File
     ( toDestination
     , toCache
     , toURL
+    , removeSpaces
     , makeDirectories
     , getRecursiveContents
     , havingExtension
@@ -15,17 +16,30 @@ import System.Directory
 import System.FilePath
 import Control.Monad
 
+-- | Auxiliary function to remove pathSeparators form the start. We don't deal
+--   with absolute paths here.
+removeLeadingSeparator :: FilePath -> FilePath
+removeLeadingSeparator [] = []
+removeLeadingSeparator p@(x:xs) | x `elem` pathSeparators = xs
+                                | otherwise               = p
+
 -- | Convert a relative filepath to a filepath in the destination (_site).
 toDestination :: FilePath -> FilePath
-toDestination path = "_site" </> path
+toDestination path = "_site" </> (removeLeadingSeparator path)
 
 -- | Convert a relative filepath to a filepath in the cache (_cache).
 toCache :: FilePath -> FilePath
-toCache path = "_cache" </> path
+toCache path = "_cache" </> (removeLeadingSeparator path)
 
 -- | Get the url for a given page.
 toURL :: FilePath -> FilePath
 toURL = flip addExtension ".html" . dropExtension
+
+-- | Swaps spaces for '-'.
+removeSpaces :: FilePath -> FilePath
+removeSpaces = map swap
+    where swap ' ' = '-'
+          swap x   = x
 
 -- | Given a path to a file, try to make the path writable by making
 --   all directories on the path.

@@ -56,5 +56,6 @@ renderTagCloud tagMap urlFunction minSize maxSize =
 renderTagLinks :: (String -> String) -- ^ Function that produces an url for a tag.
                -> ContextManipulation
 renderTagLinks urlFunction = renderValue "tags" "tags" renderTagLinks'
-    where renderTagLinks' = B.pack . intercalate ", " . map urlFunction
+    where renderTagLinks' = B.pack . intercalate ", "
+                          . map (\t -> link t $ urlFunction t)
                           . map trim . split "," . B.unpack
