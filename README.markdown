@@ -1,4 +1,4 @@
-# Hayll
+# Hakyll
 
 Hakyll is a simple static site generator library in Haskell. It is mostly
 inspired by [Jekyll](http://github.com/mojombo/jekyll), but I like to
