@@ -17,6 +17,7 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as M
 
 import Text.Hakyll.Util
+import Text.Hakyll.Regex
 
 -- | Function to log from a chan.
 log :: Chan String -> IO ()

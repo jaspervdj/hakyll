@@ -10,11 +10,11 @@ import qualified Data.ByteString.Lazy.Char8 as B
 
 import System.Locale (defaultTimeLocale)
 import System.FilePath (takeFileName)
-import Text.Regex (subRegex, mkRegex)
 import Text.Template (Context)
 import Data.Time.Format (parseTime, formatTime)
 import Data.Time.Clock (UTCTime)
 import Data.Maybe (fromMaybe)
+import Text.Hakyll.Regex (substitute)
 
 -- | Type for context manipulating functions.
 type ContextManipulation = Context -> Context
@@ -38,9 +38,8 @@ renderDate key format defaultValue context =
     M.insert (B.pack key) (B.pack value) context
     where value = fromMaybe defaultValue pretty
           pretty = do filePath <- M.lookup (B.pack "path") context
-                      let dateString = subRegex (mkRegex "^([0-9]*-[0-9]*-[0-9]*).*")
-                                                (takeFileName $ B.unpack filePath)
-                                                "\\1"
+                      let dateString = substitute "^([0-9]*-[0-9]*-[0-9]*).*" "\\1"
+                                                  (takeFileName $ B.unpack filePath)
                       time <- parseTime defaultTimeLocale
                                         "%Y-%m-%d"
                                         dateString :: Maybe UTCTime

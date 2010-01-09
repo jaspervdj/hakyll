@@ -12,6 +12,7 @@ import Data.List (intercalate)
 import Control.Monad (foldM)
 
 import Text.Hakyll.Context (ContextManipulation, renderValue)
+import Text.Hakyll.Regex
 import Text.Hakyll.Util
 import Text.Hakyll.Page
 import Control.Arrow (second)

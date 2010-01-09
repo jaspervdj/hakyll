@@ -1,5 +1,5 @@
 Name:           hakyll
-Version:        0.4
+Version:        0.4.1
 
 Synopsis:       A simple static site generator library.
 Description:
@@ -30,7 +30,8 @@ library
                    containers >= 0.1,
                    bytestring >= 0.9 && < 0.9.2,
                    pandoc >= 1,
-                   regex-compat >= 0.92,
+                   regex-base >= 0.83,
+                   regex-tdfa >= 0.92,
                    network >= 2,
                    mtl >= 1.1,
                    old-locale >= 1,
@@ -45,4 +46,5 @@ library
                    Text.Hakyll.Util
                    Text.Hakyll.Tags
                    Text.Hakyll.Context
+                   Text.Hakyll.Regex
                    Network.Hakyll.SimpleServer

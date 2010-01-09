@@ -3,27 +3,23 @@ module Text.Hakyll.CompressCSS
     ) where
 
 import Data.List (isPrefixOf)
-import Text.Regex (subRegex, mkRegex)
-
--- | subRegex with arguments flipped for easy function composition.
-subRegex' :: String -> String -> String -> String
-subRegex' pattern replacement str = subRegex (mkRegex pattern) str replacement
+import Text.Hakyll.Regex (substitute)
 
 -- | Compress CSS to speed up your site.
 compressCSS :: String -> String
 compressCSS = compressSeparators
-            . compressWhitespace
             . stripComments
+            . compressWhitespace
 
 -- | Compresses certain forms of separators.
 compressSeparators :: String -> String
-compressSeparators = subRegex' ";\\s*}" "}" 
-                   . subRegex' "\\s*([{};:])\\s*" "\\1"
-                   . subRegex' ";;*" ";"
+compressSeparators = substitute "; *}" "}" 
+                   . substitute " *([{};:]) *" "\\1"
+                   . substitute ";;*" ";"
 
 -- | Compresses all whitespace.
 compressWhitespace :: String -> String
-compressWhitespace = subRegex' "\\s\\s*" " "
+compressWhitespace = substitute "[ \t\n][ \t\n]*" " "
 
 -- | Function that strips CSS comments away.
 stripComments :: String -> String

@@ -1,12 +1,10 @@
 module Text.Hakyll.Util 
     ( trim
-    , split
     , stripHTML
     , link
     ) where
 
 import Data.Char (isSpace)
-import Text.Regex (splitRegex, mkRegex)
 
 -- | Trim a string (drop spaces and tabs at both sides).
 trim :: String -> String
@@ -22,11 +20,6 @@ stripHTML str = let (beforeTag, rest) = break (== '<') str
     -- We need a failsafe tail function.
     where tail' [] = []
           tail' xs = tail xs
-
--- | Split a list at a certain element.
-split :: String -> String -> [String]
-split pattern = filter (not . null)
-              . splitRegex (mkRegex pattern)
 
 -- | Make a HTML link.
 --
