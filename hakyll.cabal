@@ -12,7 +12,7 @@ Bug-Reports:    http://github.com/jaspervdj/Hakyll/issues
 License:        BSD3
 License-File:   LICENSE
 Category:       Text
-Cabal-Version:  >= 1.2
+Cabal-Version:  >= 1.6
 
 build-type:     Simple
 
