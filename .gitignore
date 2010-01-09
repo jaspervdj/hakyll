@@ -2,8 +2,28 @@
 ## gitignore(5) -- specify ignored files
 ##
 
+# Ignore swap files and cabal output.
 *.swo
 *.swp
 *~
 .DS_Store
-/dist/
+dist
+
+# Ignore test builds.
+tests/Tests
+tests/Tests.hi
+tests/Tests.o
+
+# Rest of the file: ignore examples
+examples/hakyll/_cache
+examples/hakyll/_site
+examples/hakyll/hakyll
+examples/hakyll/hakyll.o
+examples/hakyll/hakyll.hi
+examples/hakyll/reference
+
+examples/simpleblog/_cache
+examples/simpleblog/_site
+
+examples/brochure/_cache
+examples/brochure/_site

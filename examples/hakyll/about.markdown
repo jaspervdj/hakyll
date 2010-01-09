@@ -25,4 +25,5 @@ you will have to license your code under a GPL-compatible license.
 
 ## Authors
 
-Hakyll was written by [Jasper Van der Jeugt](http://jaspervdj.be).
+Hakyll was originally written by [Jasper Van der Jeugt](http://jaspervdj.be). It
+also received contributions from [seschwar](http://github.com/seschwar).
