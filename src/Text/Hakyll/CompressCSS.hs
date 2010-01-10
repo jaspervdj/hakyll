@@ -3,7 +3,7 @@ module Text.Hakyll.CompressCSS
     ) where
 
 import Data.List (isPrefixOf)
-import Text.Hakyll.Regex (substitute)
+import Text.Hakyll.Regex (substituteRegex)
 
 -- | Compress CSS to speed up your site.
 compressCSS :: String -> String
@@ -13,13 +13,13 @@ compressCSS = compressSeparators
 
 -- | Compresses certain forms of separators.
 compressSeparators :: String -> String
-compressSeparators = substitute "; *}" "}" 
-                   . substitute " *([{};:]) *" "\\1"
-                   . substitute ";;*" ";"
+compressSeparators = substituteRegex "; *}" "}" 
+                   . substituteRegex " *([{};:]) *" "\\1"
+                   . substituteRegex ";;*" ";"
 
 -- | Compresses all whitespace.
 compressWhitespace :: String -> String
-compressWhitespace = substitute "[ \t\n][ \t\n]*" " "
+compressWhitespace = substituteRegex "[ \t\n][ \t\n]*" " "
 
 -- | Function that strips CSS comments away.
 stripComments :: String -> String

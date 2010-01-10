@@ -7,7 +7,6 @@ module Text.Hakyll.Tags
     ) where
 
 import qualified Data.Map as M
-import qualified Data.ByteString.Lazy.Char8 as B
 import Data.List (intercalate)
 import Control.Monad (foldM)
 
@@ -24,7 +23,7 @@ readTagMap :: [FilePath] -> IO (M.Map String [FilePath])
 readTagMap paths = foldM addPaths M.empty paths
     where addPaths current path = do
             page <- readPage path
-            let tags = map trim $ split "," $ B.unpack $ getValue ("tags") page
+            let tags = map trim $ splitRegex "," $ getValue ("tags") page
             return $ foldr (\t -> M.insertWith (++) t [path]) current tags
 
 -- | Render a tag cloud.
@@ -57,6 +56,6 @@ renderTagCloud tagMap urlFunction minSize maxSize =
 renderTagLinks :: (String -> String) -- ^ Function that produces an url for a tag.
                -> ContextManipulation
 renderTagLinks urlFunction = renderValue "tags" "tags" renderTagLinks'
-    where renderTagLinks' = B.pack . intercalate ", "
+    where renderTagLinks' = intercalate ", "
                           . map (\t -> link t $ urlFunction t)
-                          . map trim . split "," . B.unpack
+                          . map trim . splitRegex ","

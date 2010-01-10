@@ -6,7 +6,6 @@ module Text.Hakyll.Renderables
     ) where
 
 import System.FilePath (FilePath)
-import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as M
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
@@ -16,13 +15,13 @@ import Text.Hakyll.File
 data CustomPage = CustomPage 
     { url :: String,
       dependencies :: [FilePath],
-      mapping :: [(String, Either String (IO B.ByteString))]
+      mapping :: [(String, Either String (IO String))]
     }
 
 -- | Create a custom page.
 createCustomPage :: String -- ^ Destination of the page, relative to _site.
                  -> [FilePath] -- ^ Dependencies of the page.
-                 -> [(String, Either String (IO B.ByteString))] -- ^ Key - value mapping for rendering.
+                 -> [(String, Either String (IO String))] -- ^ Key - value mapping for rendering.
                  -> CustomPage
 createCustomPage = CustomPage
 
@@ -30,10 +29,9 @@ instance Renderable CustomPage where
     getDependencies = dependencies
     getURL = url
     toContext page = do
-        values <- mapM (either (return . B.pack) (>>= return) . snd) (mapping page)
-        let keys = map (B.pack . fst) (mapping page)
-        return $ M.fromList $ [ (B.pack "url", B.pack $ url page)
-                              ] ++ zip keys values 
+        values <- mapM (either (return) (>>= return) . snd) (mapping page)
+        return $ M.fromList $ [ ("url", url page)
+                              ] ++ zip (map fst $ mapping page) values 
 
 -- | PagePath is a class that wraps a FilePath. This is used to render Pages
 --   without reading them first through use of caching.

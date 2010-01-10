@@ -8,7 +8,6 @@ module Text.Hakyll.Page
 
 import qualified Data.Map as M
 import qualified Data.List as L
-import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Maybe (fromMaybe)
 
 import System.FilePath (FilePath, takeExtension)
@@ -16,10 +15,10 @@ import System.IO
 
 import Text.Hakyll.File
 import Text.Hakyll.Util (trim)
+import Text.Hakyll.Context (Context)
 import Text.Hakyll.Renderable
 import Text.Pandoc
 
-import Text.Template (Context)
 
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
@@ -31,26 +30,22 @@ fromContext = Page
 
 -- | Obtain a value from a page. Will resturn an empty string when nothing is
 --   found.
-getValue :: String -> Page -> B.ByteString
-getValue str (Page page) = fromMaybe B.empty $ M.lookup (B.pack str) page
-
--- | Auxiliary function to pack a pair.
-packPair :: (String, String) -> (B.ByteString, B.ByteString)
-packPair (a, b) = (B.pack a, B.pack b)
+getValue :: String -> Page -> String
+getValue str (Page page) = fromMaybe [] $ M.lookup str page
 
 -- | Get the URL for a certain page. This should always be defined. If
 --   not, it will error.
 getPageURL :: Page -> String
-getPageURL (Page page) = B.unpack $ fromMaybe (error "No page url") $ M.lookup (B.pack "url") page
+getPageURL (Page page) = fromMaybe (error "No page url") $ M.lookup "url" page
 
 -- | Get the original page path.
 getPagePath :: Page -> String
-getPagePath (Page page) = B.unpack $ fromMaybe (error "No page path") $ M.lookup (B.pack "path") page
+getPagePath (Page page) = fromMaybe (error "No page path") $ M.lookup "path" page
 
 -- | Get the body for a certain page. When not defined, the body will be
 --   empty.
-getBody :: Page -> B.ByteString
-getBody (Page page) = fromMaybe B.empty $ M.lookup (B.pack "body") page
+getBody :: Page -> String
+getBody (Page page) = fromMaybe [] $ M.lookup "body" page
 
 -- | The default writer options for pandoc rendering.
 writerOptions :: WriterOptions
@@ -86,13 +81,13 @@ cachePage page@(Page mapping) = do
     makeDirectories destination
     handle <- openFile destination WriteMode
     hPutStrLn handle "---"
-    mapM_ (writePair handle) $ M.toList $ M.delete (B.pack "body") mapping
+    mapM_ (writePair handle) $ M.toList $ M.delete "body" mapping
     hPutStrLn handle "---"
-    B.hPut handle $ getBody page
+    hPutStr handle $ getBody page
     hClose handle
-    where writePair h (k, v) = B.hPut h k >>
-                               B.hPut h (B.pack ": ") >>
-                               B.hPut h v >>
+    where writePair h (k, v) = hPutStr h k >>
+                               hPutStr h ": " >>
+                               hPutStr h v >>
                                hPutStrLn h ""
 
 -- | Read a page from a file. Metadata is supported, and if the filename
@@ -114,13 +109,13 @@ readPage pagePath = do
                             else hGetContents handle >>= \b -> return ([], line ++ b)
 
     -- Render file
-    let rendered = B.pack $ (renderFunction $ takeExtension path) body
+    let rendered = (renderFunction $ takeExtension path) body
     seq rendered $ hClose handle
     let page = fromContext $ M.fromList $
-            [ (B.pack "body", rendered)
-            , packPair ("url", url)
-            , packPair ("path", pagePath)
-            ] ++ map packPair context
+            [ ("body", rendered)
+            , ("url", url)
+            , ("path", pagePath)
+            ] ++ context
 
     -- Cache if needed
     if getFromCache then return () else cachePage page

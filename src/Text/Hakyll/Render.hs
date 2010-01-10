@@ -10,15 +10,16 @@ module Text.Hakyll.Render
     , css
     ) where
 
-import Text.Template hiding (render)
-import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Map as M
+import Data.List (isPrefixOf)
 import Control.Monad (unless, liftM, foldM)
+import Data.Char (isAlpha)
+import Data.Maybe (fromMaybe)
 
 import System.Directory (copyFile)
 import System.IO
 
-import Text.Hakyll.Context (ContextManipulation)
+import Text.Hakyll.Context (Context, ContextManipulation)
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
@@ -32,6 +33,19 @@ depends :: FilePath -- ^ File to be rendered or created.
 depends file dependencies action = do
     valid <- isCacheValid (toDestination file) dependencies
     unless valid action
+
+-- | Substitutes `$identifiers` in the given string by values from the given
+--   "Context". When a key is not found, it is left as it is.
+substitute :: String -> Context -> String 
+substitute [] _ = []
+substitute string context 
+    | "$$" `isPrefixOf` string = "$$" ++ (substitute (tail tail') context)
+    | "$" `isPrefixOf` string = substitute'
+    | otherwise = (head string) : (substitute tail' context)
+    where tail' = tail string
+          (key, rest) = break (not . isAlpha) tail'
+          replacement = fromMaybe ('$' : key) $ M.lookup key context
+          substitute' = replacement ++ substitute rest context
 
 -- | Render to a Page.
 render :: Renderable a
@@ -49,18 +63,18 @@ renderWith :: Renderable a
            -> IO Page -- ^ The body of the result will contain the render.
 renderWith manipulation templatePath renderable = do
     handle <- openFile templatePath ReadMode
-    templateString <- liftM B.pack $ hGetContents handle
+    templateString <- hGetContents handle
     seq templateString $ hClose handle
     context <- liftM manipulation $ toContext renderable
     -- Ignore $root when substituting here. We will only replace that in the
     -- final render (just before writing).
-    let contextIgnoringRoot = M.insert (B.pack "root") (B.pack "$root") context
+    let contextIgnoringRoot = M.insert "root" "$root" context
         body = substitute templateString contextIgnoringRoot
-    return $ fromContext (M.insert (B.pack "body") body context)
+    return $ fromContext (M.insert "body" body context)
 
 -- | Render each renderable with the given template, then concatenate the
 --   result.
-renderAndConcat :: Renderable a => FilePath -> [a] -> IO B.ByteString
+renderAndConcat :: Renderable a => FilePath -> [a] -> IO String
 renderAndConcat = renderAndConcatWith id
 
 -- | Render each renderable with the given template, then concatenate the
@@ -70,14 +84,14 @@ renderAndConcatWith :: Renderable a
                     => ContextManipulation
                     -> FilePath
                     -> [a]
-                    -> IO B.ByteString
+                    -> IO String
 renderAndConcatWith manipulation templatePath renderables =
-    foldM concatRender' B.empty renderables
-    where concatRender' :: Renderable a => B.ByteString -> a -> IO B.ByteString
+    foldM concatRender' [] renderables
+    where concatRender' :: Renderable a => String -> a -> IO String
           concatRender' chunk renderable = do
               rendered <- renderWith manipulation templatePath renderable
               let body = getBody rendered
-              return $ B.append chunk $ body
+              return $ chunk ++ body
 
 -- | Chain a render action for a page with a number of templates. This will
 --   also write the result to the site destination. This is the preferred way
@@ -100,11 +114,11 @@ writePage :: Page -> IO ()
 writePage page = do
     let destination = toDestination url
     makeDirectories destination
-    B.writeFile destination body
+    writeFile destination body
     where url = getURL page
-          -- Substitute $root here, just before writing.
-          body = substitute (getBody page)
-                            (M.singleton (B.pack "root") (B.pack $ toRoot url))
+          -- Substitute $root here, just before writing.
+          body = substitute (getBody page)
+                            (M.singleton "root" $ toRoot url)
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.

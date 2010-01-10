@@ -48,7 +48,7 @@ instance Show Request where
 readRequest :: Handle -> Server Request
 readRequest handle = do
     requestLine <- liftIO $ hGetLine handle
-    let [method, uri, version] = map trim $ split " " requestLine
+    let [method, uri, version] = map trim $ splitRegex " " requestLine
     return $ Request { requestMethod = B.pack method
                      , requestURI = B.pack uri
                      , requestVersion = B.pack version

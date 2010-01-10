@@ -1,8 +1,8 @@
 -- | A module that exports a simple regex interface. This code is mostly copied
 --   from the regex-compat package at hackage.
 module Text.Hakyll.Regex
-    ( split
-    , substitute
+    ( splitRegex
+    , substituteRegex
     ) where
 
 import Text.Regex.TDFA
@@ -13,10 +13,10 @@ matchRegexAll :: Regex -> String -> Maybe (String, String, String, [String])
 matchRegexAll p str = matchM p str
 
 -- | Replaces every occurance of the given regexp with the replacement string.
-subRegex :: Regex                          -- ^ Search pattern
-      -> String                         -- ^ Input string
-      -> String                         -- ^ Replacement text
-      -> String                         -- ^ Output string
+subRegex :: Regex -- ^ Search pattern
+         -> String -- ^ Input string
+         -> String -- ^ Replacement text
+         -> String -- ^ Output string
 subRegex _ "" _ = ""
 subRegex regexp inp replacement =
   let -- bre matches a backslash then capture either a backslash or some digits
@@ -43,9 +43,9 @@ subRegex regexp inp replacement =
 
 -- | Splits a string based on a regular expression.  The regular expression
 --   should identify one delimiter.
-splitRegex :: Regex -> String -> [String]
-splitRegex _ [] = []
-splitRegex delim strIn = loop strIn where
+splitRegex' :: Regex -> String -> [String]
+splitRegex' _ [] = []
+splitRegex' delim strIn = loop strIn where
   loop str = case matchOnceText delim str of
                 Nothing -> [str]
                 Just (firstline, _, remainder) ->
@@ -54,13 +54,13 @@ splitRegex delim strIn = loop strIn where
                     else firstline : loop remainder
 
 -- | Split a list at a certain element.
-split :: String -> String -> [String]
-split pattern = filter (not . null)
-              . splitRegex (makeRegex pattern)
+splitRegex :: String -> String -> [String]
+splitRegex pattern = filter (not . null)
+                   . splitRegex' (makeRegex pattern)
 
 -- | Substitute a regex. Simplified interface.
-substitute :: String -- ^ Pattern to replace (regex).
-           -> String -- ^ Replacement string.
-           -> String -- ^ Input string.
-           -> String -- ^ Result.
-substitute pattern replacement str = subRegex (makeRegex pattern) str replacement
+substituteRegex :: String -- ^ Pattern to replace (regex).
+                -> String -- ^ Replacement string.
+                -> String -- ^ Input string.
+                -> String -- ^ Result.
+substituteRegex pattern replacement str = subRegex (makeRegex pattern) str replacement
