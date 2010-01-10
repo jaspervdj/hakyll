@@ -34,7 +34,9 @@ toCache path = "_cache" </> (removeLeadingSeparator path)
 
 -- | Get the url for a given page.
 toURL :: FilePath -> FilePath
-toURL = flip addExtension ".html" . dropExtension
+toURL path = if takeExtension path `elem` [".markdown", ".md", ".tex"]
+                then flip addExtension ".html" $ dropExtension path
+                else path
 
 -- | Get the relative url to the site root, for a given (absolute) url
 toRoot :: FilePath -> FilePath
