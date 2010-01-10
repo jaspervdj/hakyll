@@ -121,6 +121,7 @@ readPage pagePath = do
             [ (B.pack "body", rendered)
             , packPair ("url", url)
             , packPair ("path", pagePath)
+            , packPair ("root", toRoot url)
             ] ++ map packPair context
 
     -- Cache if needed

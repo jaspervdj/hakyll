@@ -3,6 +3,7 @@ module Text.Hakyll.Context
     ( ContextManipulation
     , renderValue
     , renderDate
+    , ignoreKeys
     ) where
 
 import qualified Data.Map as M
@@ -44,3 +45,9 @@ renderDate key format defaultValue context =
                                         "%Y-%m-%d"
                                         dateString :: Maybe UTCTime
                       return $ formatTime defaultTimeLocale format time
+
+-- | Ignore a number of keys during the render phase.
+ignoreKeys :: [String] -> ContextManipulation
+ignoreKeys keyList = M.union (M.fromList pairs)
+    where pairs = map pair keyList
+          pair key = (B.pack $ '$' : key, B.pack $ '$' : key)

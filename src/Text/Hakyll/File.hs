@@ -4,6 +4,7 @@ module Text.Hakyll.File
     ( toDestination
     , toCache
     , toURL
+    , toRoot
     , removeSpaces
     , makeDirectories
     , getRecursiveContents
@@ -34,6 +35,12 @@ toCache path = "_cache" </> (removeLeadingSeparator path)
 -- | Get the url for a given page.
 toURL :: FilePath -> FilePath
 toURL = flip addExtension ".html" . dropExtension
+
+-- | Get the relative url to the site root, for a given (absolute) url
+toRoot :: FilePath -> FilePath
+toRoot = joinPath . map parent . splitPath
+       . takeDirectory . removeLeadingSeparator
+    where parent = const ".."
 
 -- | Swaps spaces for '-'.
 removeSpaces :: FilePath -> FilePath

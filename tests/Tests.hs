@@ -40,7 +40,10 @@ tests = [ testGroup "Util group" [ testProperty "trim length" prop_trim_length
                                     , testCase "renderDate 2" test_render_date1
                                     ]
 
-        , testGroup "File group" [ testProperty "havingExtension count" prop_having_extension_count
+        , testGroup "File group" [ testCase "toRoot 1" test_to_root1
+                                 , testCase "toRoot 2" test_to_root2
+                                 , testCase "toRoot 3" test_to_root3
+                                 , testProperty "havingExtension count" prop_having_extension_count
                                  , testCase "havingExtension 1" test_having_extension1
                                  , testCase "havingExtension 2" test_having_extension2
                                  ]
@@ -93,6 +96,10 @@ test_render_date2 = M.lookup (B.pack "date") rendered @?= Just (B.pack "Unknown 
                                 "Unknown date"
                                 (M.singleton (B.pack "path")
                                              (B.pack "2009-badness-30-a-title.markdown"))
+-- toRoot test cases
+test_to_root1 = toRoot "/posts/foo.html" @?= ".."
+test_to_root2 = toRoot "posts/foo.html" @?= ".."
+test_to_root3 = toRoot "foo.html" @?= ""
 
 -- Add an extension, and test that they have that extension
 prop_having_extension_count names extension =
