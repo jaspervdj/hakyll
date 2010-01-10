@@ -32,7 +32,8 @@ instance Renderable CustomPage where
     toContext page = do
         values <- mapM (either (return . B.pack) (>>= return) . snd) (mapping page)
         let keys = map (B.pack . fst) (mapping page)
-        return $ M.fromList $ (B.pack "url", B.pack $ url page) : zip keys values 
+        return $ M.fromList $ [ (B.pack "url", B.pack $ url page)
+                              ] ++ zip keys values 
 
 -- | PagePath is a class that wraps a FilePath. This is used to render Pages
 --   without reading them first through use of caching.

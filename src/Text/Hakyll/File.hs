@@ -38,9 +38,11 @@ toURL = flip addExtension ".html" . dropExtension
 
 -- | Get the relative url to the site root, for a given (absolute) url
 toRoot :: FilePath -> FilePath
-toRoot = joinPath . map parent . splitPath
+toRoot = emptyException . joinPath . map parent . splitPath
        . takeDirectory . removeLeadingSeparator
     where parent = const ".."
+          emptyException [] = "."
+          emptyException x  = x
 
 -- | Swaps spaces for '-'.
 removeSpaces :: FilePath -> FilePath

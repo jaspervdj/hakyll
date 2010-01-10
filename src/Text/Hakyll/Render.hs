@@ -52,7 +52,10 @@ renderWith manipulation templatePath renderable = do
     templateString <- liftM B.pack $ hGetContents handle
     seq templateString $ hClose handle
     context <- liftM manipulation $ toContext renderable
-    let body = substitute templateString context
+    -- Ignore $root when substituting here. We will only replace that in the
+    -- final render (just before writing).
+    let contextIgnoringRoot = M.insert (B.pack "root") (B.pack "$root") context
+        body = substitute templateString contextIgnoringRoot
     return $ fromContext (M.insert (B.pack "body") body context)
 
 -- | Render each renderable with the given template, then concatenate the
@@ -91,6 +94,17 @@ renderChainWith manipulation templates renderable =
         do initialPage <- liftM manipulation $ toContext renderable
            result <- foldM (flip render) (fromContext initialPage) templates
            writePage result
+
+-- | Write a page to the site destination.
+writePage :: Page -> IO ()
+writePage page = do
+    let destination = toDestination url
+    makeDirectories destination
+    B.writeFile destination body
+    where url = getURL page
+          -- Substitute $root here, just before writing.
+          body = substitute (getBody page)
+                            (M.singleton (B.pack "root") (B.pack $ toRoot url))
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.

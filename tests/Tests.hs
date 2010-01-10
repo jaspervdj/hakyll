@@ -99,7 +99,7 @@ test_render_date2 = M.lookup (B.pack "date") rendered @?= Just (B.pack "Unknown 
 -- toRoot test cases
 test_to_root1 = toRoot "/posts/foo.html" @?= ".."
 test_to_root2 = toRoot "posts/foo.html" @?= ".."
-test_to_root3 = toRoot "foo.html" @?= ""
+test_to_root3 = toRoot "foo.html" @?= "."
 
 -- Add an extension, and test that they have that extension
 prop_having_extension_count names extension =
