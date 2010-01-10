@@ -1,7 +1,8 @@
 module Main where
 
 import Text.Hakyll (hakyll)
-import Text.Hakyll.Render (renderAndConcat, renderChain, css)
+import Text.Hakyll.Render
+import Text.Hakyll.Context
 import Text.Hakyll.File (getRecursiveContents, directory)
 import Text.Hakyll.Renderables (createPagePath, createCustomPage)
 import Data.List (sort)
