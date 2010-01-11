@@ -115,7 +115,7 @@ every post using a simple template:
 
 ~~~~~{.html}
 <li>
-    <a href="$root/$url">$title</a>
+    <a href="$$root/$url">$title</a>
     - <em>$date</em> - by <em>$author</em>
 </li>
 ~~~~~
