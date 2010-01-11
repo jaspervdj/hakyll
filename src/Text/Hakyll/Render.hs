@@ -35,17 +35,27 @@ depends file dependencies action = do
     unless valid action
 
 -- | Substitutes `$identifiers` in the given string by values from the given
---   "Context". When a key is not found, it is left as it is.
-substitute :: String -> Context -> String 
-substitute [] _ = []
-substitute string context 
-    | "$$" `isPrefixOf` string = "$$" ++ (substitute (tail tail') context)
-    | "$" `isPrefixOf` string = substitute'
-    | otherwise = (head string) : (substitute tail' context)
+--   "Context". When a key is not found, it is left as it is. You can here
+--   specify the characters used to replace escaped dollars `$$`.
+substitute :: String -> String -> Context -> String 
+substitute _ [] _ = []
+substitute escaper string context 
+    | "$$" `isPrefixOf` string = escaper ++ substitute' (tail tail')
+    | "$" `isPrefixOf` string = substituteKey
+    | otherwise = (head string) : (substitute' tail')
     where tail' = tail string
           (key, rest) = break (not . isAlpha) tail'
           replacement = fromMaybe ('$' : key) $ M.lookup key context
-          substitute' = replacement ++ substitute rest context
+          substituteKey = replacement ++ substitute' rest
+          substitute' str = substitute escaper str context
+
+-- | "substitute" for use during a chain.
+regularSubstitute :: String -> Context -> String
+regularSubstitute = substitute "$$"
+
+-- | "substitute" for the end of a chain (just before writing).
+finalSubstitute :: String -> Context -> String
+finalSubstitute = substitute "$"
 
 -- | Render to a Page.
 render :: Renderable a
@@ -69,7 +79,7 @@ renderWith manipulation templatePath renderable = do
     -- Ignore $root when substituting here. We will only replace that in the
     -- final render (just before writing).
     let contextIgnoringRoot = M.insert "root" "$root" context
-        body = substitute templateString contextIgnoringRoot
+        body = regularSubstitute templateString contextIgnoringRoot
     return $ fromContext (M.insert "body" body context)
 
 -- | Render each renderable with the given template, then concatenate the
@@ -117,8 +127,8 @@ writePage page = do
     writeFile destination body
     where url = getURL page
           -- Substitute $root here, just before writing.
-          body = substitute (getBody page)
-                            (M.singleton "root" $ toRoot url)
+          body = finalSubstitute (getBody page)
+                                 (M.singleton "root" $ toRoot url)
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.
