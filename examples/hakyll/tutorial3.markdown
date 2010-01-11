@@ -104,7 +104,7 @@ documents, so we'll do this. In `templates/default.html`:
 ~~~~~~{.html}
 <head>
   <title>SimpleBlog - $title</title>
-  <link rel="stylesheet" type="text/css" href="/css/default.css" />
+  <link rel="stylesheet" type="text/css" href="$$root/css/default.css" />
   <link rel="alternate"
         type="application/rss+xml"
         title="SimpleBlog"

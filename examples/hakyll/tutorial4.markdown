@@ -25,7 +25,7 @@ have a look at it's type.
 
 ~~~~~{.haskell}
 renderValue :: String -> String
-            -> (ByteString -> ByteString)
+            -> (String -> String)
             -> ContextManipulation
 ~~~~~
 
@@ -37,11 +37,10 @@ replaced. The third argument is the function to manipulate the `value` with.
 As a simple example, let's write a function that puts the `$title` in uppercase.
 
 ~~~~~{.haskell}
-import qualified Data.ByteString.Lazy.Char8 as B
 import Data.Char (toUpper)
 
 titleUpper :: ContextManipulation
-titleUpper = renderValue "title" "title" $ B.map toUpper
+titleUpper = renderValue "title" "title" $ map toUpper
 ~~~~~
 
 ## Applying Context Manipulations

@@ -92,14 +92,14 @@ html files) containing a number of keys. The syntax for these keys is
   <head>
     <title>MyAweSomeCompany - $title</title>
     <link rel="stylesheet" type="text/css"
-          href="css/default.css" />
+          href="$$root/css/default.css" />
   </head>
   <body>
     <h1>MyAweSomeCompany - $title</h1>
     <div id="navigation">
-      <a href="index.html">Home</a>
-      <a href="about.html">About</a>
-      <a href="products.html">Products</a>
+      <a href="$$root/index.html">Home</a>
+      <a href="$$root/about.html">About</a>
+      <a href="$$root/products.html">Products</a>
     </div>
 
     $body
@@ -113,6 +113,17 @@ replaced by the body of the about page. `body` is the traditional name for the
 body of any page - that is the convention in Hakyll. Also note that in this
 case, `$body` would be replaced by a chunk of html - the result of the
 markdown-to-html conversion.
+
+## The $$root key
+
+There is one "special" key in Hakyll: the $$root key. What is so special about
+it? Well, internally, it is treated differently - but this should not concern
+you. The thing is that it is the only key you can also use in **Pages**.
+
+It will be substituted by a relative url part (like `..` or `../..`) so it
+points to the root directory of your site. It is recommended to use this
+whenever you need it, it can save you some time from messing with absolute
+and relative URL's.
 
 ## Putting it all together
 

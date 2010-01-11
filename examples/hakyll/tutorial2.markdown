@@ -93,7 +93,7 @@ the end just `key: value` mappings. A CustomPage is created using the
 ~~~~~{.haskell}
 createCustomPage :: FilePath
                  -> [FilePath]
-                 -> [(String, Either String (IO ByteString)]
+                 -> [(String, Either String (IO String)]
 ~~~~~
 
 The first argument is the `url` of the page to generate. For our index page,
@@ -106,16 +106,16 @@ This, once again, is about dependency handling. The idea is that you can choose
 which type to use for the value:
 
 - `String`: Simply a `String`.
-- `IO ByteString`: Here, you can give an arbitrary `IO` action that will result
-  in a ByteString. However - this action _will not be executed_ when the file
+- `IO String`: Here, you can give an arbitrary `IO` action that will result
+  in a String. However - this action _will not be executed_ when the file
   in `_site` is up-to-date.
 
-First, let us define this `IO ByteString` for our index page. We want to render
+First, let us define this `IO String` for our index page. We want to render
 every post using a simple template:
 
 ~~~~~{.html}
 <li>
-    <a href="/$url">$title</a>
+    <a href="$root/$url">$title</a>
     - <em>$date</em> - by <em>$author</em>
 </li>
 ~~~~~
