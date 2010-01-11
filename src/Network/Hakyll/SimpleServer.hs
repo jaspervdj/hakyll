@@ -13,8 +13,8 @@ import System.Directory (doesFileExist, doesDirectoryExist)
 import Control.Concurrent (forkIO)
 import Control.Concurrent.Chan (Chan, newChan, readChan, writeChan)
 import System.FilePath (takeExtension)
-import qualified Data.ByteString.Char8 as B
 import qualified Data.Map as M
+import Data.List (intercalate)
 
 import Text.Hakyll.Util
 import Text.Hakyll.Regex
@@ -33,15 +33,15 @@ data ServerConfig = ServerConfig { documentRoot :: FilePath
 type Server = ReaderT ServerConfig IO
 
 -- | Simple representation of a HTTP request.
-data Request = Request { requestMethod :: B.ByteString
-                       , requestURI :: B.ByteString
-                       , requestVersion :: B.ByteString
+data Request = Request { requestMethod :: String
+                       , requestURI :: String
+                       , requestVersion :: String
                        } deriving (Ord, Eq)
 
 instance Show Request where
-    show request =  (B.unpack $ requestMethod request) ++ " "
-                 ++ (B.unpack $ requestURI request) ++ " "
-                 ++ (B.unpack $ requestVersion request)
+    show request =  requestMethod request ++ " "
+                 ++ requestURI request ++ " "
+                 ++ requestVersion request
 
 -- | Read a HTTP request from a 'Handle'. For now, this will ignore the request
 --   headers and body.
@@ -49,51 +49,51 @@ readRequest :: Handle -> Server Request
 readRequest handle = do
     requestLine <- liftIO $ hGetLine handle
     let [method, uri, version] = map trim $ splitRegex " " requestLine
-    return $ Request { requestMethod = B.pack method
-                     , requestURI = B.pack uri
-                     , requestVersion = B.pack version
+    return $ Request { requestMethod = method
+                     , requestURI = uri
+                     , requestVersion = version
                      }
 
 -- | Simple representation of the HTTP response we send back.
-data Response = Response { responseVersion :: B.ByteString
+data Response = Response { responseVersion :: String
                          , responseStatusCode :: Int
-                         , responsePhrase :: B.ByteString
-                         , responseHeaders :: M.Map B.ByteString B.ByteString
-                         , responseBody :: B.ByteString
+                         , responsePhrase :: String
+                         , responseHeaders :: M.Map String String
+                         , responseBody :: String
                          } deriving (Ord, Eq)
 
 instance Show Response where
-    show response =  (B.unpack $ responseVersion response) ++ " "
+    show response =  responseVersion response ++ " "
                   ++ (show $ responseStatusCode response) ++ " "
-                  ++ (B.unpack $ responsePhrase response)
+                  ++ responsePhrase response
 
 -- | A default response.
 defaultResponse :: Response
-defaultResponse = Response { responseVersion = B.pack "HTTP/1.1"
+defaultResponse = Response { responseVersion = "HTTP/1.1"
                            , responseStatusCode = 0
-                           , responsePhrase = B.empty
+                           , responsePhrase = ""
                            , responseHeaders = M.empty
-                           , responseBody = B.empty
+                           , responseBody = ""
                            }
 
 -- | Create a response for a given HTTP request.
 createResponse :: Request -> Server Response
 createResponse request
-    | requestMethod request == B.pack "GET" = createGetResponse request
-    | otherwise = return $ createErrorResponse 501 (B.pack "Not Implemented")
+    | requestMethod request == "GET" = createGetResponse request
+    | otherwise = return $ createErrorResponse 501 "Not Implemented"
 
 -- | Create a simple error response.
 createErrorResponse :: Int          -- ^ Error code.
-                    -> B.ByteString -- ^ Error phrase.
+                    -> String -- ^ Error phrase.
                     -> Response     -- ^ Result.
 createErrorResponse statusCode phrase = defaultResponse
     { responseStatusCode = statusCode
     , responsePhrase = phrase
-    , responseHeaders = M.singleton (B.pack "Content-Type") (B.pack "text/html")
-    , responseBody = B.pack $ 
+    , responseHeaders = M.singleton "Content-Type" "text/html"
+    , responseBody =
            "<html> <head> <title>" ++ show statusCode ++ "</title> </head>"
         ++ "<body> <h1>" ++ show statusCode ++ "</h1>\n"
-        ++ "<p>" ++ (B.unpack phrase) ++ "</p> </body> </html>"
+        ++ "<p>" ++ phrase ++ "</p> </body> </html>"
     }
 
 -- | Create a simple get response.
@@ -101,7 +101,7 @@ createGetResponse :: Request -> Server Response
 createGetResponse request = do
     -- Construct the complete fileName of the requested resource.
     config <- ask
-    let uri = B.unpack (requestURI request)
+    let uri = requestURI request
         log' = writeChan (logChannel config)
     isDirectory <- liftIO $ doesDirectoryExist $ documentRoot config ++ uri
     let fileName =
@@ -109,13 +109,13 @@ createGetResponse request = do
                                                     else uri
 
         create200 = do
-            body <- B.readFile fileName
+            body <- readFile fileName
             let headers =
-                    [ (B.pack "Content-Length", B.pack $ show $ B.length body)
+                    [ ("Content-Length", show $ length body)
                     ] ++ getMIMEHeader fileName
             return $ defaultResponse
                 { responseStatusCode = 200
-                , responsePhrase = B.pack "OK"
+                , responsePhrase = "OK"
                 , responseHeaders = (responseHeaders defaultResponse) 
                     `M.union` M.fromList headers
                 , responseBody = body
@@ -124,7 +124,7 @@ createGetResponse request = do
         -- Called when an error occurs during the creation of a 200 response.
         create500 e = do
             log' $ "Internal Error: " ++ show e
-            return $ createErrorResponse 500 (B.pack "Internal Server Error")
+            return $ createErrorResponse 500 "Internal Server Error"
 
     -- Send back the page if found.
     exists <- liftIO $ doesFileExist fileName
@@ -132,13 +132,13 @@ createGetResponse request = do
         then do response <- liftIO $ catch create200 create500
                 return response
         else do liftIO $ log' $ "Not Found: " ++ fileName
-                return $ createErrorResponse 404 (B.pack "Not Found")
+                return $ createErrorResponse 404 "Not Found"
 
 -- | Get the mime header for a certain filename. This is based on the extension
 --   of the given 'FilePath'.
-getMIMEHeader :: FilePath -> [(B.ByteString, B.ByteString)]
+getMIMEHeader :: FilePath -> [(String, String)]
 getMIMEHeader fileName =
-    case result of (Just x) -> [(B.pack "Content-Type", B.pack x)]
+    case result of (Just x) -> [("Content-Type", x)]
                    Nothing  -> []
   where
     result = lookup (takeExtension fileName) [ (".css", "text/css")
@@ -168,22 +168,21 @@ respond handle = do
     -- Send the response back to the handle.
     liftIO $ putResponse response
   where
-    putResponse response = do B.hPutStr handle $ B.intercalate (B.pack " ")
+    putResponse response = do hPutStr handle $ intercalate " "
                                   [ responseVersion response
-                                  , B.pack $ show $ responseStatusCode response
+                                  , show $ responseStatusCode response
                                   , responsePhrase response
                                   ]
                               hPutStr handle "\r\n"
                               mapM_ putHeader
                                     (M.toList $ responseHeaders response)
                               hPutStr handle "\r\n"
-                              B.hPutStr handle $ responseBody response
+                              hPutStr handle $ responseBody response
                               hPutStr handle "\r\n"
                               hClose handle
 
     putHeader (key, value) =
-        B.hPutStr handle $ key `B.append` B.pack ": "
-                               `B.append` value `B.append` B.pack "\r\n"
+        hPutStr handle $ key ++ ": " ++ value ++ "\r\n"
 
 -- | Start a simple http server on the given 'PortNumber', serving the given
 --   directory.
