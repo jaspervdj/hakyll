@@ -43,11 +43,12 @@ substitute escaper string context
     | "$$" `isPrefixOf` string = escaper ++ substitute' (tail tail')
     | "$" `isPrefixOf` string = substituteKey
     | otherwise = (head string) : (substitute' tail')
-    where tail' = tail string
-          (key, rest) = break (not . isAlpha) tail'
-          replacement = fromMaybe ('$' : key) $ M.lookup key context
-          substituteKey = replacement ++ substitute' rest
-          substitute' str = substitute escaper str context
+  where
+    tail' = tail string
+    (key, rest) = break (not . isAlpha) tail'
+    replacement = fromMaybe ('$' : key) $ M.lookup key context
+    substituteKey = replacement ++ substitute' rest
+    substitute' str = substitute escaper str context
 
 -- | "substitute" for use during a chain.
 regularSubstitute :: String -> Context -> String
@@ -97,11 +98,12 @@ renderAndConcatWith :: Renderable a
                     -> IO String
 renderAndConcatWith manipulation templatePath renderables =
     foldM concatRender' [] renderables
-    where concatRender' :: Renderable a => String -> a -> IO String
-          concatRender' chunk renderable = do
-              rendered <- renderWith manipulation templatePath renderable
-              let body = getBody rendered
-              return $ chunk ++ body
+  where
+    concatRender' :: Renderable a => String -> a -> IO String
+    concatRender' chunk renderable = do
+        rendered <- renderWith manipulation templatePath renderable
+        let body = getBody rendered
+        return $ chunk ++ body
 
 -- | Chain a render action for a page with a number of templates. This will
 --   also write the result to the site destination. This is the preferred way
@@ -125,23 +127,26 @@ writePage page = do
     let destination = toDestination url
     makeDirectories destination
     writeFile destination body
-    where url = getURL page
-          -- Substitute $root here, just before writing.
-          body = finalSubstitute (getBody page)
-                                 (M.singleton "root" $ toRoot url)
+  where
+    url = getURL page
+    -- Substitute $root here, just before writing.
+    body = finalSubstitute (getBody page)
+                           (M.singleton "root" $ toRoot url)
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.
 static :: FilePath -> IO ()
-static source = depends destination [source]
-        (makeDirectories destination >> copyFile source destination)
-    where destination = toDestination source
+static source = depends destination [source] action
+  where
+    destination = toDestination source
+    action = do makeDirectories destination
+                copyFile source destination
 
 -- | Render a css file, compressing it.
 css :: FilePath -> IO ()
 css source = depends destination [source] css'
-    where destination = toDestination source
-          css' = do h <- openFile source ReadMode
-                    contents <- hGetContents h
-                    makeDirectories destination
-                    writeFile destination (compressCSS contents)
+  where
+    destination = toDestination source
+    css' = do contents <- readFile source
+              makeDirectories destination
+              writeFile destination (compressCSS contents)

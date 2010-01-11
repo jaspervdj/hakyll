@@ -9,7 +9,8 @@ import Data.Char (isSpace)
 -- | Trim a string (drop spaces and tabs at both sides).
 trim :: String -> String
 trim = reverse . trim' . reverse . trim'
-    where trim' = dropWhile isSpace
+  where
+    trim' = dropWhile isSpace
 
 -- | Strip html tags.
 stripHTML :: String -> String
@@ -18,8 +19,9 @@ stripHTML str = let (beforeTag, rest) = break (== '<') str
                     (_, afterTag)     = break (== '>') rest
                 in beforeTag ++ (stripHTML $ tail' afterTag)
     -- We need a failsafe tail function.
-    where tail' [] = []
-          tail' xs = tail xs
+  where
+    tail' [] = []
+    tail' xs = tail xs
 
 -- | Make a HTML link.
 --

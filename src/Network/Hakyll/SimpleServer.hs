@@ -78,8 +78,9 @@ defaultResponse = Response { responseVersion = B.pack "HTTP/1.1"
 
 -- | Create a response for a given HTTP request.
 createResponse :: Request -> Server Response
-createResponse request | requestMethod request == B.pack "GET" = createGetResponse request
-                       | otherwise = return $ createErrorResponse 501 (B.pack "Not Implemented")
+createResponse request
+    | requestMethod request == B.pack "GET" = createGetResponse request
+    | otherwise = return $ createErrorResponse 501 (B.pack "Not Implemented")
 
 -- | Create a simple error response.
 createErrorResponse :: Int          -- ^ Error code.
@@ -89,9 +90,10 @@ createErrorResponse statusCode phrase = defaultResponse
     { responseStatusCode = statusCode
     , responsePhrase = phrase
     , responseHeaders = M.singleton (B.pack "Content-Type") (B.pack "text/html")
-    , responseBody = B.pack $  "<html> <head> <title>" ++ show statusCode ++ "</title> </head>"
-                            ++ "<body> <h1>" ++ show statusCode ++ "</h1>\n"
-                            ++ "<p>" ++ (B.unpack phrase) ++ "</p> </body> </html>"
+    , responseBody = B.pack $ 
+           "<html> <head> <title>" ++ show statusCode ++ "</title> </head>"
+        ++ "<body> <h1>" ++ show statusCode ++ "</h1>\n"
+        ++ "<p>" ++ (B.unpack phrase) ++ "</p> </body> </html>"
     }
 
 -- | Create a simple get response.
@@ -100,48 +102,56 @@ createGetResponse request = do
     -- Construct the complete fileName of the requested resource.
     config <- ask
     let uri = B.unpack (requestURI request)
+        log' = writeChan (logChannel config)
     isDirectory <- liftIO $ doesDirectoryExist $ documentRoot config ++ uri
-    let fileName = (documentRoot config) ++ if isDirectory then uri ++ "/index.html"
-                                                           else uri
+    let fileName =
+            (documentRoot config) ++ if isDirectory then uri ++ "/index.html"
+                                                    else uri
 
         create200 = do
             body <- B.readFile fileName
-            let headers = [ (B.pack "Content-Length", B.pack $ show $ B.length body)
-                          ] ++ getMIMEHeader fileName
-            return $ defaultResponse { responseStatusCode = 200
-                                     , responsePhrase = B.pack "OK"
-                                     , responseHeaders = (responseHeaders defaultResponse) 
-                                            `M.union` M.fromList headers
-                                     , responseBody = body
-                                     }
+            let headers =
+                    [ (B.pack "Content-Length", B.pack $ show $ B.length body)
+                    ] ++ getMIMEHeader fileName
+            return $ defaultResponse
+                { responseStatusCode = 200
+                , responsePhrase = B.pack "OK"
+                , responseHeaders = (responseHeaders defaultResponse) 
+                    `M.union` M.fromList headers
+                , responseBody = body
+                }
 
         -- Called when an error occurs during the creation of a 200 response.
-        create500 e = do writeChan (logChannel config) $ "Internal Error: " ++ show e
-                         return $ createErrorResponse 500 (B.pack "Internal Server Error")
+        create500 e = do
+            log' $ "Internal Error: " ++ show e
+            return $ createErrorResponse 500 (B.pack "Internal Server Error")
 
     -- Send back the page if found.
     exists <- liftIO $ doesFileExist fileName
-    if exists then do response <- liftIO $ catch create200 create500
-                      return response
-              else do liftIO $ writeChan (logChannel config) $ "Not Found: " ++ fileName
-                      return $ createErrorResponse 404 (B.pack "Not Found")
+    if exists
+        then do response <- liftIO $ catch create200 create500
+                return response
+        else do liftIO $ log' $ "Not Found: " ++ fileName
+                return $ createErrorResponse 404 (B.pack "Not Found")
 
 -- | Get the mime header for a certain filename. This is based on the extension
 --   of the given 'FilePath'.
 getMIMEHeader :: FilePath -> [(B.ByteString, B.ByteString)]
-getMIMEHeader fileName = case result of (Just x) -> [(B.pack "Content-Type", B.pack x)]
-                                        Nothing  -> []
-    where result = lookup (takeExtension fileName) [ (".css", "text/css")
-                                                   , (".gif", "image/gif")
-                                                   , (".htm", "text/html")
-                                                   , (".html", "text/html")
-                                                   , (".jpeg", "image/jpeg")
-                                                   , (".jpg", "image/jpeg")
-                                                   , (".js", "text/javascript")
-                                                   , (".png", "image/png")
-                                                   , (".txt", "text/plain")
-                                                   , (".xml", "text/xml")
-                                                   ]
+getMIMEHeader fileName =
+    case result of (Just x) -> [(B.pack "Content-Type", B.pack x)]
+                   Nothing  -> []
+  where
+    result = lookup (takeExtension fileName) [ (".css", "text/css")
+                                               , (".gif", "image/gif")
+                                               , (".htm", "text/html")
+                                               , (".html", "text/html")
+                                               , (".jpeg", "image/jpeg")
+                                               , (".jpg", "image/jpeg")
+                                               , (".js", "text/javascript")
+                                               , (".png", "image/png")
+                                               , (".txt", "text/plain")
+                                               , (".xml", "text/xml")
+                                               ]
 
 -- | Respond to an incoming request.
 respond :: Handle -> Server ()
@@ -152,24 +162,28 @@ respond handle = do
 
     -- Generate some output.
     config <- ask
-    liftIO $ writeChan (logChannel config) $ show request ++ " => " ++ show response
+    liftIO $ writeChan (logChannel config)
+           $ show request ++ " => " ++ show response
 
     -- Send the response back to the handle.
     liftIO $ putResponse response
-    where putResponse response = do B.hPutStr handle $ B.intercalate (B.pack " ")
-                                          [ responseVersion response
-                                          , B.pack $ show $ responseStatusCode response
-                                          , responsePhrase response
-                                          ]
-                                    hPutStr handle "\r\n"
-                                    mapM_ putHeader (M.toList $ responseHeaders response)
-                                    hPutStr handle "\r\n"
-                                    B.hPutStr handle $ responseBody response
-                                    hPutStr handle "\r\n"
-                                    hClose handle
+  where
+    putResponse response = do B.hPutStr handle $ B.intercalate (B.pack " ")
+                                  [ responseVersion response
+                                  , B.pack $ show $ responseStatusCode response
+                                  , responsePhrase response
+                                  ]
+                              hPutStr handle "\r\n"
+                              mapM_ putHeader
+                                    (M.toList $ responseHeaders response)
+                              hPutStr handle "\r\n"
+                              B.hPutStr handle $ responseBody response
+                              hPutStr handle "\r\n"
+                              hClose handle
 
-          putHeader (key, value) = B.hPutStr handle $ key `B.append` B.pack ": "
-                                                        `B.append` value `B.append` B.pack "\r\n"
+    putHeader (key, value) =
+        B.hPutStr handle $ key `B.append` B.pack ": "
+                               `B.append` value `B.append` B.pack "\r\n"
 
 -- | Start a simple http server on the given 'PortNumber', serving the given
 --   directory.
@@ -194,5 +208,3 @@ simpleServer port root = do
     writeChan logChan $ "Starting hakyll server on port " ++ show port ++ "..."
     socket <- listenOn (PortNumber port)
     forever (listen socket)
-    where 
-

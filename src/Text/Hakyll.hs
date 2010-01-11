@@ -28,10 +28,11 @@ build buildFunction = do putStrLn "Generating..."
 clean :: IO ()
 clean = do remove' "_cache"
            remove' "_site"
-    where remove' dir = do putStrLn $ "Removing " ++ dir ++ "..."
-                           exists <- doesDirectoryExist dir
-                           if exists then removeDirectoryRecursive dir
-                                     else return ()
+  where
+    remove' dir = do putStrLn $ "Removing " ++ dir ++ "..."
+                     exists <- doesDirectoryExist dir
+                     if exists then removeDirectoryRecursive dir
+                               else return ()
 
 -- | Show usage information.
 help :: IO ()

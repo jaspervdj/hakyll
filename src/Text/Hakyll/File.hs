@@ -25,8 +25,9 @@ removeLeadingSeparator [] = []
 removeLeadingSeparator path
     | (head path') `elem` pathSeparators = (tail path')
     | otherwise                          = path'
-    where path' = if "$root" `isPrefixOf` path then drop 5 path
-                                               else path
+  where
+    path' = if "$root" `isPrefixOf` path then drop 5 path
+                                         else path
 
 -- | Convert a relative filepath to a filepath in the destination (_site).
 toDestination :: FilePath -> FilePath
@@ -46,21 +47,24 @@ toURL path = if takeExtension path `elem` [".markdown", ".md", ".tex"]
 toRoot :: FilePath -> FilePath
 toRoot = emptyException . joinPath . map parent . splitPath
        . takeDirectory . removeLeadingSeparator
-    where parent = const ".."
-          emptyException [] = "."
-          emptyException x  = x
+  where
+    parent = const ".."
+    emptyException [] = "."
+    emptyException x  = x
 
 -- | Swaps spaces for '-'.
 removeSpaces :: FilePath -> FilePath
 removeSpaces = map swap
-    where swap ' ' = '-'
-          swap x   = x
+  where
+    swap ' ' = '-'
+    swap x   = x
 
 -- | Given a path to a file, try to make the path writable by making
 --   all directories on the path.
 makeDirectories :: FilePath -> IO ()
 makeDirectories path = createDirectoryIfMissing True dir
-    where dir = takeDirectory path
+  where
+    dir = takeDirectory path
 
 -- | Get all contents of a directory. Note that files starting with a dot (.)
 --   will be ignored.
@@ -75,7 +79,8 @@ getRecursiveContents topdir = do
             then getRecursiveContents path
             else return [path]
     return (concat paths)
-    where isProper = not . (== '.') . head
+  where
+    isProper = not . (== '.') . head
 
 -- | A filter that takes all file names with a given extension. Prefix the
 --   extension with a dot:

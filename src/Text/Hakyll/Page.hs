@@ -42,7 +42,8 @@ getPageURL (Page page) = fromMaybe (error "No page url") $ M.lookup "url" page
 
 -- | Get the original page path.
 getPagePath :: Page -> String
-getPagePath (Page page) = fromMaybe (error "No page path") $ M.lookup "path" page
+getPagePath (Page page) =
+    fromMaybe (error "No page path") $ M.lookup "path" page
 
 -- | Get the body for a certain page. When not defined, the body will be
 --   empty.
@@ -56,21 +57,24 @@ writerOptions = defaultWriterOptions
 -- | Get a render function for a given extension.
 renderFunction :: String -> (String -> String)
 renderFunction ".html" = id
-renderFunction ext = writeHtmlString writerOptions .
-                     readFunction ext defaultParserState
-    where readFunction ".markdown" = readMarkdown
-          readFunction ".md"       = readMarkdown
-          readFunction ".tex"      = readLaTeX
-          readFunction _           = readMarkdown
+renderFunction ext = writeHtmlString writerOptions
+                   . readFunction ext defaultParserState
+  where
+    readFunction ".markdown" = readMarkdown
+    readFunction ".md"       = readMarkdown
+    readFunction ".tex"      = readLaTeX
+    readFunction _           = readMarkdown
 
 -- | Read metadata header from a file handle.
 readMetaData :: Handle -> IO [(String, String)]
 readMetaData handle = do
     line <- hGetLine handle
-    if isDelimiter line then return []
-                        else do others <- readMetaData handle
-                                return $ (trimPair . break (== ':')) line : others
-        where trimPair (key, value) = (trim key, trim $ tail value)
+    if isDelimiter line
+        then return []
+        else do others <- readMetaData handle
+                return $ (trimPair . break (== ':')) line : others
+  where
+    trimPair (key, value) = (trim key, trim $ tail value)
 
 -- | Check if the given string is a metadata delimiter.
 isDelimiter :: String -> Bool
@@ -87,10 +91,11 @@ cachePage page@(Page mapping) = do
     hPutStrLn handle "---"
     hPutStr handle $ getBody page
     hClose handle
-    where writePair h (k, v) = hPutStr h k >>
-                               hPutStr h ": " >>
-                               hPutStr h v >>
-                               hPutStrLn h ""
+  where
+    writePair h (k, v) = do hPutStr h k
+                            hPutStr h ": "
+                            hPutStr h v
+                            hPutStrLn h ""
 
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a .markdown extension, it will be rendered using pandoc. Note that
@@ -104,11 +109,12 @@ readPage pagePath = do
     -- Read file.
     handle <- openFile path ReadMode
     line <- hGetLine handle
-    (context, body) <- if isDelimiter line
-                            then do md <- readMetaData handle
-                                    c <- hGetContents handle
-                                    return (md, c)
-                            else hGetContents handle >>= \b -> return ([], line ++ b)
+    (context, body) <-
+        if isDelimiter line
+            then do md <- readMetaData handle
+                    c <- hGetContents handle
+                    return (md, c)
+            else hGetContents handle >>= \b -> return ([], line ++ b)
 
     -- Render file
     let rendered = (renderFunction $ takeExtension path) body
@@ -123,8 +129,9 @@ readPage pagePath = do
     -- Cache if needed
     if getFromCache then return () else cachePage page
     return page
-    where url = toURL pagePath
-          cacheFile = toCache url
+  where
+    url = toURL pagePath
+    cacheFile = toCache url
 
 -- Make pages renderable.
 instance Renderable Page where

@@ -21,10 +21,11 @@ import Control.Arrow (second)
 --   commas.
 readTagMap :: [FilePath] -> IO (M.Map String [FilePath])
 readTagMap paths = foldM addPaths M.empty paths
-    where addPaths current path = do
-            page <- readPage path
-            let tags = map trim $ splitRegex "," $ getValue ("tags") page
-            return $ foldr (\t -> M.insertWith (++) t [path]) current tags
+  where
+    addPaths current path = do
+        page <- readPage path
+        let tags = map trim $ splitRegex "," $ getValue ("tags") page
+        return $ foldr (\t -> M.insertWith (++) t [path]) current tags
 
 -- | Render a tag cloud.
 renderTagCloud :: M.Map String [FilePath] -- ^ A tag map as produced by 'readTagMap'.
@@ -34,28 +35,31 @@ renderTagCloud :: M.Map String [FilePath] -- ^ A tag map as produced by 'readTag
                -> String -- ^ Result of the render.
 renderTagCloud tagMap urlFunction minSize maxSize =
     intercalate " " $ map renderTag tagCount
-    where renderTag :: (String, Float) -> String
-          renderTag (tag, count) =  "<a style=\"font-size: "
-                                 ++ sizeTag count ++ "\" href=\""
-                                 ++ urlFunction tag ++ "\">"
-                                 ++ tag ++ "</a>"
+  where
+    renderTag :: (String, Float) -> String
+    renderTag (tag, count) =  "<a style=\"font-size: "
+                           ++ sizeTag count ++ "\" href=\""
+                           ++ urlFunction tag ++ "\">"
+                           ++ tag ++ "</a>"
 
-          sizeTag :: Float -> String
-          sizeTag count = show size' ++ "%"
-                where size' :: Int
-                      size' = floor (minSize + (relative count) * (maxSize - minSize))
-          
-          minCount = minimum $ map snd $ tagCount
-          maxCount = maximum $ map snd $ tagCount
-          relative count = (count - minCount) / (maxCount - minCount)
+    sizeTag :: Float -> String
+    sizeTag count = show size' ++ "%"
+      where
+        size' :: Int
+        size' = floor (minSize + (relative count) * (maxSize - minSize))
 
-          tagCount :: [(String, Float)]
-          tagCount = map (second $ fromIntegral . length) $ M.toList tagMap
+    minCount = minimum $ map snd $ tagCount
+    maxCount = maximum $ map snd $ tagCount
+    relative count = (count - minCount) / (maxCount - minCount)
+
+    tagCount :: [(String, Float)]
+    tagCount = map (second $ fromIntegral . length) $ M.toList tagMap
 
 -- Render all tags to links.
 renderTagLinks :: (String -> String) -- ^ Function that produces an url for a tag.
                -> ContextManipulation
 renderTagLinks urlFunction = renderValue "tags" "tags" renderTagLinks'
-    where renderTagLinks' = intercalate ", "
-                          . map (\t -> link t $ urlFunction t)
-                          . map trim . splitRegex ","
+  where
+    renderTagLinks' = intercalate ", "
+                    . map (\t -> link t $ urlFunction t)
+                    . map trim . splitRegex ","
