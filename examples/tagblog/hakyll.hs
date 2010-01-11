@@ -58,7 +58,7 @@ main = hakyll $ do
           postManipulation = renderDate "date" "%B %e, %Y" "Date unknown"
                            . renderTagLinks tagToURL 
 
-          tagToURL tag = "/tags/" ++ removeSpaces tag ++ ".html"
+          tagToURL tag = "$root/tags/" ++ removeSpaces tag ++ ".html"
 
           renderPostList url title posts = do
               let postItems = renderAndConcatWith postManipulation

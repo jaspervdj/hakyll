@@ -16,13 +16,17 @@ module Text.Hakyll.File
 import System.Directory
 import System.FilePath
 import Control.Monad
+import Data.List (isPrefixOf)
 
 -- | Auxiliary function to remove pathSeparators form the start. We don't deal
---   with absolute paths here.
+--   with absolute paths here. We also remove $root from the start.
 removeLeadingSeparator :: FilePath -> FilePath
 removeLeadingSeparator [] = []
-removeLeadingSeparator p@(x:xs) | x `elem` pathSeparators = xs
-                                | otherwise               = p
+removeLeadingSeparator path
+    | (head path') `elem` pathSeparators = (tail path')
+    | otherwise                          = path'
+    where path' = if "$root" `isPrefixOf` path then drop 5 path
+                                               else path
 
 -- | Convert a relative filepath to a filepath in the destination (_site).
 toDestination :: FilePath -> FilePath
