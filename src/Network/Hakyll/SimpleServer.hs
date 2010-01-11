@@ -8,7 +8,7 @@ import Prelude hiding (log)
 import Network
 import Control.Monad (forever, mapM_)
 import Control.Monad.Reader (ReaderT, runReaderT, ask, liftIO)
-import System.IO (Handle, hClose, hGetLine, hPutStr, hPutStrLn, stderr)
+import System.IO
 import System.Directory (doesFileExist, doesDirectoryExist)
 import Control.Concurrent (forkIO)
 import Control.Concurrent.Chan (Chan, newChan, readChan, writeChan)
@@ -83,9 +83,9 @@ createResponse request
     | otherwise = return $ createErrorResponse 501 "Not Implemented"
 
 -- | Create a simple error response.
-createErrorResponse :: Int          -- ^ Error code.
-                    -> String -- ^ Error phrase.
-                    -> Response     -- ^ Result.
+createErrorResponse :: Int      -- ^ Error code.
+                    -> String   -- ^ Error phrase.
+                    -> Response -- ^ Result.
 createErrorResponse statusCode phrase = defaultResponse
     { responseStatusCode = statusCode
     , responsePhrase = phrase
@@ -109,9 +109,12 @@ createGetResponse request = do
                                                     else uri
 
         create200 = do
+            h <- openFile fileName ReadMode
+            contentLength <- hFileSize h
+            hClose h
             body <- readFile fileName
             let headers =
-                    [ ("Content-Length", show $ length body)
+                    [ ("Content-Length", show $ contentLength)
                     ] ++ getMIMEHeader fileName
             return $ defaultResponse
                 { responseStatusCode = 200
