@@ -25,6 +25,8 @@ import Text.Hakyll.Renderable
 import Text.Hakyll.File
 import Text.Hakyll.CompressCSS
 
+import Control.Parallel.Strategies (rnf, ($|))
+
 -- | Execute an IO action only when the cache is invalid.
 depends :: FilePath -- ^ File to be rendered or created.
         -> [FilePath] -- ^ Files the render depends on.
@@ -75,12 +77,13 @@ renderWith :: Renderable a
 renderWith manipulation templatePath renderable = do
     handle <- openFile templatePath ReadMode
     templateString <- hGetContents handle
-    seq templateString $ hClose handle
     context <- liftM manipulation $ toContext renderable
     -- Ignore $root when substituting here. We will only replace that in the
     -- final render (just before writing).
     let contextIgnoringRoot = M.insert "root" "$root" context
         body = regularSubstitute templateString contextIgnoringRoot
+    -- Force the body to be rendered before closing the handle.
+    seq (($|) id rnf body) $ hClose handle
     return $ fromContext (M.insert "body" body context)
 
 -- | Render each renderable with the given template, then concatenate the

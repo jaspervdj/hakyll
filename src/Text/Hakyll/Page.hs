@@ -92,9 +92,7 @@ cachePage page@(Page mapping) = do
     hPutStr handle $ getBody page
     hClose handle
   where
-    writePair h (k, v) = do hPutStr h k
-                            hPutStr h ": "
-                            hPutStr h v
+    writePair h (k, v) = do hPutStr h $ k ++ ": " ++ v
                             hPutStrLn h ""
 
 -- | Read a page from a file. Metadata is supported, and if the filename
@@ -109,12 +107,13 @@ readPage pagePath = do
     -- Read file.
     handle <- openFile path ReadMode
     line <- hGetLine handle
-    (context, body) <-
+    (metaData, body) <-
         if isDelimiter line
             then do md <- readMetaData handle
-                    c <- hGetContents handle
-                    return (md, c)
-            else hGetContents handle >>= \b -> return ([], line ++ b)
+                    b <- hGetContents handle
+                    return (md, b)
+            else do b <- hGetContents handle
+                    return ([], line ++ b)
 
     -- Render file
     let rendered = (renderFunction $ takeExtension path) body
