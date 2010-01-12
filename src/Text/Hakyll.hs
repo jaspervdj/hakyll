@@ -11,7 +11,7 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 hakyll :: IO () -> IO ()
 hakyll buildFunction = do
     args <- getArgs
-    case args of []             -> build buildFunction
+    case args of ["build"]      -> build buildFunction
                  ["clean"]      -> clean
                  ["preview", p] -> build buildFunction >> server (read p)
                  ["preview"]    -> build buildFunction >> server 8000
@@ -38,11 +38,11 @@ clean = do remove' "_cache"
 help :: IO ()
 help = do
     name <- getProgName
-    putStrLn $  "This is a hakyll site generator program. You should always\n"
+    putStrLn $  "This is a Hakyll site generator program. You should always\n"
              ++ "run it from the project root directory.\n"
              ++ "\n"
              ++ "Usage:\n"
-             ++ name ++ "                 Generate the site.\n"
+             ++ name ++ " build           Generate the site.\n"
              ++ name ++ " clean           Clean up and remove cache.\n"
              ++ name ++ " help            Show this message.\n"
              ++ name ++ " preview [port]  Generate site, then start a server.\n"
