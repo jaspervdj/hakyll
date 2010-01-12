@@ -113,7 +113,7 @@ readPage pagePath = do
                     b <- hGetContents handle
                     return (md, b)
             else do b <- hGetContents handle
-                    return ([], line ++ b)
+                    return ([], line ++ "\n" ++ b)
 
     -- Render file
     let rendered = (renderFunction $ takeExtension path) body
@@ -121,7 +121,7 @@ readPage pagePath = do
             [ ("body", rendered)
             , ("url", url)
             , ("path", pagePath)
-            ] ++ context
+            ] ++ metaData
 
     seq (($|) id rnf rendered) $ hClose handle
 
