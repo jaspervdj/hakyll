@@ -10,7 +10,7 @@ module Text.Hakyll.Render
     , css
     ) where
 
-import Control.Monad (unless, liftM, foldM)
+import Control.Monad (unless, mapM, foldM)
 
 import System.Directory (copyFile)
 import System.IO
@@ -49,7 +49,7 @@ renderWith :: Renderable a
 renderWith manipulation templatePath renderable = do
     template <- readFile templatePath
     context <- toContext renderable
-    return $ pureRenderWith manipulation template context
+    return $ fromContext $ pureRenderWith manipulation template context
 
 -- | Render each renderable with the given template, then concatenate the
 --   result.
@@ -83,11 +83,12 @@ renderChain = renderChainWith id
 --   "ContextManipulation" which to apply on the context when it is read first.
 renderChainWith :: Renderable a
                 => ContextManipulation -> [FilePath] -> a -> IO ()
-renderChainWith manipulation templates renderable =
-    depends (getURL renderable) (getDependencies renderable ++ templates) $
-        do initialPage <- liftM manipulation $ toContext renderable
-           result <- foldM (flip render) (fromContext initialPage) templates
-           writePage result
+renderChainWith manipulation templatePaths renderable =
+    depends (getURL renderable) (getDependencies renderable ++ templatePaths) $
+        do templates <- mapM readFile templatePaths
+           context <- toContext renderable
+           let result = pureRenderChainWith manipulation templates context
+           writePage $ fromContext result
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.

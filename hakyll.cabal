@@ -47,3 +47,4 @@ library
                    Text.Hakyll.Context
                    Text.Hakyll.Regex
                    Network.Hakyll.SimpleServer
+  other-modules: Text.Hakyll.Render.Internal

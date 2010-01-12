@@ -4,12 +4,13 @@ module Text.Hakyll.Render.Internal
     , regularSubstitute
     , finalSubstitute
     , pureRenderWith
+    , pureRenderChainWith
     , writePage
     ) where
 
 import qualified Data.Map as M
 import Text.Hakyll.Context (Context, ContextManipulation)
-import Data.List (isPrefixOf)
+import Data.List (isPrefixOf, foldl')
 import Data.Char (isAlpha)
 import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rnf, ($|))
@@ -45,14 +46,23 @@ finalSubstitute = substitute "$"
 pureRenderWith :: ContextManipulation -- ^ Manipulation to apply on the context.
                -> String -- ^ Template to use for rendering.
                -> Context -- ^ Renderable object to render with given template.
-               -> Page -- ^ The body of the result will contain the render.
+               -> Context -- ^ The body of the result will contain the render.
 pureRenderWith manipulation template context =
     -- Ignore $root when substituting here. We will only replace that in the
     -- final render (just before writing).
     let contextIgnoringRoot = M.insert "root" "$root" (manipulation context)
         body = regularSubstitute template contextIgnoringRoot
     -- Force the body to be rendered.
-    in ($|) fromContext rnf (M.insert "body" body context)
+    in ($|) id rnf (M.insert "body" body context)
+
+-- | A pure renderChain function.
+pureRenderChainWith :: ContextManipulation
+                    -> [String]
+                    -> Context
+                    -> Context
+pureRenderChainWith manipulation templates context =
+    let initial = manipulation context
+    in foldl' (flip $ pureRenderWith id) initial templates
 
 -- | Write a page to the site destination. Final action after render
 --   chains and such.
