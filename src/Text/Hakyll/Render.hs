@@ -10,22 +10,18 @@ module Text.Hakyll.Render
     , css
     ) where
 
-import qualified Data.Map as M
-import Data.List (isPrefixOf)
 import Control.Monad (unless, liftM, foldM)
-import Data.Char (isAlpha)
-import Data.Maybe (fromMaybe)
 
 import System.Directory (copyFile)
 import System.IO
 
-import Text.Hakyll.Context (Context, ContextManipulation)
+import Text.Hakyll.Context (ContextManipulation)
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
 import Text.Hakyll.CompressCSS
 
-import Control.Parallel.Strategies (rnf, ($|))
+import Text.Hakyll.Render.Internal
 
 -- | Execute an IO action only when the cache is invalid.
 depends :: FilePath -- ^ File to be rendered or created.
@@ -35,30 +31,6 @@ depends :: FilePath -- ^ File to be rendered or created.
 depends file dependencies action = do
     valid <- isCacheValid (toDestination file) dependencies
     unless valid action
-
--- | Substitutes `$identifiers` in the given string by values from the given
---   "Context". When a key is not found, it is left as it is. You can here
---   specify the characters used to replace escaped dollars `$$`.
-substitute :: String -> String -> Context -> String 
-substitute _ [] _ = []
-substitute escaper string context 
-    | "$$" `isPrefixOf` string = escaper ++ substitute' (tail tail')
-    | "$" `isPrefixOf` string = substituteKey
-    | otherwise = (head string) : (substitute' tail')
-  where
-    tail' = tail string
-    (key, rest) = break (not . isAlpha) tail'
-    replacement = fromMaybe ('$' : key) $ M.lookup key context
-    substituteKey = replacement ++ substitute' rest
-    substitute' str = substitute escaper str context
-
--- | "substitute" for use during a chain.
-regularSubstitute :: String -> Context -> String
-regularSubstitute = substitute "$$"
-
--- | "substitute" for the end of a chain (just before writing).
-finalSubstitute :: String -> Context -> String
-finalSubstitute = substitute "$"
 
 -- | Render to a Page.
 render :: Renderable a
@@ -75,16 +47,9 @@ renderWith :: Renderable a
            -> a -- ^ Renderable object to render with given template.
            -> IO Page -- ^ The body of the result will contain the render.
 renderWith manipulation templatePath renderable = do
-    handle <- openFile templatePath ReadMode
-    templateString <- hGetContents handle
-    context <- liftM manipulation $ toContext renderable
-    -- Ignore $root when substituting here. We will only replace that in the
-    -- final render (just before writing).
-    let contextIgnoringRoot = M.insert "root" "$root" context
-        body = regularSubstitute templateString contextIgnoringRoot
-    -- Force the body to be rendered before closing the handle.
-    seq (($|) id rnf body) $ hClose handle
-    return $ fromContext (M.insert "body" body context)
+    template <- readFile templatePath
+    context <- toContext renderable
+    return $ pureRenderWith manipulation template context
 
 -- | Render each renderable with the given template, then concatenate the
 --   result.
@@ -123,18 +88,6 @@ renderChainWith manipulation templates renderable =
         do initialPage <- liftM manipulation $ toContext renderable
            result <- foldM (flip render) (fromContext initialPage) templates
            writePage result
-
--- | Write a page to the site destination.
-writePage :: Page -> IO ()
-writePage page = do
-    let destination = toDestination url
-    makeDirectories destination
-    writeFile destination body
-  where
-    url = getURL page
-    -- Substitute $root here, just before writing.
-    body = finalSubstitute (getBody page)
-                           (M.singleton "root" $ toRoot url)
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.
