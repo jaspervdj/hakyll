@@ -10,7 +10,7 @@ module Text.Hakyll.Render
     , css
     ) where
 
-import Control.Monad (unless, mapM, foldM)
+import Control.Monad (unless, mapM)
 
 import System.Directory (copyFile)
 import System.IO
@@ -64,14 +64,10 @@ renderAndConcatWith :: Renderable a
                     -> FilePath
                     -> [a]
                     -> IO String
-renderAndConcatWith manipulation templatePath renderables =
-    foldM concatRender' [] renderables
-  where
-    concatRender' :: Renderable a => String -> a -> IO String
-    concatRender' chunk renderable = do
-        rendered <- renderWith manipulation templatePath renderable
-        let body = getBody rendered
-        return $ chunk ++ body
+renderAndConcatWith manipulation templatePath renderables = do
+    template <- readFile templatePath
+    contexts <- mapM toContext renderables
+    return $ pureRenderAndConcatWith manipulation template contexts
 
 -- | Chain a render action for a page with a number of templates. This will
 --   also write the result to the site destination. This is the preferred way

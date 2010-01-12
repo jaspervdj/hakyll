@@ -4,6 +4,7 @@ module Text.Hakyll.Render.Internal
     , regularSubstitute
     , finalSubstitute
     , pureRenderWith
+    , pureRenderAndConcatWith
     , pureRenderChainWith
     , writePage
     ) where
@@ -54,6 +55,18 @@ pureRenderWith manipulation template context =
         body = regularSubstitute template contextIgnoringRoot
     -- Force the body to be rendered.
     in ($|) id rnf (M.insert "body" body context)
+
+-- | A pure renderAndConcat function.
+pureRenderAndConcatWith :: ContextManipulation
+                        -> String -- ^ Template to use.
+                        -> [Context] -- ^ Different renderables.
+                        -> String
+pureRenderAndConcatWith manipulation template contexts =
+    foldl' renderAndConcat [] contexts
+  where
+    renderAndConcat chunk context =
+        let rendered = pureRenderWith manipulation template context
+        in chunk ++ fromMaybe "" (M.lookup "body" rendered)
 
 -- | A pure renderChain function.
 pureRenderChainWith :: ContextManipulation
