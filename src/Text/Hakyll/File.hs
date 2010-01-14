@@ -17,6 +17,8 @@ import System.Directory
 import System.FilePath
 import Control.Monad
 import Data.List (isPrefixOf)
+import Text.Hakyll.Hakyll (Hakyll)
+import Control.Monad.Reader (liftIO)
 
 -- | Auxiliary function to remove pathSeparators form the start. We don't deal
 --   with absolute paths here. We also remove $root from the start.
@@ -90,8 +92,10 @@ havingExtension :: String -> [FilePath] -> [FilePath]
 havingExtension extension = filter ((==) extension . takeExtension)
 
 -- | Perform an IO action on every file in a given directory.
-directory :: (FilePath -> IO ()) -> FilePath -> IO ()
-directory action dir = getRecursiveContents dir >>= mapM_ action
+directory :: (FilePath -> Hakyll ()) -> FilePath -> Hakyll ()
+directory action dir = do
+    contents <- liftIO $ getRecursiveContents dir
+    mapM_ action contents
 
 -- | Check if a cache file is still valid.
 isCacheValid :: FilePath -> [FilePath] -> IO Bool

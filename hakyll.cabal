@@ -36,6 +36,7 @@ library
                    time >= 1,
                    parallel >= 1
   exposed-modules: Text.Hakyll
+                   Text.Hakyll.Hakyll
                    Text.Hakyll.Render
                    Text.Hakyll.Renderable
                    Text.Hakyll.Renderables

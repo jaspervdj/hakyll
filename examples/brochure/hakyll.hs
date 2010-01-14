@@ -1,9 +1,9 @@
-import Text.Hakyll (hakyll)
+import Text.Hakyll (hakyll, defaultHakyllConfiguration)
 import Text.Hakyll.File (directory)
 import Text.Hakyll.Render (css, static, renderChain)
 import Text.Hakyll.Renderables (createPagePath)
 
-main = hakyll $ do
+main = hakyll defaultHakyllConfiguration $ do
     directory css "css"
     render "about.markdown"
     render "index.markdown"

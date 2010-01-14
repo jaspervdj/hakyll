@@ -5,6 +5,7 @@ module Text.Hakyll.Renderables
     , createPagePath
     ) where
 
+import Text.Hakyll.Hakyll (Hakyll)
 import System.FilePath (FilePath)
 import qualified Data.Map as M
 import Text.Hakyll.Page
@@ -15,13 +16,14 @@ import Text.Hakyll.File
 data CustomPage = CustomPage 
     { url :: String,
       dependencies :: [FilePath],
-      mapping :: [(String, Either String (IO String))]
+      mapping :: [(String, Either String (Hakyll String))]
     }
 
 -- | Create a custom page.
 createCustomPage :: String -- ^ Destination of the page, relative to _site.
                  -> [FilePath] -- ^ Dependencies of the page.
-                 -> [(String, Either String (IO String))] -- ^ Key - value mapping for rendering.
+                 -> [(String, Either String (Hakyll String))] -- ^ Key - value 
+                                                              --   mapping.
                  -> CustomPage
 createCustomPage = CustomPage
 

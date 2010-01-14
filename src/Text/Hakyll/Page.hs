@@ -11,10 +11,12 @@ import qualified Data.List as L
 import Data.Maybe (fromMaybe)
 
 import Control.Parallel.Strategies (rnf, ($|))
+import Control.Monad.Reader (liftIO)
 
 import System.FilePath (FilePath, takeExtension)
 import System.IO
 
+import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.File
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Context (Context)
@@ -66,9 +68,9 @@ renderFunction ext = writeHtmlString writerOptions
     readFunction _           = readMarkdown
 
 -- | Read metadata header from a file handle.
-readMetaData :: Handle -> IO [(String, String)]
+readMetaData :: Handle -> Hakyll [(String, String)]
 readMetaData handle = do
-    line <- hGetLine handle
+    line <- liftIO $ hGetLine handle
     if isDelimiter line
         then return []
         else do others <- readMetaData handle
@@ -81,8 +83,8 @@ isDelimiter :: String -> Bool
 isDelimiter = L.isPrefixOf "---"
 
 -- | Used for caching of files.
-cachePage :: Page -> IO ()
-cachePage page@(Page mapping) = do
+cachePage :: Page -> Hakyll ()
+cachePage page@(Page mapping) = liftIO $ do
     let destination = toCache $ getURL page
     makeDirectories destination
     handle <- openFile destination WriteMode
@@ -98,21 +100,21 @@ cachePage page@(Page mapping) = do
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a .markdown extension, it will be rendered using pandoc. Note that
 --   pages are not templates, so they should not contain $identifiers.
-readPage :: FilePath -> IO Page
+readPage :: FilePath -> Hakyll Page
 readPage pagePath = do
     -- Check cache.
-    getFromCache <- isCacheValid cacheFile [pagePath]
+    getFromCache <- liftIO $ isCacheValid cacheFile [pagePath]
     let path = if getFromCache then cacheFile else pagePath
 
     -- Read file.
-    handle <- openFile path ReadMode
-    line <- hGetLine handle
+    handle <- liftIO $ openFile path ReadMode
+    line <- liftIO $ hGetLine handle
     (metaData, body) <-
         if isDelimiter line
             then do md <- readMetaData handle
-                    b <- hGetContents handle
+                    b <- liftIO $ hGetContents handle
                     return (md, b)
-            else do b <- hGetContents handle
+            else do b <- liftIO $ hGetContents handle
                     return ([], line ++ "\n" ++ b)
 
     -- Render file
@@ -123,7 +125,7 @@ readPage pagePath = do
             , ("path", pagePath)
             ] ++ metaData
 
-    seq (($|) id rnf rendered) $ hClose handle
+    seq (($|) id rnf rendered) $ liftIO $ hClose handle
 
     -- Cache if needed
     if getFromCache then return () else cachePage page

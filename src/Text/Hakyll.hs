@@ -1,28 +1,42 @@
 module Text.Hakyll
-    ( hakyll
+    ( defaultHakyllConfiguration
+    , hakyll
     ) where
 
+import Control.Monad.Reader (runReaderT)
+import qualified Data.Map as M
+
 import Network.Hakyll.SimpleServer (simpleServer)
+import Text.Hakyll.Hakyll
 
 import System.Environment (getArgs, getProgName)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 
+-- | Default hakyll configuration.
+defaultHakyllConfiguration :: HakyllConfiguration
+defaultHakyllConfiguration = HakyllConfiguration
+    { hakyllDestination = "_site"
+    , hakyllGlobalContext = M.empty
+    }
+
 -- | Main function to run hakyll.
-hakyll :: IO () -> IO ()
-hakyll buildFunction = do
+hakyll :: HakyllConfiguration -> Hakyll () -> IO ()
+hakyll configuration buildFunction = do
     args <- getArgs
-    case args of ["build"]      -> build buildFunction
+    case args of ["build"]      -> build'
                  ["clean"]      -> clean
-                 ["preview", p] -> build buildFunction >> server (read p)
-                 ["preview"]    -> build buildFunction >> server 8000
+                 ["preview", p] -> build' >> server (read p)
+                 ["preview"]    -> build' >> server 8000
                  ["server", p]  -> server (read p)
                  ["server"]     -> server 8000
                  _              -> help
+  where
+    build' = build configuration buildFunction
 
 -- | Build the site.
-build :: IO () -> IO ()
-build buildFunction = do putStrLn "Generating..."
-                         buildFunction
+build :: HakyllConfiguration -> Hakyll () -> IO ()
+build configuration buildFunction = do putStrLn "Generating..."
+                                       runReaderT buildFunction configuration
 
 -- | Clean up directories.
 clean :: IO ()

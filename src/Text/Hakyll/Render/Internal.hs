@@ -11,6 +11,8 @@ module Text.Hakyll.Render.Internal
 
 import qualified Data.Map as M
 import Text.Hakyll.Context (Context, ContextManipulation)
+import Control.Monad.Reader (ask, liftIO)
+import Control.Monad (liftM)
 import Data.List (isPrefixOf, foldl')
 import Data.Char (isAlpha)
 import Data.Maybe (fromMaybe)
@@ -18,6 +20,7 @@ import Control.Parallel.Strategies (rnf, ($|))
 import Text.Hakyll.Renderable
 import Text.Hakyll.Page
 import Text.Hakyll.File
+import Text.Hakyll.Hakyll (Hakyll, hakyllGlobalContext)
 
 -- | Substitutes `$identifiers` in the given string by values from the given
 --   "Context". When a key is not found, it is left as it is. You can here
@@ -79,13 +82,13 @@ pureRenderChainWith manipulation templates context =
 
 -- | Write a page to the site destination. Final action after render
 --   chains and such.
-writePage :: Page -> IO ()
+writePage :: Page -> Hakyll ()
 writePage page = do
+    globalContext <- liftM hakyllGlobalContext ask 
     let destination = toDestination url
-    makeDirectories destination
-    writeFile destination body
+        context = (M.singleton "root" $ toRoot url) `M.union` globalContext
+    liftIO $ makeDirectories destination
+    -- Substitute $root here, just before writing.
+    liftIO $ writeFile destination $ finalSubstitute (getBody page) context
   where
     url = getURL page
-    -- Substitute $root here, just before writing.
-    body = finalSubstitute (getBody page)
-                           (M.singleton "root" $ toRoot url)
