@@ -10,7 +10,7 @@ import qualified Data.Map as M
 import qualified Data.List as L
 import Data.Maybe (fromMaybe)
 
-import Control.Parallel.Strategies (rnf, ($|))
+import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
 
 import System.FilePath (FilePath, takeExtension)
@@ -125,7 +125,7 @@ readPage pagePath = do
             , ("path", pagePath)
             ] ++ metaData
 
-    seq (($|) id rnf rendered) $ liftIO $ hClose handle
+    seq (($|) id rdeepseq rendered) $ liftIO $ hClose handle
 
     -- Cache if needed
     if getFromCache then return () else cachePage page

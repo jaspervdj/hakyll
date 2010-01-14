@@ -16,7 +16,7 @@ import Control.Monad (liftM)
 import Data.List (isPrefixOf, foldl')
 import Data.Char (isAlpha)
 import Data.Maybe (fromMaybe)
-import Control.Parallel.Strategies (rnf, ($|))
+import Control.Parallel.Strategies (rdeepseq, ($|))
 import Text.Hakyll.Renderable
 import Text.Hakyll.Page
 import Text.Hakyll.File
@@ -57,7 +57,7 @@ pureRenderWith manipulation template context =
     let contextIgnoringRoot = M.insert "root" "$root" (manipulation context)
         body = regularSubstitute template contextIgnoringRoot
     -- Force the body to be rendered.
-    in ($|) id rnf (M.insert "body" body context)
+    in ($|) id rdeepseq (M.insert "body" body context)
 
 -- | A pure renderAndConcat function.
 pureRenderAndConcatWith :: ContextManipulation
