@@ -36,6 +36,7 @@ tests = [ testGroup "Util group"
             , testCase "compressCSS 1" test_compress_css1
             , testCase "compressCSS 2" test_compress_css2
             , testCase "compressCSS 3" test_compress_css3
+            , testCase "compressCSS 4" test_compress_css4
             ]
 
         , testGroup "Context group"
@@ -96,6 +97,8 @@ test_compress_css2 = compressCSS "img {border  :none;;;;  }"
 test_compress_css3 =
     compressCSS "p {font-size  : 90%;} h1 {color  :white;;;  }"
     @?= "p{font-size:90%}h1{color:white}"
+test_compress_css4 = compressCSS "a { /* /* red is pretty cool */ color: red; }"
+                   @?= "a{color:red}"
 
 -- Date rendering test cases.
 test_render_date1 =
