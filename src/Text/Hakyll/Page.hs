@@ -10,7 +10,7 @@ import qualified Data.Map as M
 import qualified Data.List as L
 import Data.Maybe (fromMaybe)
 
-import Control.Parallel.Strategies (rnf, ($|))
+import Control.Parallel.Strategies (rdeepseq, ($|))
 
 import System.FilePath (FilePath, takeExtension)
 import System.IO
@@ -123,7 +123,7 @@ readPage pagePath = do
             , ("path", pagePath)
             ] ++ metaData
 
-    seq (($|) id rnf rendered) $ hClose handle
+    seq (($|) id rdeepseq rendered) $ hClose handle
 
     -- Cache if needed
     if getFromCache then return () else cachePage page
