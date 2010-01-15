@@ -15,8 +15,7 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 -- | Default hakyll configuration.
 defaultHakyllConfiguration :: HakyllConfiguration
 defaultHakyllConfiguration = HakyllConfiguration
-    { hakyllDestination = "_site"
-    , hakyllGlobalContext = M.empty
+    { additionalContext = M.empty
     }
 
 -- | Main function to run hakyll.
