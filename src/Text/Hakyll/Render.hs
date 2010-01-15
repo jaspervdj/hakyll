@@ -31,7 +31,7 @@ depends :: FilePath -- ^ File to be rendered or created.
         -> Hakyll () -- ^ IO action to execute when the file is out of date.
         -> Hakyll ()
 depends file dependencies action = do
-    valid <- liftIO $ isCacheValid (toDestination file) dependencies
+    valid <- isCacheValid (toDestination file) dependencies
     unless valid action
 
 -- | Render to a Page.
@@ -93,17 +93,17 @@ renderChainWith manipulation templatePaths renderable =
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.
 static :: FilePath -> Hakyll ()
-static source = depends destination [source] (liftIO action)
+static source = depends destination [source] action
   where
     destination = toDestination source
     action = do makeDirectories destination
-                copyFile source destination
+                liftIO $ copyFile source destination
 
 -- | Render a css file, compressing it.
 css :: FilePath -> Hakyll ()
-css source = depends destination [source] (liftIO css')
+css source = depends destination [source] css'
   where
     destination = toDestination source
-    css' = do contents <- readFile source
+    css' = do contents <- liftIO $ readFile source
               makeDirectories destination
-              writeFile destination (compressCSS contents)
+              liftIO $ writeFile destination (compressCSS contents)

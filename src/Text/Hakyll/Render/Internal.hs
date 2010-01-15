@@ -87,7 +87,7 @@ writePage page = do
     globalContext <- liftM hakyllGlobalContext ask 
     let destination = toDestination url
         context = (M.singleton "root" $ toRoot url) `M.union` globalContext
-    liftIO $ makeDirectories destination
+    makeDirectories destination
     -- Substitute $root here, just before writing.
     liftIO $ writeFile destination $ finalSubstitute (getBody page) context
   where

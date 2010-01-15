@@ -84,18 +84,22 @@ isDelimiter = L.isPrefixOf "---"
 
 -- | Used for caching of files.
 cachePage :: Page -> Hakyll ()
-cachePage page@(Page mapping) = liftIO $ do
-    let destination = toCache $ getURL page
+cachePage page@(Page mapping) = do
     makeDirectories destination
-    handle <- openFile destination WriteMode
-    hPutStrLn handle "---"
-    mapM_ (writePair handle) $ M.toList $ M.delete "body" mapping
-    hPutStrLn handle "---"
-    hPutStr handle $ getBody page
-    hClose handle
+    liftIO writePageToCache
   where
+    writePageToCache = do
+        handle <- openFile destination WriteMode
+        hPutStrLn handle "---"
+        mapM_ (writePair handle) $ M.toList $ M.delete "body" mapping
+        hPutStrLn handle "---"
+        hPutStr handle $ getBody page
+        hClose handle
+
     writePair h (k, v) = do hPutStr h $ k ++ ": " ++ v
                             hPutStrLn h ""
+
+    destination = toCache $ getURL page
 
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a .markdown extension, it will be rendered using pandoc. Note that
@@ -103,7 +107,7 @@ cachePage page@(Page mapping) = liftIO $ do
 readPage :: FilePath -> Hakyll Page
 readPage pagePath = do
     -- Check cache.
-    getFromCache <- liftIO $ isCacheValid cacheFile [pagePath]
+    getFromCache <- isCacheValid cacheFile [pagePath]
     let path = if getFromCache then cacheFile else pagePath
 
     -- Read file.

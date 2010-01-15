@@ -63,20 +63,20 @@ removeSpaces = map swap
 
 -- | Given a path to a file, try to make the path writable by making
 --   all directories on the path.
-makeDirectories :: FilePath -> IO ()
-makeDirectories path = createDirectoryIfMissing True dir
+makeDirectories :: FilePath -> Hakyll ()
+makeDirectories path = liftIO $ createDirectoryIfMissing True dir
   where
     dir = takeDirectory path
 
 -- | Get all contents of a directory. Note that files starting with a dot (.)
 --   will be ignored.
-getRecursiveContents :: FilePath -> IO [FilePath]
+getRecursiveContents :: FilePath -> Hakyll [FilePath]
 getRecursiveContents topdir = do
-    names <- getDirectoryContents topdir
+    names <- liftIO $ getDirectoryContents topdir
     let properNames = filter isProper names
     paths <- forM properNames $ \name -> do
         let path = topdir </> name
-        isDirectory <- doesDirectoryExist path
+        isDirectory <- liftIO $ doesDirectoryExist path
         if isDirectory
             then getRecursiveContents path
             else return [path]
@@ -87,20 +87,24 @@ getRecursiveContents topdir = do
 -- | A filter that takes all file names with a given extension. Prefix the
 --   extension with a dot:
 --
---   > havingExtension ".markdown" ["index.markdown", "style.css"] == ["index.markdown"]
+--   > havingExtension ".markdown" [ "index.markdown"
+--   >                             , "style.css"
+--   >                             ] == ["index.markdown"]
 havingExtension :: String -> [FilePath] -> [FilePath]
 havingExtension extension = filter ((==) extension . takeExtension)
 
--- | Perform an IO action on every file in a given directory.
+-- | Perform a Hakyll action on every file in a given directory.
 directory :: (FilePath -> Hakyll ()) -> FilePath -> Hakyll ()
 directory action dir = do
-    contents <- liftIO $ getRecursiveContents dir
+    contents <- getRecursiveContents dir
     mapM_ action contents
 
 -- | Check if a cache file is still valid.
-isCacheValid :: FilePath -> [FilePath] -> IO Bool
-isCacheValid cache depends = doesFileExist cache >>= \exists ->
-    if not exists then return False
-                  else do dependsModified <- (mapM getModificationTime depends) >>= return . maximum
-                          cacheModified <- getModificationTime cache
-                          return (cacheModified >= dependsModified)
+isCacheValid :: FilePath -> [FilePath] -> Hakyll Bool
+isCacheValid cache depends = do
+    exists <- liftIO $ doesFileExist cache
+    if not exists
+        then return False
+        else do dependsModified <- liftIO $ mapM getModificationTime depends
+                cacheModified <- liftIO $ getModificationTime cache
+                return (cacheModified >= maximum dependsModified)
