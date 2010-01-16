@@ -133,8 +133,8 @@ one template, and our renderable object is simply a `PagePath`.
 
 ~~~~~{.haskell}
 import Text.Hakyll (hakyll)
-import Text.Render (renderChain)
-import Text.Renderables (createPagePath)
+import Text.Hakyll.Render (renderChain)
+import Text.Hakyll.Renderables (createPagePath)
 main = hakyll $ do
     renderChain ["templates/default.html"]
         (createPagePath "about.markdown")
@@ -144,8 +144,8 @@ Or, to render all our three pages:
 
 ~~~~~{.haskell}
 import Text.Hakyll (hakyll)
-import Text.Render (renderChain)
-import Text.Renderables (createPagePath)
+import Text.Hakyll.Render (renderChain)
+import Text.Hakyll.Renderables (createPagePath)
 main = hakyll $ do
     render "about.markdown"
     render "index.markdown"
@@ -170,7 +170,7 @@ use:
 
 ~~~~~{.haskell}
 import Text.Hakyll (hakyll)
-import Text.Render (static)
+import Text.Hakyll.Render (static)
 main = hakyll $ do
     static "css/default.css"
 ~~~~~
@@ -180,7 +180,7 @@ we want to use that, we would use `css` instead of `static`.
 
 ~~~~~{.haskell}
 import Text.Hakyll (hakyll)
-import Text.Render (css)
+import Text.Hakyll.Render (css)
 main = hakyll $ do
     css "css/default.css"
 ~~~~~
@@ -193,7 +193,7 @@ our example would become:
 
 ~~~~~{.haskell}
 import Text.Hakyll (hakyll)
-import Text.Render (css)
+import Text.Hakyll.Render (css)
 import Text.File (directory)
 main = hakyll $ do
     directory css "css"
