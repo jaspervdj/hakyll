@@ -16,6 +16,7 @@ import Data.List (isPrefixOf, foldl')
 import Data.Char (isAlpha)
 import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
+
 import Text.Hakyll.Renderable
 import Text.Hakyll.Page
 import Text.Hakyll.File

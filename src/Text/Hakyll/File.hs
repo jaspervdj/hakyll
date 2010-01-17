@@ -17,8 +17,9 @@ import System.Directory
 import System.FilePath
 import Control.Monad
 import Data.List (isPrefixOf)
-import Text.Hakyll.Hakyll (Hakyll)
 import Control.Monad.Reader (liftIO)
+
+import Text.Hakyll.Hakyll (Hakyll)
 
 -- | Auxiliary function to remove pathSeparators form the start. We don't deal
 --   with absolute paths here. We also remove $root from the start.

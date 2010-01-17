@@ -12,7 +12,6 @@ module Text.Hakyll.Render
 
 import Control.Monad (unless)
 import Control.Monad.Reader (liftIO)
-
 import System.Directory (copyFile)
 
 import Text.Hakyll.Hakyll (Hakyll)
@@ -21,7 +20,6 @@ import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
 import Text.Hakyll.CompressCSS
-
 import Text.Hakyll.Render.Internal
 
 -- | Execute an IO action only when the cache is invalid.

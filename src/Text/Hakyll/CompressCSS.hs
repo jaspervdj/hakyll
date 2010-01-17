@@ -3,6 +3,7 @@ module Text.Hakyll.CompressCSS
     ) where
 
 import Data.List (isPrefixOf)
+
 import Text.Hakyll.Regex (substituteRegex)
 
 -- | Compress CSS to speed up your site.

@@ -8,12 +8,12 @@ module Text.Hakyll.Context
 
 import qualified Data.Map as M
 import Data.Map (Map)
-
 import System.Locale (defaultTimeLocale)
 import System.FilePath (takeFileName)
 import Data.Time.Format (parseTime, formatTime)
 import Data.Time.Clock (UTCTime)
 import Data.Maybe (fromMaybe)
+
 import Text.Hakyll.Regex (substituteRegex)
 
 -- | Type for a context.

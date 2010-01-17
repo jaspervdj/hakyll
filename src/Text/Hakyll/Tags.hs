@@ -9,14 +9,14 @@ module Text.Hakyll.Tags
 import qualified Data.Map as M
 import Data.List (intercalate)
 import Control.Monad (foldM)
-import Text.Hakyll.Hakyll (Hakyll)
+import Control.Arrow (second)
 
+import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (ContextManipulation, renderValue)
 import Text.Hakyll.Render.Internal (finalSubstitute)
 import Text.Hakyll.Regex
 import Text.Hakyll.Util
 import Text.Hakyll.Page
-import Control.Arrow (second)
 
 -- | Read a tag map. This creates a map from tags to page paths. This function
 --   assumes the tags are located in the @tags@ metadata field, separated by

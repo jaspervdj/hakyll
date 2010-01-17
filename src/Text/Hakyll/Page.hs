@@ -9,20 +9,18 @@ module Text.Hakyll.Page
 import qualified Data.Map as M
 import qualified Data.List as L
 import Data.Maybe (fromMaybe)
-
 import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
-
 import System.FilePath (takeExtension)
 import System.IO
+
+import Text.Pandoc
 
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.File
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Context (Context)
 import Text.Hakyll.Renderable
-import Text.Pandoc
-
 
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.

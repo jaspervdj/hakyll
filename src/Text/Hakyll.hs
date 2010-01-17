@@ -5,12 +5,11 @@ module Text.Hakyll
 
 import Control.Monad.Reader (runReaderT)
 import qualified Data.Map as M
+import System.Environment (getArgs, getProgName)
+import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 
 import Network.Hakyll.SimpleServer (simpleServer)
 import Text.Hakyll.Hakyll
-
-import System.Environment (getArgs, getProgName)
-import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 
 -- | Default hakyll configuration.
 defaultHakyllConfiguration :: HakyllConfiguration

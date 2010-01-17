@@ -5,9 +5,9 @@ module Network.Hakyll.SimpleServer
     ) where
 
 import Prelude hiding (log)
-import Network
 import Control.Monad (forever)
 import Control.Monad.Reader (ReaderT, runReaderT, ask, liftIO)
+import Network
 import System.IO
 import System.Directory (doesFileExist, doesDirectoryExist)
 import Control.Concurrent (forkIO)

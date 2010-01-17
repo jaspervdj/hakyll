@@ -1,11 +1,11 @@
+import Data.Char
+import qualified Data.Map as M
+
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.QuickCheck2
 import Test.Framework.Providers.HUnit
 import Test.QuickCheck
 import Test.HUnit
-
-import Data.Char
-import qualified Data.Map as M
 
 import Text.Hakyll.CompressCSS
 import Text.Hakyll.Util

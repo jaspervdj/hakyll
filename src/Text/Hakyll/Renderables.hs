@@ -5,8 +5,9 @@ module Text.Hakyll.Renderables
     , createPagePath
     ) where
 
-import Text.Hakyll.Hakyll (Hakyll)
 import qualified Data.Map as M
+
+import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File

@@ -5,9 +5,10 @@ module Text.Hakyll.Hakyll
     , askHakyll
     ) where
 
-import Text.Hakyll.Context (Context)
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad (liftM)
+
+import Text.Hakyll.Context (Context)
 
 -- | Hakyll global configuration type.
 data HakyllConfiguration = HakyllConfiguration
