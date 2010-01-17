@@ -6,7 +6,6 @@ module Text.Hakyll.Renderables
     ) where
 
 import Text.Hakyll.Hakyll (Hakyll)
-import System.FilePath (FilePath)
 import qualified Data.Map as M
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable

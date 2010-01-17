@@ -3,7 +3,6 @@ module Text.Hakyll.Renderable
     ) where
 
 import Text.Hakyll.Hakyll (Hakyll)
-import System.FilePath (FilePath)
 import Text.Hakyll.Context (Context)
 
 -- | A class for datatypes that can be rendered to pages.

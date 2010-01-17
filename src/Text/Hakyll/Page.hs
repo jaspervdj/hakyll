@@ -13,7 +13,7 @@ import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
 
-import System.FilePath (FilePath, takeExtension)
+import System.FilePath (takeExtension)
 import System.IO
 
 import Text.Hakyll.Hakyll (Hakyll)

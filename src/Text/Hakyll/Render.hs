@@ -10,11 +10,10 @@ module Text.Hakyll.Render
     , css
     ) where
 
-import Control.Monad (unless, mapM)
+import Control.Monad (unless)
 import Control.Monad.Reader (liftIO)
 
 import System.Directory (copyFile)
-import System.IO
 
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (ContextManipulation)

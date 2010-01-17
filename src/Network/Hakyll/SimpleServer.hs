@@ -6,7 +6,7 @@ module Network.Hakyll.SimpleServer
 
 import Prelude hiding (log)
 import Network
-import Control.Monad (forever, mapM_)
+import Control.Monad (forever)
 import Control.Monad.Reader (ReaderT, runReaderT, ask, liftIO)
 import System.IO
 import System.Directory (doesFileExist, doesDirectoryExist)
@@ -202,10 +202,9 @@ simpleServer port root = do
           -- When a client connects, respond in a separate thread.
         listen socket = do (handle, _, _) <- accept socket
                            forkIO (runReaderT (respond handle) config)
-                           return ()
 
     -- Handle logging in a separate thread
-    forkIO (log logChan)
+    _ <- forkIO (log logChan)
 
     writeChan logChan $ "Starting hakyll server on port " ++ show port ++ "..."
     socket <- listenOn (PortNumber port)
