@@ -12,6 +12,7 @@ import Control.Monad (foldM)
 import Text.Hakyll.Hakyll (Hakyll)
 
 import Text.Hakyll.Context (ContextManipulation, renderValue)
+import Text.Hakyll.Render.Internal (finalSubstitute)
 import Text.Hakyll.Regex
 import Text.Hakyll.Util
 import Text.Hakyll.Page
@@ -29,8 +30,8 @@ readTagMap paths = foldM addPaths M.empty paths
         return $ foldr (\t -> M.insertWith (++) t [path]) current tags
 
 -- | Render a tag cloud.
-renderTagCloud :: M.Map String [FilePath] -- ^ A tag map as produced by 'readTagMap'.
-               -> (String -> String) -- ^ Function that produces an url for a tag.
+renderTagCloud :: M.Map String [FilePath] -- ^ Map as produced by 'readTagMap'.
+               -> (String -> String) -- ^ Function to produce an url for a tag.
                -> Float -- ^ Smallest font size, in percent.
                -> Float -- ^ Biggest font size, in percent.
                -> String -- ^ Result of the render.
@@ -38,10 +39,12 @@ renderTagCloud tagMap urlFunction minSize maxSize =
     intercalate " " $ map renderTag tagCount
   where
     renderTag :: (String, Float) -> String
-    renderTag (tag, count) =  "<a style=\"font-size: "
-                           ++ sizeTag count ++ "\" href=\""
-                           ++ urlFunction tag ++ "\">"
-                           ++ tag ++ "</a>"
+    renderTag (tag, count) = 
+        finalSubstitute "<a style=\"font-size: $size\" href=\"$url\">$tag</a>" $
+                        M.fromList [ ("size", sizeTag count)
+                                   , ("url", urlFunction tag)
+                                   , ("tag", tag)
+                                   ]
 
     sizeTag :: Float -> String
     sizeTag count = show size' ++ "%"
