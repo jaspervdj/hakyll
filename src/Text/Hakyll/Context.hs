@@ -31,7 +31,7 @@ renderValue src dst f context = case M.lookup src context of
     Nothing      -> context
     (Just value) -> M.insert dst (f value) context
 
--- | When the context has a key called `path` in a `yyyy-mm-dd-title.extension`
+-- | When the context has a key called @path@ in a @yyyy-mm-dd-title.extension@
 --   format (default for pages), this function can render the date.
 renderDate :: String -- ^ Key in which the rendered date should be placed.
            -> String -- ^ Format to use on the date.

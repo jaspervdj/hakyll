@@ -52,27 +52,45 @@ renderWith manipulation templatePath renderable = do
     context <- toContext renderable
     return $ fromContext $ pureRenderWith manipulation template context
 
--- | Render each renderable with the given template, then concatenate the
---   result.
-renderAndConcat :: Renderable a => FilePath -> [a] -> Hakyll String
+-- | Render each renderable with the given templates, then concatenate the
+--   result. So, basically this function:
+--
+--   * Takes every renderable.
+--
+--   * Renders every renderable with all given templates. This is comparable
+--     with a renderChain action.
+--
+--   * Concatenates the result.
+--
+renderAndConcat :: Renderable a
+                => [FilePath] -- ^ Templates to apply on every renderable.
+                -> [a] -- ^ Renderables to render.
+                -> Hakyll String
 renderAndConcat = renderAndConcatWith id
 
--- | Render each renderable with the given template, then concatenate the
+-- | Render each renderable with the given templates, then concatenate the
 --   result. This function allows you to specify a "ContextManipulation" to
 --   apply on every "Renderable".
 renderAndConcatWith :: Renderable a
                     => ContextManipulation
-                    -> FilePath
+                    -> [FilePath]
                     -> [a]
                     -> Hakyll String
-renderAndConcatWith manipulation templatePath renderables = do
-    template <- liftIO $ readFile templatePath
+renderAndConcatWith manipulation templatePaths renderables = do
+    templates <- liftIO $ mapM readFile templatePaths
     contexts <- mapM toContext renderables
-    return $ pureRenderAndConcatWith manipulation template contexts
+    return $ pureRenderAndConcatWith manipulation templates contexts
 
 -- | Chain a render action for a page with a number of templates. This will
 --   also write the result to the site destination. This is the preferred way
 --   to do general rendering.
+--
+--   > renderChain [ "templates/notice.html"
+--   >             , "templates/default.html"
+--   >             ] $ createPagePath "warning.html"
+--
+--   This code will first render @warning.html@ using @templates/notice.html@,
+--   and will then render the result with @templates/default.html@.
 renderChain :: Renderable a => [FilePath] -> a -> Hakyll ()
 renderChain = renderChainWith id
 

@@ -19,7 +19,7 @@ import Text.Hakyll.Page
 import Control.Arrow (second)
 
 -- | Read a tag map. This creates a map from tags to page paths. This function
---   assumes the tags are located in the `tags` metadata field, separated by
+--   assumes the tags are located in the @tags@ metadata field, separated by
 --   commas.
 readTagMap :: [FilePath] -> Hakyll (M.Map String [FilePath])
 readTagMap paths = foldM addPaths M.empty paths
@@ -30,7 +30,7 @@ readTagMap paths = foldM addPaths M.empty paths
         return $ foldr (\t -> M.insertWith (++) t [path]) current tags
 
 -- | Render a tag cloud.
-renderTagCloud :: M.Map String [FilePath] -- ^ Map as produced by 'readTagMap'.
+renderTagCloud :: M.Map String [FilePath] -- ^ Map as produced by "readTagMap".
                -> (String -> String) -- ^ Function to produce an url for a tag.
                -> Float -- ^ Smallest font size, in percent.
                -> Float -- ^ Biggest font size, in percent.

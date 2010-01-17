@@ -21,9 +21,9 @@ import Text.Hakyll.Page
 import Text.Hakyll.File
 import Text.Hakyll.Hakyll
 
--- | Substitutes `$identifiers` in the given string by values from the given
+-- | Substitutes @$identifiers@ in the given string by values from the given
 --   "Context". When a key is not found, it is left as it is. You can here
---   specify the characters used to replace escaped dollars `$$`.
+--   specify the characters used to replace escaped dollars (@$$@).
 substitute :: String -> String -> Context -> String 
 substitute _ [] _ = []
 substitute escaper string context 
@@ -60,14 +60,14 @@ pureRenderWith manipulation template context =
 
 -- | A pure renderAndConcat function.
 pureRenderAndConcatWith :: ContextManipulation
-                        -> String -- ^ Template to use.
+                        -> [String] -- ^ Templates to use.
                         -> [Context] -- ^ Different renderables.
                         -> String
-pureRenderAndConcatWith manipulation template contexts =
+pureRenderAndConcatWith manipulation templates contexts =
     foldl' renderAndConcat [] contexts
   where
     renderAndConcat chunk context =
-        let rendered = pureRenderWith manipulation template context
+        let rendered = pureRenderChainWith manipulation templates context
         in chunk ++ fromMaybe "" (M.lookup "body" rendered)
 
 -- | A pure renderChain function.

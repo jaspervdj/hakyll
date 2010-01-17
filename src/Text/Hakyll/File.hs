@@ -31,11 +31,11 @@ removeLeadingSeparator path
     path' = if "$root" `isPrefixOf` path then drop 5 path
                                          else path
 
--- | Convert a relative filepath to a filepath in the destination (_site).
+-- | Convert a relative filepath to a filepath in the destination (@_site@).
 toDestination :: FilePath -> FilePath
 toDestination path = "_site" </> (removeLeadingSeparator path)
 
--- | Convert a relative filepath to a filepath in the cache (_cache).
+-- | Convert a relative filepath to a filepath in the cache (@_cache@).
 toCache :: FilePath -> FilePath
 toCache path = "_cache" </> (removeLeadingSeparator path)
 
@@ -100,7 +100,9 @@ directory action dir = do
     mapM_ action contents
 
 -- | Check if a cache file is still valid.
-isCacheValid :: FilePath -> [FilePath] -> Hakyll Bool
+isCacheValid :: FilePath -- ^ The cached file.
+             -> [FilePath] -- ^ Dependencies of the cached file.
+             -> Hakyll Bool
 isCacheValid cache depends = do
     exists <- liftIO $ doesFileExist cache
     if not exists

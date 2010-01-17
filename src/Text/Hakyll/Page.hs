@@ -102,8 +102,7 @@ cachePage page@(Page mapping) = do
     destination = toCache $ getURL page
 
 -- | Read a page from a file. Metadata is supported, and if the filename
---   has a .markdown extension, it will be rendered using pandoc. Note that
---   pages are not templates, so they should not contain $identifiers.
+--   has a @.markdown@ extension, it will be rendered using pandoc.
 readPage :: FilePath -> Hakyll Page
 readPage pagePath = do
     -- Check cache.

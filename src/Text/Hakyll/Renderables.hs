@@ -19,10 +19,15 @@ data CustomPage = CustomPage
     }
 
 -- | Create a custom page.
+--   
+--   The association list given maps keys to values for substitution. Note
+--   that as value, you can either give a @String@ or a @Hakyll String@.
+--   A @Hakyll String@ is preferred for more complex data, since it allows
+--   dependency checking. A @String@ is obviously more simple to use in some
+--   cases.
 createCustomPage :: String -- ^ Destination of the page, relative to _site.
                  -> [FilePath] -- ^ Dependencies of the page.
-                 -> [(String, Either String (Hakyll String))] -- ^ Key - value 
-                                                              --   mapping.
+                 -> [(String, Either String (Hakyll String))] -- ^ Mapping.
                  -> CustomPage
 createCustomPage = CustomPage
 

@@ -19,6 +19,6 @@ data HakyllConfiguration = HakyllConfiguration
 -- | Our custom monad stack.
 type Hakyll = ReaderT HakyllConfiguration IO
 
--- | Simplified "ask" function for the Hakyll monad stack.
+-- | Simplified @ask@ function for the Hakyll monad stack.
 askHakyll :: (HakyllConfiguration -> a) -> Hakyll a
 askHakyll = flip liftM ask
