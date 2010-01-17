@@ -86,16 +86,23 @@ cachePage page@(Page mapping) = do
     makeDirectories destination
     liftIO writePageToCache
   where
+    (sectionMetaData, simpleMetaData) = M.partition (not . elem '\n')
+                                                    (M.delete "body" mapping)
+
     writePageToCache = do
         handle <- openFile destination WriteMode
         hPutStrLn handle "---"
-        mapM_ (writePair handle) $ M.toList $ M.delete "body" mapping
+        mapM_ (writePair handle) $ M.toList simpleMetaData
+        mapM_ (writeSection handle) $ M.toList sectionMetaData
         hPutStrLn handle "---"
         hPutStr handle $ getBody page
         hClose handle
 
     writePair h (k, v) = do hPutStr h $ k ++ ": " ++ v
                             hPutStrLn h ""
+
+    writeSection h (k, v) = do hPutStrLn h $ "--- " ++ k
+                               hPutStrLn h v
 
     destination = toCache $ getURL page
 
