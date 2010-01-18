@@ -60,10 +60,8 @@ renderFunction ".html" = id
 renderFunction ext = writeHtmlString writerOptions
                    . readFunction ext defaultParserState
   where
-    readFunction ".markdown" = readMarkdown
-    readFunction ".md"       = readMarkdown
-    readFunction ".tex"      = readLaTeX
-    readFunction _           = readMarkdown
+    readFunction ".tex" = readLaTeX
+    readFunction _      = readMarkdown
 
 -- | Read metadata header from a file handle.
 readMetaData :: Handle -> IO [(String, String)]
