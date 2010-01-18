@@ -52,6 +52,10 @@ getPagePath (Page page) =
 getBody :: Page -> String
 getBody (Page page) = fromMaybe [] $ M.lookup "body" page
 
+-- | The default reader options for pandoc parsing.
+readerOptions :: ParserState
+readerOptions = defaultParserState { stateSmart = True }
+
 -- | The default writer options for pandoc rendering.
 writerOptions :: WriterOptions
 writerOptions = defaultWriterOptions
@@ -60,7 +64,7 @@ writerOptions = defaultWriterOptions
 getRenderFunction :: String -> (String -> String)
 getRenderFunction ".html" = id
 getRenderFunction ext = writeHtmlString writerOptions
-                      . readFunction ext defaultParserState
+                      . readFunction ext readerOptions
   where
     readFunction ".rst" = readRST
     readFunction ".tex" = readLaTeX
