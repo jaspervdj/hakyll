@@ -12,7 +12,7 @@ import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
 import System.FilePath (takeExtension)
-import System.IO (Handle, IOMode(..), openFile, hClose)
+import System.IO (IOMode(..), openFile, hClose)
 import qualified System.IO.UTF8 as U
 
 import Text.Pandoc
@@ -22,6 +22,7 @@ import Text.Hakyll.File
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Context (Context)
 import Text.Hakyll.Renderable
+import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
@@ -56,25 +57,22 @@ writerOptions :: WriterOptions
 writerOptions = defaultWriterOptions
 
 -- | Get a render function for a given extension.
-renderFunction :: String -> (String -> String)
-renderFunction ".html" = id
-renderFunction ext = writeHtmlString writerOptions
-                   . readFunction ext defaultParserState
+getRenderFunction :: String -> (String -> String)
+getRenderFunction ".html" = id
+getRenderFunction ext = writeHtmlString writerOptions
+                      . readFunction ext defaultParserState
   where
     readFunction ".rst" = readRST
     readFunction ".tex" = readLaTeX
     readFunction _      = readMarkdown
 
--- | Read metadata header from a file handle.
-readMetaData :: Handle -> Hakyll [(String, String)]
-readMetaData handle = do
-    line <- liftIO $ U.hGetLine handle
-    if isDelimiter line
-        then return []
-        else do others <- readMetaData handle
-                return $ (trimPair . break (== ':')) line : others
-  where
-    trimPair (key, value) = (trim key, trim $ tail value)
+-- | Split a page into sections.
+splitAtDelimiters :: [String] -> [[String]]
+splitAtDelimiters [] = []
+splitAtDelimiters ls@(x:xs)
+    | isDelimiter x = let (content, rest) = break isDelimiter xs
+                      in (x : content) : splitAtDelimiters rest
+    | otherwise = [ls]
 
 -- | Check if the given string is a metadata delimiter.
 isDelimiter :: String -> Bool
@@ -106,6 +104,31 @@ cachePage page@(Page mapping) = do
 
     destination = toCache $ getURL page
 
+-- | Read one section of a page.
+readSection :: (String -> String) -- ^ Render function.
+            -> Bool -- ^ If this section is the first section in the page.
+            -> [String] -- ^ Lines in the section.
+            -> [(String, String)] -- ^ Key-values extracted.
+readSection _ _ [] = []
+readSection renderFunction True ls
+    | isDelimiter (head ls) = readSimpleMetaData (tail ls)
+    | otherwise = [("body", renderFunction $ unlines ls)]
+  where
+    readSimpleMetaData = map readPair
+    readPair = (trimPair . break (== ':'))
+    trimPair (key, value) = (trim key, trim $ tail value)
+
+readSection renderFunction False ls
+    | isDelimiter (head ls) = readSectionMetaData ls
+    | otherwise = error $ "Page parsing error at: " ++ head ls
+  where
+    readSectionMetaData [] = []
+    readSectionMetaData (header:value) =
+        let key = if header `matchesRegex` "----*  *[a-zA-Z][a-zA-Z]*"
+                      then substituteRegex "[^a-zA-Z]" "" header
+                      else "body"
+        in [(key, renderFunction $ unlines value)]
+
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a @.markdown@ extension, it will be rendered using pandoc.
 readPage :: FilePath -> Hakyll Page
@@ -113,27 +136,22 @@ readPage pagePath = do
     -- Check cache.
     getFromCache <- isCacheValid cacheFile [pagePath]
     let path = if getFromCache then cacheFile else pagePath
+        renderFunction = getRenderFunction $ takeExtension path
+        sectionFunctions = map (readSection renderFunction)
+                               (True : repeat False)
 
     -- Read file.
     handle <- liftIO $ openFile path ReadMode
-    line <- liftIO $ U.hGetLine handle
-    (metaData, body) <-
-        if isDelimiter line
-            then do md <- readMetaData handle
-                    b <- liftIO $ U.hGetContents handle
-                    return (md, b)
-            else do b <- liftIO $ U.hGetContents handle
-                    return ([], line ++ "\n" ++ b)
+    sections <- fmap (splitAtDelimiters . lines )
+                     (liftIO $ U.hGetContents handle)
 
-    -- Render file
-    let rendered = (renderFunction $ takeExtension path) body
+    let context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
-            [ ("body", rendered)
-            , ("url", url)
+            [ ("url", url)
             , ("path", pagePath)
-            ] ++ metaData
+            ] ++ context
 
-    seq (($|) id rdeepseq rendered) $ liftIO $ hClose handle
+    seq (($|) id rdeepseq context) $ liftIO $ hClose handle
 
     -- Cache if needed
     if getFromCache then return () else cachePage page

@@ -1,8 +1,10 @@
 -- | A module that exports a simple regex interface. This code is mostly copied
---   from the regex-compat package at hackage.
+--   from the regex-compat package at hackage. I decided to write this module
+--   because I want to abstract the regex package used.
 module Text.Hakyll.Regex
     ( splitRegex
     , substituteRegex
+    , matchesRegex
     ) where
 
 import Text.Regex.TDFA
@@ -58,9 +60,15 @@ splitRegex :: String -> String -> [String]
 splitRegex pattern = filter (not . null)
                    . splitRegex' (makeRegex pattern)
 
--- | Substitute a regex. Simplified interface.
+-- | Substitute a regex. Simplified interface. This function performs a global
+--   substitution.
 substituteRegex :: String -- ^ Pattern to replace (regex).
                 -> String -- ^ Replacement string.
                 -> String -- ^ Input string.
                 -> String -- ^ Result.
-substituteRegex pattern replacement str = subRegex (makeRegex pattern) str replacement
+substituteRegex pattern replacement string =
+    subRegex (makeRegex pattern) string replacement
+
+-- | Simple regex matching.
+matchesRegex :: String -> String -> Bool
+matchesRegex string pattern = string =~ pattern
