@@ -12,7 +12,8 @@ import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
 import System.FilePath (takeExtension)
-import System.IO
+import System.IO (Handle, IOMode(..), openFile, hClose)
+import qualified System.IO.UTF8 as U
 
 import Text.Pandoc
 
@@ -68,7 +69,7 @@ renderFunction ext = writeHtmlString writerOptions
 -- | Read metadata header from a file handle.
 readMetaData :: Handle -> Hakyll [(String, String)]
 readMetaData handle = do
-    line <- liftIO $ hGetLine handle
+    line <- liftIO $ U.hGetLine handle
     if isDelimiter line
         then return []
         else do others <- readMetaData handle
@@ -91,18 +92,18 @@ cachePage page@(Page mapping) = do
 
     writePageToCache = do
         handle <- openFile destination WriteMode
-        hPutStrLn handle "---"
+        U.hPutStrLn handle "---"
         mapM_ (writePair handle) $ M.toList simpleMetaData
         mapM_ (writeSection handle) $ M.toList sectionMetaData
-        hPutStrLn handle "---"
-        hPutStr handle $ getBody page
+        U.hPutStrLn handle "---"
+        U.hPutStrLn handle $ getBody page
         hClose handle
 
-    writePair h (k, v) = do hPutStr h $ k ++ ": " ++ v
-                            hPutStrLn h ""
+    writePair h (k, v) = do U.hPutStr h $ k ++ ": " ++ v
+                            U.hPutStrLn h ""
 
-    writeSection h (k, v) = do hPutStrLn h $ "--- " ++ k
-                               hPutStrLn h v
+    writeSection h (k, v) = do U.hPutStrLn h $ "--- " ++ k
+                               U.hPutStrLn h v
 
     destination = toCache $ getURL page
 
@@ -116,13 +117,13 @@ readPage pagePath = do
 
     -- Read file.
     handle <- liftIO $ openFile path ReadMode
-    line <- liftIO $ hGetLine handle
+    line <- liftIO $ U.hGetLine handle
     (metaData, body) <-
         if isDelimiter line
             then do md <- readMetaData handle
-                    b <- liftIO $ hGetContents handle
+                    b <- liftIO $ U.hGetContents handle
                     return (md, b)
-            else do b <- liftIO $ hGetContents handle
+            else do b <- liftIO $ U.hGetContents handle
                     return ([], line ++ "\n" ++ b)
 
     -- Render file
