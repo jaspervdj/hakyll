@@ -86,7 +86,7 @@ cachePage page@(Page mapping) = do
     makeDirectories destination
     liftIO writePageToCache
   where
-    (sectionMetaData, simpleMetaData) = M.partition (not . elem '\n')
+    (sectionMetaData, simpleMetaData) = M.partition (elem '\n')
                                                     (M.delete "body" mapping)
 
     writePageToCache = do
