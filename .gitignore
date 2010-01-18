@@ -9,7 +9,9 @@
 *.swp
 *~
 .DS_Store
+TAGS
 dist
+tags
 
 # Ignore test builds.
 tests/Tests

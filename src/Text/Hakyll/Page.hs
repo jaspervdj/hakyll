@@ -61,10 +61,9 @@ renderFunction ".html" = id
 renderFunction ext = writeHtmlString writerOptions
                    . readFunction ext defaultParserState
   where
-    readFunction ".markdown" = readMarkdown
-    readFunction ".md"       = readMarkdown
-    readFunction ".tex"      = readLaTeX
-    readFunction _           = readMarkdown
+    readFunction ".rst" = readRST
+    readFunction ".tex" = readLaTeX
+    readFunction _      = readMarkdown
 
 -- | Read metadata header from a file handle.
 readMetaData :: Handle -> Hakyll [(String, String)]
@@ -134,7 +133,7 @@ readPage pagePath = do
             , ("path", pagePath)
             ] ++ metaData
 
-    seq (($|) id rdeepseq rendered) $ liftIO $ hClose handle
+    seq (($|) id rdeepseq rendered) $ hClose handle
 
     -- Cache if needed
     if getFromCache then return () else cachePage page

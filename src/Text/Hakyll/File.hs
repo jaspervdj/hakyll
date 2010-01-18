@@ -42,7 +42,17 @@ toCache path = "_cache" </> (removeLeadingSeparator path)
 
 -- | Get the url for a given page.
 toURL :: FilePath -> FilePath
-toURL path = if takeExtension path `elem` [".markdown", ".md", ".tex"]
+toURL path = if takeExtension path `elem` [ ".markdown"
+                                          , ".md"
+                                          , ".mdn"
+                                          , ".mdwn"
+                                          , ".mkd"
+                                          , ".mkdn"
+                                          , ".mkdwn"
+                                          , ".rst"
+                                          , ".text"
+                                          , ".tex"
+                                          ]
                 then flip addExtension ".html" $ dropExtension path
                 else path
 
