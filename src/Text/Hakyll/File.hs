@@ -46,6 +46,7 @@ toURL path = if takeExtension path `elem` [ ".markdown"
                                           , ".mkd"
                                           , ".mkdn"
                                           , ".mkdwn"
+                                          , ".rst"
                                           , ".text"
                                           , ".tex"
                                           ]

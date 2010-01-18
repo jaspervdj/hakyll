@@ -60,6 +60,7 @@ renderFunction ".html" = id
 renderFunction ext = writeHtmlString writerOptions
                    . readFunction ext defaultParserState
   where
+    readFunction ".rst" = readRST
     readFunction ".tex" = readLaTeX
     readFunction _      = readMarkdown
 
