@@ -133,7 +133,7 @@ readPage pagePath = do
             , ("path", pagePath)
             ] ++ metaData
 
-    seq (($|) id rdeepseq rendered) $ hClose handle
+    seq (($|) id rdeepseq rendered) $ liftIO $ hClose handle
 
     -- Cache if needed
     if getFromCache then return () else cachePage page
