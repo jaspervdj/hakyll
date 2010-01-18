@@ -8,8 +8,7 @@ import Prelude hiding (log)
 import Control.Monad (forever)
 import Control.Monad.Reader (ReaderT, runReaderT, ask, liftIO)
 import Network
-import System.IO (stderr, Handle, IOMode(..), openFile, hFileSize, hClose)
-import qualified System.IO.UTF8 as U
+import System.IO
 import System.Directory (doesFileExist, doesDirectoryExist)
 import Control.Concurrent (forkIO)
 import Control.Concurrent.Chan (Chan, newChan, readChan, writeChan)
@@ -22,7 +21,7 @@ import Text.Hakyll.Regex
 
 -- | Function to log from a chan.
 log :: Chan String -> IO ()
-log logChan = forever (readChan logChan >>= U.hPutStrLn stderr)
+log logChan = forever (readChan logChan >>= hPutStrLn stderr)
 
 -- | General server configuration.
 data ServerConfig = ServerConfig { documentRoot :: FilePath
@@ -48,7 +47,7 @@ instance Show Request where
 --   headers and body.
 readRequest :: Handle -> Server Request
 readRequest handle = do
-    requestLine <- liftIO $ U.hGetLine handle
+    requestLine <- liftIO $ hGetLine handle
     let [method, uri, version] = map trim $ splitRegex " " requestLine
     return $ Request { requestMethod = method
                      , requestURI = uri
@@ -110,10 +109,9 @@ createGetResponse request = do
                                                     else uri
 
         create200 = do
-            h <- openFile fileName ReadMode
+            h <- openBinaryFile fileName ReadMode
             contentLength <- hFileSize h
-            hClose h
-            body <- readFile fileName
+            body <- hGetContents h
             let headers =
                     [ ("Content-Length", show $ contentLength)
                     ] ++ getMIMEHeader fileName
@@ -148,7 +146,7 @@ getMIMEHeader fileName =
     result = lookup (takeExtension fileName) [ (".css", "text/css")
                                                , (".gif", "image/gif")
                                                , (".htm", "text/html")
-                                               , (".html", "text/html; charset=utf8")
+                                               , (".html", "text/html")
                                                , (".jpeg", "image/jpeg")
                                                , (".jpg", "image/jpeg")
                                                , (".js", "text/javascript")
@@ -172,21 +170,21 @@ respond handle = do
     -- Send the response back to the handle.
     liftIO $ putResponse response
   where
-    putResponse response = do U.hPutStr handle $ intercalate " "
+    putResponse response = do hPutStr handle $ intercalate " "
                                   [ responseVersion response
                                   , show $ responseStatusCode response
                                   , responsePhrase response
                                   ]
-                              U.hPutStr handle "\r\n"
+                              hPutStr handle "\r\n"
                               mapM_ putHeader
                                     (M.toList $ responseHeaders response)
-                              U.hPutStr handle "\r\n"
-                              U.hPutStr handle $ responseBody response
-                              U.hPutStr handle "\r\n"
+                              hPutStr handle "\r\n"
+                              hPutStr handle $ responseBody response
+                              hPutStr handle "\r\n"
                               hClose handle
 
     putHeader (key, value) =
-        U.hPutStr handle $ key ++ ": " ++ value ++ "\r\n"
+        hPutStr handle $ key ++ ": " ++ value ++ "\r\n"
 
 -- | Start a simple http server on the given 'PortNumber', serving the given
 --   directory.
