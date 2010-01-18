@@ -95,14 +95,12 @@ Hakyll has a specialized module to deal with tags, provided by
 `Text.Hakyll.Tags`. This module assumes tags are comma separated, and placed in
 the `tags` metadata field.
 
-~~~~~
----
-title: A third post
-author: Publius Ovidius Naso
-tags: epic fail, ovidius
----
-Pellentesque tempor blandit elit, vel...
-~~~~~
+> ---
+> title: A third post
+> author: Publius Ovidius Naso
+> tags: epic fail, ovidius
+> ---
+> Pellentesque tempor blandit elit, vel...
 
 But first things first. We need to render a post list for every tag. We already
 had some code to render a list of all posts. We're just going to abstract this

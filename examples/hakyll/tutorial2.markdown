@@ -29,16 +29,13 @@ provide us with all the blog posts. The blog posts have a
 can sort them easily, you could of course name them whatever you want. They
 contain some metadata, too:
 
-~~~~~{.markdown}
----
-title: A first post
-author: Julius Caesar
-date: November 5, 2009
----
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-Vivamus pretium leo adipiscing lectus iaculis lobortis.
-Vivamus scelerisque velit dignissim metus...
-~~~~~
+> title: A first post
+> author: Julius Caesar
+> date: November 5, 2009
+> ---
+> Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+> Vivamus pretium leo adipiscing lectus iaculis lobortis.
+> Vivamus scelerisque velit dignissim metus...
 
 Now, we find the posts and sort them reversed:
 

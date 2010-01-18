@@ -66,14 +66,12 @@ metadata. The metadata is placed in the file header and surrouded by `---`
 lines. Each line should contain a `key: value` pair. Let's have a look at the
 `about.markdown` page.
 
-~~~~~{.markdown}
----
-title: About
----
-Nullam imperdiet sodales orci vitae molestie.
-Nunc quam orci, pharetra a rhoncus vitae,
-eleifend id felis. Suspendisse potenti...
-~~~~~
+> ---
+> title: About
+> ---
+> Nullam imperdiet sodales orci vitae molestie.
+> Nunc quam orci, pharetra a rhoncus vitae,
+> eleifend id felis. Suspendisse potenti...
 
 This contains one `key: value` pair, namely `title: About`. The rest of the
 file is treated as markdown by pandoc. If you want to know more about
