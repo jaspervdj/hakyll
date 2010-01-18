@@ -1,6 +1,6 @@
 module Main where
 
-import Text.Hakyll (hakyll)
+import Text.Hakyll (hakyll, defaultHakyllConfiguration)
 import Text.Hakyll.Render
 import Text.Hakyll.Tags (readTagMap, renderTagCloud, renderTagLinks)
 import Text.Hakyll.File (getRecursiveContents, directory, removeSpaces)
@@ -11,7 +11,7 @@ import Data.Map (toList)
 import Control.Monad (mapM_, liftM)
 import Data.Either (Either(..))
 
-main = hakyll $ do
+main = hakyll defaultHakyllConfiguration $ do
     -- Static directory.
     directory css "css"
 
@@ -31,7 +31,7 @@ main = hakyll $ do
 
     -- Render index, including recent posts.
     let recentPosts = renderAndConcatWith postManipulation
-                                          "templates/postitem.html"
+                                          ["templates/postitem.html"]
                                           (take 3 renderablePosts)
     renderChain ["index.html", "templates/default.html"] $
         createCustomPage "index.html" ("templates/postitem.html" : take 3 postPaths)
@@ -45,7 +45,7 @@ main = hakyll $ do
                            ]) renderablePosts
 
     -- Render rss feed
-    let recentRSSItems = renderAndConcat "templates/rssitem.xml" $ take 3 renderablePosts
+    let recentRSSItems = renderAndConcat ["templates/rssitem.xml"] $ take 3 renderablePosts
     let rssPage = createCustomPage "rss.xml"
                         ("templates/postitem.html" : take 3 postPaths)
                         [("items", Right recentRSSItems)]
@@ -62,7 +62,7 @@ main = hakyll $ do
 
           renderPostList url title posts = do
               let postItems = renderAndConcatWith postManipulation
-                                                  "templates/postitem.html"
+                                                  ["templates/postitem.html"]
                                                   (map createPagePath posts)
                   customPage = createCustomPage url
                                                 ("templates/postitem.html" : posts)
