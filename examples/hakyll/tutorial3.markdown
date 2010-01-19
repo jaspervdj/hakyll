@@ -1,124 +1,162 @@
 ---
 title: Tutorial (Part III)
-what: adds an RSS feed to the blog from the previous tutorial
+what: creates a simple blog
 ---
 
-## Adding RSS to our simple blog
+## Creating a simple blog with Hakyll
 
-In this tutorial, we're going to add an RSS feed to the blog we wrote in
-[the previous tutorial](tutorial2.html). Here is a
-[zip file containing the source](examples/rssblog.zip).
+After we created a simple brochure site, we're going to try something more
+advanced: we are going to create a simple blog system.
 
-An RSS feed looks like this:
+A [zip file containing the source](examples/simpleblog.zip) for this
+tutorial is also available.
 
-~~~~~{.xml}
-<?xml version="1.0" ?>
-<rss version="2.0">
-  <channel>
-    <title>The SimpleBlog</title>
-    <link>http://example.com/</link>
-    <description>Simple blog in hakyll</description>
-    <item>
-      <title>Title goes here</title>
-      <link>http://example.com/post.html</link>
-      <description>
-        A description is optional.
-      </description>
-    </item>
-  </channel>
-</rss>
-~~~~~
-
-Note that, obviously, there can be more than one item. We're going to use a
-template to render this. This is where `templates/rss.xml` comes in:
-
-~~~~~{.xml}
-<?xml version="1.0" ?>
-<rss version="2.0">
-  <channel>
-    <title>The SimpleBlog</title>
-    <link>http://jaspervdj.be/</link>
-    <description>Simple blog in hakyll</description>
-    $items
-  </channel> 
-</rss>
-~~~~~
-
-We thus render our feed with the following code (no, I didn't define `rssPage`
-yet - I'm going to work from bottom to top here, it's easier to explain it
-that way).
+Blogs, as you probably know, are composed of posts. In Hakyll, we're going
+to use simple pages for posts. All posts are located in the `posts`
+directory. But we're not going to use the `directory` command here - you will
+see why later. First, some trivial things like css.
 
 ~~~~~{.haskell}
-renderChain ["templates/rss.xml"] rssPage
+main = hakyll $ do
+    directory css "css"
 ~~~~~
 
-This, as you can see, is a regular render chain, once again. We need make a
-`Renderable` that "fills in" the `$items` identifier. We're going to do this
-using a [custom page](tutorial2.html#custom-pages).
+## Finding the posts, and a bit about renderables
 
-## Custom pages again
+`Text.Hakyll.File` contains a handy function `getRecursiveContents`, which will
+provide us with all the blog posts. The blog posts have a
+`yyyy-mm-dd-title.extension` naming scheme. This is just a simple trick so we
+can sort them easily, you could of course name them whatever you want. They
+contain some metadata, too:
 
-Note that we do not have to include all posts in the rss feed - only a few
-recent ones. We'll settle on the latest three here.
+    title: A first post
+    author: Julius Caesar
+    date: November 5, 2009
+    ---
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+    Vivamus pretium leo adipiscing lectus iaculis lobortis.
+    Vivamus scelerisque velit dignissim metus...
 
-We want to render every post using the following template,
-`templates/rssitem.xml`:
+Now, we find the posts and sort them reversed:
 
 ~~~~~{.haskell}
-<item>
-  <title>$title</title>
-  <link>http://example.com/$url</link>
-  <description>$title by $author</description>
-</item>
+-- Find all post paths.
+postPaths <- liftM (reverse . sort) $ getRecursiveContents "posts"
 ~~~~~
 
-Since we build on the previous example, we still have our `renderablePosts`
-list. We'll be using it again:
+Our `postPaths` value is now of the type `[FilePath]`. `FilePath` is no
+instance of `Renderable`, but `PagePath` is:
 
 ~~~~~{.haskell}
-let recentRSSItems = renderAndConcat "templates/rssitem.xml"
-                                     (take 3 renderablePosts)
+let renderablePosts = map createPagePath postPaths
 ~~~~~
 
-We're using the `renderAndConcat` function again. Note that because of
-hakyll/haskell laziness, this action isn't executed directly, and this helps
-dependency handling.
-
-Now, the `rssPage` page. As you might remember, we use the `createCustomPage`
-function to create a custom page. We first give the destination url, then a
-list of dependencies, and then a list of `(key, value)` pairs.
+We have two templates we want to render our posts with: first we would like to
+render them using `templates/post.html`, and we want to render the result
+using `templates/default.html`. This can be done with the `renderChain`
+function:
 
 ~~~~~{.haskell}
-let rssPage = createCustomPage
-                   "rss.xml"
-                   ("templates/postitem.html" : take 3 postPaths)
-                   [("items", Right recentRSSItems)]
+mapM_ (renderChain [ "templates/post.html"
+                   , "templates/default.html"
+                   ]) renderablePosts
 ~~~~~
 
-## Adding a link to the feed
+Remember that the `renderChain` works by rendering the datatype using the first
+template, creating a new page with the render result in the `body` field, and so
+on until it has been rendered with all templates.
 
-According to the w3 organization,
-[you should add \<link\> tags](http://www.w3.org/QA/Tips/use-links) to your
-documents, so we'll do this. In `templates/default.html`:
+Now, we have the posts rendered. What is left is to generate some kind of index
+page with links to those posts. We want one general list showing all posts, and
+we want to show a few recent posts on the index page.
 
-~~~~~~{.html}
-<head>
-  <title>SimpleBlog - $title</title>
-  <link rel="stylesheet" type="text/css" href="$$root/css/default.css" />
-  <link rel="alternate"
-        type="application/rss+xml"
-        title="SimpleBlog"
-        href="http://example.com/rss.xml" />
-</head>
-~~~~~~
+## Custom Pages
 
-This makes most browsers see the rss feed, and show it in the address bar.
-If you want, you can also add a pretty button to your blog linking to
-`rss.xml`.
+Currently, there are 3 renderable datatypes in Hakyll:
 
-## That's it!
+- `Page`: The result of any rendering action. It is generally not recommended
+  to use pages a lot, because they cannot check dependencies (and therefore,
+  you would always regenerate your entire site if you use pages the wrong way).
+- `PagePath`: Basically just a `FilePath` in a box. Internally, this will use
+  a `Page` for rendering, but `PagePath` provides better dependency checking
+  and works on a higher level.
+- `CustomPage`: Basically the name says it - the preferred way of creating
+  custom pages in Hakyll.
 
-Yep, that's it. Feel free to play with the source code in
-[the zip file](examples/rssblog.zip) and extend the blog further. As always,
-all questions are welcome on the
+We will use a `CustomPage` here. Basically, all `Renderable` datatypes are in
+the end just `key: value` mappings. A CustomPage is created using the
+`createCustomPage` function, which has the following type signature:
+
+~~~~~{.haskell}
+createCustomPage :: FilePath
+                 -> [FilePath]
+                 -> [(String, Either String (IO String)]
+~~~~~
+
+The first argument is the `url` of the page to generate. For our index page,
+this will be, `index.html`. The second argument is _a list of dependencies_.
+Basically, you should here give a list of files on which your custom page
+depends.
+
+The last argument is obviously our `key: value` mapping. But why the `Either`?
+This, once again, is about dependency handling. The idea is that you can choose
+which type to use for the value:
+
+- `String`: Simply a `String`.
+- `IO String`: Here, you can give an arbitrary `IO` action that will result
+  in a String. However - this action _will not be executed_ when the file
+  in `_site` is up-to-date.
+
+First, let us define this `IO String` for our index page. We want to render
+every post using a simple template:
+
+~~~~~{.html}
+<li>
+    <a href="$$root/$url">$title</a>
+    - <em>$date</em> - by <em>$author</em>
+</li>
+~~~~~
+
+When every post is rendered with this template, we then want to concatenate the
+result. Since rendering and concatenating is pretty common, Hakyll provides us
+with a high-level function to do this.
+
+~~~~~{.haskell}
+let recentPosts = renderAndConcat ["templates/postitem.html"]
+                    (take 3 renderablePosts)
+~~~~~
+
+Now, creating our custom page is fairly straight-forward:
+
+~~~~~{.haskell}
+createCustomPage "index.html"
+                 ("templates/postitem.html" : take 3 postPaths)
+                 [ ("title", Left "All posts")
+                 , ("posts", Right recentPosts)
+                 ]
+~~~~~
+
+You can see our three arguments here. We're rendering `index.html`, then we tell
+Hakyll on what files it depends - here the `templates/postitem.html` template
+and the latest 3 posts. Finally, we give a `title` value to substitute in the
+template, and the result of our concatenation. Of course, we also need to render
+this custom page:
+
+~~~~~{.haskell}
+renderChain ["index.html", "templates/default.html"] $
+    createCustomPage "index.html"
+         ("templates/postitem.html" : take 3 postPaths)
+         [ ("title", Left "All posts")
+         , ("posts", Right recentPosts)
+         ]
+~~~~~
+
+Note that the `index.html` in the `renderChain` list is also a template.
+
+## That's that
+
+If you have any more questions, feel free to ask them on the
 [google discussion group](http://groups.google.com/group/hakyll).
+
+There is a [next tutorial](tutorial4.html), explaining how to add an RSS feed
+to our sample blog.

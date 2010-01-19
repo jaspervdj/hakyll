@@ -66,12 +66,12 @@ metadata. The metadata is placed in the file header and surrouded by `---`
 lines. Each line should contain a `key: value` pair. Let's have a look at the
 `about.markdown` page.
 
-> ---
-> title: About
-> ---
-> Nullam imperdiet sodales orci vitae molestie.
-> Nunc quam orci, pharetra a rhoncus vitae,
-> eleifend id felis. Suspendisse potenti...
+    ---
+    title: About
+    ---
+    Nullam imperdiet sodales orci vitae molestie.
+    Nunc quam orci, pharetra a rhoncus vitae,
+    eleifend id felis. Suspendisse potenti...
 
 This contains one `key: value` pair, namely `title: About`. The rest of the
 file is treated as markdown by pandoc. If you want to know more about
@@ -209,4 +209,4 @@ questions, feel free to ask them on the
 [google discussion group](http://groups.google.com/group/hakyll).
 
 If you feel comfortable with the basics, here is a next tutorial:
-[building a simple blog](tutorial2.html).
+[more about writing pages](tutorial2.html).

@@ -1,162 +1,159 @@
 ---
 title: Tutorial (Part II)
-what: creates a simple blog
+what: elaborates a little on writing pages and templates
 ---
 
-## Creating a simple blog with Hakyll
+## The structure of a Page
 
-After we created a simple brochure site, we're going to try something more
-advanced: we are going to create a simple blog system.
+The most important thing to realize is that a `Page` is just a key-value
+mapping. Another example:
 
-A [zip file containing the source](examples/simpleblog.zip) for this
-tutorial is also available.
+    ---
+    title: About
+    author: Mia Wallace
+    ---
+    Hello there! This is
+    a simple about page.
 
-Blogs, as you probably know, are composed of posts. In Hakyll, we're going
-to use simple pages for posts. All posts are located in the `posts`
-directory. But we're not going to use the `directory` command here - you will
-see why later. First, some trivial things like css.
+This will produce the following mapping:
 
-~~~~~{.haskell}
-main = hakyll $ do
-    directory css "css"
-~~~~~
+- `title`: About
+- `author`: Mia Wallace
+- `body`: Hello there! This is a simple about page.
 
-## Finding the posts, and a bit about renderables
+`body` is the traditional name for the main body part of a page. If the page has
+a `.markdown` extension for example, this would also be rendered by pandoc. But
+pages are more flexible. The following is also a valid page:
 
-`Text.Hakyll.File` contains a handy function `getRecursiveContents`, which will
-provide us with all the blog posts. The blog posts have a
-`yyyy-mm-dd-title.extension` naming scheme. This is just a simple trick so we
-can sort them easily, you could of course name them whatever you want. They
-contain some metadata, too:
+    Hello there! This is
+    a simple about page.
 
-> title: A first post
-> author: Julius Caesar
-> date: November 5, 2009
-> ---
-> Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-> Vivamus pretium leo adipiscing lectus iaculis lobortis.
-> Vivamus scelerisque velit dignissim metus...
+This will produce one key-value pair:
 
-Now, we find the posts and sort them reversed:
+- `body`: Hello there! This is a simple about page.
 
-~~~~~{.haskell}
--- Find all post paths.
-postPaths <- liftM (reverse . sort) $ getRecursiveContents "posts"
-~~~~~
+But the `Page` parser can do more than this. You can add extra sections, apart
+from the body, and even leave out the body.
 
-Our `postPaths` value is now of the type `[FilePath]`. `FilePath` is no
-instance of `Renderable`, but `PagePath` is:
+    ---
+    author: Vincent Vega
+   
+    --- prelude
+    A small introduction goes here. I can write *markdown* here, by the way. Well,
+    assuming this page has a `.markdown` extension.
+   
+    --- main
+    I can write some more things here.
 
-~~~~~{.haskell}
-let renderablePosts = map createPagePath postPaths
-~~~~~
+This will produce the following:
 
-We have two templates we want to render our posts with: first we would like to
-render them using `templates/post.html`, and we want to render the result
-using `templates/default.html`. This can be done with the `renderChain`
-function:
+- `author`: Vincent Vega
+- `prelude`: A small introduction goes here. I can write *markdown* here, by the
+  way. Well, assuming this page has a `.markdown` extension.
+- `main`: I can write some more things here.
 
-~~~~~{.haskell}
-mapM_ (renderChain [ "templates/post.html"
-                   , "templates/default.html"
-                   ]) renderablePosts
-~~~~~
+The example from this tutorial (we will see later) uses this to build a
+three-column system for the website, separating content from layout.
 
-Remember that the `renderChain` works by rendering the datatype using the first
-template, creating a new page with the render result in the `body` field, and so
-on until it has been rendered with all templates.
+## Combining pages
 
-Now, we have the posts rendered. What is left is to generate some kind of index
-page with links to those posts. We want one general list showing all posts, and
-we want to show a few recent posts on the index page.
+Now you know that `Page`s, and `Renderable`s in general, are basically nothing
+more than key-values mappings, it is time to abuse this fact. There is another
+`Renderable` type we haven't talked about before: a `CombinedRenderable`.
 
-## Custom Pages
-
-Currently, there are 3 renderable datatypes in Hakyll:
-
-- `Page`: The result of any rendering action. It is generally not recommended
-  to use pages a lot, because they cannot check dependencies (and therefore,
-  you would always regenerate your entire site if you use pages the wrong way).
-- `PagePath`: Basically just a `FilePath` in a box. Internally, this will use
-  a `Page` for rendering, but `PagePath` provides better dependency checking
-  and works on a higher level.
-- `CustomPage`: Basically the name says it - the preferred way of creating
-  custom pages in Hakyll.
-
-We will use a `CustomPage` here. Basically, all `Renderable` datatypes are in
-the end just `key: value` mappings. A CustomPage is created using the
-`createCustomPage` function, which has the following type signature:
+The type signature of the `combine` function does a pretty good job at
+explaining it:
 
 ~~~~~{.haskell}
-createCustomPage :: FilePath
-                 -> [FilePath]
-                 -> [(String, Either String (IO String)]
+combine :: (Renderable a, Renderable b)
+        => a -> b -> CombinedRenderable a b
 ~~~~~
 
-The first argument is the `url` of the page to generate. For our index page,
-this will be, `index.html`. The second argument is _a list of dependencies_.
-Basically, you should here give a list of files on which your custom page
-depends.
+This means we can take two `Renderable` values and combine them. This is
+basically a `Map.union`: The result will contain all keys from `a`, and all
+keys from `b`. If a key is present in both `Renderable`s, the value from `a`
+will be chosen. This is, for example, always the case with an `url` (since
+all `Renderable` types always have an url).
 
-The last argument is obviously our `key: value` mapping. But why the `Either`?
-This, once again, is about dependency handling. The idea is that you can choose
-which type to use for the value:
+Combining two `Renderable`s, but setting a different `url` is quite common, so
+there is another function that helps us here:
 
-- `String`: Simply a `String`.
-- `IO String`: Here, you can give an arbitrary `IO` action that will result
-  in a String. However - this action _will not be executed_ when the file
-  in `_site` is up-to-date.
+~~~~~{.haskell}
+combineWithURL :: (Renderable a, Renderable b)
+               => FilePath -> a -> b -> CombinedRenderable a b
+~~~~~
 
-First, let us define this `IO String` for our index page. We want to render
-every post using a simple template:
+## The example
+
+Now that we have the tools, we'll get on to the example. This time, we'll
+be making a more advanced brochure site. Here
+[is a zip file](examples/morepages.zip) containing the source code for the
+tutorial.
+
+Every page consists of three sections, originally named `section1`, `section2`
+and `section3`. So our pages look more or less like this:
+
+    ---
+    title: About
+
+    --- section1
+    ## Mattis
+    Nullam imperdiet sodales orci vitae molestie. Nunc...
+
+    --- section2
+    ## Orci
+    Vivamus eget mauris sit amet nulla laoreet lobortis. Nulla in...
+
+    --- section3
+    ## Augue
+    In urna ante, pulvinar et imperdiet nec, fermentum ac...
+
+The cool thing is we do not have to specify how these will be layed out. In our
+template, we decide to use a simple three column system:
 
 ~~~~~{.html}
-<li>
-    <a href="$$root/$url">$title</a>
-    - <em>$date</em> - by <em>$author</em>
-</li>
+<div class="column"> $section1 </div>
+<div class="column"> $section2 </div>
+<div class="column"> $section3 </div>
 ~~~~~
 
-When every post is rendered with this template, we then want to concatenate the
-result. Since rendering and concatenating is pretty common, Hakyll provides us
-with a high-level function to do this.
+The columns are then floated using css. So far so good, but what if we wanted
+an additional text block on every page? An easy solution would be to add this
+to the template, but then our layout-content separation idea will be broken
+again. So we simply add to the template:
+
+~~~~~{.html}
+<div class="footer"> $footer </div>
+~~~~~
+
+And now we will use `combine` to put the footer on every page. We write a small
+auxiliary function that combines a given `Renderable` with the footer:
 
 ~~~~~{.haskell}
-let recentPosts = renderAndConcat "templates/postitem.html"
-                    (take 3 renderablePosts)
+withFooter a = a `combine` createPagePath "footer.markdown"
 ~~~~~
 
-Now, creating our custom page is fairly straight-forward:
+Now, were we previously wrote:
 
 ~~~~~{.haskell}
-createCustomPage "index.html"
-                 ("templates/postitem.html" : take 3 postPaths)
-                 [ ("title", Left "All posts")
-                 , ("posts", Right recentPosts)
-                 ]
+render "about.markdown"
+where render = renderChain ["templates/default.html"]
+             . createPagePath
 ~~~~~
 
-You can see our three arguments here. We're rendering `index.html`, then we tell
-Hakyll on what files it depends - here the `templates/postitem.html` template
-and the latest 3 posts. Finally, we give a `title` value to substitute in the
-template, and the result of our concatenation. Of course, we also need to render
-this custom page:
+We simply have to add our footer:
 
 ~~~~~{.haskell}
-renderChain ["index.html", "templates/default.html"] $
-    createCustomPage "index.html"
-         ("templates/postitem.html" : take 3 postPaths)
-         [ ("title", Left "All posts")
-         , ("posts", Right recentPosts)
-         ]
+render "about.markdown"
+where render = renderChain ["templates/default.html"]
+             . withFooter
+             . createPagePath
 ~~~~~
 
-Note that the `index.html` in the `renderChain` list is also a template.
+And now every page will include the footer.
 
-## That's that
+## That's all folks
 
-If you have any more questions, feel free to ask them on the
+I hope this tutorial was clear enough to teach you the concepts of pages and
+combining renderables. As always, questions and feedback are welcome at the
 [google discussion group](http://groups.google.com/group/hakyll).
-
-There is a [next tutorial](tutorial3.html), explaining how to add an RSS feed
-to our sample blog.
