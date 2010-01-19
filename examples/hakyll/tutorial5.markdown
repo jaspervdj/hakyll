@@ -159,7 +159,7 @@ post lists for every tag.
 Hakyll provides a function called `readTagMap`. Let's inspect it's type.
 
 ~~~~~{.haskell}
-readTagMap [FilePath] -> IO Map String [FilePath]
+readTagMap [FilePath] -> Hakyll Map String [FilePath]
 ~~~~~
 
 You give it a list of paths, and it creates a map that, for every tag, holds
