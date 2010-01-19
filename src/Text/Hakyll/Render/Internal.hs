@@ -16,7 +16,6 @@ import Data.List (isPrefixOf, foldl')
 import Data.Char (isAlpha)
 import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
-import qualified System.IO.UTF8 as U
 
 import Text.Hakyll.Renderable
 import Text.Hakyll.Page
@@ -90,6 +89,6 @@ writePage page = do
         context = additionalContext' `M.union` (M.singleton "root" $ toRoot url)
     makeDirectories destination
     -- Substitute $root here, just before writing.
-    liftIO $ U.writeFile destination $ finalSubstitute (getBody page) context
+    liftIO $ writeFile destination $ finalSubstitute (getBody page) context
   where
     url = getURL page

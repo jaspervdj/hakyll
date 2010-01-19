@@ -12,8 +12,7 @@ import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
 import System.FilePath (takeExtension)
-import System.IO (IOMode(..), openFile, hClose)
-import qualified System.IO.UTF8 as U
+import System.IO
 
 import Text.Pandoc
 
@@ -93,18 +92,18 @@ cachePage page@(Page mapping) = do
 
     writePageToCache = do
         handle <- openFile destination WriteMode
-        U.hPutStrLn handle "---"
+        hPutStrLn handle "---"
         mapM_ (writePair handle) $ M.toList simpleMetaData
         mapM_ (writeSection handle) $ M.toList sectionMetaData
-        U.hPutStrLn handle "---"
-        U.hPutStrLn handle $ getBody page
+        hPutStrLn handle "---"
+        hPutStrLn handle $ getBody page
         hClose handle
 
-    writePair h (k, v) = do U.hPutStr h $ k ++ ": " ++ v
-                            U.hPutStrLn h ""
+    writePair h (k, v) = do hPutStr h $ k ++ ": " ++ v
+                            hPutStrLn h ""
 
-    writeSection h (k, v) = do U.hPutStrLn h $ "--- " ++ k
-                               U.hPutStrLn h v
+    writeSection h (k, v) = do hPutStrLn h $ "--- " ++ k
+                               hPutStrLn h v
 
     destination = toCache $ getURL page
 
@@ -147,7 +146,7 @@ readPage pagePath = do
     -- Read file.
     handle <- liftIO $ openFile path ReadMode
     sections <- fmap (splitAtDelimiters . lines )
-                     (liftIO $ U.hGetContents handle)
+                     (liftIO $ hGetContents handle)
 
     let context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
