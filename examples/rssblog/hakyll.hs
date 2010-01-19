@@ -1,7 +1,7 @@
 module Main where
 
 import Control.Monad.Reader (liftIO)
-import Text.Hakyll (hakyll, defaultHakyllConfiguration)
+import Text.Hakyll (hakyll)
 import Text.Hakyll.Render (renderAndConcat, renderChain, css)
 import Text.Hakyll.File (getRecursiveContents, directory)
 import Text.Hakyll.Renderables (createPagePath, createCustomPage)
@@ -9,7 +9,7 @@ import Data.List (sort)
 import Control.Monad (mapM_, liftM)
 import Data.Either (Either(..))
 
-main = hakyll defaultHakyllConfiguration $ do
+main = hakyll $ do
     -- Static directory.
     directory css "css"
 

@@ -1,6 +1,6 @@
 module Main where
 
-import Text.Hakyll (hakyll, defaultHakyllConfiguration)
+import Text.Hakyll (hakyll)
 import Text.Hakyll.Render
 import Text.Hakyll.Context
 import Text.Hakyll.File (getRecursiveContents, directory)
@@ -10,7 +10,7 @@ import Control.Monad (mapM_, liftM)
 import Control.Monad.Reader (liftIO)
 import Data.Either (Either(..))
 
-main = hakyll defaultHakyllConfiguration $ do
+main = hakyll $ do
     -- Static directory.
     directory css "css"
 

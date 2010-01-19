@@ -7,7 +7,7 @@ import Text.Hakyll.Regex
 import Control.Monad (mapM_, liftM)
 import Data.List (sort)
 
-main = hakyll defaultHakyllConfiguration $ do
+main = hakyll $ do
     directory css "css"
     directory static "images"
     directory static "examples"

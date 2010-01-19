@@ -1,6 +1,7 @@
 module Text.Hakyll
     ( defaultHakyllConfiguration
     , hakyll
+    , hakyllWithConfiguration
     ) where
 
 import Control.Monad.Reader (runReaderT)
@@ -18,9 +19,13 @@ defaultHakyllConfiguration = HakyllConfiguration
     { additionalContext = M.empty
     }
 
--- | Main function to run hakyll.
-hakyll :: HakyllConfiguration -> Hakyll () -> IO ()
-hakyll configuration buildFunction = do
+-- | Hakyll with a default configuration.
+hakyll :: Hakyll () -> IO ()
+hakyll = hakyllWithConfiguration defaultHakyllConfiguration
+
+-- | Main function to run hakyll with a configuration.
+hakyllWithConfiguration :: HakyllConfiguration -> Hakyll () -> IO ()
+hakyllWithConfiguration configuration buildFunction = do
     args <- getArgs
     case args of ["build"]      -> build'
                  ["clean"]      -> clean
