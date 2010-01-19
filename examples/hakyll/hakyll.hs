@@ -21,7 +21,7 @@ main = hakyll defaultHakyllConfiguration $ do
                                         [ ("title", Left "Tutorials")
                                         , ("tutorials", Right tutorialList)
                                         ]
-    renderChain ["templates/tutorials.html", "templates/default.html"] tutorialPage
+    renderChain ["templates/tutorials.html", "templates/default.html"] $ withSidebar tutorialPage
 
     mapM_ render' $ [ "about.markdown"
                     , "index.markdown"
@@ -29,4 +29,7 @@ main = hakyll defaultHakyllConfiguration $ do
                     , "reference.markdown"
                     ] ++ tutorials
 
-    where render' = renderChain ["templates/default.html"] . createPagePath
+  where
+    render' = renderChain ["templates/default.html"] . withSidebar . createPagePath
+    withSidebar a = a `combine` createPagePath "sidebar.markdown"
+          

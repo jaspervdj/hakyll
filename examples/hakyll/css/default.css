@@ -40,7 +40,7 @@ div#sidebar {
     text-align: right;
 }
 
-div#navigation a {
+div#sidebar a {
     display: block;
     font-size: 110%;
     text-decoration: none;
