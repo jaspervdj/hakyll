@@ -17,7 +17,7 @@ stripHTML :: String -> String
 stripHTML []  = []
 stripHTML str = let (beforeTag, rest) = break (== '<') str
                     (_, afterTag)     = break (== '>') rest
-                in beforeTag ++ (stripHTML $ tail' afterTag)
+                in beforeTag ++ stripHTML (tail' afterTag)
     -- We need a failsafe tail function.
   where
     tail' [] = []

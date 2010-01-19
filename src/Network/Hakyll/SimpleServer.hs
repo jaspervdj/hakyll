@@ -49,10 +49,11 @@ readRequest :: Handle -> Server Request
 readRequest handle = do
     requestLine <- liftIO $ hGetLine handle
     let [method, uri, version] = map trim $ splitRegex " " requestLine
-    return $ Request { requestMethod = method
-                     , requestURI = uri
-                     , requestVersion = version
-                     }
+        request = Request { requestMethod = method
+                          , requestURI = uri
+                          , requestVersion = version
+                          }
+    return request
 
 -- | Simple representation of the HTTP response we send back.
 data Response = Response { responseVersion :: String
@@ -64,7 +65,7 @@ data Response = Response { responseVersion :: String
 
 instance Show Response where
     show response =  responseVersion response ++ " "
-                  ++ (show $ responseStatusCode response) ++ " "
+                  ++ show (responseStatusCode response) ++ " "
                   ++ responsePhrase response
 
 -- | A default response.
@@ -105,20 +106,19 @@ createGetResponse request = do
         log' = writeChan (logChannel config)
     isDirectory <- liftIO $ doesDirectoryExist $ documentRoot config ++ uri
     let fileName =
-            (documentRoot config) ++ if isDirectory then uri ++ "/index.html"
-                                                    else uri
+            documentRoot config ++ if isDirectory then uri ++ "/index.html"
+                                                  else uri
 
         create200 = do
             h <- openBinaryFile fileName ReadMode
             contentLength <- hFileSize h
             body <- hGetContents h
-            let headers =
-                    [ ("Content-Length", show $ contentLength)
-                    ] ++ getMIMEHeader fileName
+            let mimeHeader = getMIMEHeader fileName
+                headers = ("Content-Length", show contentLength) : mimeHeader
             return $ defaultResponse
                 { responseStatusCode = 200
                 , responsePhrase = "OK"
-                , responseHeaders = (responseHeaders defaultResponse) 
+                , responseHeaders = responseHeaders defaultResponse
                     `M.union` M.fromList headers
                 , responseBody = body
                 }
@@ -131,8 +131,7 @@ createGetResponse request = do
     -- Send back the page if found.
     exists <- liftIO $ doesFileExist fileName
     if exists
-        then do response <- liftIO $ catch create200 create500
-                return response
+        then liftIO $ catch create200 create500
         else do liftIO $ log' $ "Not Found: " ++ fileName
                 return $ createErrorResponse 404 "Not Found"
 

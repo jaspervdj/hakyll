@@ -11,6 +11,7 @@ import qualified Data.List as L
 import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
+import Control.Monad (unless)
 import System.FilePath (takeExtension)
 import System.IO
 
@@ -120,11 +121,11 @@ readSection renderFunction isFirst ls
     | otherwise = body (tail ls)
   where
     isDelimiter' = isDelimiter (head ls)
-    isNamedDelimiter = (head ls) `matchesRegex` "----*  *[a-zA-Z][a-zA-Z]*"
+    isNamedDelimiter = head ls `matchesRegex` "----*  *[a-zA-Z][a-zA-Z]*"
     body ls' = [("body", renderFunction $ unlines ls')]
 
     readSimpleMetaData = map readPair
-    readPair = (trimPair . break (== ':'))
+    readPair = trimPair . break (== ':')
     trimPair (key, value) = (trim key, trim $ tail value)
 
     readSectionMetaData [] = []
@@ -157,7 +158,7 @@ readPage pagePath = do
     seq (($|) id rdeepseq context) $ liftIO $ hClose handle
 
     -- Cache if needed
-    if getFromCache then return () else cachePage page
+    unless getFromCache $ cachePage page
     return page
   where
     url = toURL pagePath

@@ -27,7 +27,7 @@ stripComments :: String -> String
 stripComments [] = []
 stripComments str
     | isPrefixOf "/*" str = stripComments $ eatComments $ drop 2 str
-    | otherwise = (head str) : (stripComments $ tail str)
+    | otherwise = head str : stripComments (tail str)
   where
     eatComments str' | null str' = []
                      | isPrefixOf "*/" str' = drop 2 str'

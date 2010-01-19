@@ -4,6 +4,7 @@ module Text.Hakyll
     ) where
 
 import Control.Monad.Reader (runReaderT)
+import Control.Monad (when)
 import qualified Data.Map as M
 import System.Environment (getArgs, getProgName)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
@@ -43,8 +44,7 @@ clean = do remove' "_cache"
   where
     remove' dir = do putStrLn $ "Removing " ++ dir ++ "..."
                      exists <- doesDirectoryExist dir
-                     if exists then removeDirectoryRecursive dir
-                               else return ()
+                     when exists $ removeDirectoryRecursive dir
 
 -- | Show usage information.
 help :: IO ()
@@ -61,4 +61,4 @@ help = do
              ++ name ++ " server [port]   Run a local test server.\n"
 
 server :: Integer -> IO ()
-server p = do simpleServer (fromIntegral $ p) "_site"
+server p = simpleServer (fromIntegral p) "_site"

@@ -26,19 +26,19 @@ import Text.Hakyll.Hakyll (Hakyll)
 removeLeadingSeparator :: FilePath -> FilePath
 removeLeadingSeparator [] = []
 removeLeadingSeparator path
-    | (head path') `elem` pathSeparators = (tail path')
-    | otherwise                          = path'
+    | head path' `elem` pathSeparators = tail path'
+    | otherwise                        = path'
   where
     path' = if "$root" `isPrefixOf` path then drop 5 path
                                          else path
 
 -- | Convert a relative filepath to a filepath in the destination (@_site@).
 toDestination :: FilePath -> FilePath
-toDestination path = "_site" </> (removeLeadingSeparator path)
+toDestination path = "_site" </> removeLeadingSeparator path
 
 -- | Convert a relative filepath to a filepath in the cache (@_cache@).
 toCache :: FilePath -> FilePath
-toCache path = "_cache" </> (removeLeadingSeparator path)
+toCache path = "_cache" </> removeLeadingSeparator path
 
 -- | Get the url for a given page.
 toURL :: FilePath -> FilePath
@@ -106,9 +106,7 @@ havingExtension extension = filter ((==) extension . takeExtension)
 
 -- | Perform a Hakyll action on every file in a given directory.
 directory :: (FilePath -> Hakyll ()) -> FilePath -> Hakyll ()
-directory action dir = do
-    contents <- getRecursiveContents dir
-    mapM_ action contents
+directory action dir = getRecursiveContents dir >>= mapM_ action
 
 -- | Check if a cache file is still valid.
 isCacheValid :: FilePath -- ^ The cached file.

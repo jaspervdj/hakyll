@@ -99,7 +99,7 @@ renderChainWith :: Renderable a
 renderChainWith manipulation templatePaths renderable =
     depends (getURL renderable) dependencies render'
   where
-    dependencies = (getDependencies renderable) ++ templatePaths
+    dependencies = getDependencies renderable ++ templatePaths
     render' = do templates <- liftIO $ mapM readFile templatePaths
                  context <- toContext renderable
                  let result = pureRenderChainWith manipulation templates context

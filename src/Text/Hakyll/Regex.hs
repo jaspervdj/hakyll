@@ -12,7 +12,7 @@ import Text.Regex.TDFA
 -- | Match a regular expression against a string, returning more information
 --   about the match.
 matchRegexAll :: Regex -> String -> Maybe (String, String, String, [String])
-matchRegexAll p str = matchM p str
+matchRegexAll = matchM
 
 -- | Replaces every occurance of the given regexp with the replacement string.
 subRegex :: Regex -- ^ Search pattern
@@ -30,10 +30,10 @@ subRegex regexp inp replacement =
           Nothing -> repl
           Just (lead, _, trail, bgroups) ->
             let newval =
-                 if (head bgroups) == "\\"
+                 if head bgroups == "\\"
                    then "\\"
                    else let index :: Int
-                            index = (read (head bgroups)) - 1
+                            index = read (head bgroups) - 1
                         in if index == -1
                              then match'
                              else groups !! index
@@ -41,7 +41,7 @@ subRegex regexp inp replacement =
   in case matchRegexAll regexp inp of
        Nothing -> inp
        Just (lead, match', trail, groups) ->
-         lead ++ lookup' match' replacement groups ++ (subRegex regexp trail replacement)
+         lead ++ lookup' match' replacement groups ++ subRegex regexp trail replacement
 
 -- | Splits a string based on a regular expression.  The regular expression
 --   should identify one delimiter.
@@ -70,5 +70,7 @@ substituteRegex pattern replacement string =
     subRegex (makeRegex pattern) string replacement
 
 -- | Simple regex matching.
-matchesRegex :: String -> String -> Bool
-matchesRegex string pattern = string =~ pattern
+matchesRegex :: String -- ^ Input string.
+             -> String -- ^ Pattern to match.
+             -> Bool
+matchesRegex = (=~)

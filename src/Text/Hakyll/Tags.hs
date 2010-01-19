@@ -26,8 +26,8 @@ readTagMap paths = foldM addPaths M.empty paths
   where
     addPaths current path = do
         page <- readPage path
-        let tags = map trim $ splitRegex "," $ getValue ("tags") page
-        return $ foldr (\t -> M.insertWith (++) t [path]) current tags
+        let tags = map trim $ splitRegex "," $ getValue "tags" page
+        return $ foldr (flip (M.insertWith (++)) [path]) current tags
 
 -- | Render a tag cloud.
 renderTagCloud :: M.Map String [FilePath] -- ^ Map as produced by "readTagMap".
@@ -50,10 +50,10 @@ renderTagCloud tagMap urlFunction minSize maxSize =
     sizeTag count = show size' ++ "%"
       where
         size' :: Int
-        size' = floor (minSize + (relative count) * (maxSize - minSize))
+        size' = floor $ minSize + relative count * (maxSize - minSize)
 
-    minCount = minimum $ map snd $ tagCount
-    maxCount = maximum $ map snd $ tagCount
+    minCount = minimum $ map snd tagCount
+    maxCount = maximum $ map snd tagCount
     relative count = (count - minCount) / (maxCount - minCount)
 
     tagCount :: [(String, Float)]
@@ -65,5 +65,5 @@ renderTagLinks :: (String -> String) -- ^ Function that produces an url for a ta
 renderTagLinks urlFunction = renderValue "tags" "tags" renderTagLinks'
   where
     renderTagLinks' = intercalate ", "
-                    . map (\t -> link t $ urlFunction t)
-                    . map trim . splitRegex ","
+                    . map ((\t -> link t $ urlFunction t) . trim)
+                    . splitRegex ","

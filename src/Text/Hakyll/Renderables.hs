@@ -40,8 +40,8 @@ instance Renderable CustomPage where
     getURL = customPageURL
     toContext page = do
         values <- mapM (either return id . snd) (customPageContext page)
-        return $ M.fromList $ [ ("url", customPageURL page)
-                              ] ++ zip (map fst $ customPageContext page) values
+        let pairs = zip (map fst $ customPageContext page) values
+        return $ M.fromList $ ("url", customPageURL page) : pairs
 
 -- | PagePath is a class that wraps a FilePath. This is used to render Pages
 --   without reading them first through use of caching.
@@ -96,4 +96,4 @@ instance (Renderable a, Renderable b)
         return $ c1 `M.union` c2
     toContext (CombinedRenderableWithURL url a b) = do
         c <- toContext (CombinedRenderable a b)
-        return $ (M.singleton "url" url) `M.union` c
+        return $ M.singleton "url" url `M.union` c

@@ -30,10 +30,10 @@ substitute _ [] _ = []
 substitute escaper string context 
     | "$$" `isPrefixOf` string = escaper ++ substitute' (tail tail')
     | "$" `isPrefixOf` string = substituteKey
-    | otherwise = (head string) : (substitute' tail')
+    | otherwise = head string : substitute' tail'
   where
     tail' = tail string
-    (key, rest) = break (not . isAlpha) tail'
+    (key, rest) = span isAlpha tail'
     replacement = fromMaybe ('$' : key) $ M.lookup key context
     substituteKey = replacement ++ substitute' rest
     substitute' str = substitute escaper str context
@@ -86,7 +86,7 @@ writePage :: Page -> Hakyll ()
 writePage page = do
     additionalContext' <- askHakyll additionalContext
     let destination = toDestination url
-        context = additionalContext' `M.union` (M.singleton "root" $ toRoot url)
+        context = additionalContext' `M.union` M.singleton "root" (toRoot url)
     makeDirectories destination
     -- Substitute $root here, just before writing.
     liftIO $ writeFile destination $ finalSubstitute (getBody page) context
