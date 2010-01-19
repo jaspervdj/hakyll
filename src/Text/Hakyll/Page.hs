@@ -113,23 +113,23 @@ readSection :: (String -> String) -- ^ Render function.
             -> [String] -- ^ Lines in the section.
             -> [(String, String)] -- ^ Key-values extracted.
 readSection _ _ [] = []
-readSection renderFunction True ls
-    | isDelimiter (head ls) = readSimpleMetaData (tail ls)
-    | otherwise = [("body", renderFunction $ unlines ls)]
+readSection renderFunction isFirst ls
+    | not isDelimiter' = body ls
+    | isNamedDelimiter = readSectionMetaData ls
+    | isFirst = readSimpleMetaData (tail ls)
+    | otherwise = body (tail ls)
   where
+    isDelimiter' = isDelimiter (head ls)
+    isNamedDelimiter = (head ls) `matchesRegex` "----*  *[a-zA-Z][a-zA-Z]*"
+    body ls' = [("body", renderFunction $ unlines ls')]
+
     readSimpleMetaData = map readPair
     readPair = (trimPair . break (== ':'))
     trimPair (key, value) = (trim key, trim $ tail value)
 
-readSection renderFunction False ls
-    | isDelimiter (head ls) = readSectionMetaData ls
-    | otherwise = error $ "Page parsing error at: " ++ head ls
-  where
     readSectionMetaData [] = []
     readSectionMetaData (header:value) =
-        let key = if header `matchesRegex` "----*  *[a-zA-Z][a-zA-Z]*"
-                      then substituteRegex "[^a-zA-Z]" "" header
-                      else "body"
+        let key = substituteRegex "[^a-zA-Z]" "" header
         in [(key, renderFunction $ unlines value)]
 
 -- | Read a page from a file. Metadata is supported, and if the filename
