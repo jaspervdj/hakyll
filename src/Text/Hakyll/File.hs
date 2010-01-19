@@ -2,7 +2,6 @@
 --   files and directories.
 module Text.Hakyll.File
     ( toDestination
-    , toCache
     , toURL
     , toRoot
     , removeSpaces
@@ -35,10 +34,6 @@ removeLeadingSeparator path
 -- | Convert a relative filepath to a filepath in the destination (@_site@).
 toDestination :: FilePath -> FilePath
 toDestination path = "_site" </> removeLeadingSeparator path
-
--- | Convert a relative filepath to a filepath in the cache (@_cache@).
-toCache :: FilePath -> FilePath
-toCache path = "_cache" </> removeLeadingSeparator path
 
 -- | Get the url for a given page.
 toURL :: FilePath -> FilePath

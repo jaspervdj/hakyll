@@ -4,15 +4,15 @@ module Text.Hakyll.Page
     , getValue
     , getBody
     , readPage
+    , splitAtDelimiters
     ) where
 
 import qualified Data.Map as M
-import qualified Data.List as L
+import Data.List (isPrefixOf)
 import Data.Char (isSpace)
 import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
-import Control.Monad (unless)
 import System.FilePath (takeExtension)
 import System.IO
 
@@ -81,33 +81,7 @@ splitAtDelimiters ls@(x:xs)
 
 -- | Check if the given string is a metadata delimiter.
 isDelimiter :: String -> Bool
-isDelimiter = L.isPrefixOf "---"
-
--- | Used for caching of files.
-cachePage :: Page -> Hakyll ()
-cachePage page@(Page mapping) = do
-    makeDirectories destination
-    liftIO writePageToCache
-  where
-    (sectionMetaData, simpleMetaData) = M.partition (elem '\n')
-                                                    (M.delete "body" mapping)
-
-    writePageToCache = do
-        handle <- openFile destination WriteMode
-        hPutStrLn handle "---"
-        mapM_ (writePair handle) $ M.toList simpleMetaData
-        mapM_ (writeSection handle) $ M.toList sectionMetaData
-        hPutStrLn handle "---"
-        hPutStrLn handle $ getBody page
-        hClose handle
-
-    writePair h (k, v) = do hPutStr h $ k ++ ": " ++ v
-                            hPutStrLn h ""
-
-    writeSection h (k, v) = do hPutStrLn h $ "--- " ++ k
-                               hPutStrLn h v
-
-    destination = toCache $ getURL page
+isDelimiter = isPrefixOf "---"
 
 -- | Read one section of a page.
 readSection :: (String -> String) -- ^ Render function.
@@ -122,7 +96,7 @@ readSection renderFunction isFirst ls
     | otherwise = body (tail ls)
   where
     isDelimiter' = isDelimiter (head ls)
-    isNamedDelimiter = head ls `matchesRegex` "----*  *[a-zA-Z0-9][a-zA-Z0-9]*"
+    isNamedDelimiter = head ls `matchesRegex` "^----*  *[a-zA-Z0-9][a-zA-Z0-9]*"
     body ls' = [("body", renderFunction $ unlines ls')]
 
     readSimpleMetaData = map readPair . filter (not . all isSpace)
@@ -137,11 +111,8 @@ readSection renderFunction isFirst ls
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a @.markdown@ extension, it will be rendered using pandoc.
 readPage :: FilePath -> Hakyll Page
-readPage pagePath = do
-    -- Check cache.
-    getFromCache <- isCacheValid cacheFile [pagePath]
-    let path = if getFromCache then cacheFile else pagePath
-        renderFunction = getRenderFunction $ takeExtension path
+readPage path = do
+    let renderFunction = getRenderFunction $ takeExtension path
         sectionFunctions = map (readSection renderFunction)
                                (True : repeat False)
 
@@ -149,21 +120,19 @@ readPage pagePath = do
     handle <- liftIO $ openFile path ReadMode
     sections <- fmap (splitAtDelimiters . lines )
                      (liftIO $ hGetContents handle)
+    liftIO $ print sections
 
     let context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
             [ ("url", url)
-            , ("path", pagePath)
+            , ("path", path)
             ] ++ context
 
     seq (($|) id rdeepseq context) $ liftIO $ hClose handle
 
-    -- Cache if needed
-    unless getFromCache $ cachePage page
     return page
   where
-    url = toURL pagePath
-    cacheFile = toCache url
+    url = toURL path
 
 -- Make pages renderable.
 instance Renderable Page where

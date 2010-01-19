@@ -39,8 +39,7 @@ build configuration buildFunction = do putStrLn "Generating..."
 
 -- | Clean up directories.
 clean :: IO ()
-clean = do remove' "_cache"
-           remove' "_site"
+clean = remove' "_site"
   where
     remove' dir = do putStrLn $ "Removing " ++ dir ++ "..."
                      exists <- doesDirectoryExist dir
