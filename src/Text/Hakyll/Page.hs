@@ -8,6 +8,7 @@ module Text.Hakyll.Page
 
 import qualified Data.Map as M
 import qualified Data.List as L
+import Data.Char (isSpace)
 import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
 import Control.Monad.Reader (liftIO)
@@ -121,16 +122,16 @@ readSection renderFunction isFirst ls
     | otherwise = body (tail ls)
   where
     isDelimiter' = isDelimiter (head ls)
-    isNamedDelimiter = head ls `matchesRegex` "----*  *[a-zA-Z][a-zA-Z]*"
+    isNamedDelimiter = head ls `matchesRegex` "----*  *[a-zA-Z0-9][a-zA-Z0-9]*"
     body ls' = [("body", renderFunction $ unlines ls')]
 
-    readSimpleMetaData = map readPair
+    readSimpleMetaData = map readPair . filter (not . all isSpace)
     readPair = trimPair . break (== ':')
     trimPair (key, value) = (trim key, trim $ tail value)
 
     readSectionMetaData [] = []
     readSectionMetaData (header:value) =
-        let key = substituteRegex "[^a-zA-Z]" "" header
+        let key = substituteRegex "[^a-zA-Z0-9]" "" header
         in [(key, renderFunction $ unlines value)]
 
 -- | Read a page from a file. Metadata is supported, and if the filename

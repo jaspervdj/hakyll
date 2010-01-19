@@ -13,7 +13,7 @@ import qualified Data.Map as M
 import Text.Hakyll.Context (Context, ContextManipulation)
 import Control.Monad.Reader (liftIO)
 import Data.List (isPrefixOf, foldl')
-import Data.Char (isAlpha)
+import Data.Char (isAlphaNum)
 import Data.Maybe (fromMaybe)
 import Control.Parallel.Strategies (rdeepseq, ($|))
 
@@ -33,7 +33,7 @@ substitute escaper string context
     | otherwise = head string : substitute' tail'
   where
     tail' = tail string
-    (key, rest) = span isAlpha tail'
+    (key, rest) = span isAlphaNum tail'
     replacement = fromMaybe ('$' : key) $ M.lookup key context
     substituteKey = replacement ++ substitute' rest
     substitute' str = substitute escaper str context
