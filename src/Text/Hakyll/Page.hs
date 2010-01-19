@@ -120,7 +120,6 @@ readPage path = do
     handle <- liftIO $ openFile path ReadMode
     sections <- fmap (splitAtDelimiters . lines )
                      (liftIO $ hGetContents handle)
-    liftIO $ print sections
 
     let context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
