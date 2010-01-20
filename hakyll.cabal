@@ -49,3 +49,4 @@ library
                    Text.Hakyll.Regex
                    Network.Hakyll.SimpleServer
   other-modules: Text.Hakyll.Render.Internal
+                 Text.Hakyll.Internal.Cache

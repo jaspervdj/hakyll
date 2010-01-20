@@ -2,13 +2,14 @@
 --   files and directories.
 module Text.Hakyll.File
     ( toDestination
+    , toCache
     , toURL
     , toRoot
     , removeSpaces
     , makeDirectories
     , getRecursiveContents
     , havingExtension
-    , isCacheValid
+    , isMoreRecent
     , directory
     ) where
 
@@ -18,7 +19,7 @@ import Control.Monad
 import Data.List (isPrefixOf)
 import Control.Monad.Reader (liftIO)
 
-import Text.Hakyll.Hakyll (Hakyll)
+import Text.Hakyll.Hakyll
 
 -- | Auxiliary function to remove pathSeparators form the start. We don't deal
 --   with absolute paths here. We also remove $root from the start.
@@ -31,9 +32,17 @@ removeLeadingSeparator path
     path' = if "$root" `isPrefixOf` path then drop 5 path
                                          else path
 
--- | Convert a relative filepath to a filepath in the destination (@_site@).
-toDestination :: FilePath -> FilePath
-toDestination path = "_site" </> removeLeadingSeparator path
+-- | Convert a relative filepath to a filepath in the destination
+--   (default: @_site@).
+toDestination :: FilePath -> Hakyll FilePath
+toDestination path = do dir <- askHakyll siteDirectory
+                        return $ dir </> removeLeadingSeparator path
+
+-- | Convert a relative filepath to a filepath in the cache
+--   (default: @_cache@).
+toCache :: FilePath -> Hakyll FilePath
+toCache path = do dir <- askHakyll cacheDirectory
+                  return $ dir </> removeLeadingSeparator path
 
 -- | Get the url for a given page.
 toURL :: FilePath -> FilePath
@@ -103,14 +112,14 @@ havingExtension extension = filter ((==) extension . takeExtension)
 directory :: (FilePath -> Hakyll ()) -> FilePath -> Hakyll ()
 directory action dir = getRecursiveContents dir >>= mapM_ action
 
--- | Check if a cache file is still valid.
-isCacheValid :: FilePath -- ^ The cached file.
+-- | Check if a file is newer then a number of given files.
+isMoreRecent :: FilePath -- ^ The cached file.
              -> [FilePath] -- ^ Dependencies of the cached file.
              -> Hakyll Bool
-isCacheValid cache depends = do
-    exists <- liftIO $ doesFileExist cache
+isMoreRecent file depends = do
+    exists <- liftIO $ doesFileExist file
     if not exists
         then return False
         else do dependsModified <- liftIO $ mapM getModificationTime depends
-                cacheModified <- liftIO $ getModificationTime cache
-                return (cacheModified >= maximum dependsModified)
+                fileModified <- liftIO $ getModificationTime file
+                return (fileModified >= maximum dependsModified)

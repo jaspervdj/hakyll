@@ -15,6 +15,10 @@ data HakyllConfiguration = HakyllConfiguration
     { -- | An additional context to use when rendering. This additional context
       --   is used globally.
       additionalContext :: Context
+    , -- | Directory where the site is placed.
+      siteDirectory :: FilePath
+    , -- | Directory for cache files.
+      cacheDirectory :: FilePath
     }
 
 -- | Our custom monad stack.

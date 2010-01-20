@@ -45,9 +45,6 @@ tests = [ testGroup "Util group"
             ]
 
         , testGroup "File group"
-            [ testCase "toDestination 1" test_to_destination1
-            , testCase "toDestination 2" test_to_destination2
-            , testCase "toDestination 3" test_to_destination3
             , testCase "toRoot 1" test_to_root1
             , testCase "toRoot 2" test_to_root2
             , testCase "toRoot 3" test_to_root3
@@ -111,15 +108,6 @@ test_render_date2 = M.lookup "date" rendered @?= Just "Unknown date"
   where
     rendered = renderDate "date" "%B %e, %Y" "Unknown date" $
                           M.singleton "path" "2009-badness-30-a-title.markdown"
-
--- toDestination test cases
-test_to_destination1 = toDestination "/posts/foo.html"
-                     @?= "_site/posts/foo.html"
-
-test_to_destination2 = toDestination "$root/posts/foo.html"
-                     @?= "_site/posts/foo.html"
-
-test_to_destination3 = toDestination "foo.html" @?= "_site/foo.html"
 
 -- toRoot test cases
 test_to_root1 = toRoot "/posts/foo.html" @?= ".."

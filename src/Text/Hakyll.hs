@@ -4,7 +4,7 @@ module Text.Hakyll
     , hakyllWithConfiguration
     ) where
 
-import Control.Monad.Reader (runReaderT)
+import Control.Monad.Reader (runReaderT, liftIO)
 import Control.Monad (when)
 import qualified Data.Map as M
 import System.Environment (getArgs, getProgName)
@@ -17,6 +17,8 @@ import Text.Hakyll.Hakyll
 defaultHakyllConfiguration :: HakyllConfiguration
 defaultHakyllConfiguration = HakyllConfiguration
     { additionalContext = M.empty
+    , siteDirectory = "_site"
+    , cacheDirectory = "_cache"
     }
 
 -- | Hakyll with a default configuration.
@@ -27,32 +29,27 @@ hakyll = hakyllWithConfiguration defaultHakyllConfiguration
 hakyllWithConfiguration :: HakyllConfiguration -> Hakyll () -> IO ()
 hakyllWithConfiguration configuration buildFunction = do
     args <- getArgs
-    case args of ["build"]      -> build'
-                 ["clean"]      -> clean
-                 ["preview", p] -> build' >> server (read p)
-                 ["preview"]    -> build' >> server 8000
-                 ["server", p]  -> server (read p)
-                 ["server"]     -> server 8000
-                 _              -> help
-  where
-    build' = build configuration buildFunction
-
--- | Build the site.
-build :: HakyllConfiguration -> Hakyll () -> IO ()
-build configuration buildFunction = do putStrLn "Generating..."
-                                       runReaderT buildFunction configuration
+    let f = case args of ["build"]      -> buildFunction
+                         ["clean"]      -> clean
+                         ["preview", p] -> buildFunction >> server (read p)
+                         ["preview"]    -> buildFunction >> server 8000
+                         ["server", p]  -> server (read p)
+                         ["server"]     -> server 8000
+                         _              -> help
+    runReaderT f configuration
 
 -- | Clean up directories.
-clean :: IO ()
-clean = remove' "_site"
+clean :: Hakyll ()
+clean = do askHakyll siteDirectory >>= remove'
+           askHakyll cacheDirectory >>= remove'
   where
-    remove' dir = do putStrLn $ "Removing " ++ dir ++ "..."
-                     exists <- doesDirectoryExist dir
-                     when exists $ removeDirectoryRecursive dir
+    remove' dir = liftIO $ do putStrLn $ "Removing " ++ dir ++ "..."
+                              exists <- doesDirectoryExist dir
+                              when exists $ removeDirectoryRecursive dir
 
 -- | Show usage information.
-help :: IO ()
-help = do
+help :: Hakyll ()
+help = liftIO $ do
     name <- getProgName
     putStrLn $  "This is a Hakyll site generator program. You should always\n"
              ++ "run it from the project root directory.\n"
@@ -64,5 +61,5 @@ help = do
              ++ name ++ " preview [port]  Generate site, then start a server.\n"
              ++ name ++ " server [port]   Run a local test server.\n"
 
-server :: Integer -> IO ()
-server p = simpleServer (fromIntegral p) "_site"
+server :: Integer -> Hakyll ()
+server p = askHakyll siteDirectory >>= liftIO . simpleServer (fromIntegral p)

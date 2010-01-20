@@ -85,8 +85,8 @@ pureRenderChainWith manipulation templates context =
 writePage :: Page -> Hakyll ()
 writePage page = do
     additionalContext' <- askHakyll additionalContext
-    let destination = toDestination url
-        context = additionalContext' `M.union` M.singleton "root" (toRoot url)
+    destination <- toDestination url
+    let context = additionalContext' `M.union` M.singleton "root" (toRoot url)
     makeDirectories destination
     -- Substitute $root here, just before writing.
     liftIO $ writeFile destination $ finalSubstitute (getBody page) context
