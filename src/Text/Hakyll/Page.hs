@@ -18,6 +18,7 @@ import System.IO
 
 import Text.Pandoc
 
+import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.File
 import Text.Hakyll.Util (trim)
@@ -28,6 +29,7 @@ import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
 data Page = Page Context
+          deriving (Show, Read)
 
 -- | Create a Page from a key-value mapping.
 fromContext :: Context -> Page
@@ -110,8 +112,8 @@ readSection renderFunction isFirst ls
 
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a @.markdown@ extension, it will be rendered using pandoc.
-readPage :: FilePath -> Hakyll Page
-readPage path = do
+readPageFromFile :: FilePath -> Hakyll Page
+readPageFromFile path = do
     let renderFunction = getRenderFunction $ takeExtension path
         sectionFunctions = map (readSection renderFunction)
                                (True : repeat False)
@@ -128,10 +130,18 @@ readPage path = do
             ] ++ context
 
     seq (($|) id rdeepseq context) $ liftIO $ hClose handle
-
     return page
   where
     url = toURL path
+
+-- | Read a page. Might fetch it from the cache if available.
+readPage :: FilePath -> Hakyll Page
+readPage path = do
+    cacheResult <- getFromCache path
+    case cacheResult of (Just page) -> return page
+                        Nothing     -> do page <- readPageFromFile path
+                                          storeInCache page path
+                                          return page
 
 -- Make pages renderable.
 instance Renderable Page where
