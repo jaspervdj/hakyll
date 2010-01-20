@@ -11,12 +11,14 @@ import qualified Data.Map as M
 import Data.List (isPrefixOf)
 import Data.Char (isSpace)
 import Data.Maybe (fromMaybe)
-import Control.Parallel.Strategies (rdeepseq, ($|))
+import Control.Monad (liftM)
 import Control.Monad.Reader (liftIO)
+import Control.Parallel.Strategies (rdeepseq, ($|))
 import System.FilePath (takeExtension)
 import System.IO
 
 import Text.Pandoc
+import Data.Binary
 
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Hakyll (Hakyll)
@@ -148,3 +150,8 @@ instance Renderable Page where
     getDependencies = (:[]) . getPagePath
     getURL = getPageURL
     toContext (Page page) = return page
+
+-- Make pages serializable.
+instance Binary Page where
+    put (Page context) = put $ M.toList context
+    get = liftM (Page . M.fromList) get
