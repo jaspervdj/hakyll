@@ -3,7 +3,8 @@ import Text.Hakyll.Render
 import Text.Hakyll.Renderables
 import Text.Hakyll.File
 import Text.Hakyll.Regex
-
+import Control.Monad.Reader (liftIO)
+import System.Directory
 import Control.Monad (mapM_, liftM)
 import Data.List (sort)
 
@@ -13,7 +14,7 @@ main = hakyll $ do
     directory static "examples"
     directory static "reference"
 
-    tutorials <- liftM (sort . filter (`matchesRegex` "tutorial[0-9]*.markdown")) $ getRecursiveContents "."
+    tutorials <- liftIO $ liftM (sort . filter (`matchesRegex` "tutorial[0-9]*.markdown")) $ getDirectoryContents "."
     let tutorialList = renderAndConcat ["templates/tutorialitem.html"]
                                        (map createPagePath tutorials)
         tutorialPage = createCustomPage "tutorials.html"
