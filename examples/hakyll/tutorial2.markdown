@@ -39,8 +39,9 @@ from the body, and even leave out the body.
     author: Vincent Vega
    
     --- prelude
-    A small introduction goes here. I can write *markdown* here, by the way. Well,
-    assuming this page has a `.markdown` extension.
+    A small introduction goes here. I can write *markdown*
+    here, by the way. Well, assuming this page has a
+    `.markdown` extension.
    
     --- main
     I can write some more things here.
@@ -102,7 +103,8 @@ and `section3`. So our pages look more or less like this:
 
     --- section2
     ## Orci
-    Vivamus eget mauris sit amet nulla laoreet lobortis. Nulla in...
+    Vivamus eget mauris sit amet nulla laoreet lobortis.
+    Nulla in...
 
     --- section3
     ## Augue
