@@ -136,7 +136,8 @@ readPageFromFile path = do
   where
     url = toURL path
 
--- | Read a page. Might fetch it from the cache if available.
+-- | Read a page. Might fetch it from the cache if available. Otherwise, it will
+--   read it from the file given and store it in the cache.
 readPage :: FilePath -> Hakyll Page
 readPage path = do
     cacheResult <- getFromCache path

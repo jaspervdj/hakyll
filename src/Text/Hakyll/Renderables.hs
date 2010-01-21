@@ -64,10 +64,14 @@ data CombinedRenderable a b = CombinedRenderable a b
 -- | Combine two renderables. The url will always be taken from the first
 --   "Renderable". Also, if a `$key` is present in both renderables, the
 --   value from the first "Renderable" will be taken as well.
+--
+--   Since renderables are always more or less key-value maps, you can see
+--   this as a @union@ between two maps.
 combine :: (Renderable a, Renderable b) => a -> b -> CombinedRenderable a b
 combine = CombinedRenderable
 
--- | Combine two renderables and set a custom URL.
+-- | Combine two renderables and set a custom URL. This behaves like "combine",
+--   except that for the @url@ field, the given URL is always chosen.
 combineWithURL :: (Renderable a, Renderable b)
                => FilePath
                -> a
@@ -75,7 +79,7 @@ combineWithURL :: (Renderable a, Renderable b)
                -> CombinedRenderable a b
 combineWithURL = CombinedRenderableWithURL
 
--- | Render combinations.
+-- Render combinations.
 instance (Renderable a, Renderable b)
          => Renderable (CombinedRenderable a b) where
 
