@@ -4,12 +4,13 @@ module Text.Hakyll.Context
     , ContextManipulation
     , renderValue
     , renderDate
+    , changeExtension
     ) where
 
 import qualified Data.Map as M
 import Data.Map (Map)
 import System.Locale (defaultTimeLocale)
-import System.FilePath (takeFileName)
+import System.FilePath (takeFileName, addExtension, dropExtension)
 import Data.Time.Format (parseTime, formatTime)
 import Data.Time.Clock (UTCTime)
 import Data.Maybe (fromMaybe)
@@ -47,3 +48,16 @@ renderDate key format defaultValue context = M.insert key value context
                                   "%Y-%m-%d"
                                   dateString :: Maybe UTCTime
                 return $ formatTime defaultTimeLocale format time
+
+-- | Change the extension of a file. This is only needed when you want to
+--   render, for example, mardown to @.php@ files instead of @.html@ files.
+--
+--   > renderChainWith (changeExtension "php")
+--   >                 ["templates/default.html"]
+--   >                 (createPagePath "test.markdown")
+--
+--   Will render to @test.php@ instead of @test.html@.
+changeExtension :: String -> ContextManipulation
+changeExtension extension = renderValue "url" "url" changeExtension'
+  where
+    changeExtension' = flip addExtension extension . dropExtension

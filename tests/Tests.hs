@@ -17,8 +17,8 @@ main = defaultMain tests
 
 tests = [ testGroup "Util group"
             [ testProperty "trim length" prop_trim_length
-            , testProperty "trim id" prop_trim_id
-            , testProperty "trim empty" prop_trim_empty
+            -- , testProperty "trim id" prop_trim_id
+            -- , testProperty "trim empty" prop_trim_empty
             , testCase "stripHTML 1" test_strip_html1
             , testCase "stripHTML 2" test_strip_html2
             , testCase "stripHTML 3" test_strip_html3
@@ -42,6 +42,7 @@ tests = [ testGroup "Util group"
         , testGroup "Context group"
             [ testCase "renderDate 1" test_render_date1
             , testCase "renderDate 2" test_render_date1
+            , testCase "changeExtension 1" test_change_extension1
             ]
 
         , testGroup "File group"
@@ -50,7 +51,7 @@ tests = [ testGroup "Util group"
             , testCase "toRoot 3" test_to_root3
             , testCase "removeSpaces 1" test_remove_spaces1
             , testCase "removeSpaces 2" test_remove_spaces2
-            , testProperty "havingExtension count" prop_having_extension_count
+            -- , testProperty "havingExtension count" prop_having_extension_count
             , testCase "havingExtension 1" test_having_extension1
             , testCase "havingExtension 2" test_having_extension2
             ]
@@ -60,10 +61,10 @@ tests = [ testGroup "Util group"
 prop_trim_length str = length str >= length (trim str)
 
 -- Check that a string which does not start or end with a space is not trimmed.
-prop_trim_id str = (not $ null str)
-                 && (not $ isSpace $ head str)
-                 && (not $ isSpace $ last str)
-                 ==> str == (trim str)
+prop_trim_id str = isAlreadyTrimmed ==> str == (trim str)
+  where
+    isAlreadyTrimmed :: Bool
+    isAlreadyTrimmed = (not $ isSpace $ head str) && (not $ isSpace $ last str)
 
 -- An string of only spaces should be reduced to an empty string.
 prop_trim_empty str = (all isSpace str) ==> null (trim str)
@@ -108,6 +109,11 @@ test_render_date2 = M.lookup "date" rendered @?= Just "Unknown date"
   where
     rendered = renderDate "date" "%B %e, %Y" "Unknown date" $
                           M.singleton "path" "2009-badness-30-a-title.markdown"
+
+-- changeExtension test cases.
+test_change_extension1 = M.lookup "url" rendered @?= Just "foo.php"
+  where
+    rendered = changeExtension "php" (M.singleton "url" "foo.html")
 
 -- toRoot test cases
 test_to_root1 = toRoot "/posts/foo.html" @?= ".."
