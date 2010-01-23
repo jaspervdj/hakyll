@@ -13,7 +13,6 @@ import Data.Char (isSpace)
 import Data.Maybe (fromMaybe)
 import Control.Monad (liftM)
 import Control.Monad.Reader (liftIO)
-import Control.Parallel.Strategies (rdeepseq, ($|))
 import System.FilePath (takeExtension)
 import System.IO
 
@@ -121,17 +120,14 @@ readPageFromFile path = do
                                (True : repeat False)
 
     -- Read file.
-    handle <- liftIO $ openFile path ReadMode
-    sections <- fmap (splitAtDelimiters . lines )
-                     (liftIO $ hGetContents handle)
-
-    let context = concat $ zipWith ($) sectionFunctions sections
+    contents <- liftIO $ readFile path
+    let sections = splitAtDelimiters $ lines $ contents
+        context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
             [ ("url", url)
             , ("path", path)
             ] ++ context
 
-    seq (($|) id rdeepseq context) $ liftIO $ hClose handle
     return page
   where
     url = toURL path

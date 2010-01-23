@@ -34,7 +34,7 @@ library
                    mtl >= 1.1,
                    old-locale >= 1,
                    time >= 1,
-                   parallel >= 2,
+                   deepseq >= 1,
                    binary >= 0.5
   exposed-modules: Text.Hakyll
                    Text.Hakyll.Hakyll

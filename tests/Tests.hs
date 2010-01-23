@@ -45,7 +45,7 @@ tests = [ testGroup "Util group"
             ]
 
         , testGroup "File group"
-            , testCase "toRoot 1" test_to_root1
+            [ testCase "toRoot 1" test_to_root1
             , testCase "toRoot 2" test_to_root2
             , testCase "toRoot 3" test_to_root3
             , testCase "removeSpaces 1" test_remove_spaces1

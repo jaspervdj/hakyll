@@ -11,11 +11,11 @@ module Text.Hakyll.Render.Internal
 
 import qualified Data.Map as M
 import Text.Hakyll.Context (Context, ContextManipulation)
+import Control.DeepSeq (deepseq)
 import Control.Monad.Reader (liftIO)
 import Data.List (isPrefixOf, foldl')
 import Data.Char (isAlphaNum)
 import Data.Maybe (fromMaybe)
-import Control.Parallel.Strategies (rdeepseq, ($|))
 
 import Text.Hakyll.Renderable
 import Text.Hakyll.Page
@@ -57,7 +57,7 @@ pureRenderWith manipulation template context =
     let contextIgnoringRoot = M.insert "root" "$root" (manipulation context)
         body = regularSubstitute template contextIgnoringRoot
     -- Force the body to be rendered.
-    in ($|) id rdeepseq (M.insert "body" body context)
+    in body `deepseq` M.insert "body" body context
 
 -- | A pure renderAndConcat function.
 pureRenderAndConcatWith :: ContextManipulation
