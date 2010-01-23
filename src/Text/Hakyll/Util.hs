@@ -6,20 +6,20 @@ module Text.Hakyll.Util
 
 import Data.Char (isSpace)
 
--- | Trim a string (drop spaces and tabs at both sides).
+-- | Trim a string (drop spaces, tabs and newlines at both sides).
 trim :: String -> String
 trim = reverse . trim' . reverse . trim'
   where
     trim' = dropWhile isSpace
 
--- | Strip html tags.
+-- | Strip html tags from the given string.
 stripHTML :: String -> String
 stripHTML []  = []
 stripHTML str = let (beforeTag, rest) = break (== '<') str
                     (_, afterTag)     = break (== '>') rest
                 in beforeTag ++ stripHTML (tail' afterTag)
-    -- We need a failsafe tail function.
   where
+    -- We need a failsafe tail function.
     tail' [] = []
     tail' xs = tail xs
 

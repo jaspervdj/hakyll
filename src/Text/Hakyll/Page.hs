@@ -14,7 +14,6 @@ import Data.Maybe (fromMaybe)
 import Control.Monad (liftM)
 import Control.Monad.Reader (liftIO)
 import System.FilePath (takeExtension)
-import System.IO
 
 import Text.Pandoc
 import Data.Binary

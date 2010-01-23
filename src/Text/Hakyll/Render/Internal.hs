@@ -60,7 +60,7 @@ pureRenderWith manipulation template context =
     in body `deepseq` M.insert "body" body context
 
 -- | A pure renderAndConcat function.
-pureRenderAndConcatWith :: ContextManipulation
+pureRenderAndConcatWith :: ContextManipulation -- ^ Manipulation to apply.
                         -> [String] -- ^ Templates to use.
                         -> [Context] -- ^ Different renderables.
                         -> String
