@@ -1,8 +1,10 @@
 module Text.Hakyll.Internal.Cache
     ( storeInCache
     , getFromCache
+    , isCacheMoreRecent
     ) where
 
+import Control.Monad ((<=<))
 import Control.Monad.Reader (liftIO)
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.File
@@ -20,9 +22,9 @@ storeInCache value path = do
 --   cache. This function performs a timestamp check on the filepath and the
 --   filepath in the cache, and only returns the cached value when it is still
 --   up-to-date.
-getFromCache :: (Binary a) => FilePath -> Hakyll (Maybe a)
-getFromCache path = do
-    cachePath <- toCache path
-    valid <- isMoreRecent cachePath [path]
-    if valid then liftIO (decodeFile cachePath) >>= return . Just
-             else return Nothing
+getFromCache :: (Binary a) => FilePath -> Hakyll a
+getFromCache = liftIO . decodeFile <=< toCache
+
+-- | Check if a file in the cache is more recent than a number of other files.
+isCacheMoreRecent :: FilePath -> [FilePath] -> Hakyll Bool
+isCacheMoreRecent file depends = toCache file >>= flip isMoreRecent depends

@@ -24,6 +24,8 @@ import qualified Data.Map as M
 import Data.List (intercalate)
 import Control.Monad (foldM)
 import Control.Arrow (second)
+import Control.Applicative ((<$>))
+import System.FilePath ((</>))
 
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (ContextManipulation, changeValue)
@@ -31,11 +33,26 @@ import Text.Hakyll.Render.Internal (finalSubstitute)
 import Text.Hakyll.Regex
 import Text.Hakyll.Util
 import Text.Hakyll.Page
+import Text.Hakyll.Internal.Cache
 
 -- | Read a tag map. This creates a map from tags to page paths.
-readTagMap :: [FilePath] -> Hakyll (M.Map String [FilePath])
-readTagMap paths = foldM addPaths M.empty paths
+--
+--   You also have to give a unique identifier for every tagmap. This is for
+--   caching reasons, so the tagmap will be stored in
+--   @_cache/_tagmap/identifier@.
+readTagMap :: String -- ^ Unique identifier for the tagmap.
+           -> [FilePath]
+           -> Hakyll (M.Map String [FilePath])
+readTagMap identifier paths = do
+    isCacheMoreRecent' <- isCacheMoreRecent fileName paths
+    if isCacheMoreRecent' then M.fromList <$> getFromCache fileName
+                          else do tagMap <- readTagMap'
+                                  storeInCache (M.toList tagMap) fileName
+                                  return tagMap
   where
+    fileName = "_tagmap" </> identifier
+
+    readTagMap' = foldM addPaths M.empty paths
     addPaths current path = do
         page <- readPage path
         let tags = map trim $ splitRegex "," $ getValue "tags" page

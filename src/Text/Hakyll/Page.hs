@@ -120,7 +120,7 @@ readPageFromFile path = do
 
     -- Read file.
     contents <- liftIO $ readFile path
-    let sections = splitAtDelimiters $ lines $ contents
+    let sections = splitAtDelimiters $ lines contents
         context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
             [ ("url", url)
@@ -135,11 +135,11 @@ readPageFromFile path = do
 --   read it from the file given and store it in the cache.
 readPage :: FilePath -> Hakyll Page
 readPage path = do
-    cacheResult <- getFromCache path
-    case cacheResult of (Just page) -> return page
-                        Nothing     -> do page <- readPageFromFile path
-                                          storeInCache page path
-                                          return page
+    isCacheMoreRecent' <- isCacheMoreRecent path [path]
+    if isCacheMoreRecent' then getFromCache path
+                          else do page <- readPageFromFile path
+                                  storeInCache page path
+                                  return page
 
 -- Make pages renderable.
 instance Renderable Page where
