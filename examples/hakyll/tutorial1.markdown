@@ -61,10 +61,10 @@ it will generate a very nice main function.
 ## Pages
 
 An important concept in Hakyll is Pages. Pages are text files that can be
-written in markdown, html or TeX. Furthermore, they can also contain some
-metadata. The metadata is placed in the file header and surrouded by `---`
-lines. Each line should contain a `key: value` pair. Let's have a look at the
-`about.markdown` page.
+written in markdown, html, rst... basically anything Pandoc supports.
+Furthermore, they can also contain some metadata. The metadata is placed in the
+file header and surrouded by `---` lines. Each line should contain a
+`key: value` pair. Let's have a look at the `index.markdown` page.
 
     ---
     title: About
@@ -91,13 +91,15 @@ html files) containing a number of keys. The syntax for these keys is
     <title>MyAweSomeCompany - $title</title>
     <link rel="stylesheet" type="text/css"
           href="$$root/css/default.css" />
+    <link rel="stylesheet" type="text/css"
+          href="$$root/css/syntax.css" />
   </head>
   <body>
     <h1>MyAweSomeCompany - $title</h1>
     <div id="navigation">
       <a href="$$root/index.html">Home</a>
       <a href="$$root/about.html">About</a>
-      <a href="$$root/products.html">Products</a>
+      <a href="$$root/code.html">Code</a>
     </div>
 
     $body
@@ -135,7 +137,7 @@ import Text.Hakyll.Render (renderChain)
 import Text.Hakyll.Renderables (createPagePath)
 main = hakyll $ do
     renderChain ["templates/default.html"]
-        (createPagePath "about.markdown")
+        (createPagePath "index.markdown")
 ~~~~~
 
 Or, to render all our three pages:
@@ -145,19 +147,20 @@ import Text.Hakyll (hakyll)
 import Text.Hakyll.Render (renderChain)
 import Text.Hakyll.Renderables (createPagePath)
 main = hakyll $ do
-    render "about.markdown"
+    render "about.rst"
     render "index.markdown"
-    render "products.markdown"
+    render "code.lhs"
     where render = renderChain ["templates/default.html"]
                  . createPagePath
 ~~~~~
 
-This will create the following files:
+As you can see, we can render a variety of formats. This will create the
+following files:
 
 ~~~~~
 _site/about.html
 _site/index.html
-_site/products.html
+_site/code.html
 ~~~~~
 
 ## CSS, images and other static files

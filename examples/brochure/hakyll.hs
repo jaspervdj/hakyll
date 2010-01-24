@@ -5,7 +5,7 @@ import Text.Hakyll.Renderables (createPagePath)
 
 main = hakyll $ do
     directory css "css"
-    render "about.markdown"
+    render "about.rst"
     render "index.markdown"
-    render "products.markdown"
+    render "code.lhs"
     where render = renderChain ["templates/default.html"] . createPagePath
