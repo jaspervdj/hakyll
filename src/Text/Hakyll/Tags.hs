@@ -45,9 +45,9 @@ readTagMap :: String -- ^ Unique identifier for the tagmap.
            -> Hakyll (M.Map String [FilePath])
 readTagMap identifier paths = do
     isCacheMoreRecent' <- isCacheMoreRecent fileName paths
-    if isCacheMoreRecent' then M.fromList <$> getFromCache fileName
+    if isCacheMoreRecent' then M.fromAscList <$> getFromCache fileName
                           else do tagMap <- readTagMap'
-                                  storeInCache (M.toList tagMap) fileName
+                                  storeInCache (M.toAscList tagMap) fileName
                                   return tagMap
   where
     fileName = "_tagmap" </> identifier

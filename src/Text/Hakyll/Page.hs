@@ -149,5 +149,5 @@ instance Renderable Page where
 
 -- Make pages serializable.
 instance Binary Page where
-    put (Page context) = put $ M.toList context
-    get = liftM (Page . M.fromList) get
+    put (Page context) = put $ M.toAscList context
+    get = liftM (Page . M.fromAscList) get
