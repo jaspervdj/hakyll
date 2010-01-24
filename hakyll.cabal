@@ -34,7 +34,8 @@ library
                    mtl >= 1.1,
                    old-locale >= 1,
                    time >= 1,
-                   binary >= 0.5
+                   binary >= 0.5,
+                   QuickCheck >= 2
   exposed-modules: Network.Hakyll.SimpleServer
                    Text.Hakyll
                    Text.Hakyll.Context
@@ -47,7 +48,7 @@ library
                    Text.Hakyll.Page
                    Text.Hakyll.Util
                    Text.Hakyll.Tags
-  other-modules: Text.Hakyll.Internal.Cache
-                 Text.Hakyll.Internal.CompressCSS
-                 Text.Hakyll.Internal.Render
-                 Text.Hakyll.Internal.Template
+                   Text.Hakyll.Internal.Cache
+                   Text.Hakyll.Internal.CompressCSS
+                   Text.Hakyll.Internal.Render
+                   Text.Hakyll.Internal.Template
