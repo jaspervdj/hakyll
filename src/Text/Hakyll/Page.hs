@@ -1,10 +1,10 @@
+-- | A module for dealing with "Page"s. This module is mostly internally used.
 module Text.Hakyll.Page 
     ( Page
     , fromContext
     , getValue
     , getBody
     , readPage
-    , splitAtDelimiters
     ) where
 
 import qualified Data.Map as M

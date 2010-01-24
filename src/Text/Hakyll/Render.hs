@@ -1,3 +1,5 @@
+-- | Module containing rendering functions. All these functions are used to
+--   render files to the @_site@ directory.
 module Text.Hakyll.Render 
     ( depends
     , render

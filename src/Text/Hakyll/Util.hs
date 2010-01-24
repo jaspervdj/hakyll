@@ -1,3 +1,4 @@
+-- | Miscellaneous text manipulation functions.
 module Text.Hakyll.Util 
     ( trim
     , stripHTML
@@ -26,6 +27,8 @@ stripHTML str = let (beforeTag, rest) = break (== '<') str
 -- | Make a HTML link.
 --
 --   > link "foo" "bar.html" == "<a href='bar.html'>foo</a>"
-link :: String -> String -> String
+link :: String -- ^ Link text.
+     -> String -- ^ Link destination.
+     -> String
 link text destination = "<a href=\"" ++ destination ++ "\">"
                       ++ text ++ "</a>"
