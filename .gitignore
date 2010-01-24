@@ -14,7 +14,7 @@ dist
 tags
 
 # Ignore test builds.
-tests/Tests
+tests/Main
 
 # Rest of the file: ignore examples
 examples/*/_cache
