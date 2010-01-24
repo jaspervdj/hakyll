@@ -11,7 +11,6 @@ module Text.Hakyll.Render.Internal
 
 import qualified Data.Map as M
 import Text.Hakyll.Context (Context, ContextManipulation)
-import Control.DeepSeq (deepseq)
 import Control.Monad.Reader (liftIO)
 import Data.List (isPrefixOf, foldl')
 import Data.Char (isAlphaNum)
@@ -56,20 +55,18 @@ pureRenderWith manipulation template context =
     -- final render (just before writing).
     let contextIgnoringRoot = M.insert "root" "$root" (manipulation context)
         body = regularSubstitute template contextIgnoringRoot
-    -- Force the body to be rendered.
-    in body `deepseq` M.insert "body" body context
+    in M.insert "body" body context
 
 -- | A pure renderAndConcat function.
 pureRenderAndConcatWith :: ContextManipulation -- ^ Manipulation to apply.
                         -> [String] -- ^ Templates to use.
                         -> [Context] -- ^ Different renderables.
                         -> String
-pureRenderAndConcatWith manipulation templates contexts =
-    foldl' renderAndConcat [] contexts
+pureRenderAndConcatWith manipulation templates =
+    concatMap renderAndConcat
   where
-    renderAndConcat chunk context =
-        let rendered = pureRenderChainWith manipulation templates context
-        in chunk ++ fromMaybe "" (M.lookup "body" rendered)
+    renderAndConcat = fromMaybe "" . M.lookup "body"
+                    . pureRenderChainWith manipulation templates
 
 -- | A pure renderChain function.
 pureRenderChainWith :: ContextManipulation
