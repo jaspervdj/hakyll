@@ -56,6 +56,7 @@ toURL path = if takeExtension path `elem` [ ".markdown"
                                           , ".rst"
                                           , ".text"
                                           , ".tex"
+                                          , ".lhs"
                                           ]
                 then flip addExtension ".html" $ dropExtension path
                 else path

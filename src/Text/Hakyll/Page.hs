@@ -67,11 +67,14 @@ writerOptions = defaultWriterOptions
 getRenderFunction :: String -> (String -> String)
 getRenderFunction ".html" = id
 getRenderFunction ext = writeHtmlString writerOptions
-                      . readFunction ext readerOptions
+                      . readFunction ext (readOptions ext)
   where
     readFunction ".rst" = readRST
     readFunction ".tex" = readLaTeX
     readFunction _      = readMarkdown
+
+    readOptions ".lhs"  = readerOptions { stateLiterateHaskell = True }
+    readOptions _       = readerOptions
 
 -- | Split a page into sections.
 splitAtDelimiters :: [String] -> [[String]]
