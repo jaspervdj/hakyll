@@ -8,6 +8,7 @@ import Test.QuickCheck
 import Test.Framework (testGroup)
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
+import Test.HUnit
 
 import Text.Hakyll.Util
 
@@ -17,6 +18,11 @@ utilGroup = testGroup "Util"
     , testProperty "prop_trim_id" prop_trim_id
     , testProperty "prop_stripHTML_length" prop_stripHTML_length
     , testProperty "prop_stripHTML_id" prop_stripHTML_id
+    , testCase "test_stripHTML_1" test_stripHTML_1
+    , testCase "test_stripHTML_2" test_stripHTML_2
+    , testCase "test_stripHTML_3" test_stripHTML_3
+    , testCase "test_link_1" test_link_1
+    , testCase "test_link_2" test_link_2
     ]
 
 -- Test that a string always becomes shorter when trimmed.
@@ -34,3 +40,15 @@ prop_stripHTML_length str = length str >= length (stripHTML str)
 -- Check that strings without tags remain untouched.
 prop_stripHTML_id str = (not $ any (`elem` ['>', '<']) str)
                       ==> str == stripHTML str
+
+-- Strip HTML test cases.
+test_stripHTML_1 = stripHTML "<b>text</b>" @?= "text"
+test_stripHTML_2 = stripHTML "text" @?= "text"
+test_stripHTML_3 =
+    stripHTML "<b>Hakyll</b>, a <i>website</i> generator<img src=\"foo.png\" />"
+        @?= "Hakyll, a website generator"
+
+-- Link test cases.
+test_link_1 = link "foo bar" "/foo/bar.html"
+           @?= "<a href=\"/foo/bar.html\">foo bar</a>"
+test_link_2 = link "back home" "/" @?= "<a href=\"/\">back home</a>"
