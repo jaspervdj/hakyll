@@ -1,5 +1,5 @@
 -- | Internal module do some low-level rendering.
-module Text.Hakyll.Render.Internal
+module Text.Hakyll.Internal.Render
     ( substitute
     , regularSubstitute
     , finalSubstitute
@@ -14,20 +14,12 @@ import Control.Monad.Reader (liftIO)
 import Data.List (foldl')
 import Data.Maybe (fromMaybe)
 
-import Text.Hakyll.Template (Template, substitute, fromString)
 import Text.Hakyll.Context (Context, ContextManipulation)
 import Text.Hakyll.Renderable
 import Text.Hakyll.Page
 import Text.Hakyll.File
 import Text.Hakyll.Hakyll
-
--- | "substitute" for use during a chain.
-regularSubstitute :: Template -> Context -> String
-regularSubstitute = substitute "$$"
-
--- | "substitute" for the end of a chain (just before writing).
-finalSubstitute :: Template -> Context -> String
-finalSubstitute = substitute "$"
+import Text.Hakyll.Internal.Template
 
 -- | A pure render function.
 pureRenderWith :: ContextManipulation -- ^ Manipulation to apply on the context.

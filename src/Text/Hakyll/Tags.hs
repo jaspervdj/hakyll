@@ -29,12 +29,11 @@ import System.FilePath ((</>))
 
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (ContextManipulation, changeValue)
-import Text.Hakyll.Render.Internal (finalSubstitute)
 import Text.Hakyll.Regex
-import Text.Hakyll.Template
 import Text.Hakyll.Util
 import Text.Hakyll.Page
 import Text.Hakyll.Internal.Cache
+import Text.Hakyll.Internal.Template
 
 -- | Read a tag map. This creates a map from tags to page paths.
 --

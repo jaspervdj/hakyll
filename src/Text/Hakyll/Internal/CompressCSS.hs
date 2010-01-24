@@ -1,6 +1,6 @@
 -- | Module used for CSS compression. The compression is currently in a simple
 --   state, but would typically reduce the number of bytes by about 25%.
-module Text.Hakyll.CompressCSS
+module Text.Hakyll.Internal.CompressCSS
     ( compressCSS
     ) where
 

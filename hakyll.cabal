@@ -35,19 +35,19 @@ library
                    old-locale >= 1,
                    time >= 1,
                    binary >= 0.5
-  exposed-modules: Text.Hakyll
+  exposed-modules: Network.Hakyll.SimpleServer
+                   Text.Hakyll
+                   Text.Hakyll.Context
+                   Text.Hakyll.File
                    Text.Hakyll.Hakyll
+                   Text.Hakyll.Regex
                    Text.Hakyll.Render
                    Text.Hakyll.Renderable
                    Text.Hakyll.Renderables
-                   Text.Hakyll.CompressCSS
-                   Text.Hakyll.File
                    Text.Hakyll.Page
                    Text.Hakyll.Util
                    Text.Hakyll.Tags
-                   Text.Hakyll.Context
-                   Text.Hakyll.Regex
-                   Text.Hakyll.Template
-                   Network.Hakyll.SimpleServer
-  other-modules: Text.Hakyll.Render.Internal
-                 Text.Hakyll.Internal.Cache
+  other-modules: Text.Hakyll.Internal.Cache
+                 Text.Hakyll.Internal.CompressCSS
+                 Text.Hakyll.Internal.Render
+                 Text.Hakyll.Internal.Template

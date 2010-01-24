@@ -1,8 +1,10 @@
-module Text.Hakyll.Template
+module Text.Hakyll.Internal.Template
     ( Template
     , fromString
     , readTemplate
     , substitute
+    , regularSubstitute
+    , finalSubstitute
     ) where
 
 import qualified Data.Map as M
@@ -46,9 +48,9 @@ readTemplate path = do
   where 
     fileName = "templates" </> path
 
--- | Substitutes @$identifiers@ in the given string by values from the given
---   "Context". When a key is not found, it is left as it is. You can here
---   specify the characters used to replace escaped dollars (@$$@).
+-- | Substitutes @$identifiers@ in the given "Template" by values from the given
+--   "Context". When a key is not found, it is left as it is. You can specify
+--   the characters used to replace escaped dollars (@$$@) here.
 substitute :: String -> Template -> Context -> String 
 substitute escaper (Chunk chunk template) context =
     chunk ++ substitute escaper template context
@@ -59,6 +61,16 @@ substitute escaper (Identifier key template) context =
 substitute escaper (EscapeCharacter template) context =
     escaper ++ substitute escaper template context
 substitute _ End _ = []
+
+-- | "substitute" for use during a chain. This will leave escaped characters as
+--   they are.
+regularSubstitute :: Template -> Context -> String
+regularSubstitute = substitute "$$"
+
+-- | "substitute" for the end of a chain (just before writing). This renders
+--   escaped characters.
+finalSubstitute :: Template -> Context -> String
+finalSubstitute = substitute "$"
     
 instance Binary Template where
     put (Chunk string template) = put (0 :: Word8) >> put string >> put template
