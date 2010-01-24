@@ -10,44 +10,28 @@ module Text.Hakyll.Render.Internal
     ) where
 
 import qualified Data.Map as M
-import Text.Hakyll.Context (Context, ContextManipulation)
 import Control.Monad.Reader (liftIO)
-import Data.List (isPrefixOf, foldl')
-import Data.Char (isAlphaNum)
+import Data.List (foldl')
 import Data.Maybe (fromMaybe)
 
+import Text.Hakyll.Template (Template, substitute, fromString)
+import Text.Hakyll.Context (Context, ContextManipulation)
 import Text.Hakyll.Renderable
 import Text.Hakyll.Page
 import Text.Hakyll.File
 import Text.Hakyll.Hakyll
 
--- | Substitutes @$identifiers@ in the given string by values from the given
---   "Context". When a key is not found, it is left as it is. You can here
---   specify the characters used to replace escaped dollars (@$$@).
-substitute :: String -> String -> Context -> String 
-substitute _ [] _ = []
-substitute escaper string context 
-    | "$$" `isPrefixOf` string = escaper ++ substitute' (tail tail')
-    | "$" `isPrefixOf` string = substituteKey
-    | otherwise = head string : substitute' tail'
-  where
-    tail' = tail string
-    (key, rest) = span isAlphaNum tail'
-    replacement = fromMaybe ('$' : key) $ M.lookup key context
-    substituteKey = replacement ++ substitute' rest
-    substitute' str = substitute escaper str context
-
 -- | "substitute" for use during a chain.
-regularSubstitute :: String -> Context -> String
+regularSubstitute :: Template -> Context -> String
 regularSubstitute = substitute "$$"
 
 -- | "substitute" for the end of a chain (just before writing).
-finalSubstitute :: String -> Context -> String
+finalSubstitute :: Template -> Context -> String
 finalSubstitute = substitute "$"
 
 -- | A pure render function.
 pureRenderWith :: ContextManipulation -- ^ Manipulation to apply on the context.
-               -> String -- ^ Template to use for rendering.
+               -> Template -- ^ Template to use for rendering.
                -> Context -- ^ Renderable object to render with given template.
                -> Context -- ^ The body of the result will contain the render.
 pureRenderWith manipulation template context =
@@ -59,7 +43,7 @@ pureRenderWith manipulation template context =
 
 -- | A pure renderAndConcat function.
 pureRenderAndConcatWith :: ContextManipulation -- ^ Manipulation to apply.
-                        -> [String] -- ^ Templates to use.
+                        -> [Template] -- ^ Templates to use.
                         -> [Context] -- ^ Different renderables.
                         -> String
 pureRenderAndConcatWith manipulation templates =
@@ -70,7 +54,7 @@ pureRenderAndConcatWith manipulation templates =
 
 -- | A pure renderChain function.
 pureRenderChainWith :: ContextManipulation
-                    -> [String]
+                    -> [Template]
                     -> Context
                     -> Context
 pureRenderChainWith manipulation templates context =
@@ -86,6 +70,7 @@ writePage page = do
     let context = additionalContext' `M.union` M.singleton "root" (toRoot url)
     makeDirectories destination
     -- Substitute $root here, just before writing.
-    liftIO $ writeFile destination $ finalSubstitute (getBody page) context
+    liftIO $ writeFile destination $ finalSubstitute (fromString $ getBody page)
+                                                     context
   where
     url = getURL page

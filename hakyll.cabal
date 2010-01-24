@@ -47,6 +47,7 @@ library
                    Text.Hakyll.Tags
                    Text.Hakyll.Context
                    Text.Hakyll.Regex
+                   Text.Hakyll.Template
                    Network.Hakyll.SimpleServer
   other-modules: Text.Hakyll.Render.Internal
                  Text.Hakyll.Internal.Cache

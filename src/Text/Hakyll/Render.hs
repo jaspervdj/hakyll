@@ -16,6 +16,7 @@ import Control.Monad (unless)
 import Control.Monad.Reader (liftIO)
 import System.Directory (copyFile)
 
+import Text.Hakyll.Template (readTemplate)
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (ContextManipulation)
 import Text.Hakyll.Page
@@ -49,7 +50,7 @@ renderWith :: Renderable a
            -> a -- ^ Renderable object to render with given template.
            -> Hakyll Page -- ^ The body of the result will contain the render.
 renderWith manipulation templatePath renderable = do
-    template <- liftIO $ readFile templatePath
+    template <- readTemplate templatePath
     context <- toContext renderable
     return $ fromContext $ pureRenderWith manipulation template context
 
@@ -78,7 +79,7 @@ renderAndConcatWith :: Renderable a
                     -> [a]
                     -> Hakyll String
 renderAndConcatWith manipulation templatePaths renderables = do
-    templates <- liftIO $ mapM readFile templatePaths
+    templates <- mapM readTemplate templatePaths
     contexts <- mapM toContext renderables
     return $ pureRenderAndConcatWith manipulation templates contexts
 
@@ -103,10 +104,11 @@ renderChainWith manipulation templatePaths renderable =
     depends (getURL renderable) dependencies render'
   where
     dependencies = getDependencies renderable ++ templatePaths
-    render' = do templates <- liftIO $ mapM readFile templatePaths
-                 context <- toContext renderable
-                 let result = pureRenderChainWith manipulation templates context
-                 writePage $ fromContext result
+    render' = do
+        templates <- mapM readTemplate templatePaths
+        context <- toContext renderable
+        let result = pureRenderChainWith manipulation templates context
+        writePage $ fromContext result
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.

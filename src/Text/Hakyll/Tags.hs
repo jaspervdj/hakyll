@@ -31,6 +31,7 @@ import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (ContextManipulation, changeValue)
 import Text.Hakyll.Render.Internal (finalSubstitute)
 import Text.Hakyll.Regex
+import Text.Hakyll.Template
 import Text.Hakyll.Util
 import Text.Hakyll.Page
 import Text.Hakyll.Internal.Cache
@@ -50,7 +51,7 @@ readTagMap identifier paths = do
                                   storeInCache (M.toAscList tagMap) fileName
                                   return tagMap
   where
-    fileName = "_tagmap" </> identifier
+    fileName = "tagmaps" </> identifier
 
     readTagMap' = foldM addPaths M.empty paths
     addPaths current path = do
@@ -69,11 +70,12 @@ renderTagCloud tagMap urlFunction minSize maxSize =
   where
     renderTag :: (String, Float) -> String
     renderTag (tag, count) = 
-        finalSubstitute "<a style=\"font-size: $size\" href=\"$url\">$tag</a>" $
-                        M.fromList [ ("size", sizeTag count)
-                                   , ("url", urlFunction tag)
-                                   , ("tag", tag)
-                                   ]
+        finalSubstitute linkTemplate $ M.fromList [ ("size", sizeTag count)
+                                                  , ("url", urlFunction tag)
+                                                  , ("tag", tag)
+                                                  ]
+    linkTemplate =
+        fromString "<a style=\"font-size: $size\" href=\"$url\">$tag</a>"
 
     sizeTag :: Float -> String
     sizeTag count = show size' ++ "%"

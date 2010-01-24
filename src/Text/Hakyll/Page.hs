@@ -13,7 +13,7 @@ import Data.Char (isSpace)
 import Data.Maybe (fromMaybe)
 import Control.Monad (liftM)
 import Control.Monad.Reader (liftIO)
-import System.FilePath (takeExtension)
+import System.FilePath (takeExtension, (</>))
 
 import Text.Pandoc
 import Data.Binary
@@ -135,11 +135,13 @@ readPageFromFile path = do
 --   read it from the file given and store it in the cache.
 readPage :: FilePath -> Hakyll Page
 readPage path = do
-    isCacheMoreRecent' <- isCacheMoreRecent path [path]
-    if isCacheMoreRecent' then getFromCache path
+    isCacheMoreRecent' <- isCacheMoreRecent fileName [path]
+    if isCacheMoreRecent' then getFromCache fileName
                           else do page <- readPageFromFile path
-                                  storeInCache page path
+                                  storeInCache page fileName
                                   return page
+  where
+    fileName = "pages" </> path
 
 -- Make pages renderable.
 instance Renderable Page where
