@@ -11,10 +11,11 @@ import qualified Data.Map as M
 import Data.List (isPrefixOf)
 import Data.Char (isSpace)
 import Data.Maybe (fromMaybe)
-import Control.Monad (liftM)
+import Control.Monad (liftM, replicateM)
 import Control.Monad.Reader (liftIO)
 import System.FilePath (takeExtension, (</>))
 
+import Test.QuickCheck
 import Text.Pandoc
 import Data.Binary
 
@@ -29,7 +30,7 @@ import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
 data Page = Page Context
-          deriving (Show, Read)
+          deriving (Show, Read, Eq)
 
 -- | Create a Page from a key-value mapping.
 fromContext :: Context -> Page
@@ -156,3 +157,17 @@ instance Renderable Page where
 instance Binary Page where
     put (Page context) = put $ M.toAscList context
     get = liftM (Page . M.fromAscList) get
+
+-- | Generate an arbitrary page.
+arbitraryPage :: Gen Page
+arbitraryPage = do keys <- listOf key'
+                   values <- arbitrary
+                   return $ Page $ M.fromList $ zip keys values
+  where
+    key' = do l <- choose (5, 10)
+              replicateM l $ choose ('a', 'z')
+
+-- Make pages testable
+instance Arbitrary Page where
+    arbitrary = arbitraryPage
+    shrink (Page context) = map (Page . flip M.delete context) $ M.keys context
