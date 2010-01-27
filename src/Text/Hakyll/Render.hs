@@ -71,8 +71,8 @@ renderAndConcat :: Renderable a
 renderAndConcat = renderAndConcatWith id
 
 -- | Render each renderable with the given templates, then concatenate the
---   result. This function allows you to specify a "ContextManipulation" to
---   apply on every "Renderable".
+--   result. This function allows you to specify a @ContextManipulation@ to
+--   apply on every @Renderable@.
 renderAndConcatWith :: Renderable a
                     => ContextManipulation
                     -> [FilePath]
@@ -97,7 +97,7 @@ renderChain :: Renderable a => [FilePath] -> a -> Hakyll ()
 renderChain = renderChainWith id
 
 -- | A more custom render chain that allows you to specify a
---   "ContextManipulation" which to apply on the context when it is read first.
+--   @ContextManipulation@ which to apply on the context when it is read first.
 renderChainWith :: Renderable a
                 => ContextManipulation -> [FilePath] -> a -> Hakyll ()
 renderChainWith manipulation templatePaths renderable =

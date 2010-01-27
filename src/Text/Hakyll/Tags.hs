@@ -59,7 +59,7 @@ readTagMap identifier paths = do
         return $ foldr (flip (M.insertWith (++)) [path]) current tags
 
 -- | Render a tag cloud.
-renderTagCloud :: M.Map String [FilePath] -- ^ Map as produced by "readTagMap".
+renderTagCloud :: M.Map String [FilePath] -- ^ Map as produced by @readTagMap@.
                -> (String -> String) -- ^ Function to produce an url for a tag.
                -> Float -- ^ Smallest font size, in percent.
                -> Float -- ^ Biggest font size, in percent.

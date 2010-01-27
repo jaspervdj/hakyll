@@ -24,9 +24,9 @@ type Context = Map String String
 -- | Type for context manipulating functions.
 type ContextManipulation = Context -> Context
 
--- | Do something with a value in a "Context", but keep the old value as well.
+-- | Do something with a value in a @Context@, but keep the old value as well.
 --   This is probably the most common function to construct a
---   "ContextManipulation".
+--   @ContextManipulation@.
 renderValue :: String -- ^ Key of which the value should be copied.
             -> String -- ^ Key the value should be copied to.
             -> (String -> String) -- ^ Function to apply on the value.
@@ -35,7 +35,7 @@ renderValue src dst f context = case M.lookup src context of
     Nothing      -> context
     (Just value) -> M.insert dst (f value) context
 
--- | Change a value in a "Context".
+-- | Change a value in a @Context@.
 --
 --   > import Data.Char (toUpper)
 --   > changeValue "title" (map toUpper)

@@ -1,4 +1,4 @@
--- | A module for dealing with "Page"s. This module is mostly internally used.
+-- | A module for dealing with @Page@s. This module is mostly internally used.
 module Text.Hakyll.Page 
     ( Page
     , fromContext

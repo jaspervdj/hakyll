@@ -29,7 +29,7 @@ data Template = Chunk String Template
               | End
               deriving (Show, Read, Eq)
 
--- | Construct a "Template" from a string.
+-- | Construct a @Template@ from a string.
 fromString :: String -> Template
 fromString [] = End
 fromString string
@@ -41,7 +41,7 @@ fromString string
   where
     tail' = tail string
 
--- | Read a "Template" from a file. This function might fetch the "Template"
+-- | Read a @Template@ from a file. This function might fetch the @Template@
 --   from the cache, if available.
 readTemplate :: FilePath -> Hakyll Template
 readTemplate path = do
@@ -54,7 +54,7 @@ readTemplate path = do
   where 
     fileName = "templates" </> path
 
--- | Substitutes @$identifiers@ in the given "Template" by values from the given
+-- | Substitutes @$identifiers@ in the given @Template@ by values from the given
 --   "Context". When a key is not found, it is left as it is. You can specify
 --   the characters used to replace escaped dollars (@$$@) here.
 substitute :: String -> Template -> Context -> String 
@@ -68,12 +68,12 @@ substitute escaper (EscapeCharacter template) context =
     escaper ++ substitute escaper template context
 substitute _ End _ = []
 
--- | "substitute" for use during a chain. This will leave escaped characters as
+-- | @substitute@ for use during a chain. This will leave escaped characters as
 --   they are.
 regularSubstitute :: Template -> Context -> String
 regularSubstitute = substitute "$$"
 
--- | "substitute" for the end of a chain (just before writing). This renders
+-- | @substitute@ for the end of a chain (just before writing). This renders
 --   escaped characters.
 finalSubstitute :: Template -> Context -> String
 finalSubstitute = substitute "$"
@@ -111,7 +111,7 @@ arbitraryTemplate length' = oneof [ do chunk <- chunk'
                 return $ if null sanitized then "foo"
                                            else sanitized
 
--- | Make "Template" testable.
+-- | Make @Template@ testable.
 instance Arbitrary Template where
     arbitrary = choose (0, 20) >>= arbitraryTemplate
 

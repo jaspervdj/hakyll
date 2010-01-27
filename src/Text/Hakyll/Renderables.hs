@@ -1,6 +1,8 @@
 module Text.Hakyll.Renderables
     ( CustomPage
     , createCustomPage
+    , createListing
+    , createListingWith
     , PagePath
     , createPagePath
     , CombinedRenderable
@@ -9,11 +11,14 @@ module Text.Hakyll.Renderables
     ) where
 
 import qualified Data.Map as M
+import Control.Arrow (second)
 
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
+import Text.Hakyll.Context
+import Text.Hakyll.Render
 
 -- | A custom page.
 data CustomPage = CustomPage 
@@ -34,6 +39,39 @@ createCustomPage :: String -- ^ Destination of the page, relative to _site.
                  -> [(String, Either String (Hakyll String))] -- ^ Mapping.
                  -> CustomPage
 createCustomPage = CustomPage
+
+-- | A @createCustomPage@ function specialized in creating listings.
+--
+--   This function creates a listing of a certain list of @Renderable@s. Every
+--   item in the list is created by applying the given template to every
+--   renderable. You can also specify additional context to be included in the
+--   @CustomPage@.
+createListing :: (Renderable a)
+              => String -- ^ Destination of the page.
+              -> FilePath -- ^ Template to render all items with.
+              -> [a] -- ^ Renderables in the list.
+              -> [(String, String)] -- ^ Additional context.
+              -> CustomPage
+createListing = createListingWith id
+
+-- | A @createCustomPage@ function specialized in creating listings.
+--
+--   In addition to @createListing@, this function allows you to specify an
+--   extra @ContextManipulation@ for all @Renderable@s given.
+createListingWith :: (Renderable a)
+                  => ContextManipulation -- ^ Manipulation for the renderables.
+                  -> String -- ^ Destination of the page.
+                  -> FilePath -- ^ Template to render all items with.
+                  -> [a] -- ^ Renderables in the list.
+                  -> [(String, String)] -- ^ Additional context.
+                  -> CustomPage
+createListingWith manipulation url template renderables additional =
+    createCustomPage url dependencies context
+  where
+    dependencies = template : concatMap getDependencies renderables
+    context = ("body", Right concatenation) : additional'
+    concatenation = renderAndConcatWith manipulation [template] renderables
+    additional' = map (second Left) additional
 
 instance Renderable CustomPage where
     getDependencies = customPageDependencies
@@ -62,15 +100,15 @@ data CombinedRenderable a b = CombinedRenderable a b
                             | CombinedRenderableWithURL FilePath a b
 
 -- | Combine two renderables. The url will always be taken from the first
---   "Renderable". Also, if a `$key` is present in both renderables, the
---   value from the first "Renderable" will be taken as well.
+--   @Renderable@. Also, if a `$key` is present in both renderables, the
+--   value from the first @Renderable@ will be taken as well.
 --
 --   Since renderables are always more or less key-value maps, you can see
 --   this as a @union@ between two maps.
 combine :: (Renderable a, Renderable b) => a -> b -> CombinedRenderable a b
 combine = CombinedRenderable
 
--- | Combine two renderables and set a custom URL. This behaves like "combine",
+-- | Combine two renderables and set a custom URL. This behaves like @combine@,
 --   except that for the @url@ field, the given URL is always chosen.
 combineWithURL :: (Renderable a, Renderable b)
                => FilePath
