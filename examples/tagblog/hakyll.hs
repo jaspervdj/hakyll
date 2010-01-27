@@ -20,7 +20,7 @@ main = hakyll $ do
     let renderablePosts = map createPagePath postPaths
 
     -- Read tag map.
-    tagMap <- readTagMap postPaths
+    tagMap <- readTagMap "postTags" postPaths
 
     -- Render all posts list.
     renderPostList "posts.html" "All posts" postPaths

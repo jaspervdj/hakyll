@@ -159,14 +159,16 @@ post lists for every tag.
 Hakyll provides a function called `readTagMap`. Let's inspect it's type.
 
 ~~~~~{.haskell}
-readTagMap [FilePath] -> Hakyll Map String [FilePath]
+readTagMap String [FilePath] -> Hakyll Map String [FilePath]
 ~~~~~
 
 You give it a list of paths, and it creates a map that, for every tag, holds
 a number of posts. We can easily use this to render a post list for every tag.
+The first argument given is an "identifier", unique to this tag map. Hakyll
+needs this so it can cache the tags.
 
 ~~~~~{.haskell}
-tagMap <- readTagMap postPaths
+tagMap <- readTagMap "postTags" postPaths
 let renderListForTag (tag, posts) =
         renderPostList (tagToURL tag)
                        ("Posts tagged " ++ tag)
@@ -181,11 +183,11 @@ A tag cloud is a commonly found thing on blogs. Hakyll also provides code to
 generate a tag cloud. Let's have a look at the `renderTagCloud` function.
 
 ~~~~~{.haskell}
-TagCloud :: M.Map String [FilePath]
-         -> (String -> String)
-         -> Float
-         -> Float
-         -> String
+renderTagCloud :: M.Map String [FilePath]
+               -> (String -> String)
+               -> Float
+               -> Float
+               -> String
 ~~~~~
 
 The first argument is obviously the result of the `readTagMap` function. The
