@@ -13,14 +13,14 @@ import Data.Char (isSpace)
 import Data.Maybe (fromMaybe)
 import Control.Monad (liftM, replicateM)
 import Control.Monad.Reader (liftIO)
-import System.FilePath (takeExtension, (</>))
+import System.FilePath
 
 import Test.QuickCheck
 import Text.Pandoc
 import Data.Binary
 
 import Text.Hakyll.Internal.Cache
-import Text.Hakyll.Hakyll (Hakyll)
+import Text.Hakyll.Hakyll
 import Text.Hakyll.File
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Context (Context)
@@ -124,9 +124,11 @@ readPageFromFile path = do
 
     -- Read file.
     contents <- liftIO $ readFile path
+    enableCategories' <- askHakyll enableCategories
     let sections = splitAtDelimiters $ lines contents
         context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
+            [ ("category", getCategory path) | enableCategories' ] ++
             [ ("url", url)
             , ("path", path)
             ] ++ context
@@ -134,6 +136,7 @@ readPageFromFile path = do
     return page
   where
     url = toURL path
+    getCategory = last . splitDirectories . takeDirectory
 
 -- | Read a page. Might fetch it from the cache if available. Otherwise, it will
 --   read it from the file given and store it in the cache.

@@ -12,6 +12,9 @@ module Text.Hakyll.Renderables
 
 import qualified Data.Map as M
 import Control.Arrow (second)
+import Control.Monad (liftM)
+
+import Data.Binary
 
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Page
@@ -94,6 +97,11 @@ instance Renderable PagePath where
     getDependencies (PagePath path) = return path
     getURL (PagePath path) = toURL path
     toContext (PagePath path) = readPage path >>= toContext
+
+-- We can serialize filepaths
+instance Binary PagePath where
+    put (PagePath path) = put path
+    get = liftM PagePath get
 
 -- | A combination of two other renderables.
 data CombinedRenderable a b = CombinedRenderable a b
