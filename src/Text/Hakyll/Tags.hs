@@ -91,13 +91,13 @@ renderTagCloud tagMap urlFunction minSize maxSize =
 
 -- | Render all tags to links.
 --   
---   On your side, it is nice if you can display the tags on a page, but
+--   On your site, it is nice if you can display the tags on a page, but
 --   naturally, most people would expect these are clickable.
 --
 --   So, this function takes a function to produce an url for a given tag, and
 --   applies it on all tags.
 --
---   Note that it is your own responsibility to ensure a page which such an url
+--   Note that it is your own responsibility to ensure a page with such an url
 --   exists.
 renderTagLinks :: (String -> String) -- ^ Function to produce an url for a tag.
                -> ContextManipulation
