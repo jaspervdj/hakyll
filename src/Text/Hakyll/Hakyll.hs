@@ -19,6 +19,8 @@ data HakyllConfiguration = HakyllConfiguration
       siteDirectory :: FilePath
     , -- | Directory for cache files.
       cacheDirectory :: FilePath
+      -- | Use categories in addition to tags.
+    , enableCategories :: Bool
     }
 
 -- | Our custom monad stack.

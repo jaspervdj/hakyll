@@ -12,6 +12,7 @@ import Data.List (isPrefixOf)
 import Data.Char (isAlphaNum)
 import Data.Binary
 import Control.Monad (liftM, liftM2, replicateM)
+import Control.Applicative ((<$>))
 import Data.Maybe (fromMaybe)
 import System.FilePath ((</>))
 import Control.Monad.Reader (liftIO)
@@ -95,10 +96,10 @@ instance Binary Template where
 arbitraryTemplate :: Int -> Gen Template
 arbitraryTemplate 0 = return End
 arbitraryTemplate length' = oneof [ do chunk <- chunk'
-                                       template' >>= return . Chunk chunk
+                                       Chunk chunk <$> template'
                                   , do key <- key'
-                                       template' >>= return . Identifier key
-                                  , template' >>= return . EscapeCharacter
+                                       Identifier key <$> template'
+                                  , EscapeCharacter <$> template'
                                   ]
   where
     template' = arbitraryTemplate (length' - 1)

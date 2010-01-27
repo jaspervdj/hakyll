@@ -25,9 +25,9 @@ import Data.List (intercalate)
 import Control.Monad (foldM)
 import Control.Arrow (second)
 import Control.Applicative ((<$>))
-import System.FilePath ((</>))
+import System.FilePath
 
-import Text.Hakyll.Hakyll (Hakyll)
+import Text.Hakyll.Hakyll
 import Text.Hakyll.Context (ContextManipulation, changeValue)
 import Text.Hakyll.Regex
 import Text.Hakyll.Util
@@ -55,8 +55,13 @@ readTagMap identifier paths = do
     readTagMap' = foldM addPaths M.empty paths
     addPaths current path = do
         page <- readPage path
+        categoriesEnabled <- askHakyll enableCategories
         let tags = map trim $ splitRegex "," $ getValue "tags" page
-        return $ foldr (flip (M.insertWith (++)) [path]) current tags
+            category = [getCategory path | categoriesEnabled]
+            addPaths' = flip (M.insertWith (++)) [path]
+        return $ foldr addPaths' current (category ++ tags)
+
+    getCategory = last . splitDirectories . takeDirectory
 
 -- | Render a tag cloud.
 renderTagCloud :: M.Map String [FilePath] -- ^ Map as produced by @readTagMap@.

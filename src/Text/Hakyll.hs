@@ -19,6 +19,7 @@ defaultHakyllConfiguration = HakyllConfiguration
     { additionalContext = M.empty
     , siteDirectory = "_site"
     , cacheDirectory = "_cache"
+    , enableCategories = False
     }
 
 -- | Hakyll with a default configuration.
