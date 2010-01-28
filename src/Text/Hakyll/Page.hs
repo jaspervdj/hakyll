@@ -124,11 +124,10 @@ readPageFromFile path = do
 
     -- Read file.
     contents <- liftIO $ readFile path
-    enableCategories' <- askHakyll enableCategories
     let sections = splitAtDelimiters $ lines contents
         context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
-            [ ("category", getCategory path) | enableCategories' ] ++
+            category ++
             [ ("url", url)
             , ("path", path)
             ] ++ context
@@ -136,7 +135,8 @@ readPageFromFile path = do
     return page
   where
     url = toURL path
-    getCategory = last . splitDirectories . takeDirectory
+    category = let dirs = splitDirectories $ takeDirectory path
+               in [("category", last dirs) | not (null dirs)]
 
 -- | Read a page. Might fetch it from the cache if available. Otherwise, it will
 --   read it from the file given and store it in the cache.
