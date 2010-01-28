@@ -72,7 +72,7 @@ we want to show a few recent posts on the index page.
 
 ## Custom Pages
 
-Currently, there are 3 renderable datatypes in Hakyll:
+Currently, there are 4 renderable datatypes in Hakyll:
 
 - `Page`: The result of any rendering action. It is generally not recommended
   to use pages a lot, because they cannot check dependencies (and therefore,
@@ -82,6 +82,8 @@ Currently, there are 3 renderable datatypes in Hakyll:
   and works on a higher level.
 - `CustomPage`: Basically the name says it - the preferred way of creating
   custom pages in Hakyll.
+- `CombinedRenderable`: A way of combining two other `Renderable`s - this is
+  explained in tutorial 2.
 
 We will use a `CustomPage` here. Basically, all `Renderable` datatypes are in
 the end just `key: value` mappings. A CustomPage is created using the
@@ -107,8 +109,23 @@ which type to use for the value:
   result in a String. However - this action _will not be executed_ when the file
   in `_site` is up-to-date.
 
-First, let us define this `Hakyll String` for our index page. We want to render
-every post using a simple template:
+However, in this specific case - a list of posts - there is an easier, and more
+high-level approach[^1]. Let's look at the signature of `createListing`:
+
+~~~~~{.haskell}
+createListing :: (Renderable a)
+              -> String
+              -> FilePath
+              -> [a]
+              -> [(String, String)]
+~~~~~
+
+[^1]: Since Hakyll-1.3 onwards.
+
+The first argument is the destination url. For our blog, this is of course
+`index.html`. The second argument is a template to render _each renderable_
+with. We use `templates/postitem.html` here. This is, as you can see, a simple
+template:
 
 ~~~~~{.html}
 <li>
@@ -117,41 +134,32 @@ every post using a simple template:
 </li>
 ~~~~~
 
-When every post is rendered with this template, we then want to concatenate the
-result. Since rendering and concatenating is pretty common, Hakyll provides us
-with a high-level function to do this.
+We then give a list of renderables. For our index, these are the 3 last posts.
+The last argument of the `createListing` functions lets you specify additional
+key-value pairs. We use this to set the title of our page. So, we create our
+index page using:
 
 ~~~~~{.haskell}
-let recentPosts = renderAndConcat ["templates/postitem.html"]
-                    (take 3 renderablePosts)
+let index = createListing "index.html"
+                          "templates/postitem.html"
+                          (take 3 renderablePosts)
+                          [("title", "Home")]
 ~~~~~
 
-Now, creating our custom page is fairly straight-forward:
+The result of this will be a `CustomPage`. The body of this page will contain
+a concatenation of all the renderables, rendered with the
+`templates/postitem.html` template.
+
+Now, we only have to render it: first using the `index.html` template, then
+using the `templates/default.html` template.
 
 ~~~~~{.haskell}
-createCustomPage "index.html"
-                 ("templates/postitem.html" : take 3 postPaths)
-                 [ ("title", Left "All posts")
-                 , ("posts", Right recentPosts)
-                 ]
+renderChain ["index.html", "templates/default.html"] index
 ~~~~~
 
-You can see our three arguments here. We're rendering `index.html`, then we tell
-Hakyll on what files it depends - here the `templates/postitem.html` template
-and the latest 3 posts. Finally, we give a `title` value to substitute in the
-template, and the result of our concatenation. Of course, we also need to render
-this custom page:
-
-~~~~~{.haskell}
-renderChain ["index.html", "templates/default.html"] $
-    createCustomPage "index.html"
-         ("templates/postitem.html" : take 3 postPaths)
-         [ ("title", Left "All posts")
-         , ("posts", Right recentPosts)
-         ]
-~~~~~
-
-Note that the `index.html` in the `renderChain` list is also a template.
+Note that the `index.html` in the `renderChain` list is also a template. Now,
+take your time to read the `index.html` template and the other files in the zip
+so you understand what is going on here.
 
 ## That's that
 

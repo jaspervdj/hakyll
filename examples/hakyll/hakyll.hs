@@ -14,14 +14,11 @@ main = hakyll $ do
     directory static "examples"
     directory static "reference"
 
-    tutorials <- liftIO $ liftM (sort . filter (`matchesRegex` "tutorial[0-9]*.markdown")) $ getDirectoryContents "."
-    let tutorialList = renderAndConcat ["templates/tutorialitem.html"]
-                                       (map createPagePath tutorials)
-        tutorialPage = createCustomPage "tutorials.html"
-                                        ("templates/tutorialitem.html" : tutorials)
-                                        [ ("title", Left "Tutorials")
-                                        , ("tutorials", Right tutorialList)
-                                        ]
+    tutorials <- liftIO $ liftM (sort . filter (`matchesRegex` "^tutorial[0-9]*.markdown$")) $ getDirectoryContents "."
+    let tutorialPage = createListing "tutorials.html"
+                                     "templates/tutorialitem.html"
+                                     (map createPagePath tutorials)
+                                     [("title", "Tutorials")]
     renderChain ["templates/tutorials.html", "templates/default.html"] $ withSidebar tutorialPage
 
     mapM_ render' $ [ "about.markdown"
