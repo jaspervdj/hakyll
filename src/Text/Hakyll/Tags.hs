@@ -13,9 +13,25 @@
 --   > The novel is set in a post-apocalyptic near future, where the Earth and
 --   > its populations have been damaged greatly by Nuclear...
 --
---   All the following functions would work with such a format.
+--   All the following functions would work with such a format. In addition to
+--   tags, Hakyll also supports categories. The convention when using categories
+--   is to place pages in subdirectories.
+--
+--   An example, the page @posts\/coding\/2010-01-28-hakyll-categories.markdown@
+--   would be placed under the `coding` category.
+--
+--   Tags or categories are read using the @readTagMap@ and @readCategoryMap@
+--   functions. Because categories are implemented using tags - categories can
+--   be seen as tags, with the restriction that a page can only have one
+--   category - all functions for tags also work with categories.
+--
+--   When reading a @TagMap@ (which is also used for category maps) using the
+--   @readTagMap@ or @readCategoryMap@ function, you also have to give a unique
+--   identifier to it. This identifier is simply for caching reasons, so Hakyll
+--   can tell different maps apart; it has no other use.
 module Text.Hakyll.Tags
-    ( readTagMap
+    ( TagMap
+    , readTagMap
     , readCategoryMap
     , renderTagCloud
     , renderTagLinks
@@ -39,13 +55,14 @@ import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Internal.Template
 
 -- | Type for a tag map.
+--
+--   This is a map associating tags or categories to the appropriate pages
+--   using that tag or category. In the case of categories, each path will only
+--   appear under one category - this is not the case with tags.
 type TagMap = M.Map String [PagePath]
 
--- | Read a tag map. This creates a map from tags to page paths.
---
---   You also have to give a unique identifier for every tagmap. This is for
---   caching reasons, so the tagmap will be stored in
---   @_cache/_tagmap/identifier@.
+-- | Read a tag map. This is a internally used function that can be used for
+--   tags as well as for categories.
 readMap :: (Context -> [String]) -- ^ Function to get tags from a context.
         -> String -- ^ Unique identifier for the tagmap.
         -> [PagePath]
@@ -66,16 +83,18 @@ readMap getTagsFunction identifier paths = do
             addPaths' = flip (M.insertWith (++)) [path]
         return $ foldr addPaths' current tags
 
-readTagMap :: String
-           -> [PagePath]
+-- | Read a @TagMap@, using the @tags@ metadata field.
+readTagMap :: String -- ^ Unique identifier for the map.
+           -> [PagePath] -- ^ Paths to get tags from.
            -> Hakyll TagMap
 readTagMap = readMap  getTagsFunction
   where
     getTagsFunction = map trim . splitRegex ","
                     . fromMaybe [] . M.lookup "tags"
 
-readCategoryMap :: String
-                -> [PagePath]
+-- | Read a @TagMap@, using the subdirectories the pages are placed in.
+readCategoryMap :: String -- ^ Unique identifier for the map.
+                -> [PagePath] -- ^ Paths to get tags from.
                 -> Hakyll TagMap
 readCategoryMap = readMap $ maybeToList . M.lookup "category"
 
