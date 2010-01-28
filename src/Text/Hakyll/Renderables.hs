@@ -49,6 +49,13 @@ createCustomPage = CustomPage
 --   item in the list is created by applying the given template to every
 --   renderable. You can also specify additional context to be included in the
 --   @CustomPage@.
+--
+--   > let customPage = createListingWith 
+--   >                      "index.html" -- Destination of the page.
+--   >                      "templates/postitem.html" -- Path to template to
+--   >                                                -- render the items with.
+--   >                      posts -- ^ Renderables to create the list with.
+--   >                      [("title", "Home")] -- ^ Additional context
 createListing :: (Renderable a)
               => String -- ^ Destination of the page.
               -> FilePath -- ^ Template to render all items with.
