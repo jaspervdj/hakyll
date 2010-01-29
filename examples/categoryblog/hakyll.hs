@@ -2,12 +2,11 @@ module Main where
 
 import Text.Hakyll (hakyll)
 import Text.Hakyll.Render
-import Text.Hakyll.Tags (readCategoryMap)
-import Text.Hakyll.File (getRecursiveContents, directory, removeSpaces)
+import Text.Hakyll.Tags (TagMap, readCategoryMap)
+import Text.Hakyll.File (getRecursiveContents, directory, removeSpaces, sortByBaseName)
 import Text.Hakyll.Renderables (createPagePath, createCustomPage, createListingWith, createListing)
 import Text.Hakyll.Context (ContextManipulation, renderDate)
 import Text.Hakyll.Util (link)
-import Data.List (sort)
 import Data.Map (toList)
 import Control.Monad (mapM_, liftM, (<=<))
 import Data.Either (Either(..))
@@ -17,7 +16,7 @@ main = hakyll $ do
     directory css "css"
 
     -- Find all post paths.
-    postPaths <- liftM (reverse . sort) $ getRecursiveContents "posts"
+    postPaths <- liftM (reverse . sortByBaseName) $ getRecursiveContents "posts"
     let renderablePosts = map createPagePath postPaths
 
     -- Read category map.
@@ -54,6 +53,7 @@ main = hakyll $ do
 
           categoryToURL category = "$root/categories/" ++ removeSpaces category ++ ".html"
 
+          categoryList :: TagMap -> String
           categoryList = uncurry categoryListItem <=< toList
 
           categoryListItem category posts = "<li>" ++ link category (categoryToURL category)

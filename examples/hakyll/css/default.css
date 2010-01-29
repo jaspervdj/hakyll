@@ -83,6 +83,12 @@ div.column p {
     padding-right: 15px;
 }
 
+img {
+    display: block;
+    margin: 10px auto 10px auto;
+    border: none;
+}
+
 ul {
     list-style-type: square;
     padding-left: 1em;
