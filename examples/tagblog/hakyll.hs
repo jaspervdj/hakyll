@@ -31,7 +31,7 @@ main = hakyll $ do
 
     -- Render index, including recent posts.
     let tagCloud = renderTagCloud tagMap tagToURL 100 200
-    let index = createListingWith postManipulation "index.html"
+        index = createListingWith postManipulation "index.html"
                                   "templates/postitem.html"
                                   (take 3 renderablePosts)
                                   [ ("title", "Home")

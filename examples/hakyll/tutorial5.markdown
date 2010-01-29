@@ -108,24 +108,18 @@ code into a more general function:
 
 ~~~~{.haskell}
 renderPostList url title posts = do
-    let postItems = renderAndConcatWith
-                        postManipulation
-                        "templates/postitem.html"
-                        (map createPagePath posts)
-        customPage = createCustomPage
-                            url
-                            ("templates/postitem.html" : posts)
-                            [ ("title", Left title)
-                            , ("posts", Right postItems)
-                            ]
-    renderChain ["posts.html", "templates/default.html"]
-                customPage
+    let list = createListingWith postManipulation
+                                 url "templates/postitem.html"
+                                 posts [("title", title)]
+    renderChain ["posts.html", "templates/default.html"] list
 ~~~~~
 
-Our "render all posts" action can now be written as:
+As you can see, `createListing` also has a `xxxWith` variant that lets you
+specify a `ContextManipulation` to apply on every `Renderable`. Our "render all
+posts" action can now be written as:
 
 ~~~~~{.haskell}
-renderPostList "posts.html" "All posts" postPaths
+renderPostList "posts.html" "All posts" renderablePosts
 ~~~~~
 
 ## Tag links
@@ -136,7 +130,7 @@ clickable. We can again solve this with a `ContextManipulation`. We have a
 function that produces an url for a given tag:
 
 ~~~~~{.haskell}
-tagToURL tag = "/tags/" ++ removeSpaces tag ++ ".html"
+tagToURL tag = "$root/tags/" ++ removeSpaces tag ++ ".html"
 ~~~~~
 
 `removeSpaces` is an auxiliary function from `Text.Hakyll.File`. Now, there is
@@ -151,6 +145,8 @@ postManipulation = renderDate "date" "%B %e, %Y" "Unknown date"
                  . renderTagLinks tagToURL
 ~~~~~
 
+So, the `renderTagLinks` function replaces the `$tags` value from
+`epic fail, random` to `<a href="$root/tags/epic-fail.html">epic fail</a>, ...`.
 If we click a tag, we get a `404`. That's because we haven't generated the
 post lists for every tag.
 
@@ -159,7 +155,8 @@ post lists for every tag.
 Hakyll provides a function called `readTagMap`. Let's inspect it's type.
 
 ~~~~~{.haskell}
-readTagMap String [FilePath] -> Hakyll Map String [FilePath]
+type TagMap = Map String [FilePath]
+readTagMap String [FilePath] -> Hakyll TagMap
 ~~~~~
 
 You give it a list of paths, and it creates a map that, for every tag, holds
@@ -183,7 +180,7 @@ A tag cloud is a commonly found thing on blogs. Hakyll also provides code to
 generate a tag cloud. Let's have a look at the `renderTagCloud` function.
 
 ~~~~~{.haskell}
-renderTagCloud :: M.Map String [FilePath]
+renderTagCloud :: TagMap
                -> (String -> String)
                -> Float
                -> Float
@@ -197,13 +194,12 @@ tag cloud back. We can add this to our index:
 
 ~~~~~{.haskell}
 let tagCloud = renderTagCloud tagMap tagToURL 100 200
-...
-createCustomPage "index.html"
-                ("templates/postitem.html" : take 3 postPaths)
-                [ ("title", Left "Home")
-                , ("posts", Right recentPosts)
-                , ("tagcloud", Left tagCloud)
-                ]
+    index = createListingWith postManipulation "index.html"
+                              "templates/postitem.html"
+                              (take 3 renderablePosts)
+                              [ ("title", "Home")
+                              , ("tagcloud", tagCloud)
+                              ]
 ~~~~~
 
 ## That's it

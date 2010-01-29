@@ -39,17 +39,17 @@ template to render this. This is where `templates/rss.xml` comes in:
     <title>The SimpleBlog</title>
     <link>http://jaspervdj.be/</link>
     <description>Simple blog in hakyll</description>
-    $items
+    $body
   </channel> 
 </rss>
 ~~~~~
 
-We thus render our feed with the following code (no, I didn't define `rssPage`
+We thus render our feed with the following code (no, I didn't define `rss`
 yet - I'm going to work from bottom to top here, it's easier to explain it
 that way).
 
 ~~~~~{.haskell}
-renderChain ["templates/rss.xml"] rssPage
+renderChain ["templates/rss.xml"] rss
 ~~~~~
 
 This, as you can see, is a regular render chain, once again. We need make a
@@ -73,27 +73,17 @@ We want to render every post using the following template,
 ~~~~~
 
 Since we build on the previous example, we still have our `renderablePosts`
-list. We'll be using it again:
+list. We'll be using it again to create a listing:
 
 ~~~~~{.haskell}
-let recentRSSItems = renderAndConcat ["templates/rssitem.xml"]
-                                     (take 3 renderablePosts)
+let rss = createListing "rss.xml" "templates/rssitem.xml"
+                        (take 3 renderablePosts) []
 ~~~~~
 
-We're using the `renderAndConcat` function again. Note that because of
-hakyll/haskell laziness, this action isn't executed directly, and this helps
-dependency handling.
-
-Now, the `rssPage` page. As you might remember, we use the `createCustomPage`
-function to create a custom page. We first give the destination url, then a
-list of dependencies, and then a list of `(key, value)` pairs.
-
-~~~~~{.haskell}
-let rssPage = createCustomPage
-                   "rss.xml"
-                   ("templates/postitem.html" : take 3 postPaths)
-                   [("items", Right recentRSSItems)]
-~~~~~
+Note that we give `rss.xml` as destination url, because that is where we want
+our `CustomPage`. We give a template to render every post with
+(`"templates/rssitem.xml"`) and no additional context (so we use the empty list
+`[]`).
 
 ## Adding a link to the feed
 
