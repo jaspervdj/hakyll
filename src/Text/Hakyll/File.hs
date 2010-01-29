@@ -8,6 +8,7 @@ module Text.Hakyll.File
     , removeSpaces
     , makeDirectories
     , getRecursiveContents
+    , sortByBaseName
     , havingExtension
     , isMoreRecent
     , directory
@@ -16,7 +17,7 @@ module Text.Hakyll.File
 import System.Directory
 import System.FilePath
 import Control.Monad
-import Data.List (isPrefixOf)
+import Data.List (isPrefixOf, sortBy)
 import Control.Monad.Reader (liftIO)
 
 import Text.Hakyll.Hakyll
@@ -99,6 +100,12 @@ getRecursiveContents topdir = do
     return (concat paths)
   where
     isProper = not . (== '.') . head
+
+-- | Sort a list of filenames on the basename.
+sortByBaseName :: [FilePath] -> [FilePath]
+sortByBaseName = sortBy compareBaseName
+  where
+    compareBaseName f1 f2 = compare (takeFileName f1) (takeFileName f2)
 
 -- | A filter that takes all file names with a given extension. Prefix the
 --   extension with a dot:
