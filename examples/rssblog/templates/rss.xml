@@ -4,6 +4,6 @@
         <title>The SimpleBlog</title>
         <link>http://example.com</link>
         <description>Simple blog in hakyll</description>
-        $items
+        $body
     </channel> 
 </rss>
