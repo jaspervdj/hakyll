@@ -77,8 +77,9 @@ categoryList :: TagMap -> String
 categoryList = uncurry categoryListItem <=< toList
 ~~~~~
 
-This function might seem a little harder to understand, and figuring out how it
-works is left as an exercise for the reader[^1].
+This function might seem a little harder to understand if you are not familiar
+with the `<=<` operator. Figuring out how it works is left as an exercise for
+the reader[^1].
 
 [^1]: Hint: `>>=` is `concatMap` in the list monad.
 
