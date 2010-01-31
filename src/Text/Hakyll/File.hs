@@ -45,7 +45,9 @@ toCache :: FilePath -> Hakyll FilePath
 toCache path = do dir <- askHakyll cacheDirectory
                   return $ dir </> removeLeadingSeparator path
 
--- | Get the url for a given page.
+-- | Get the url for a given page. For most extensions, this would be the path
+--   itself. It's only for rendered extensions (@.markdown@, @.rst@, @.lhs@ this
+--   function returns a path with a @.html@ extension instead.
 toUrl :: FilePath -> FilePath
 toUrl path = if takeExtension path `elem` [ ".markdown"
                                           , ".md"

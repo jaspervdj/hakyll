@@ -1,3 +1,12 @@
+-- | This is the main Hakyll module, exporting the important @hakyl@ function.
+--
+--   Most configurations would use this @hakyll@ function more or less as the
+--   main function:
+--
+--   > main = hakyll $ do
+--   >     directory css "css"
+--   >     directory static "images"
+--
 module Text.Hakyll
     ( defaultHakyllConfiguration
     , hakyll
@@ -13,7 +22,7 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 import Network.Hakyll.SimpleServer (simpleServer)
 import Text.Hakyll.Hakyll
 
--- | Default hakyll configuration.
+-- | The default hakyll configuration.
 defaultHakyllConfiguration :: HakyllConfiguration
 defaultHakyllConfiguration = HakyllConfiguration
     { additionalContext = M.empty
@@ -21,11 +30,11 @@ defaultHakyllConfiguration = HakyllConfiguration
     , cacheDirectory = "_cache"
     }
 
--- | Hakyll with a default configuration.
+-- | Main function to run Hakyll with the default configuration.
 hakyll :: Hakyll () -> IO ()
 hakyll = hakyllWithConfiguration defaultHakyllConfiguration
 
--- | Main function to run hakyll with a configuration.
+-- | Main function to run hakyll with a custom configuration.
 hakyllWithConfiguration :: HakyllConfiguration -> Hakyll () -> IO ()
 hakyllWithConfiguration configuration buildFunction = do
     args <- getArgs
@@ -61,5 +70,6 @@ help = liftIO $ do
              ++ name ++ " preview [port]  Generate site, then start a server.\n"
              ++ name ++ " server [port]   Run a local test server.\n"
 
+-- | Start a server at the given port number.
 server :: Integer -> Hakyll ()
 server p = askHakyll siteDirectory >>= liftIO . simpleServer (fromIntegral p)
