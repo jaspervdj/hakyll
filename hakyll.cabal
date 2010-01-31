@@ -49,6 +49,6 @@ library
                    Text.Hakyll.Util
                    Text.Hakyll.Tags
                    Text.Hakyll.Internal.Cache
-                   Text.Hakyll.Internal.CompressCSS
+                   Text.Hakyll.Internal.CompressCss
                    Text.Hakyll.Internal.Render
                    Text.Hakyll.Internal.Template

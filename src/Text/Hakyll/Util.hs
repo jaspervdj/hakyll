@@ -1,7 +1,7 @@
 -- | Miscellaneous text manipulation functions.
 module Text.Hakyll.Util 
     ( trim
-    , stripHTML
+    , stripHtml
     , link
     ) where
 
@@ -14,11 +14,11 @@ trim = reverse . trim' . reverse . trim'
     trim' = dropWhile isSpace
 
 -- | Strip html tags from the given string.
-stripHTML :: String -> String
-stripHTML []  = []
-stripHTML str = let (beforeTag, rest) = break (== '<') str
+stripHtml :: String -> String
+stripHtml []  = []
+stripHtml str = let (beforeTag, rest) = break (== '<') str
                     (_, afterTag)     = break (== '>') rest
-                in beforeTag ++ stripHTML (tail' afterTag)
+                in beforeTag ++ stripHtml (tail' afterTag)
   where
     -- We need a failsafe tail function.
     tail' [] = []

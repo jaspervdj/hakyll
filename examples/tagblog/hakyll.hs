@@ -26,11 +26,11 @@ main = hakyll $ do
     renderPostList "posts.html" "All posts" renderablePosts
 
     -- Render post list per tag
-    mapM_ (\(tag, posts) -> renderPostList (tagToURL tag) ("Posts tagged " ++ tag) posts)
+    mapM_ (\(tag, posts) -> renderPostList (tagToUrl tag) ("Posts tagged " ++ tag) posts)
           (toList tagMap)
 
     -- Render index, including recent posts.
-    let tagCloud = renderTagCloud tagMap tagToURL 100 200
+    let tagCloud = renderTagCloud tagMap tagToUrl 100 200
         index = createListingWith postManipulation "index.html"
                                   "templates/postitem.html"
                                   (take 3 renderablePosts)
@@ -51,9 +51,9 @@ main = hakyll $ do
 
     where postManipulation :: ContextManipulation
           postManipulation = renderDate "date" "%B %e, %Y" "Date unknown"
-                           . renderTagLinks tagToURL 
+                           . renderTagLinks tagToUrl 
 
-          tagToURL tag = "$root/tags/" ++ removeSpaces tag ++ ".html"
+          tagToUrl tag = "$root/tags/" ++ removeSpaces tag ++ ".html"
 
           renderPostList url title posts = do
               let list = createListingWith postManipulation url "templates/postitem.html" posts [("title", title)]

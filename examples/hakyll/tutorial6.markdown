@@ -65,7 +65,7 @@ a list item for one category:
 
 ~~~~~{.haskell}
 categoryListItem category posts =
-    "<li>" ++ link category (categoryToURL category)
+    "<li>" ++ link category (categoryToUrl category)
     ++ " - " ++ show (length posts) ++ " items.</li>"
 ~~~~~
 

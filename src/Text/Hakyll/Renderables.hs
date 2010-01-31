@@ -7,7 +7,7 @@ module Text.Hakyll.Renderables
     , createPagePath
     , CombinedRenderable
     , combine
-    , combineWithURL
+    , combineWithUrl
     ) where
 
 import qualified Data.Map as M
@@ -25,7 +25,7 @@ import Text.Hakyll.Render
 
 -- | A custom page.
 data CustomPage = CustomPage 
-    { customPageURL :: String,
+    { customPageUrl :: String,
       customPageDependencies :: [FilePath],
       customPageContext :: [(String, Either String (Hakyll String))]
     }
@@ -85,11 +85,11 @@ createListingWith manipulation url template renderables additional =
 
 instance Renderable CustomPage where
     getDependencies = customPageDependencies
-    getURL = customPageURL
+    getUrl = customPageUrl
     toContext page = do
         values <- mapM (either return id . snd) (customPageContext page)
         let pairs = zip (map fst $ customPageContext page) values
-        return $ M.fromList $ ("url", customPageURL page) : pairs
+        return $ M.fromList $ ("url", customPageUrl page) : pairs
 
 -- | PagePath is a class that wraps a FilePath. This is used to render Pages
 --   without reading them first through use of caching.
@@ -102,7 +102,7 @@ createPagePath = PagePath
 -- We can render filepaths
 instance Renderable PagePath where
     getDependencies (PagePath path) = return path
-    getURL (PagePath path) = toURL path
+    getUrl (PagePath path) = toUrl path
     toContext (PagePath path) = readPage path >>= toContext
 
 -- We can serialize filepaths
@@ -112,7 +112,7 @@ instance Binary PagePath where
 
 -- | A combination of two other renderables.
 data CombinedRenderable a b = CombinedRenderable a b
-                            | CombinedRenderableWithURL FilePath a b
+                            | CombinedRenderableWithUrl FilePath a b
 
 -- | Combine two renderables. The url will always be taken from the first
 --   @Renderable@. Also, if a `$key` is present in both renderables, the
@@ -125,12 +125,12 @@ combine = CombinedRenderable
 
 -- | Combine two renderables and set a custom URL. This behaves like @combine@,
 --   except that for the @url@ field, the given URL is always chosen.
-combineWithURL :: (Renderable a, Renderable b)
+combineWithUrl :: (Renderable a, Renderable b)
                => FilePath
                -> a
                -> b
                -> CombinedRenderable a b
-combineWithURL = CombinedRenderableWithURL
+combineWithUrl = CombinedRenderableWithUrl
 
 -- Render combinations.
 instance (Renderable a, Renderable b)
@@ -139,18 +139,18 @@ instance (Renderable a, Renderable b)
     -- Add the dependencies.
     getDependencies (CombinedRenderable a b) =
         getDependencies a ++ getDependencies b
-    getDependencies (CombinedRenderableWithURL _ a b) =
+    getDependencies (CombinedRenderableWithUrl _ a b) =
         getDependencies a ++ getDependencies b
 
     -- Take the url from the first renderable, or the specified URL.
-    getURL (CombinedRenderable a _) = getURL a
-    getURL (CombinedRenderableWithURL url _ _) = url
+    getUrl (CombinedRenderable a _) = getUrl a
+    getUrl (CombinedRenderableWithUrl url _ _) = url
 
     -- Take a union of the contexts.
     toContext (CombinedRenderable a b) = do
         c1 <- toContext a
         c2 <- toContext b
         return $ c1 `M.union` c2
-    toContext (CombinedRenderableWithURL url a b) = do
+    toContext (CombinedRenderableWithUrl url a b) = do
         c <- toContext (CombinedRenderable a b)
         return $ M.singleton "url" url `M.union` c

@@ -22,7 +22,7 @@ import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
 import Text.Hakyll.Internal.Template (readTemplate)
-import Text.Hakyll.Internal.CompressCSS
+import Text.Hakyll.Internal.CompressCss
 import Text.Hakyll.Internal.Render
 
 -- | Execute an IO action only when the cache is invalid.
@@ -101,7 +101,7 @@ renderChain = renderChainWith id
 renderChainWith :: Renderable a
                 => ContextManipulation -> [FilePath] -> a -> Hakyll ()
 renderChainWith manipulation templatePaths renderable =
-    depends (getURL renderable) dependencies render'
+    depends (getUrl renderable) dependencies render'
   where
     dependencies = getDependencies renderable ++ templatePaths
     render' = do
@@ -126,4 +126,4 @@ css source = do destination <- toDestination source
   where
     css' destination = do contents <- liftIO $ readFile source
                           makeDirectories destination
-                          liftIO $ writeFile destination (compressCSS contents)
+                          liftIO $ writeFile destination (compressCss contents)

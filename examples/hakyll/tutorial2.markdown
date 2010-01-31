@@ -80,7 +80,7 @@ Combining two `Renderable`s, but setting a different `url` is quite common, so
 there is another function that helps us here:
 
 ~~~~~{.haskell}
-combineWithURL :: (Renderable a, Renderable b)
+combineWithUrl :: (Renderable a, Renderable b)
                => FilePath -> a -> b -> CombinedRenderable a b
 ~~~~~
 

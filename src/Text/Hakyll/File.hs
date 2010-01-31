@@ -3,7 +3,7 @@
 module Text.Hakyll.File
     ( toDestination
     , toCache
-    , toURL
+    , toUrl
     , toRoot
     , removeSpaces
     , makeDirectories
@@ -46,8 +46,8 @@ toCache path = do dir <- askHakyll cacheDirectory
                   return $ dir </> removeLeadingSeparator path
 
 -- | Get the url for a given page.
-toURL :: FilePath -> FilePath
-toURL path = if takeExtension path `elem` [ ".markdown"
+toUrl :: FilePath -> FilePath
+toUrl path = if takeExtension path `elem` [ ".markdown"
                                           , ".md"
                                           , ".mdn"
                                           , ".mdwn"

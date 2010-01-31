@@ -43,8 +43,8 @@ getValue str (Page page) = fromMaybe [] $ M.lookup str page
 
 -- | Get the URL for a certain page. This should always be defined. If
 --   not, it will error.
-getPageURL :: Page -> String
-getPageURL (Page page) = fromMaybe (error "No page url") $ M.lookup "url" page
+getPageUrl :: Page -> String
+getPageUrl (Page page) = fromMaybe (error "No page url") $ M.lookup "url" page
 
 -- | Get the original page path.
 getPagePath :: Page -> String
@@ -134,7 +134,7 @@ readPageFromFile path = do
 
     return page
   where
-    url = toURL path
+    url = toUrl path
     category = let dirs = splitDirectories $ takeDirectory path
                in [("category", last dirs) | not (null dirs)]
 
@@ -153,7 +153,7 @@ readPage path = do
 -- Make pages renderable.
 instance Renderable Page where
     getDependencies = (:[]) . getPagePath
-    getURL = getPageURL
+    getUrl = getPageUrl
     toContext (Page page) = return page
 
 -- Make pages serializable.

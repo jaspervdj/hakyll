@@ -1,5 +1,5 @@
 module Text.Hakyll.Renderable
-    ( Renderable(toContext, getDependencies, getURL)
+    ( Renderable(toContext, getDependencies, getUrl)
     ) where
 
 import Text.Hakyll.Hakyll (Hakyll)
@@ -15,4 +15,4 @@ class Renderable a where
     getDependencies :: a -> [FilePath]
 
     -- | Get the destination for the renderable.
-    getURL :: a -> FilePath
+    getUrl :: a -> FilePath

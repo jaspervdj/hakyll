@@ -26,7 +26,7 @@ main = hakyll $ do
     renderPostList "posts.html" "All posts" renderablePosts
 
     -- Render post list per category
-    mapM_ (\(category, posts) -> renderPostList (categoryToURL category) ("Posts about " ++ category) posts)
+    mapM_ (\(category, posts) -> renderPostList (categoryToUrl category) ("Posts about " ++ category) posts)
           (toList categoryMap)
 
     -- Render index, including recent posts.
@@ -51,12 +51,12 @@ main = hakyll $ do
     where postManipulation :: ContextManipulation
           postManipulation = renderDate "date" "%B %e, %Y" "Date unknown"
 
-          categoryToURL category = "$root/categories/" ++ removeSpaces category ++ ".html"
+          categoryToUrl category = "$root/categories/" ++ removeSpaces category ++ ".html"
 
           categoryList :: TagMap -> String
           categoryList = uncurry categoryListItem <=< toList
 
-          categoryListItem category posts = "<li>" ++ link category (categoryToURL category)
+          categoryListItem category posts = "<li>" ++ link category (categoryToUrl category)
                                           ++ " - " ++ show (length posts) ++ " items.</li>"
 
           renderPostList url title posts = do

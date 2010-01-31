@@ -1,7 +1,7 @@
 -- | Module used for CSS compression. The compression is currently in a simple
 --   state, but would typically reduce the number of bytes by about 25%.
-module Text.Hakyll.Internal.CompressCSS
-    ( compressCSS
+module Text.Hakyll.Internal.CompressCss
+    ( compressCss
     ) where
 
 import Data.List (isPrefixOf)
@@ -9,8 +9,8 @@ import Data.List (isPrefixOf)
 import Text.Hakyll.Regex (substituteRegex)
 
 -- | Compress CSS to speed up your site.
-compressCSS :: String -> String
-compressCSS = compressSeparators
+compressCss :: String -> String
+compressCss = compressSeparators
             . stripComments
             . compressWhitespace
 

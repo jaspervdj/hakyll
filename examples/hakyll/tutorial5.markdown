@@ -130,7 +130,7 @@ clickable. We can again solve this with a `ContextManipulation`. We have a
 function that produces an url for a given tag:
 
 ~~~~~{.haskell}
-tagToURL tag = "$root/tags/" ++ removeSpaces tag ++ ".html"
+tagToUrl tag = "$root/tags/" ++ removeSpaces tag ++ ".html"
 ~~~~~
 
 `removeSpaces` is an auxiliary function from `Text.Hakyll.File`. Now, there is
@@ -142,7 +142,7 @@ for a given tag - the function we just wrote. Let's extend our
 ~~~~~{.haskell}
 postManipulation :: ContextManipulation
 postManipulation = renderDate "date" "%B %e, %Y" "Unknown date"
-                 . renderTagLinks tagToURL
+                 . renderTagLinks tagToUrl
 ~~~~~
 
 So, the `renderTagLinks` function replaces the `$tags` value from
@@ -167,7 +167,7 @@ needs this so it can cache the tags.
 ~~~~~{.haskell}
 tagMap <- readTagMap "postTags" postPaths
 let renderListForTag (tag, posts) =
-        renderPostList (tagToURL tag)
+        renderPostList (tagToUrl tag)
                        ("Posts tagged " ++ tag)
 mapM_ renderListForTag (toList tagMap)
 ~~~~~
@@ -193,7 +193,7 @@ Then, we give a minimum and a maximum font size in percent, and we get the
 tag cloud back. We can add this to our index:
 
 ~~~~~{.haskell}
-let tagCloud = renderTagCloud tagMap tagToURL 100 200
+let tagCloud = renderTagCloud tagMap tagToUrl 100 200
     index = createListingWith postManipulation "index.html"
                               "templates/postitem.html"
                               (take 3 renderablePosts)

@@ -65,4 +65,4 @@ writePage page = do
     liftIO $ writeFile destination $ finalSubstitute (fromString $ getBody page)
                                                      context
   where
-    url = getURL page
+    url = getUrl page
