@@ -15,4 +15,4 @@ class Renderable a where
     getDependencies :: a -> [FilePath]
 
     -- | Get the destination for the renderable.
-    getUrl :: a -> FilePath
+    getUrl :: a -> Hakyll FilePath

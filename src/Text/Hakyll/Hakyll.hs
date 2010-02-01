@@ -19,6 +19,8 @@ data HakyllConfiguration = HakyllConfiguration
       siteDirectory :: FilePath
     , -- | Directory for cache files.
       cacheDirectory :: FilePath
+    , -- | Enable index links.
+      enableIndexUrl :: Bool
     }
 
 -- | Our custom monad stack.

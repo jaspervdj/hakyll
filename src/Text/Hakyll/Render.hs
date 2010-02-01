@@ -100,8 +100,9 @@ renderChain = renderChainWith id
 --   @ContextManipulation@ which to apply on the context when it is read first.
 renderChainWith :: Renderable a
                 => ContextManipulation -> [FilePath] -> a -> Hakyll ()
-renderChainWith manipulation templatePaths renderable =
-    depends (getUrl renderable) dependencies render'
+renderChainWith manipulation templatePaths renderable = do
+    url <- getUrl renderable
+    depends url dependencies render'
   where
     dependencies = getDependencies renderable ++ templatePaths
     render' = do

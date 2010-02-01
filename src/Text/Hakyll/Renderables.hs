@@ -85,7 +85,7 @@ createListingWith manipulation url template renderables additional =
 
 instance Renderable CustomPage where
     getDependencies = customPageDependencies
-    getUrl = customPageUrl
+    getUrl = return . customPageUrl
     toContext page = do
         values <- mapM (either return id . snd) (customPageContext page)
         let pairs = zip (map fst $ customPageContext page) values
@@ -94,6 +94,7 @@ instance Renderable CustomPage where
 -- | PagePath is a class that wraps a FilePath. This is used to render Pages
 --   without reading them first through use of caching.
 data PagePath = PagePath FilePath
+              deriving (Ord, Eq, Read, Show)
 
 -- | Create a PagePath from a FilePath.
 createPagePath :: FilePath -> PagePath
@@ -113,6 +114,7 @@ instance Binary PagePath where
 -- | A combination of two other renderables.
 data CombinedRenderable a b = CombinedRenderable a b
                             | CombinedRenderableWithUrl FilePath a b
+                            deriving (Ord, Eq, Read, Show)
 
 -- | Combine two renderables. The url will always be taken from the first
 --   @Renderable@. Also, if a `$key` is present in both renderables, the
@@ -144,7 +146,7 @@ instance (Renderable a, Renderable b)
 
     -- Take the url from the first renderable, or the specified URL.
     getUrl (CombinedRenderable a _) = getUrl a
-    getUrl (CombinedRenderableWithUrl url _ _) = url
+    getUrl (CombinedRenderableWithUrl url _ _) = return url
 
     -- Take a union of the contexts.
     toContext (CombinedRenderable a b) = do

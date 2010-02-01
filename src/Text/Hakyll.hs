@@ -28,6 +28,7 @@ defaultHakyllConfiguration = HakyllConfiguration
     { additionalContext = M.empty
     , siteDirectory = "_site"
     , cacheDirectory = "_cache"
+    , enableIndexUrl = False
     }
 
 -- | Main function to run Hakyll with the default configuration.

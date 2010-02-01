@@ -30,7 +30,7 @@ import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
 data Page = Page Context
-          deriving (Show, Read, Eq)
+          deriving (Ord, Eq, Show, Read)
 
 -- | Create a Page from a key-value mapping.
 fromContext :: Context -> Page
@@ -124,6 +124,7 @@ readPageFromFile path = do
 
     -- Read file.
     contents <- liftIO $ readFile path
+    url <- toUrl path
     let sections = splitAtDelimiters $ lines contents
         context = concat $ zipWith ($) sectionFunctions sections
         page = fromContext $ M.fromList $
@@ -134,7 +135,6 @@ readPageFromFile path = do
 
     return page
   where
-    url = toUrl path
     category = let dirs = splitDirectories $ takeDirectory path
                in [("category", last dirs) | not (null dirs)]
 
@@ -153,7 +153,7 @@ readPage path = do
 -- Make pages renderable.
 instance Renderable Page where
     getDependencies = (:[]) . getPagePath
-    getUrl = getPageUrl
+    getUrl = return . getPageUrl
     toContext (Page page) = return page
 
 -- Make pages serializable.

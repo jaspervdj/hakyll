@@ -36,8 +36,15 @@ removeLeadingSeparator path
 -- | Convert a relative filepath to a filepath in the destination
 --   (default: @_site@).
 toDestination :: FilePath -> Hakyll FilePath
-toDestination path = do dir <- askHakyll siteDirectory
-                        return $ dir </> removeLeadingSeparator path
+toDestination url = do dir <- askHakyll siteDirectory
+                       enableIndexUrl' <- askHakyll enableIndexUrl
+                       let destination = if enableIndexUrl' && separatorEnd
+                               then dir </> noSeparator </> "index.html"
+                               else dir </> noSeparator
+                       return destination
+  where
+    noSeparator = removeLeadingSeparator url
+    separatorEnd = not (null url) && last url == '/'
 
 -- | Convert a relative filepath to a filepath in the cache
 --   (default: @_cache@).
@@ -48,21 +55,34 @@ toCache path = do dir <- askHakyll cacheDirectory
 -- | Get the url for a given page. For most extensions, this would be the path
 --   itself. It's only for rendered extensions (@.markdown@, @.rst@, @.lhs@ this
 --   function returns a path with a @.html@ extension instead.
-toUrl :: FilePath -> FilePath
-toUrl path = if takeExtension path `elem` [ ".markdown"
-                                          , ".md"
-                                          , ".mdn"
-                                          , ".mdwn"
-                                          , ".mkd"
-                                          , ".mkdn"
-                                          , ".mkdwn"
-                                          , ".rst"
-                                          , ".text"
-                                          , ".tex"
-                                          , ".lhs"
-                                          ]
-                then flip addExtension ".html" $ dropExtension path
-                else path
+toUrl :: FilePath -> Hakyll FilePath
+toUrl path = do enableIndexUrl' <- askHakyll enableIndexUrl
+                -- If the file does not have a renderable extension, like for
+                -- example favicon.ico, we don't have to change it at all.
+                return $ if not hasRenderableExtension
+                            then path
+                            -- If index url's are enabled, we create pick it
+                            -- unless the page is an index already.
+                            else if enableIndexUrl' && not isIndex
+                                then indexUrl
+                                else withSimpleHtmlExtension
+  where
+    hasRenderableExtension = takeExtension path `elem` [ ".markdown"
+                                                       , ".md"
+                                                       , ".mdn"
+                                                       , ".mdwn"
+                                                       , ".mkd"
+                                                       , ".mkdn"
+                                                       , ".mkdwn"
+                                                       , ".rst"
+                                                       , ".text"
+                                                       , ".tex"
+                                                       , ".lhs"
+                                                       ]
+    isIndex = (dropExtension $ takeFileName path) == "index"
+    withSimpleHtmlExtension = flip addExtension ".html" $ dropExtension path
+    indexUrl = (dropExtension path) ++ "/"
+                            
 
 -- | Get the relative url to the site root, for a given (absolute) url
 toRoot :: FilePath -> FilePath
