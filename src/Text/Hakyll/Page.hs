@@ -67,6 +67,7 @@ writerOptions = defaultWriterOptions
 -- | Get a render function for a given extension.
 getRenderFunction :: String -> (String -> String)
 getRenderFunction ".html" = id
+getRenderFunction ".htm"  = id
 getRenderFunction ext = writeHtmlString writerOptions
                       . readFunction ext (readOptions ext)
   where

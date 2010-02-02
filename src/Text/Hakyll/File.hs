@@ -78,6 +78,8 @@ toUrl path = do enableIndexUrl' <- askHakyll enableIndexUrl
                                                        , ".text"
                                                        , ".tex"
                                                        , ".lhs"
+                                                       , ".htm"
+                                                       , ".html"
                                                        ]
     isIndex = (dropExtension $ takeFileName path) == "index"
     withSimpleHtmlExtension = flip addExtension ".html" $ dropExtension path
