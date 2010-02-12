@@ -32,7 +32,7 @@ depends :: FilePath -- ^ File to be rendered or created.
         -> Hakyll ()
 depends file dependencies action = do
     destination <- toDestination file
-    valid <- isMoreRecent destination dependencies
+    valid <- isFileMoreRecent destination dependencies
     unless valid action
 
 -- | Render to a Page.

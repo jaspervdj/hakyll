@@ -13,14 +13,17 @@ module Text.Hakyll
     , hakyllWithConfiguration
     ) where
 
-import Control.Monad.Reader (runReaderT, liftIO)
+import Control.Monad.Reader (runReaderT, liftIO, ask)
+import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad (when)
 import qualified Data.Map as M
 import System.Environment (getArgs, getProgName)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
+import System.Time (getClockTime)
 
 import Network.Hakyll.SimpleServer (simpleServer)
 import Text.Hakyll.Hakyll
+import Text.Hakyll.File
 
 -- | The default hakyll configuration.
 defaultHakyllConfiguration :: HakyllConfiguration
@@ -29,6 +32,7 @@ defaultHakyllConfiguration = HakyllConfiguration
     , siteDirectory = "_site"
     , cacheDirectory = "_cache"
     , enableIndexUrl = False
+    , previewPollDelay = 1000000
     }
 
 -- | Main function to run Hakyll with the default configuration.
@@ -41,8 +45,8 @@ hakyllWithConfiguration configuration buildFunction = do
     args <- getArgs
     let f = case args of ["build"]      -> buildFunction
                          ["clean"]      -> clean
-                         ["preview", p] -> buildFunction >> server (read p)
-                         ["preview"]    -> buildFunction >> server 8000
+                         ["preview", p] -> preview buildFunction (read p)
+                         ["preview"]    -> preview buildFunction 8000
                          ["server", p]  -> server (read p)
                          ["server"]     -> server 8000
                          _              -> help
@@ -57,6 +61,23 @@ clean = do askHakyll siteDirectory >>= remove'
                               exists <- doesDirectoryExist dir
                               when exists $ removeDirectoryRecursive dir
 
+-- | Autocompile mode.
+preview :: Hakyll () -> Integer -> Hakyll ()
+preview buildFunction port = do
+    buildFunction
+    _ <- startServer
+    liftIO getClockTime >>= run
+  where
+    startServer = do configuration <- ask
+                     liftIO $ forkIO $ runReaderT (server port) configuration
+    run time = do delay <- askHakyll previewPollDelay
+                  liftIO $ threadDelay delay
+                  contents <- getRecursiveContents "."
+                  valid <- isMoreRecent time contents
+                  if valid then run time
+                           else do buildFunction
+                                   liftIO getClockTime >>= run
+
 -- | Show usage information.
 help :: Hakyll ()
 help = liftIO $ do
@@ -68,7 +89,7 @@ help = liftIO $ do
              ++ name ++ " build           Generate the site.\n"
              ++ name ++ " clean           Clean up and remove cache.\n"
              ++ name ++ " help            Show this message.\n"
-             ++ name ++ " preview [port]  Generate site, then start a server.\n"
+             ++ name ++ " preview [port]  Run a server and autocompile.\n"
              ++ name ++ " server [port]   Run a local test server.\n"
 
 -- | Start a server at the given port number.

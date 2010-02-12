@@ -10,12 +10,14 @@ module Text.Hakyll.File
     , getRecursiveContents
     , sortByBaseName
     , havingExtension
-    , isMoreRecent
     , directory
+    , isMoreRecent
+    , isFileMoreRecent
     ) where
 
 import System.Directory
 import System.FilePath
+import System.Time (ClockTime)
 import Control.Monad
 import Data.List (isPrefixOf, sortBy)
 import Control.Monad.Reader (liftIO)
@@ -144,14 +146,22 @@ havingExtension extension = filter ((==) extension . takeExtension)
 directory :: (FilePath -> Hakyll ()) -> FilePath -> Hakyll ()
 directory action dir = getRecursiveContents dir >>= mapM_ action
 
--- | Check if a file is newer then a number of given files.
-isMoreRecent :: FilePath -- ^ The cached file.
+-- | Check if a timestamp is newer then a number of given files.
+isMoreRecent :: ClockTime  -- ^ The time to check.
              -> [FilePath] -- ^ Dependencies of the cached file.
              -> Hakyll Bool
-isMoreRecent file depends = do
+isMoreRecent _ [] = return True
+isMoreRecent timeStamp depends = do
+    dependsModified <- liftIO $ mapM getModificationTime depends
+    return (timeStamp >= maximum dependsModified)
+
+-- | Check if a file is newer then a number of given files.
+isFileMoreRecent :: FilePath   -- ^ The cached file.
+                 -> [FilePath] -- ^ Dependencies of the cached file.
+                 -> Hakyll Bool
+isFileMoreRecent file depends = do
     exists <- liftIO $ doesFileExist file
     if not exists
         then return False
-        else do dependsModified <- liftIO $ mapM getModificationTime depends
-                fileModified <- liftIO $ getModificationTime file
-                return (fileModified >= maximum dependsModified)
+        else do timeStamp <- liftIO $ getModificationTime file
+                isMoreRecent timeStamp depends

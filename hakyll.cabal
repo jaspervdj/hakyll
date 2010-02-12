@@ -33,6 +33,7 @@ library
                    network >= 2,
                    mtl >= 1.1,
                    old-locale >= 1,
+                   old-time >= 1,
                    time >= 1,
                    binary >= 0.5,
                    QuickCheck >= 2

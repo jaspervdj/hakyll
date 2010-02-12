@@ -21,6 +21,8 @@ data HakyllConfiguration = HakyllConfiguration
       cacheDirectory :: FilePath
     , -- | Enable index links.
       enableIndexUrl :: Bool
+    , -- | Delay between polls in preview mode.
+      previewPollDelay :: Int
     }
 
 -- | Our custom monad stack.

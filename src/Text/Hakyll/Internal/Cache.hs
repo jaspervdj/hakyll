@@ -27,4 +27,4 @@ getFromCache = liftIO . decodeFile <=< toCache
 
 -- | Check if a file in the cache is more recent than a number of other files.
 isCacheMoreRecent :: FilePath -> [FilePath] -> Hakyll Bool
-isCacheMoreRecent file depends = toCache file >>= flip isMoreRecent depends
+isCacheMoreRecent file depends = toCache file >>= flip isFileMoreRecent depends
