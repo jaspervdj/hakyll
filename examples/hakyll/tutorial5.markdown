@@ -1,5 +1,5 @@
 ---
-title: Tutorial (Part V)
+title: TagBlog
 what: adds tags and context manipulations to our blog
 ---
 

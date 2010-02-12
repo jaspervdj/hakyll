@@ -1,5 +1,5 @@
 ---
-title: Tutorial (Part VI)
+title: CategoryBlog
 what: explains how to use categories instead of tags
 ---
 

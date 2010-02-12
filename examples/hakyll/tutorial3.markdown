@@ -1,5 +1,5 @@
 ---
-title: Tutorial (Part III)
+title: SimpleBlog
 what: creates a simple blog
 ---
 

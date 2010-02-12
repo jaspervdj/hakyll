@@ -1,5 +1,5 @@
 ---
-title: Tutorial (Part IV)
+title: RSSBlog
 what: adds an RSS feed to the blog from the previous tutorial
 ---
 
@@ -98,7 +98,7 @@ documents, so we'll do this. In `templates/default.html`:
   <link rel="alternate"
         type="application/rss+xml"
         title="SimpleBlog"
-        href="http://example.com/rss.xml" />
+        href="$root/rss.xml" />
 </head>
 ~~~~~~
 

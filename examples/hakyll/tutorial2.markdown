@@ -1,5 +1,5 @@
 ---
-title: Tutorial (Part II)
+title: MorePages
 what: elaborates a little on writing pages and templates
 ---
 
