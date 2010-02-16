@@ -63,6 +63,10 @@ readerOptions = defaultParserState { stateSmart = True }
 -- | The default writer options for pandoc rendering.
 writerOptions :: WriterOptions
 writerOptions = defaultWriterOptions
+    { -- This option causes literate haskell to be written using '>' marks in
+      -- html, which I think is a good default.
+    , writerLiterateHaskell = True
+    }
 
 -- | Get a render function for a given extension.
 getRenderFunction :: String -> (String -> String)
