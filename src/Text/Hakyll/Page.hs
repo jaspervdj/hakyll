@@ -58,14 +58,18 @@ getBody (Page page) = fromMaybe [] $ M.lookup "body" page
 
 -- | The default reader options for pandoc parsing.
 readerOptions :: ParserState
-readerOptions = defaultParserState { stateSmart = True }
+readerOptions = defaultParserState
+    { -- The following option causes pandoc to read smart typography, a nice
+      -- and free bonus.
+      stateSmart = True
+    }
 
 -- | The default writer options for pandoc rendering.
 writerOptions :: WriterOptions
 writerOptions = defaultWriterOptions
     { -- This option causes literate haskell to be written using '>' marks in
       -- html, which I think is a good default.
-    , writerLiterateHaskell = True
+      writerLiterateHaskell = True
     }
 
 -- | Get a render function for a given extension.

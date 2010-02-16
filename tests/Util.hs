@@ -16,11 +16,11 @@ import Text.Hakyll.Util
 utilGroup = testGroup "Util"
     [ testProperty "prop_trim_length" prop_trim_length
     , testProperty "prop_trim_id" prop_trim_id
-    , testProperty "prop_stripHTML_length" prop_stripHTML_length
-    , testProperty "prop_stripHTML_id" prop_stripHTML_id
-    , testCase "test_stripHTML_1" test_stripHTML_1
-    , testCase "test_stripHTML_2" test_stripHTML_2
-    , testCase "test_stripHTML_3" test_stripHTML_3
+    , testProperty "prop_stripHtml_length" prop_stripHtml_length
+    , testProperty "prop_stripHtml_id" prop_stripHtml_id
+    , testCase "test_stripHtml_1" test_stripHtml_1
+    , testCase "test_stripHtml_2" test_stripHtml_2
+    , testCase "test_stripHtml_3" test_stripHtml_3
     , testCase "test_link_1" test_link_1
     , testCase "test_link_2" test_link_2
     ]
@@ -35,17 +35,17 @@ prop_trim_id str = (not $ null str) && isAlreadyTrimmed ==> str == (trim str)
     isAlreadyTrimmed = (not $ isSpace $ head str) && (not $ isSpace $ last str)
 
 -- Check that a stripped string is shorter.
-prop_stripHTML_length str = length str >= length (stripHTML str)
+prop_stripHtml_length str = length str >= length (stripHtml str)
 
 -- Check that strings without tags remain untouched.
-prop_stripHTML_id str = (not $ any (`elem` ['>', '<']) str)
-                      ==> str == stripHTML str
+prop_stripHtml_id str = (not $ any (`elem` ['>', '<']) str)
+                      ==> str == stripHtml str
 
--- Strip HTML test cases.
-test_stripHTML_1 = stripHTML "<b>text</b>" @?= "text"
-test_stripHTML_2 = stripHTML "text" @?= "text"
-test_stripHTML_3 =
-    stripHTML "<b>Hakyll</b>, a <i>website</i> generator<img src=\"foo.png\" />"
+-- Strip Html test cases.
+test_stripHtml_1 = stripHtml "<b>text</b>" @?= "text"
+test_stripHtml_2 = stripHtml "text" @?= "text"
+test_stripHtml_3 =
+    stripHtml "<b>Hakyll</b>, a <i>website</i> generator<img src=\"foo.png\" />"
         @?= "Hakyll, a website generator"
 
 -- Link test cases.
