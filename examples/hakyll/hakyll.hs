@@ -25,6 +25,7 @@ main = hakyll $ do
                     , "index.markdown"
                     , "philosophy.markdown"
                     , "reference.markdown"
+                    , "changelog.markdown"
                     ] ++ tutorials
 
   where
