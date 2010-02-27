@@ -29,5 +29,13 @@ data HakyllConfiguration = HakyllConfiguration
 type Hakyll = ReaderT HakyllConfiguration IO
 
 -- | Simplified @ask@ function for the Hakyll monad stack.
+--
+--   Usage would typically be something like:
+--
+--   > doSomething :: a -> b -> Hakyll c
+--   > doSomething arg1 arg2 = do
+--   >     siteDirectory' <- askHakyll siteDirectory
+--   >     ...
+--
 askHakyll :: (HakyllConfiguration -> a) -> Hakyll a
 askHakyll = flip liftM ask
