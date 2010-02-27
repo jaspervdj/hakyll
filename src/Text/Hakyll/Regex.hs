@@ -41,7 +41,8 @@ subRegex regexp inp replacement =
   in case matchRegexAll regexp inp of
        Nothing -> inp
        Just (lead, match', trail, groups) ->
-         lead ++ lookup' match' replacement groups ++ subRegex regexp trail replacement
+         lead ++ lookup' match' replacement groups
+              ++ subRegex regexp trail replacement
 
 -- | Splits a string based on a regular expression.  The regular expression
 --   should identify one delimiter.

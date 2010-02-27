@@ -59,13 +59,14 @@ renderDate :: String -- ^ Key in which the rendered date should be placed.
 renderDate key format defaultValue context = M.insert key value context
   where
     value = fromMaybe defaultValue pretty
-    pretty = do filePath <- M.lookup "path" context
-                let dateString = substituteRegex "^([0-9]*-[0-9]*-[0-9]*).*" "\\1"
-                                                 (takeFileName filePath)
-                time <- parseTime defaultTimeLocale
-                                  "%Y-%m-%d"
-                                  dateString :: Maybe UTCTime
-                return $ formatTime defaultTimeLocale format time
+    pretty = do
+        filePath <- M.lookup "path" context
+        let dateString = substituteRegex "^([0-9]*-[0-9]*-[0-9]*).*" "\\1"
+                                         (takeFileName filePath)
+        time <- parseTime defaultTimeLocale
+                          "%Y-%m-%d"
+                          dateString :: Maybe UTCTime
+        return $ formatTime defaultTimeLocale format time
 
 -- | Change the extension of a file. This is only needed when you want to
 --   render, for example, mardown to @.php@ files instead of @.html@ files.
