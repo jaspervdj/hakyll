@@ -20,6 +20,7 @@ import System.FilePath
 import System.Time (ClockTime)
 import Control.Monad
 import Data.List (isPrefixOf, sortBy)
+import Data.Ord (comparing)
 import Control.Monad.Reader (liftIO)
 
 import Text.Hakyll.Hakyll
@@ -83,9 +84,9 @@ toUrl path = do enableIndexUrl' <- askHakyll enableIndexUrl
                                                        , ".htm"
                                                        , ".html"
                                                        ]
-    isIndex = (dropExtension $ takeFileName path) == "index"
+    isIndex = dropExtension (takeFileName path) == "index"
     withSimpleHtmlExtension = flip addExtension ".html" $ dropExtension path
-    indexUrl = (dropExtension path) ++ "/"
+    indexUrl = dropExtension path ++ "/"
                             
 
 -- | Get the relative url to the site root, for a given (absolute) url
@@ -131,7 +132,7 @@ getRecursiveContents topdir = do
 sortByBaseName :: [FilePath] -> [FilePath]
 sortByBaseName = sortBy compareBaseName
   where
-    compareBaseName f1 f2 = compare (takeFileName f1) (takeFileName f2)
+    compareBaseName = comparing takeFileName
 
 -- | A filter that takes all file names with a given extension. Prefix the
 --   extension with a dot:
