@@ -93,8 +93,8 @@ instance Renderable CustomPage where
 
 -- | PagePath is a class that wraps a FilePath. This is used to render Pages
 --   without reading them first through use of caching.
-data PagePath = PagePath FilePath
-              deriving (Ord, Eq, Read, Show)
+newtype PagePath = PagePath FilePath
+                 deriving (Ord, Eq, Read, Show)
 
 -- | Create a PagePath from a FilePath.
 createPagePath :: FilePath -> PagePath
