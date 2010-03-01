@@ -43,32 +43,38 @@ defaultPaginateConfiguration = PaginateConfiguration
 --   - @$index@: 1-based index of the current page.
 --   - @$length@: Total number of pages.
 --
+--   When @$previous@ or @$next@ are not available, they will be just a label
+--   without a link. The same goes for when we are on the first or last page for
+--   @$first@ and @$last@.
 paginate :: (Renderable a)
          => PaginateConfiguration
          -> [a]
          -> [CombinedRenderable a CustomPage]
 paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
   where
+    -- Create a link with a given label, taken from the configuration.
     linkWithLabel f r = link (f configuration) `fmap` getUrl r
 
-    first = linkWithLabel firstLabel (head renderables)
-    last' = linkWithLabel lastLabel (last renderables)
-    length' = length renderables
-
+    -- The main function that creates combined renderables by recursing over
+    -- the list of renderables.
     paginate' _ [] _ = []
     paginate' maybePrev (x:xs) index = 
-        let previous = case maybePrev of
-                (Just r) -> linkWithLabel previousLabel r
-                Nothing  -> return $ previousLabel configuration
-            next = case xs of
-                (n:_) -> linkWithLabel nextLabel n
-                []    -> return $ nextLabel configuration
+        let (previous, first) = case maybePrev of
+                (Just r) -> ( linkWithLabel previousLabel r
+                            , linkWithLabel firstLabel (head renderables) )
+                Nothing  -> ( return $ previousLabel configuration
+                            , return $ firstLabel configuration )
+            (next, last') = case xs of
+                (n:_) -> ( linkWithLabel nextLabel n
+                         , linkWithLabel lastLabel (last renderables) )
+                []    -> ( return $ nextLabel configuration
+                         , return $ lastLabel configuration )
             customPage = createCustomPage "" []
                 [ ("previous", Right previous)
                 , ("next", Right next)
                 , ("first", Right first)
                 , ("last", Right last')
                 , ("index", Left $ show index)
-                , ("length", Left $ show length')
+                , ("length", Left $ show $ length $ renderables)
                 ]
         in (x `combine` customPage) : paginate' (Just x) xs (index + 1)
