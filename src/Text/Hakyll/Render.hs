@@ -26,9 +26,9 @@ import Text.Hakyll.Internal.CompressCss
 import Text.Hakyll.Internal.Render
 
 -- | Execute an IO action only when the cache is invalid.
-depends :: FilePath -- ^ File to be rendered or created.
+depends :: FilePath   -- ^ File to be rendered or created.
         -> [FilePath] -- ^ Files the render depends on.
-        -> Hakyll () -- ^ IO action to execute when the file is out of date.
+        -> Hakyll ()  -- ^ Action to execute when the file is out of date.
         -> Hakyll ()
 depends file dependencies action = do
     destination <- toDestination file
@@ -37,8 +37,8 @@ depends file dependencies action = do
 
 -- | Render to a Page.
 render :: Renderable a
-       => FilePath -- ^ Template to use for rendering.
-       -> a -- ^ Renderable object to render with given template.
+       => FilePath    -- ^ Template to use for rendering.
+       -> a           -- ^ Renderable object to render with given template.
        -> Hakyll Page -- ^ The body of the result will contain the render.
 render = renderWith id
 
@@ -46,9 +46,9 @@ render = renderWith id
 --   first.
 renderWith :: Renderable a
            => ContextManipulation -- ^ Manipulation to apply on the context.
-           -> FilePath -- ^ Template to use for rendering.
-           -> a -- ^ Renderable object to render with given template.
-           -> Hakyll Page -- ^ The body of the result will contain the render.
+           -> FilePath            -- ^ Template to use for rendering.
+           -> a                   -- ^ Data to render.
+           -> Hakyll Page         -- ^ Result of the render operation.
 renderWith manipulation templatePath renderable = do
     template <- readTemplate templatePath
     context <- toContext renderable
@@ -66,7 +66,7 @@ renderWith manipulation templatePath renderable = do
 --
 renderAndConcat :: Renderable a
                 => [FilePath] -- ^ Templates to apply on every renderable.
-                -> [a] -- ^ Renderables to render.
+                -> [a]        -- ^ Renderables to render.
                 -> Hakyll String
 renderAndConcat = renderAndConcatWith id
 

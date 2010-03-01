@@ -27,8 +27,8 @@ type ContextManipulation = Context -> Context
 -- | Do something with a value in a @Context@, but keep the old value as well.
 --   This is probably the most common function to construct a
 --   @ContextManipulation@.
-renderValue :: String -- ^ Key of which the value should be copied.
-            -> String -- ^ Key the value should be copied to.
+renderValue :: String             -- ^ Key of which the value should be copied.
+            -> String             -- ^ Key the value should be copied to.
             -> (String -> String) -- ^ Function to apply on the value.
             -> ContextManipulation
 renderValue src dst f context = case M.lookup src context of
@@ -41,7 +41,7 @@ renderValue src dst f context = case M.lookup src context of
 --   > changeValue "title" (map toUpper)
 --
 --   Will put the title in UPPERCASE.
-changeValue :: String -- ^ Key of which the value should be changed.
+changeValue :: String             -- ^ Key to change.
             -> (String -> String) -- ^ Function to apply on the value.
             -> ContextManipulation
 changeValue key = renderValue key key
