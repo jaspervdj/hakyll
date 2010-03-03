@@ -1,6 +1,5 @@
 module Text.Hakyll.Renderables
-    ( CustomPage
-    , createCustomPage
+    ( createCustomPage
     , createListing
     , createListingWith
     , PagePath
@@ -12,7 +11,8 @@ module Text.Hakyll.Renderables
 
 import qualified Data.Map as M
 import Control.Arrow (second)
-import Control.Monad (liftM)
+import Control.Monad (liftM, liftM2, mplus)
+import Control.Applicative ((<$>))
 
 import Data.Binary
 
@@ -22,13 +22,7 @@ import Text.Hakyll.Renderable
 import Text.Hakyll.File
 import Text.Hakyll.Context
 import Text.Hakyll.Render
-
--- | A custom page.
-data CustomPage = CustomPage 
-    { customPageUrl :: String,
-      customPageDependencies :: [FilePath],
-      customPageContext :: [(String, Either String (Hakyll String))]
-    }
+import Text.Hakyll.RenderAction
 
 -- | Create a custom page.
 --   
@@ -37,11 +31,18 @@ data CustomPage = CustomPage
 --   A @Hakyll String@ is preferred for more complex data, since it allows
 --   dependency checking. A @String@ is obviously more simple to use in some
 --   cases.
-createCustomPage :: String -- ^ Destination of the page, relative to _site.
-                 -> [FilePath] -- ^ Dependencies of the page.
-                 -> [(String, Either String (Hakyll String))] -- ^ Mapping.
-                 -> CustomPage
-createCustomPage = CustomPage
+createCustomPage :: String
+                 -> [FilePath]
+                 -> [(String, Either String (Hakyll String))]
+                 -> RenderAction () Context
+createCustomPage url dependencies association = RenderAction
+    { actionDependencies = dependencies
+    , actionDestination  = Just $ return url
+    , actionFunction     = actionFunction'
+    }
+  where
+    mtuple (a, b) = b >>= \b' -> return (a, b')
+    actionFunction' () = M.fromList <$> mapM (mtuple . second (either return id)) association
 
 -- | A @createCustomPage@ function specialized in creating listings.
 --
@@ -61,7 +62,7 @@ createListing :: (Renderable a)
               -> FilePath -- ^ Template to render all items with.
               -> [a] -- ^ Renderables in the list.
               -> [(String, String)] -- ^ Additional context.
-              -> CustomPage
+              -> RenderAction () Context
 createListing = createListingWith id
 
 -- | A @createCustomPage@ function specialized in creating listings.
@@ -74,7 +75,7 @@ createListingWith :: (Renderable a)
                   -> FilePath -- ^ Template to render all items with.
                   -> [a] -- ^ Renderables in the list.
                   -> [(String, String)] -- ^ Additional context.
-                  -> CustomPage
+                  -> RenderAction () Context
 createListingWith manipulation url template renderables additional =
     createCustomPage url dependencies context
   where
@@ -82,14 +83,6 @@ createListingWith manipulation url template renderables additional =
     context = ("body", Right concatenation) : additional'
     concatenation = renderAndConcatWith manipulation [template] renderables
     additional' = map (second Left) additional
-
-instance Renderable CustomPage where
-    getDependencies = customPageDependencies
-    getUrl = return . customPageUrl
-    toContext page = do
-        values <- mapM (either return id . snd) (customPageContext page)
-        let pairs = zip (map fst $ customPageContext page) values
-        return $ M.fromList $ ("url", customPageUrl page) : pairs
 
 -- | PagePath is a class that wraps a FilePath. This is used to render Pages
 --   without reading them first through use of caching.
@@ -122,8 +115,13 @@ data CombinedRenderable a b = CombinedRenderable a b
 --
 --   Since renderables are always more or less key-value maps, you can see
 --   this as a @union@ between two maps.
-combine :: (Renderable a, Renderable b) => a -> b -> CombinedRenderable a b
-combine = CombinedRenderable
+combine :: RenderAction () Context -> RenderAction () Context
+        -> RenderAction () Context
+combine x y = RenderAction
+    { actionDependencies = actionDependencies x ++ actionDependencies y
+    , actionDestination  = actionDestination x `mplus` actionDestination y
+    , actionFunction     = \_ -> liftM2 (M.union) (actionFunction x ()) (actionFunction y ())
+    }
 
 -- | Combine two renderables and set a custom URL. This behaves like @combine@,
 --   except that for the @url@ field, the given URL is always chosen.

@@ -5,8 +5,11 @@ module Text.Hakyll.Paginate
     , paginate
     ) where
 
+import Control.Applicative ((<$>))
+
+import Text.Hakyll.Context
 import Text.Hakyll.Renderables
-import Text.Hakyll.Renderable (Renderable, getUrl)
+import Text.Hakyll.RenderAction
 import Text.Hakyll.Util (link)
 
 -- | A configuration for a pagination.
@@ -46,14 +49,15 @@ defaultPaginateConfiguration = PaginateConfiguration
 --   When @$previous@ or @$next@ are not available, they will be just a label
 --   without a link. The same goes for when we are on the first or last page for
 --   @$first@ and @$last@.
-paginate :: (Renderable a)
-         => PaginateConfiguration
-         -> [a]
-         -> [CombinedRenderable a CustomPage]
+paginate :: PaginateConfiguration
+         -> [RenderAction () Context]
+         -> [RenderAction () Context]
 paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
   where
     -- Create a link with a given label, taken from the configuration.
-    linkWithLabel f r = link (f configuration) `fmap` getUrl r
+    linkWithLabel f r = case actionDestination r of
+        Just l  -> link (f configuration) <$> l
+        Nothing -> error "No link found for pagination."
 
     -- The main function that creates combined renderables by recursing over
     -- the list of renderables.
@@ -75,6 +79,6 @@ paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
                 , ("first", Right first)
                 , ("last", Right last')
                 , ("index", Left $ show index)
-                , ("length", Left $ show $ length $ renderables)
+                , ("length", Left $ show $ length renderables)
                 ]
         in (x `combine` customPage) : paginate' (Just x) xs (index + 1)

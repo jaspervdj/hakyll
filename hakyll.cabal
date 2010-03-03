@@ -44,6 +44,7 @@ library
                    Text.Hakyll.Hakyll
                    Text.Hakyll.Regex
                    Text.Hakyll.Render
+                   Text.Hakyll.RenderAction
                    Text.Hakyll.Renderable
                    Text.Hakyll.Renderables
                    Text.Hakyll.Page

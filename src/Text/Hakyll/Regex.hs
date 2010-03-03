@@ -15,7 +15,7 @@ matchRegexAll :: Regex -> String -> Maybe (String, String, String, [String])
 matchRegexAll = matchM
 
 -- | Replaces every occurance of the given regexp with the replacement string.
-subRegex :: Regex -- ^ Search pattern
+subRegex :: Regex  -- ^ Search pattern
          -> String -- ^ Input string
          -> String -- ^ Replacement text
          -> String -- ^ Output string
