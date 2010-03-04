@@ -45,11 +45,11 @@ library
                    Text.Hakyll.Regex
                    Text.Hakyll.Render
                    Text.Hakyll.RenderAction
-                   Text.Hakyll.Renderable
+                   -- Text.Hakyll.Renderable
                    Text.Hakyll.Renderables
                    Text.Hakyll.Paginate
                    Text.Hakyll.Util
-                   Text.Hakyll.Tags
+                   -- Text.Hakyll.Tags
                    Text.Hakyll.Internal.Cache
                    Text.Hakyll.Internal.CompressCss
                    Text.Hakyll.Internal.Page

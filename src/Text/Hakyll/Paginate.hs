@@ -55,8 +55,8 @@ paginate :: PaginateConfiguration
 paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
   where
     -- Create a link with a given label, taken from the configuration.
-    linkWithLabel f r = case actionDestination r of
-        Just l  -> link (f configuration) <$> l
+    linkWithLabel f r = Right $ case actionUrl r of
+        Just l  -> createSimpleRenderAction $ link (f configuration) <$> l
         Nothing -> error "No link found for pagination."
 
     -- The main function that creates combined renderables by recursing over
@@ -66,18 +66,18 @@ paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
         let (previous, first) = case maybePrev of
                 (Just r) -> ( linkWithLabel previousLabel r
                             , linkWithLabel firstLabel (head renderables) )
-                Nothing  -> ( return $ previousLabel configuration
-                            , return $ firstLabel configuration )
+                Nothing  -> ( Left $ previousLabel configuration
+                            , Left $ firstLabel configuration )
             (next, last') = case xs of
                 (n:_) -> ( linkWithLabel nextLabel n
                          , linkWithLabel lastLabel (last renderables) )
-                []    -> ( return $ nextLabel configuration
-                         , return $ lastLabel configuration )
+                []    -> ( Left $ nextLabel configuration
+                         , Left $ lastLabel configuration )
             customPage = createCustomPage "" []
-                [ ("previous", Right previous)
-                , ("next", Right next)
-                , ("first", Right first)
-                , ("last", Right last')
+                [ ("previous", previous)
+                , ("next", next)
+                , ("first", first)
+                , ("last", last')
                 , ("index", Left $ show index)
                 , ("length", Left $ show $ length renderables)
                 ]

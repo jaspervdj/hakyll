@@ -13,15 +13,17 @@ module Text.Hakyll.Render
     ) where
 
 import Control.Monad (unless)
+import Control.Arrow ((>>>))
 import Control.Monad.Reader (liftIO)
 import System.Directory (copyFile)
+import Data.Maybe (fromMaybe)
+import qualified Data.Map as M
 
 import Text.Hakyll.Hakyll (Hakyll)
-import Text.Hakyll.Context (ContextManipulation)
-import Text.Hakyll.Renderable
+import Text.Hakyll.Context (ContextManipulation, Context)
 import Text.Hakyll.File
+import Text.Hakyll.RenderAction
 import Text.Hakyll.Internal.CompressCss
-import Text.Hakyll.Internal.Page
 import Text.Hakyll.Internal.Render
 import Text.Hakyll.Internal.Template (readTemplate)
 
@@ -36,23 +38,24 @@ depends file dependencies action = do
     unless valid action
 
 -- | Render to a Page.
-render :: Renderable a
-       => FilePath    -- ^ Template to use for rendering.
-       -> a           -- ^ Renderable object to render with given template.
-       -> Hakyll Page -- ^ The body of the result will contain the render.
+render :: FilePath                     -- ^ Template to use for rendering.
+       -> RenderAction Context Context -- ^ The render computation.
 render = renderWith id
 
 -- | Render to a Page. This function allows you to manipulate the context
 --   first.
-renderWith :: Renderable a
-           => ContextManipulation -- ^ Manipulation to apply on the context.
-           -> FilePath            -- ^ Template to use for rendering.
-           -> a                   -- ^ Data to render.
-           -> Hakyll Page         -- ^ Result of the render operation.
-renderWith manipulation templatePath renderable = do
-    template <- readTemplate templatePath
-    context <- toContext renderable
-    return $ fromContext $ pureRenderWith manipulation template context
+renderWith :: ContextManipulation          -- ^ Manipulation to apply first.
+           -> FilePath                     -- ^ Template to use for rendering.
+           -> RenderAction Context Context -- ^ The render computation.
+renderWith manipulation templatePath = RenderAction
+    { actionDependencies = [templatePath]
+    , actionUrl          = Nothing
+    , actionFunction     = actionFunction'
+    }
+  where
+    actionFunction' context = do
+        template <- readTemplate templatePath
+        return $ pureRenderWith manipulation template context
 
 -- | Render each renderable with the given templates, then concatenate the
 --   result. So, basically this function:
@@ -64,24 +67,31 @@ renderWith manipulation templatePath renderable = do
 --
 --   * Concatenates the result.
 --
-renderAndConcat :: Renderable a
-                => [FilePath] -- ^ Templates to apply on every renderable.
-                -> [a]        -- ^ Renderables to render.
-                -> Hakyll String
+renderAndConcat :: [FilePath] -- ^ Templates to apply on every renderable.
+                -> [RenderAction () Context] -- ^ Renderables to render.
+                -> RenderAction () String
 renderAndConcat = renderAndConcatWith id
 
 -- | Render each renderable with the given templates, then concatenate the
 --   result. This function allows you to specify a @ContextManipulation@ to
 --   apply on every @Renderable@.
-renderAndConcatWith :: Renderable a
-                    => ContextManipulation
+renderAndConcatWith :: ContextManipulation
                     -> [FilePath]
-                    -> [a]
-                    -> Hakyll String
-renderAndConcatWith manipulation templatePaths renderables = do
-    templates <- mapM readTemplate templatePaths
-    contexts <- mapM toContext renderables
-    return $ pureRenderAndConcatWith manipulation templates contexts
+                    -> [RenderAction () Context]
+                    -> RenderAction () String
+renderAndConcatWith manipulation templatePaths renderables = RenderAction
+    { actionDependencies = renders >>= actionDependencies
+    , actionUrl           = Nothing
+    , actionFunction     = actionFunction'
+    }
+  where
+    render' = chain (map render templatePaths)
+    renders = map (>>> manipulationAction >>> render') renderables
+    manipulationAction = createManipulationAction manipulation
+
+    actionFunction' = \_ -> do
+        contexts <- mapM runRenderAction renders
+        return $ concatMap (fromMaybe "" . M.lookup "body") contexts
 
 -- | Chain a render action for a page with a number of templates. This will
 --   also write the result to the site destination. This is the preferred way
@@ -93,23 +103,24 @@ renderAndConcatWith manipulation templatePaths renderables = do
 --
 --   This code will first render @warning.html@ using @templates/notice.html@,
 --   and will then render the result with @templates/default.html@.
-renderChain :: Renderable a => [FilePath] -> a -> Hakyll ()
+renderChain :: [FilePath] -> RenderAction () Context -> Hakyll ()
 renderChain = renderChainWith id
 
 -- | A more custom render chain that allows you to specify a
 --   @ContextManipulation@ which to apply on the context when it is read first.
-renderChainWith :: Renderable a
-                => ContextManipulation -> [FilePath] -> a -> Hakyll ()
-renderChainWith manipulation templatePaths renderable = do
-    url <- getUrl renderable
-    depends url dependencies render'
+renderChainWith :: ContextManipulation
+                -> [FilePath]
+                -> RenderAction () Context
+                -> Hakyll ()
+renderChainWith manipulation templatePaths initial =
+    runRenderAction renderChainWith'
   where
-    dependencies = getDependencies renderable ++ templatePaths
-    render' = do
-        templates <- mapM readTemplate templatePaths
-        context <- toContext renderable
-        let result = pureRenderChainWith manipulation templates context
-        writePage $ fromContext result
+    renderChainWith' :: RenderAction () ()
+    renderChainWith' = initial >>> manipulationAction >>> chain' >>> writePage
+
+    chain' = chain (map render templatePaths)
+    manipulationAction = createManipulationAction manipulation
+
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.

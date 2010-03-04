@@ -1,6 +1,10 @@
 module Text.Hakyll.RenderAction
     ( RenderAction (..)
-    , fromRenderable
+    , createRenderAction
+    , createSimpleRenderAction
+    , createManipulationAction
+    , chain
+    , runRenderAction
     ) where
 
 import Prelude hiding ((.), id)
@@ -9,32 +13,42 @@ import Control.Monad ((<=<), mplus)
 
 import Text.Hakyll.Hakyll
 import Text.Hakyll.Context
-import Text.Hakyll.Renderable
 
 data RenderAction a b = RenderAction
     { actionDependencies :: [FilePath]
-    , actionDestination  :: Maybe (Hakyll FilePath)
+    , actionUrl          :: Maybe (Hakyll FilePath)
     , actionFunction     :: a -> Hakyll b
     }
+
+createRenderAction :: (a -> Hakyll b) -> RenderAction a b
+createRenderAction f = RenderAction
+    { actionDependencies = []
+    , actionUrl          = Nothing
+    , actionFunction     = f
+    }
+
+createSimpleRenderAction :: Hakyll b -> RenderAction () b
+createSimpleRenderAction x = createRenderAction (const x)
 
 instance Category RenderAction where
     id = RenderAction
         { actionDependencies = []
-        , actionDestination  = Nothing
+        , actionUrl          = Nothing
         , actionFunction     = return
         }
 
     x . y = RenderAction
         { actionDependencies = actionDependencies x ++ actionDependencies y
-        , actionDestination  = actionDestination y `mplus` actionDestination x
+        , actionUrl          = actionUrl y `mplus` actionUrl x
         , actionFunction     = actionFunction x <=< actionFunction y
         }
 
-fromRenderable :: (Renderable a)
-               => a
-               -> RenderAction () Context
-fromRenderable renderable = RenderAction
-    { actionDependencies = getDependencies renderable
-    , actionDestination  = Just $ getUrl renderable
-    , actionFunction     = const $ toContext renderable
-    }
+createManipulationAction :: ContextManipulation -> RenderAction Context Context
+createManipulationAction manipulation =
+    createRenderAction (return . manipulation)
+
+chain :: [RenderAction a a] -> RenderAction a a
+chain = foldl1 (>>>)
+
+runRenderAction :: RenderAction () a -> Hakyll a
+runRenderAction action = actionFunction action ()

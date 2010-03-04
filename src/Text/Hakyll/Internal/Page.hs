@@ -21,11 +21,8 @@ import Data.Binary
 
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Hakyll
-import Text.Hakyll.File
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Context (Context)
-import Text.Hakyll.Renderable
-import Text.Hakyll.RenderAction
 import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 
 -- | A Page is basically key-value mapping. Certain keys have special
@@ -41,16 +38,6 @@ fromContext = Page
 --   found.
 getValue :: String -> Page -> String
 getValue str (Page page) = fromMaybe [] $ M.lookup str page
-
--- | Get the URL for a certain page. This should always be defined. If
---   not, it will error.
-getPageUrl :: Page -> String
-getPageUrl (Page page) = fromMaybe (error "No page url") $ M.lookup "url" page
-
--- | Get the original page path.
-getPagePath :: Page -> String
-getPagePath (Page page) =
-    fromMaybe (error "No page path") $ M.lookup "path" page
 
 -- | Get the body for a certain page. When not defined, the body will be
 --   empty.
@@ -154,12 +141,6 @@ readPage path = do
                                   return page
   where
     fileName = "pages" </> path
-
--- Make pages renderable.
-instance Renderable Page where
-    getDependencies = (:[]) . getPagePath
-    getUrl = return . getPageUrl
-    toContext (Page page) = return page
 
 -- Make pages serializable.
 instance Binary Page where

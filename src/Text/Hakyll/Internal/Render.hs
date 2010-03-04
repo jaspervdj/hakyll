@@ -15,10 +15,9 @@ import Data.List (foldl')
 import Data.Maybe (fromMaybe)
 
 import Text.Hakyll.Context (Context, ContextManipulation)
-import Text.Hakyll.Renderable
 import Text.Hakyll.File
 import Text.Hakyll.Hakyll
-import Text.Hakyll.Internal.Page
+import Text.Hakyll.RenderAction
 import Text.Hakyll.Internal.Template
 
 -- | A pure render function.
@@ -55,13 +54,14 @@ pureRenderChainWith manipulation templates context =
 
 -- | Write a page to the site destination. Final action after render
 --   chains and such.
-writePage :: Page -> Hakyll ()
-writePage page = do
+writePage :: RenderAction Context ()
+writePage = createRenderAction $ \initialContext -> do
     additionalContext' <- askHakyll additionalContext
-    url <- getUrl page
-    destination <- toDestination url
+    let url = fromMaybe (error "No url defined at write time.")
+                        (M.lookup "url" initialContext)
+        body = fromMaybe "" (M.lookup "body" initialContext)
     let context = additionalContext' `M.union` M.singleton "root" (toRoot url)
+    destination <- toDestination url
     makeDirectories destination
     -- Substitute $root here, just before writing.
-    liftIO $ writeFile destination $ finalSubstitute (fromString $ getBody page)
-                                                     context
+    liftIO $ writeFile destination $ finalSubstitute (fromString body) context
