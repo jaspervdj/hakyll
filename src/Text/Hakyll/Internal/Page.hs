@@ -19,11 +19,12 @@ import Test.QuickCheck
 import Text.Pandoc
 import Data.Binary
 
-import Text.Hakyll.Internal.Cache
-import Text.Hakyll.Hakyll
-import Text.Hakyll.Util (trim)
 import Text.Hakyll.Context (Context)
+import Text.Hakyll.File
+import Text.Hakyll.Hakyll
 import Text.Hakyll.Regex (substituteRegex, matchesRegex)
+import Text.Hakyll.Util (trim)
+import Text.Hakyll.Internal.Cache
 
 -- | A Page is basically key-value mapping. Certain keys have special
 --   meanings, like for example url, body and title.
@@ -121,9 +122,10 @@ readPageFromFile path = do
 
     -- Read file.
     contents <- liftIO $ readFile path
+    url <- toUrl path
     let sections = splitAtDelimiters $ lines contents
         sectionsData = concat $ zipWith ($) sectionFunctions sections
-        context = M.fromList $ category ++ sectionsData
+        context = M.fromList $ ("url", url) : category ++ sectionsData
 
     return context
   where
