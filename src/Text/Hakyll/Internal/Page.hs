@@ -1,5 +1,5 @@
 -- | A module for dealing with @Page@s. This module is mostly internally used.
-module Text.Hakyll.Page 
+module Text.Hakyll.Internal.Page 
     ( Page
     , fromContext
     , getValue
@@ -25,6 +25,7 @@ import Text.Hakyll.File
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Context (Context)
 import Text.Hakyll.Renderable
+import Text.Hakyll.RenderAction
 import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 
 -- | A Page is basically key-value mapping. Certain keys have special
@@ -125,7 +126,7 @@ readSection renderFunction isFirst ls
 
 -- | Read a page from a file. Metadata is supported, and if the filename
 --   has a @.markdown@ extension, it will be rendered using pandoc.
-readPageFromFile :: FilePath -> Hakyll Page
+readPageFromFile :: FilePath -> Hakyll Context
 readPageFromFile path = do
     let renderFunction = getRenderFunction $ takeExtension path
         sectionFunctions = map (readSection renderFunction)
@@ -133,23 +134,18 @@ readPageFromFile path = do
 
     -- Read file.
     contents <- liftIO $ readFile path
-    url <- toUrl path
     let sections = splitAtDelimiters $ lines contents
-        context = concat $ zipWith ($) sectionFunctions sections
-        page = fromContext $ M.fromList $
-            category ++
-            [ ("url", url)
-            , ("path", path)
-            ] ++ context
+        sectionsData = concat $ zipWith ($) sectionFunctions sections
+        context = M.fromList $ category ++ sectionsData
 
-    return page
+    return context
   where
     category = let dirs = splitDirectories $ takeDirectory path
                in [("category", last dirs) | not (null dirs)]
 
 -- | Read a page. Might fetch it from the cache if available. Otherwise, it will
 --   read it from the file given and store it in the cache.
-readPage :: FilePath -> Hakyll Page
+readPage :: FilePath -> Hakyll Context
 readPage path = do
     isCacheMoreRecent' <- isCacheMoreRecent fileName [path]
     if isCacheMoreRecent' then getFromCache fileName

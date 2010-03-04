@@ -16,9 +16,9 @@ import Data.Maybe (fromMaybe)
 
 import Text.Hakyll.Context (Context, ContextManipulation)
 import Text.Hakyll.Renderable
-import Text.Hakyll.Page
 import Text.Hakyll.File
 import Text.Hakyll.Hakyll
+import Text.Hakyll.Internal.Page
 import Text.Hakyll.Internal.Template
 
 -- | A pure render function.

@@ -11,18 +11,18 @@ module Text.Hakyll.Renderables
 
 import qualified Data.Map as M
 import Control.Arrow (second)
-import Control.Monad (liftM, liftM2, mplus)
+import Control.Monad (liftM2, mplus)
 import Control.Applicative ((<$>))
 
 import Data.Binary
 
 import Text.Hakyll.Hakyll (Hakyll)
-import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
 import Text.Hakyll.Context
 import Text.Hakyll.Render
 import Text.Hakyll.RenderAction
+import Text.Hakyll.Internal.Page
 
 -- | Create a custom page.
 --   
@@ -90,19 +90,12 @@ newtype PagePath = PagePath FilePath
                  deriving (Ord, Eq, Read, Show)
 
 -- | Create a PagePath from a FilePath.
-createPagePath :: FilePath -> PagePath
-createPagePath = PagePath
-
--- We can render filepaths
-instance Renderable PagePath where
-    getDependencies (PagePath path) = return path
-    getUrl (PagePath path) = toUrl path
-    toContext (PagePath path) = readPage path >>= toContext
-
--- We can serialize filepaths
-instance Binary PagePath where
-    put (PagePath path) = put path
-    get = liftM PagePath get
+createPagePath :: FilePath -> RenderAction () Context
+createPagePath path = RenderAction
+    { actionDependencies = [path]
+    , actionDestination  = Just $ toUrl path
+    , actionFunction     = const (readPage path)
+    }
 
 -- | A combination of two other renderables.
 data CombinedRenderable a b = CombinedRenderable a b

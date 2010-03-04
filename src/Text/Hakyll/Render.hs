@@ -18,12 +18,12 @@ import System.Directory (copyFile)
 
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (ContextManipulation)
-import Text.Hakyll.Page
 import Text.Hakyll.Renderable
 import Text.Hakyll.File
-import Text.Hakyll.Internal.Template (readTemplate)
 import Text.Hakyll.Internal.CompressCss
+import Text.Hakyll.Internal.Page
 import Text.Hakyll.Internal.Render
+import Text.Hakyll.Internal.Template (readTemplate)
 
 -- | Execute an IO action only when the cache is invalid.
 depends :: FilePath   -- ^ File to be rendered or created.
