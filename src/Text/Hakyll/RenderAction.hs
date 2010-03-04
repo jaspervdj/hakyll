@@ -28,7 +28,7 @@ createRenderAction f = RenderAction
     }
 
 createSimpleRenderAction :: Hakyll b -> RenderAction () b
-createSimpleRenderAction x = createRenderAction (const x)
+createSimpleRenderAction = createRenderAction . const
 
 instance Category RenderAction where
     id = RenderAction
@@ -44,8 +44,7 @@ instance Category RenderAction where
         }
 
 createManipulationAction :: ContextManipulation -> RenderAction Context Context
-createManipulationAction manipulation =
-    createRenderAction (return . manipulation)
+createManipulationAction = createRenderAction . (return .)
 
 chain :: [RenderAction a a] -> RenderAction a a
 chain = foldl1 (>>>)

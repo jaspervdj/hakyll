@@ -40,7 +40,7 @@ createCustomPage url dependencies association = RenderAction
   where
     mtuple (a, b) = b >>= \b' -> return (a, b')
     toHakyllString = second (either return runRenderAction)
-    assoc' = mapM (mtuple . toHakyllString) association
+    assoc' = mapM (mtuple . toHakyllString) $ ("url", Left url) : association
 
 -- | A @createCustomPage@ function specialized in creating listings.
 --
@@ -110,7 +110,7 @@ combine x y = RenderAction
     { actionDependencies = actionDependencies x ++ actionDependencies y
     , actionUrl          = actionUrl x `mplus` actionUrl y
     , actionFunction     = \_ ->
-        liftM2 (M.union) (runRenderAction x) (runRenderAction y)
+        liftM2 M.union (runRenderAction x) (runRenderAction y)
     }
 
 -- | Combine two renderables and set a custom URL. This behaves like @combine@,
@@ -122,7 +122,7 @@ combineWithUrl :: FilePath
 combineWithUrl url x y = combine'
     { actionUrl          = Just $ return url
     , actionFunction     = \_ ->
-        (M.insert "url" url) <$> runRenderAction combine'
+        M.insert "url" url <$> runRenderAction combine'
     }
   where
     combine' = combine x y

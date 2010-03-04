@@ -89,7 +89,7 @@ renderAndConcatWith manipulation templatePaths renderables = RenderAction
     renders = map (>>> manipulationAction >>> render') renderables
     manipulationAction = createManipulationAction manipulation
 
-    actionFunction' = \_ -> do
+    actionFunction' _ = do
         contexts <- mapM runRenderAction renders
         return $ concatMap (fromMaybe "" . M.lookup "body") contexts
 
