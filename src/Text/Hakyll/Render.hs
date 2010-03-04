@@ -125,17 +125,31 @@ renderChainWith manipulation templatePaths initial =
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.
 static :: FilePath -> Hakyll ()
-static source = do destination <- toDestination source
-                   depends destination [source] (action destination)
+static source = runRenderAction static'
   where
-    action destination = do makeDirectories destination
-                            liftIO $ copyFile source destination
+    static' = RenderAction
+        { actionDependencies = [source]
+        , actionUrl          = Just $ return source
+        , actionFunction     = actionFunction'
+        }
+
+    actionFunction' _ = do
+        destination <- toDestination source
+        makeDirectories destination
+        liftIO $ copyFile source destination
 
 -- | Render a css file, compressing it.
 css :: FilePath -> Hakyll ()
-css source = do destination <- toDestination source
-                depends destination [source] (css' destination)
+css source = runRenderAction css'
   where
-    css' destination = do contents <- liftIO $ readFile source
-                          makeDirectories destination
-                          liftIO $ writeFile destination (compressCss contents)
+    css' = RenderAction
+        { actionDependencies = [source]
+        , actionUrl          = Just $ return source
+        , actionFunction     = actionFunction'
+        }
+
+    actionFunction' _ = do
+        contents <- liftIO $ readFile source
+        destination <- toDestination source
+        makeDirectories destination
+        liftIO $ writeFile destination (compressCss contents)
