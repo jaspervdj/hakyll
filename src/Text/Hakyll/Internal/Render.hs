@@ -4,15 +4,13 @@ module Text.Hakyll.Internal.Render
     , regularSubstitute
     , finalSubstitute
     , pureRenderWith
-    , pureRenderAndConcatWith
-    , pureRenderChainWith
     , writePage
     ) where
 
 import qualified Data.Map as M
 import Control.Monad.Reader (liftIO)
-import Data.List (foldl')
 import Data.Maybe (fromMaybe)
+import System.IO (hPutStrLn, stderr)
 
 import Text.Hakyll.Context (Context, ContextManipulation)
 import Text.Hakyll.File
@@ -32,26 +30,6 @@ pureRenderWith manipulation template context =
         body = regularSubstitute template contextIgnoringRoot
     in M.insert "body" body context
 
--- | A pure renderAndConcat function.
-pureRenderAndConcatWith :: ContextManipulation -- ^ Manipulation to apply.
-                        -> [Template] -- ^ Templates to use.
-                        -> [Context] -- ^ Different renderables.
-                        -> String
-pureRenderAndConcatWith manipulation templates =
-    concatMap renderAndConcat
-  where
-    renderAndConcat = fromMaybe "" . M.lookup "body"
-                    . pureRenderChainWith manipulation templates
-
--- | A pure renderChain function.
-pureRenderChainWith :: ContextManipulation
-                    -> [Template]
-                    -> Context
-                    -> Context
-pureRenderChainWith manipulation templates context =
-    let initial = manipulation context
-    in foldl' (flip $ pureRenderWith id) initial templates
-
 -- | Write a page to the site destination. Final action after render
 --   chains and such.
 writePage :: RenderAction Context ()
@@ -64,4 +42,6 @@ writePage = createRenderAction $ \initialContext -> do
     destination <- toDestination url
     makeDirectories destination
     -- Substitute $root here, just before writing.
-    liftIO $ writeFile destination $ finalSubstitute (fromString body) context
+    liftIO $ do
+        writeFile destination $ finalSubstitute (fromString body) context
+        hPutStrLn stderr $ "Writing " ++ destination

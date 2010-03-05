@@ -21,11 +21,7 @@ data RenderAction a b = RenderAction
     }
 
 createRenderAction :: (a -> Hakyll b) -> RenderAction a b
-createRenderAction f = RenderAction
-    { actionDependencies = []
-    , actionUrl          = Nothing
-    , actionFunction     = f
-    }
+createRenderAction f = id { actionFunction = f }
 
 createSimpleRenderAction :: Hakyll b -> RenderAction () b
 createSimpleRenderAction = createRenderAction . const
