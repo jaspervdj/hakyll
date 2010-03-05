@@ -98,7 +98,8 @@ readPageFromFile path = do
     url <- toUrl path
     let sections = splitAtDelimiters $ lines contents
         sectionsData = concat $ zipWith ($) sectionFunctions sections
-        context = M.fromList $ ("url", url) : category ++ sectionsData
+        context = M.fromList $
+            ("url", url) : ("path", path) : category ++ sectionsData
 
     return context
   where
