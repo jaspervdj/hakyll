@@ -1,23 +1,15 @@
 -- | A module for dealing with @Page@s. This module is mostly internally used.
 module Text.Hakyll.Internal.Page 
-    ( Page
-    , fromContext
-    , getValue
-    , getBody
-    , readPage
+    ( readPage
     ) where
 
 import qualified Data.Map as M
 import Data.List (isPrefixOf)
 import Data.Char (isSpace)
-import Data.Maybe (fromMaybe)
-import Control.Monad (liftM, replicateM)
 import Control.Monad.Reader (liftIO)
 import System.FilePath
 
-import Test.QuickCheck
 import Text.Pandoc
-import Data.Binary
 
 import Text.Hakyll.Context (Context)
 import Text.Hakyll.File
@@ -25,25 +17,6 @@ import Text.Hakyll.Hakyll
 import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Internal.Cache
-
--- | A Page is basically key-value mapping. Certain keys have special
---   meanings, like for example url, body and title.
-data Page = Page Context
-          deriving (Ord, Eq, Show, Read)
-
--- | Create a Page from a key-value mapping.
-fromContext :: Context -> Page
-fromContext = Page
-
--- | Obtain a value from a page. Will resturn an empty string when nothing is
---   found.
-getValue :: String -> Page -> String
-getValue str (Page page) = fromMaybe [] $ M.lookup str page
-
--- | Get the body for a certain page. When not defined, the body will be
---   empty.
-getBody :: Page -> String
-getBody (Page page) = fromMaybe [] $ M.lookup "body" page
 
 -- | The default reader options for pandoc parsing.
 readerOptions :: ParserState
@@ -143,22 +116,3 @@ readPage path = do
                                   return page
   where
     fileName = "pages" </> path
-
--- Make pages serializable.
-instance Binary Page where
-    put (Page context) = put $ M.toAscList context
-    get = liftM (Page . M.fromAscList) get
-
--- | Generate an arbitrary page.
-arbitraryPage :: Gen Page
-arbitraryPage = do keys <- listOf key'
-                   values <- arbitrary
-                   return $ Page $ M.fromList $ zip keys values
-  where
-    key' = do l <- choose (5, 10)
-              replicateM l $ choose ('a', 'z')
-
--- Make pages testable
-instance Arbitrary Page where
-    arbitrary = arbitraryPage
-    shrink (Page context) = map (Page . flip M.delete context) $ M.keys context

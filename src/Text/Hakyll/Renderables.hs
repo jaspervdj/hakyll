@@ -2,9 +2,7 @@ module Text.Hakyll.Renderables
     ( createCustomPage
     , createListing
     , createListingWith
-    , PagePath
     , createPagePath
-    , CombinedRenderable
     , combine
     , combineWithUrl
     ) where
@@ -80,11 +78,6 @@ createListingWith manipulation url template renderables additional =
     concatenation = renderAndConcatWith manipulation [template] renderables
     additional' = map (second Left) additional
 
--- | PagePath is a class that wraps a FilePath. This is used to render Pages
---   without reading them first through use of caching.
-newtype PagePath = PagePath FilePath
-                 deriving (Ord, Eq, Read, Show)
-
 -- | Create a PagePath from a FilePath.
 createPagePath :: FilePath -> RenderAction () Context
 createPagePath path = RenderAction
@@ -92,11 +85,6 @@ createPagePath path = RenderAction
     , actionUrl          = Just $ toUrl path
     , actionFunction     = const (readPage path)
     }
-
--- | A combination of two other renderables.
-data CombinedRenderable a b = CombinedRenderable a b
-                            | CombinedRenderableWithUrl FilePath a b
-                            deriving (Ord, Eq, Read, Show)
 
 -- | Combine two renderables. The url will always be taken from the first
 --   @Renderable@. Also, if a `$key` is present in both renderables, the
