@@ -58,7 +58,7 @@ createCustomPage url dependencies association = RenderAction
 createListing :: String -- ^ Destination of the page.
               -> FilePath -- ^ Template to render all items with.
               -> [Renderable] -- ^ Renderables in the list.
-              -> [(String, String)] -- ^ Additional context.
+              -> [(String, Either String (RenderAction () String))]
               -> Renderable
 createListing = createListingWith id
 
@@ -70,15 +70,14 @@ createListingWith :: ContextManipulation -- ^ Manipulation for the renderables.
                   -> String -- ^ Destination of the page.
                   -> FilePath -- ^ Template to render all items with.
                   -> [Renderable] -- ^ Renderables in the list.
-                  -> [(String, String)] -- ^ Additional context.
+                  -> [(String, Either String (RenderAction () String))]
                   -> Renderable
 createListingWith manipulation url template renderables additional =
     createCustomPage url dependencies context
   where
     dependencies = template : concatMap actionDependencies renderables
-    context = ("body", Right concatenation) : additional'
+    context = ("body", Right concatenation) : additional
     concatenation = renderAndConcatWith manipulation [template] renderables
-    additional' = map (second Left) additional
 
 -- | Create a PagePath from a FilePath.
 createPagePath :: FilePath -> Renderable

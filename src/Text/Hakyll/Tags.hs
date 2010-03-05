@@ -33,6 +33,7 @@ module Text.Hakyll.Tags
     ( TagMap
     , readTagMap
     , readCategoryMap
+    , withTagMap
     , renderTagCloud
     , renderTagLinks
     ) where
@@ -41,12 +42,12 @@ import qualified Data.Map as M
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe, maybeToList)
 import Control.Monad (foldM)
-import Control.Arrow (second)
+import Control.Arrow (second, (>>>))
 import Control.Applicative ((<$>))
 import System.FilePath
 
 import Text.Hakyll.Context
-import Text.Hakyll.Hakyll
+import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Regex
 import Text.Hakyll.Renderables
 import Text.Hakyll.RenderAction
@@ -77,14 +78,16 @@ readMap getTagsFunction identifier paths = RenderAction
 
     actionFunction' _ = do
         isCacheMoreRecent' <- isCacheMoreRecent fileName paths
-        if isCacheMoreRecent' then M.fromAscList <$> getFromCache fileName
-                              else do tagMap <- readTagMap'
-                                      storeInCache (M.toAscList tagMap) fileName
-                                      return tagMap
+        assocMap <- if isCacheMoreRecent'
+                        then M.fromAscList <$> getFromCache fileName
+                        else do assocMap' <- readTagMap'
+                                storeInCache (M.toAscList assocMap') fileName
+                                return assocMap'
+        return $ M.map (map createPagePath) assocMap
 
     readTagMap' = foldM addPaths M.empty paths
     addPaths current path = do
-        createPagePath path >>> 
+        context <- runRenderAction $ createPagePath path
         let tags = getTagsFunction context
             addPaths' = flip (M.insertWith (++)) [path]
         return $ foldr addPaths' current tags
@@ -92,7 +95,7 @@ readMap getTagsFunction identifier paths = RenderAction
 -- | Read a @TagMap@, using the @tags@ metadata field.
 readTagMap :: String -- ^ Unique identifier for the map.
            -> [FilePath] -- ^ Paths to get tags from.
-           -> Hakyll TagMap
+           -> RenderAction () TagMap
 readTagMap = readMap getTagsFunction
   where
     getTagsFunction = map trim . splitRegex ","
@@ -101,39 +104,46 @@ readTagMap = readMap getTagsFunction
 -- | Read a @TagMap@, using the subdirectories the pages are placed in.
 readCategoryMap :: String -- ^ Unique identifier for the map.
                 -> [FilePath] -- ^ Paths to get tags from.
-                -> Hakyll TagMap
+                -> RenderAction () TagMap
 readCategoryMap = readMap $ maybeToList . M.lookup "category"
 
+withTagMap :: RenderAction () TagMap
+           -> (String -> [Renderable] -> Hakyll ())
+           -> Hakyll ()
+withTagMap tagMap function = runRenderActionIfNeeded (tagMap >>> action)
+  where
+    action = createRenderAction (mapM_ (uncurry function) . M.toList)
+
 -- | Render a tag cloud.
-renderTagCloud :: TagMap -- ^ Map as produced by @readTagMap@.
-               -> (String -> String) -- ^ Function to produce an url for a tag.
+renderTagCloud :: (String -> String) -- ^ Function to produce an url for a tag.
                -> Float -- ^ Smallest font size, in percent.
                -> Float -- ^ Biggest font size, in percent.
-               -> String -- ^ Result of the render.
-renderTagCloud tagMap urlFunction minSize maxSize =
-    intercalate " " $ map renderTag tagCount
+               -> RenderAction TagMap String
+renderTagCloud urlFunction minSize maxSize = createRenderAction renderTagCloud'
   where
-    renderTag :: (String, Float) -> String
-    renderTag (tag, count) = 
-        finalSubstitute linkTemplate $ M.fromList [ ("size", sizeTag count)
-                                                  , ("url", urlFunction tag)
-                                                  , ("tag", tag)
-                                                  ]
+    renderTagCloud' tagMap =
+        return $ intercalate " " $ map (renderTag tagMap) (tagCount tagMap)
+
+    renderTag tagMap (tag, count) = 
+        finalSubstitute linkTemplate $ M.fromList
+            [ ("size", sizeTag tagMap count)
+            , ("url", urlFunction tag)
+            , ("tag", tag)
+            ]
+
     linkTemplate =
         fromString "<a style=\"font-size: $size\" href=\"$url\">$tag</a>"
 
-    sizeTag :: Float -> String
-    sizeTag count = show size' ++ "%"
+    sizeTag tagMap count = show (size' :: Int) ++ "%"
       where
-        size' :: Int
-        size' = floor $ minSize + relative count * (maxSize - minSize)
+        size' = floor $ minSize + relative tagMap count * (maxSize - minSize)
 
-    minCount = minimum $ map snd tagCount
-    maxCount = maximum $ map snd tagCount
-    relative count = (count - minCount) / (maxCount - minCount)
+    minCount = minimum . map snd . tagCount
+    maxCount = maximum . map snd . tagCount
+    relative tagMap count = (count - minCount tagMap) /
+                            (maxCount tagMap - minCount tagMap)
 
-    tagCount :: [(String, Float)]
-    tagCount = map (second $ fromIntegral . length) $ M.toList tagMap
+    tagCount = map (second $ fromIntegral . length) . M.toList
 
 -- | Render all tags to links.
 --   
