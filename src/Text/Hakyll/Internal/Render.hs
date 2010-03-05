@@ -10,7 +10,6 @@ module Text.Hakyll.Internal.Render
 import qualified Data.Map as M
 import Control.Monad.Reader (liftIO)
 import Data.Maybe (fromMaybe)
-import System.IO (hPutStrLn, stderr)
 
 import Text.Hakyll.Context (Context, ContextManipulation)
 import Text.Hakyll.File
@@ -42,6 +41,4 @@ writePage = createRenderAction $ \initialContext -> do
     destination <- toDestination url
     makeDirectories destination
     -- Substitute $root here, just before writing.
-    liftIO $ do
-        writeFile destination $ finalSubstitute (fromString body) context
-        hPutStrLn stderr $ "Writing " ++ destination
+    liftIO $ writeFile destination $ finalSubstitute (fromString body) context

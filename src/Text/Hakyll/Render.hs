@@ -1,8 +1,7 @@
 -- | Module containing rendering functions. All these functions are used to
 --   render files to the @_site@ directory.
 module Text.Hakyll.Render 
-    ( depends
-    , render
+    ( render
     , renderWith
     , renderAndConcat
     , renderAndConcatWith
@@ -12,7 +11,6 @@ module Text.Hakyll.Render
     , css
     ) where
 
-import Control.Monad (unless)
 import Control.Arrow ((>>>))
 import Control.Monad.Reader (liftIO)
 import System.Directory (copyFile)
@@ -26,16 +24,6 @@ import Text.Hakyll.RenderAction
 import Text.Hakyll.Internal.CompressCss
 import Text.Hakyll.Internal.Render
 import Text.Hakyll.Internal.Template (readTemplate)
-
--- | Execute an IO action only when the cache is invalid.
-depends :: FilePath   -- ^ File to be rendered or created.
-        -> [FilePath] -- ^ Files the render depends on.
-        -> Hakyll ()  -- ^ Action to execute when the file is out of date.
-        -> Hakyll ()
-depends file dependencies action = do
-    destination <- toDestination file
-    valid <- isFileMoreRecent destination dependencies
-    unless valid action
 
 -- | Render to a Page.
 render :: FilePath                     -- ^ Template to use for rendering.
@@ -113,7 +101,7 @@ renderChainWith :: ContextManipulation
                 -> RenderAction () Context
                 -> Hakyll ()
 renderChainWith manipulation templatePaths initial =
-    runRenderAction renderChainWith'
+    runRenderActionIfNeeded renderChainWith'
   where
     renderChainWith' :: RenderAction () ()
     renderChainWith' = initial >>> manipulationAction >>> chain' >>> writePage
@@ -125,30 +113,18 @@ renderChainWith manipulation templatePaths initial =
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.
 static :: FilePath -> Hakyll ()
-static source = runRenderAction static'
+static source = runRenderActionIfNeeded static'
   where
-    static' = RenderAction
-        { actionDependencies = [source]
-        , actionUrl          = Just $ return source
-        , actionFunction     = actionFunction'
-        }
-
-    actionFunction' _ = do
+    static' = createFileRenderAction source $ do
         destination <- toDestination source
         makeDirectories destination
         liftIO $ copyFile source destination
 
 -- | Render a css file, compressing it.
 css :: FilePath -> Hakyll ()
-css source = runRenderAction css'
+css source = runRenderActionIfNeeded css'
   where
-    css' = RenderAction
-        { actionDependencies = [source]
-        , actionUrl          = Just $ return source
-        , actionFunction     = actionFunction'
-        }
-
-    actionFunction' _ = do
+    css' = createFileRenderAction source $ do
         contents <- liftIO $ readFile source
         destination <- toDestination source
         makeDirectories destination
