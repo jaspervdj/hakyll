@@ -45,11 +45,11 @@ import Control.Arrow (second)
 import Control.Applicative ((<$>))
 import System.FilePath
 
-import Text.Hakyll.Hakyll
 import Text.Hakyll.Context
+import Text.Hakyll.Hakyll
 import Text.Hakyll.Regex
-import Text.Hakyll.Renderable
 import Text.Hakyll.Renderables
+import Text.Hakyll.RenderAction
 import Text.Hakyll.Util
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Internal.Template
@@ -59,42 +59,48 @@ import Text.Hakyll.Internal.Template
 --   This is a map associating tags or categories to the appropriate pages
 --   using that tag or category. In the case of categories, each path will only
 --   appear under one category - this is not the case with tags.
-type TagMap = M.Map String [PagePath]
+type TagMap = M.Map String [Renderable]
 
 -- | Read a tag map. This is a internally used function that can be used for
 --   tags as well as for categories.
 readMap :: (Context -> [String]) -- ^ Function to get tags from a context.
         -> String -- ^ Unique identifier for the tagmap.
-        -> [PagePath]
-        -> Hakyll TagMap
-readMap getTagsFunction identifier paths = do
-    isCacheMoreRecent' <- isCacheMoreRecent fileName (getDependencies =<< paths)
-    if isCacheMoreRecent' then M.fromAscList <$> getFromCache fileName
-                          else do tagMap <- readTagMap'
-                                  storeInCache (M.toAscList tagMap) fileName
-                                  return tagMap
+        -> [FilePath]
+        -> RenderAction () TagMap
+readMap getTagsFunction identifier paths = RenderAction
+    { actionDependencies = paths
+    , actionUrl          = Nothing
+    , actionFunction     = actionFunction'
+    } 
   where
     fileName = "tagmaps" </> identifier
 
+    actionFunction' _ = do
+        isCacheMoreRecent' <- isCacheMoreRecent fileName paths
+        if isCacheMoreRecent' then M.fromAscList <$> getFromCache fileName
+                              else do tagMap <- readTagMap'
+                                      storeInCache (M.toAscList tagMap) fileName
+                                      return tagMap
+
     readTagMap' = foldM addPaths M.empty paths
     addPaths current path = do
-        context <- toContext path
+        createPagePath path >>> 
         let tags = getTagsFunction context
             addPaths' = flip (M.insertWith (++)) [path]
         return $ foldr addPaths' current tags
 
 -- | Read a @TagMap@, using the @tags@ metadata field.
 readTagMap :: String -- ^ Unique identifier for the map.
-           -> [PagePath] -- ^ Paths to get tags from.
+           -> [FilePath] -- ^ Paths to get tags from.
            -> Hakyll TagMap
-readTagMap = readMap  getTagsFunction
+readTagMap = readMap getTagsFunction
   where
     getTagsFunction = map trim . splitRegex ","
                     . fromMaybe [] . M.lookup "tags"
 
 -- | Read a @TagMap@, using the subdirectories the pages are placed in.
 readCategoryMap :: String -- ^ Unique identifier for the map.
-                -> [PagePath] -- ^ Paths to get tags from.
+                -> [FilePath] -- ^ Paths to get tags from.
                 -> Hakyll TagMap
 readCategoryMap = readMap $ maybeToList . M.lookup "category"
 

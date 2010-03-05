@@ -7,6 +7,7 @@ module Text.Hakyll.RenderAction
     , chain
     , runRenderAction
     , runRenderActionIfNeeded
+    , Renderable
     ) where
 
 import Control.Category
@@ -69,3 +70,5 @@ runRenderActionIfNeeded action = do
     valid <- isFileMoreRecent destination $ actionDependencies action
     unless valid $ do liftIO $ hPutStrLn stderr $ "Rendering " ++ destination
                       runRenderAction action
+
+type Renderable = RenderAction () Context

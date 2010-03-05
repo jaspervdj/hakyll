@@ -12,7 +12,6 @@ import Control.Arrow (second)
 import Control.Monad (liftM2, mplus)
 import Control.Applicative ((<$>))
 
-
 import Text.Hakyll.File
 import Text.Hakyll.Context
 import Text.Hakyll.RenderAction
@@ -29,9 +28,9 @@ import Text.Hakyll.Internal.Page
 createCustomPage :: String
                  -> [FilePath]
                  -> [(String, Either String (RenderAction () String))]
-                 -> RenderAction () Context
+                 -> Renderable
 createCustomPage url dependencies association = RenderAction
-    { actionDependencies = dependencies
+    { actionDependencies = dependencies ++ dataDependencies
     , actionUrl          = Just $ return url
     , actionFunction     = \_ -> M.fromList <$> assoc'
     }
@@ -39,6 +38,9 @@ createCustomPage url dependencies association = RenderAction
     mtuple (a, b) = b >>= \b' -> return (a, b')
     toHakyllString = second (either return runRenderAction)
     assoc' = mapM (mtuple . toHakyllString) $ ("url", Left url) : association
+    dataDependencies = (map snd association) >>= getDependencies
+    getDependencies (Left _) = []
+    getDependencies (Right x) = actionDependencies x
 
 -- | A @createCustomPage@ function specialized in creating listings.
 --
@@ -55,9 +57,9 @@ createCustomPage url dependencies association = RenderAction
 --   >                      [("title", "Home")] -- ^ Additional context
 createListing :: String -- ^ Destination of the page.
               -> FilePath -- ^ Template to render all items with.
-              -> [RenderAction () Context] -- ^ Renderables in the list.
+              -> [Renderable] -- ^ Renderables in the list.
               -> [(String, String)] -- ^ Additional context.
-              -> RenderAction () Context
+              -> Renderable
 createListing = createListingWith id
 
 -- | A @createCustomPage@ function specialized in creating listings.
@@ -67,9 +69,9 @@ createListing = createListingWith id
 createListingWith :: ContextManipulation -- ^ Manipulation for the renderables.
                   -> String -- ^ Destination of the page.
                   -> FilePath -- ^ Template to render all items with.
-                  -> [RenderAction () Context] -- ^ Renderables in the list.
+                  -> [Renderable] -- ^ Renderables in the list.
                   -> [(String, String)] -- ^ Additional context.
-                  -> RenderAction () Context
+                  -> Renderable
 createListingWith manipulation url template renderables additional =
     createCustomPage url dependencies context
   where
@@ -79,7 +81,7 @@ createListingWith manipulation url template renderables additional =
     additional' = map (second Left) additional
 
 -- | Create a PagePath from a FilePath.
-createPagePath :: FilePath -> RenderAction () Context
+createPagePath :: FilePath -> Renderable
 createPagePath path = RenderAction
     { actionDependencies = [path]
     , actionUrl          = Just $ toUrl path
@@ -92,8 +94,8 @@ createPagePath path = RenderAction
 --
 --   Since renderables are always more or less key-value maps, you can see
 --   this as a @union@ between two maps.
-combine :: RenderAction () Context -> RenderAction () Context
-        -> RenderAction () Context
+combine :: Renderable -> Renderable
+        -> Renderable
 combine x y = RenderAction
     { actionDependencies = actionDependencies x ++ actionDependencies y
     , actionUrl          = actionUrl x `mplus` actionUrl y
@@ -104,9 +106,9 @@ combine x y = RenderAction
 -- | Combine two renderables and set a custom URL. This behaves like @combine@,
 --   except that for the @url@ field, the given URL is always chosen.
 combineWithUrl :: FilePath
-               -> RenderAction () Context
-               -> RenderAction () Context
-               -> RenderAction () Context
+               -> Renderable
+               -> Renderable
+               -> Renderable
 combineWithUrl url x y = combine'
     { actionUrl          = Just $ return url
     , actionFunction     = \_ ->

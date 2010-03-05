@@ -56,7 +56,7 @@ renderWith manipulation templatePath = RenderAction
 --   * Concatenates the result.
 --
 renderAndConcat :: [FilePath] -- ^ Templates to apply on every renderable.
-                -> [RenderAction () Context] -- ^ Renderables to render.
+                -> [Renderable] -- ^ Renderables to render.
                 -> RenderAction () String
 renderAndConcat = renderAndConcatWith id
 
@@ -65,7 +65,7 @@ renderAndConcat = renderAndConcatWith id
 --   apply on every @Renderable@.
 renderAndConcatWith :: ContextManipulation
                     -> [FilePath]
-                    -> [RenderAction () Context]
+                    -> [Renderable]
                     -> RenderAction () String
 renderAndConcatWith manipulation templatePaths renderables = RenderAction
     { actionDependencies = renders >>= actionDependencies
@@ -91,14 +91,14 @@ renderAndConcatWith manipulation templatePaths renderables = RenderAction
 --
 --   This code will first render @warning.html@ using @templates/notice.html@,
 --   and will then render the result with @templates/default.html@.
-renderChain :: [FilePath] -> RenderAction () Context -> Hakyll ()
+renderChain :: [FilePath] -> Renderable -> Hakyll ()
 renderChain = renderChainWith id
 
 -- | A more custom render chain that allows you to specify a
 --   @ContextManipulation@ which to apply on the context when it is read first.
 renderChainWith :: ContextManipulation
                 -> [FilePath]
-                -> RenderAction () Context
+                -> Renderable
                 -> Hakyll ()
 renderChainWith manipulation templatePaths initial =
     runRenderActionIfNeeded renderChainWith'
