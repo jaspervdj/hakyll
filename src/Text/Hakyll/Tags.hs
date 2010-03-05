@@ -110,7 +110,7 @@ readCategoryMap = readMap $ maybeToList . M.lookup "category"
 withTagMap :: RenderAction () TagMap
            -> (String -> [Renderable] -> Hakyll ())
            -> Hakyll ()
-withTagMap tagMap function = runRenderActionIfNeeded (tagMap >>> action)
+withTagMap tagMap function = runRenderAction (tagMap >>> action)
   where
     action = createRenderAction (mapM_ (uncurry function) . M.toList)
 
