@@ -28,16 +28,23 @@ import Text.Hakyll.File
 -- | The default hakyll configuration.
 defaultHakyllConfiguration :: HakyllConfiguration
 defaultHakyllConfiguration = HakyllConfiguration
-    { additionalContext = M.empty
-    , siteDirectory = "_site"
-    , cacheDirectory = "_cache"
-    , enableIndexUrl = False
-    , previewPollDelay = 1000000
+    { absoluteUrl       = ""
+    , additionalContext = M.empty
+    , siteDirectory     = "_site"
+    , cacheDirectory    = "_cache"
+    , enableIndexUrl    = False
+    , previewPollDelay  = 1000000
     }
 
--- | Main function to run Hakyll with the default configuration.
-hakyll :: Hakyll () -> IO ()
-hakyll = hakyllWithConfiguration defaultHakyllConfiguration
+-- | Main function to run Hakyll with the default configuration. The
+--   absolute URL is only used in certain cases, for example RSS feeds et
+--   cetera.
+hakyll :: String    -- ^ Absolute URL of your site. Used in certain cases.
+       -> Hakyll () -- ^ You code.
+       -> IO ()
+hakyll absolute = hakyllWithConfiguration configuration
+  where
+    configuration = defaultHakyllConfiguration { absoluteUrl = absolute }
 
 -- | Main function to run hakyll with a custom configuration.
 hakyllWithConfiguration :: HakyllConfiguration -> Hakyll () -> IO ()

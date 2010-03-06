@@ -18,8 +18,6 @@
 --   is to place pages in subdirectories.
 --
 --   An example, the page @posts\/coding\/2010-01-28-hakyll-categories.markdown@
---   would be placed under the `coding` category.
---
 --   Tags or categories are read using the @readTagMap@ and @readCategoryMap@
 --   functions. Because categories are implemented using tags - categories can
 --   be seen as tags, with the restriction that a page can only have one

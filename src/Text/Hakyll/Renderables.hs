@@ -38,7 +38,7 @@ createCustomPage url dependencies association = RenderAction
     mtuple (a, b) = b >>= \b' -> return (a, b')
     toHakyllString = second (either return runRenderAction)
     assoc' = mapM (mtuple . toHakyllString) $ ("url", Left url) : association
-    dataDependencies = (map snd association) >>= getDependencies
+    dataDependencies = map snd association >>= getDependencies
     getDependencies (Left _) = []
     getDependencies (Right x) = actionDependencies x
 

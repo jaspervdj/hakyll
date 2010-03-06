@@ -1,56 +1,60 @@
-Name:           hakyll
-Version:        1.4
+Name:               hakyll
+Version:            1.4
 
-Synopsis:       A simple static site generator library.
-Description:
-  A simple static site generator library, mainly aimed at
-  creating blogs and brochure sites.
-Author:         Jasper Van der Jeugt
-Maintainer:     jaspervdj@gmail.com
-Homepage:       http://jaspervdj.be/hakyll
-Bug-Reports:    http://github.com/jaspervdj/Hakyll/issues
-License:        BSD3
-License-File:   LICENSE
-Category:       Text
-Cabal-Version:  >= 1.6
+Synopsis:           A simple static site generator library.
+Description:        A simple static site generator library, mainly aimed at
+                    creating blogs and brochure sites.
+Author:             Jasper Van der Jeugt
+Maintainer:         jaspervdj@gmail.com
+Homepage:           http://jaspervdj.be/hakyll
+Bug-Reports:        http://github.com/jaspervdj/Hakyll/issues
+License:            BSD3
+License-File:       LICENSE
+Category:           Text
+Cabal-Version:      >= 1.6
+Data-Dir:           data
+Data-Files:         templates/rss.xml
+                    templates/rss-item.xml
 
-build-type:     Simple
+build-type:         Simple
 
 source-repository head
-  type: git
-  location: git://github.com/jaspervdj/Hakyll.git
+  type:             git
+  location:         git://github.com/jaspervdj/Hakyll.git
 
 library
-  ghc-options: -Wall
-  hs-source-dirs: src/
-  build-depends:   base >= 4 && < 5,
-                   filepath >= 1.1,
-                   directory >= 1,
-                   containers >= 0.1,
-                   pandoc >= 1,
-                   regex-base >= 0.83,
-                   regex-tdfa >= 0.92,
-                   network >= 2,
-                   mtl >= 1.1,
-                   old-locale >= 1,
-                   old-time >= 1,
-                   time >= 1,
-                   binary >= 0.5,
-                   QuickCheck >= 2
-  exposed-modules: Network.Hakyll.SimpleServer
-                   Text.Hakyll
-                   Text.Hakyll.Context
-                   Text.Hakyll.File
-                   Text.Hakyll.Hakyll
-                   Text.Hakyll.Regex
-                   Text.Hakyll.Render
-                   Text.Hakyll.RenderAction
-                   Text.Hakyll.Renderables
-                   Text.Hakyll.Paginate
-                   Text.Hakyll.Util
-                   Text.Hakyll.Tags
-                   Text.Hakyll.Internal.Cache
-                   Text.Hakyll.Internal.CompressCss
-                   Text.Hakyll.Internal.Page
-                   Text.Hakyll.Internal.Render
-                   Text.Hakyll.Internal.Template
+  ghc-options:      -Wall
+  hs-source-dirs:   src
+  build-depends:    base >= 4 && < 5,
+                    filepath >= 1.1,
+                    directory >= 1,
+                    containers >= 0.1,
+                    pandoc >= 1,
+                    regex-base >= 0.83,
+                    regex-tdfa >= 0.92,
+                    network >= 2,
+                    mtl >= 1.1,
+                    old-locale >= 1,
+                    old-time >= 1,
+                    time >= 1,
+                    binary >= 0.5,
+                    QuickCheck >= 2
+  exposed-modules:  Network.Hakyll.SimpleServer
+                    Text.Hakyll
+                    Text.Hakyll.Context
+                    Text.Hakyll.File
+                    Text.Hakyll.Hakyll
+                    Text.Hakyll.Regex
+                    Text.Hakyll.Render
+                    Text.Hakyll.RenderAction
+                    Text.Hakyll.Renderables
+                    Text.Hakyll.Paginate
+                    Text.Hakyll.Util
+                    Text.Hakyll.Tags
+                    Text.Hakyll.Rss
+                    Text.Hakyll.Internal.Cache
+                    Text.Hakyll.Internal.CompressCss
+                    Text.Hakyll.Internal.Page
+                    Text.Hakyll.Internal.Render
+                    Text.Hakyll.Internal.Template
+  other-modules:    Paths_hakyll

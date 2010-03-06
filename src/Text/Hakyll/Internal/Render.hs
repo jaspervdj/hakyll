@@ -33,7 +33,7 @@ pureRenderWith manipulation template context =
 --   chains and such.
 writePage :: RenderAction Context ()
 writePage = createRenderAction $ \initialContext -> do
-    additionalContext' <- askHakyll additionalContext
+    additionalContext' <- askHakyll getAdditionalContext
     let url = fromMaybe (error "No url defined at write time.")
                         (M.lookup "url" initialContext)
         body = fromMaybe "" (M.lookup "body" initialContext)

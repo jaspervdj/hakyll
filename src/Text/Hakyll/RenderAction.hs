@@ -56,7 +56,8 @@ createManipulationAction :: ContextManipulation -> RenderAction Context Context
 createManipulationAction = createRenderAction . (return .)
 
 chain :: [RenderAction a a] -> RenderAction a a
-chain = foldl1 (>>>)
+chain []         = id
+chain list@(_:_) = foldl1 (>>>) list
 
 runRenderAction :: RenderAction () a -> Hakyll a
 runRenderAction action = actionFunction action ()
