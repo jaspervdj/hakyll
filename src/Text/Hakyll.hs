@@ -47,6 +47,7 @@ hakyllWithConfiguration configuration buildFunction = do
                          ["clean"]      -> clean
                          ["preview", p] -> preview buildFunction (read p)
                          ["preview"]    -> preview buildFunction 8000
+                         ["rebuild"]    -> clean >> buildFunction
                          ["server", p]  -> server (read p)
                          ["server"]     -> server 8000
                          _              -> help
@@ -90,6 +91,7 @@ help = liftIO $ do
              ++ name ++ " clean           Clean up and remove cache.\n"
              ++ name ++ " help            Show this message.\n"
              ++ name ++ " preview [port]  Run a server and autocompile.\n"
+             ++ name ++ " rebuild         Clean up and build again.\n"
              ++ name ++ " server [port]   Run a local test server.\n"
 
 -- | Start a server at the given port number.
