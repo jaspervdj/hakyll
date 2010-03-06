@@ -1,3 +1,4 @@
+-- | This is the module which exports @RenderAction@.
 module Text.Hakyll.RenderAction
     ( RenderAction (..)
     , createRenderAction

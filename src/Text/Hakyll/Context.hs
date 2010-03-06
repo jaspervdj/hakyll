@@ -4,6 +4,7 @@ module Text.Hakyll.Context
     , ContextManipulation
     , renderValue
     , changeValue
+    , copyValue
     , renderDate
     , changeExtension
     ) where
@@ -31,9 +32,9 @@ renderValue :: String             -- ^ Key of which the value should be copied.
             -> String             -- ^ Key the value should be copied to.
             -> (String -> String) -- ^ Function to apply on the value.
             -> ContextManipulation
-renderValue src dst f context = case M.lookup src context of
+renderValue source destination f context = case M.lookup source context of
     Nothing      -> context
-    (Just value) -> M.insert dst (f value) context
+    (Just value) -> M.insert destination (f value) context
 
 -- | Change a value in a @Context@.
 --
@@ -45,6 +46,12 @@ changeValue :: String             -- ^ Key to change.
             -> (String -> String) -- ^ Function to apply on the value.
             -> ContextManipulation
 changeValue key = renderValue key key
+
+-- | Copy a value from one key to another in a @Context@.
+copyValue :: String -- ^ Source key.
+          -> String -- ^ Destination key.
+          -> ContextManipulation
+copyValue source destination = renderValue source destination id
 
 -- | When the context has a key called @path@ in a @yyyy-mm-dd-title.extension@
 --   format (default for pages), this function can render the date.

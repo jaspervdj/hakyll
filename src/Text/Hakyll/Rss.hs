@@ -1,4 +1,6 @@
--- | A Module that allows easy rendering of RSS feeds.
+-- | A Module that allows easy rendering of RSS feeds. If you use this module,
+--   you must make sure you set the `absoluteUrl` field in the main Hakyll
+--   configuration.
 module Text.Hakyll.Rss
     ( RssConfiguration (..)
     , renderRss
@@ -16,6 +18,7 @@ import Text.Hakyll.RenderAction (Renderable)
 
 import Paths_hakyll
 
+-- | This is a data structure to keep the configuration of an RSS feed.
 data RssConfiguration = RssConfiguration
     { -- | Url of the RSS feed (relative to site root). For example, @rss.xml@.
       rssUrl         :: String
@@ -25,11 +28,13 @@ data RssConfiguration = RssConfiguration
       rssDescription :: String
     }
 
-createRssWith :: ContextManipulation
-              -> RssConfiguration
-              -> [Renderable]
-              -> FilePath
-              -> FilePath
+-- | This is an auxiliary function to create a listing that is, in fact, an RSS
+--   feed.
+createRssWith :: ContextManipulation -- ^ Manipulation to apply on the items.
+              -> RssConfiguration    -- ^ Feed configuration.
+              -> [Renderable]        -- ^ Items to include.
+              -> FilePath            -- ^ RSS feed template.
+              -> FilePath            -- ^ RSS item template.
               -> Renderable
 createRssWith manipulation configuration renderables template itemTemplate =
     listing >>> render template
@@ -42,12 +47,18 @@ createRssWith manipulation configuration renderables template itemTemplate =
         , ("description", rssDescription)
         ]
 
-renderRss :: RssConfiguration -> [Renderable] -> Hakyll ()
+-- | Render an RSS feed with a number of items.
+renderRss :: RssConfiguration -- ^ Feed configuration.
+          -> [Renderable]     -- ^ Items to include in the feed.
+          -> Hakyll ()
 renderRss = renderRssWith id
 
-renderRssWith :: ContextManipulation
-              -> RssConfiguration
-              -> [Renderable]
+-- | Render an RSS feed with a number of items. This function allows you to
+--   specify a @ContextManipulation@ which will be applied on every
+--   @Renderable@.
+renderRssWith :: ContextManipulation -- ^ Manipulation to apply on the items.
+              -> RssConfiguration    -- ^ Feed configuration.
+              -> [Renderable]        -- ^ Items to include in the feed.
               -> Hakyll ()
 renderRssWith manipulation configuration renderables = do
     template <- liftIO $ getDataFileName "templates/rss.xml"
