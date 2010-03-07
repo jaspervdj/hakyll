@@ -26,11 +26,10 @@ import Text.Hakyll.Internal.Page
 --   dependency checking. A @String@ is obviously more simple to use in some
 --   cases.
 createCustomPage :: String
-                 -> [FilePath]
                  -> [(String, Either String (RenderAction () String))]
                  -> Renderable
-createCustomPage url dependencies association = RenderAction
-    { actionDependencies = dependencies ++ dataDependencies
+createCustomPage url association = RenderAction
+    { actionDependencies = dataDependencies
     , actionUrl          = Just $ return url
     , actionFunction     = \_ -> M.fromList <$> assoc'
     }
@@ -50,13 +49,13 @@ createCustomPage url dependencies association = RenderAction
 --   @CustomPage@.
 --
 --   > let customPage = createListingWith 
---   >                      "index.html" -- Destination of the page.
---   >                      "templates/postitem.html" -- Path to template to
---   >                                                -- render the items with.
---   >                      posts -- ^ Renderables to create the list with.
---   >                      [("title", "Home")] -- ^ Additional context
-createListing :: String -- ^ Destination of the page.
-              -> FilePath -- ^ Template to render all items with.
+--   >         "index.html" -- Destination of the page.
+--   >         ["templates/postitem.html"] -- Paths to templates to render the
+--   >                                     -- items with.
+--   >         posts -- Renderables to create the list with.
+--   >         [("title", Left "Home")] -- Additional context
+createListing :: String       -- ^ Destination of the page.
+              -> [FilePath]   -- ^ Templates to render all items with.
               -> [Renderable] -- ^ Renderables in the list.
               -> [(String, Either String (RenderAction () String))]
               -> Renderable
@@ -67,17 +66,16 @@ createListing = createListingWith id
 --   In addition to @createListing@, this function allows you to specify an
 --   extra @ContextManipulation@ for all @Renderable@s given.
 createListingWith :: ContextManipulation -- ^ Manipulation for the renderables.
-                  -> String -- ^ Destination of the page.
-                  -> FilePath -- ^ Template to render all items with.
+                  -> String       -- ^ Destination of the page.
+                  -> [FilePath]   -- ^ Templates to render all items with.
                   -> [Renderable] -- ^ Renderables in the list.
                   -> [(String, Either String (RenderAction () String))]
                   -> Renderable
-createListingWith manipulation url template renderables additional =
-    createCustomPage url dependencies context
+createListingWith manipulation url templates renderables additional =
+    createCustomPage url context
   where
-    dependencies = template : concatMap actionDependencies renderables
     context = ("body", Right concatenation) : additional
-    concatenation = renderAndConcatWith manipulation [template] renderables
+    concatenation = renderAndConcatWith manipulation templates renderables
 
 -- | Create a PagePath from a FilePath.
 createPagePath :: FilePath -> Renderable

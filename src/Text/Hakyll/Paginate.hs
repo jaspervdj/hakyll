@@ -39,10 +39,15 @@ defaultPaginateConfiguration = PaginateConfiguration
 --   The following metadata fields will be added:
 --
 --   - @$previous@: A link to the previous page.
+--
 --   - @$next@: A link to the next page.
+--
 --   - @$first@: A link to the first page.
+--
 --   - @$last@: A link to the last page.
+--
 --   - @$index@: 1-based index of the current page.
+--
 --   - @$length@: Total number of pages.
 --
 --   When @$previous@ or @$next@ are not available, they will be just a label
@@ -72,7 +77,7 @@ paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
                          , linkWithLabel lastLabel (last renderables) )
                 []    -> ( Left $ nextLabel configuration
                          , Left $ lastLabel configuration )
-            customPage = createCustomPage "" []
+            customPage = createCustomPage ""
                 [ ("previous", previous)
                 , ("next", next)
                 , ("first", first)

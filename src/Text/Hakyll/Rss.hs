@@ -39,8 +39,8 @@ createRssWith :: ContextManipulation -- ^ Manipulation to apply on the items.
 createRssWith manipulation configuration renderables template itemTemplate =
     listing >>> render template
   where
-    listing = createListingWith manipulation (rssUrl configuration) itemTemplate
-                                renderables additional
+    listing = createListingWith manipulation (rssUrl configuration)
+                                [itemTemplate] renderables additional
 
     additional = map (second $ Left . ($ configuration))
         [ ("title", rssTitle)
@@ -48,6 +48,15 @@ createRssWith manipulation configuration renderables template itemTemplate =
         ]
 
 -- | Render an RSS feed with a number of items.
+--
+--   Note that the @Renderable@s should have the following fields:
+--
+--   - @$title@: Title of the item.
+--
+--   - @$description@: Description to appear in the feed.
+--
+--   - @$url@: URL to the item - this is usually set automatically.
+--
 renderRss :: RssConfiguration -- ^ Feed configuration.
           -> [Renderable]     -- ^ Items to include in the feed.
           -> Hakyll ()
