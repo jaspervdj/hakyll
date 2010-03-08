@@ -24,6 +24,7 @@ import Data.Ord (comparing)
 import Control.Monad.Reader (liftIO)
 
 import Text.Hakyll.Hakyll
+import Text.Hakyll.Internal.FileType (isRenderableFile)
 
 -- | Auxiliary function to remove pathSeparators form the start. We don't deal
 --   with absolute paths here. We also remove $root from the start.
@@ -62,7 +63,7 @@ toUrl :: FilePath -> Hakyll FilePath
 toUrl path = do enableIndexUrl' <- askHakyll enableIndexUrl
                 -- If the file does not have a renderable extension, like for
                 -- example favicon.ico, we don't have to change it at all.
-                return $ if not hasRenderableExtension
+                return $ if not (isRenderableFile path)
                             then path
                             -- If index url's are enabled, we create pick it
                             -- unless the page is an index already.
@@ -70,20 +71,6 @@ toUrl path = do enableIndexUrl' <- askHakyll enableIndexUrl
                                 then indexUrl
                                 else withSimpleHtmlExtension
   where
-    hasRenderableExtension = takeExtension path `elem` [ ".markdown"
-                                                       , ".md"
-                                                       , ".mdn"
-                                                       , ".mdwn"
-                                                       , ".mkd"
-                                                       , ".mkdn"
-                                                       , ".mkdwn"
-                                                       , ".rst"
-                                                       , ".text"
-                                                       , ".tex"
-                                                       , ".lhs"
-                                                       , ".htm"
-                                                       , ".html"
-                                                       ]
     isIndex = dropExtension (takeFileName path) == "index"
     withSimpleHtmlExtension = flip addExtension ".html" $ dropExtension path
     indexUrl = dropExtension path ++ "/"

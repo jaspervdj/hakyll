@@ -54,6 +54,7 @@ library
                     Text.Hakyll.Rss
                     Text.Hakyll.Internal.Cache
                     Text.Hakyll.Internal.CompressCss
+                    Text.Hakyll.Internal.FileType
                     Text.Hakyll.Internal.Page
                     Text.Hakyll.Internal.Render
                     Text.Hakyll.Internal.Template

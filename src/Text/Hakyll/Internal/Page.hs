@@ -17,6 +17,7 @@ import Text.Hakyll.Hakyll
 import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Internal.Cache
+import Text.Hakyll.Internal.FileType
 
 -- | The default reader options for pandoc parsing.
 readerOptions :: ParserState
@@ -35,18 +36,19 @@ writerOptions = defaultWriterOptions
     }
 
 -- | Get a render function for a given extension.
-getRenderFunction :: String -> (String -> String)
-getRenderFunction ".html" = id
-getRenderFunction ".htm"  = id
-getRenderFunction ext = writeHtmlString writerOptions
-                      . readFunction ext (readOptions ext)
+getRenderFunction :: FileType -> (String -> String)
+getRenderFunction Html     = id
+getRenderFunction fileType = writeHtmlString writerOptions
+                           . readFunction fileType (readOptions fileType)
   where
-    readFunction ".rst" = readRST
-    readFunction ".tex" = readLaTeX
-    readFunction _      = readMarkdown
+    readFunction ReStructuredText = readRST
+    readFunction LaTeX            = readLaTeX
+    readFunction Markdown         = readMarkdown
+    readFunction t                = error $ "Cannot render file " ++ show t
 
-    readOptions ".lhs"  = readerOptions { stateLiterateHaskell = True }
-    readOptions _       = readerOptions
+    readOptions LiterateHaskellMarkdown =
+        readerOptions { stateLiterateHaskell = True }
+    readOptions _                       = readerOptions
 
 -- | Split a page into sections.
 splitAtDelimiters :: [String] -> [[String]]
@@ -89,7 +91,7 @@ readSection renderFunction isFirst ls
 --   has a @.markdown@ extension, it will be rendered using pandoc.
 readPageFromFile :: FilePath -> Hakyll Context
 readPageFromFile path = do
-    let renderFunction = getRenderFunction $ takeExtension path
+    let renderFunction = getRenderFunction $ getFileType path
         sectionFunctions = map (readSection renderFunction)
                                (True : repeat False)
 
