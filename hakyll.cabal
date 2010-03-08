@@ -13,7 +13,9 @@ License-File:       LICENSE
 Category:           Text
 Cabal-Version:      >= 1.6
 Data-Dir:           data
-Data-Files:         templates/rss.xml
+Data-Files:         templates/atom.xml
+                    templates/atom-item.xml
+                    templates/rss.xml
                     templates/rss-item.xml
 
 build-type:         Simple
@@ -51,7 +53,7 @@ library
                     Text.Hakyll.Paginate
                     Text.Hakyll.Util
                     Text.Hakyll.Tags
-                    Text.Hakyll.Rss
+                    Text.Hakyll.Feed
                     Text.Hakyll.Internal.Cache
                     Text.Hakyll.Internal.CompressCss
                     Text.Hakyll.Internal.FileType

@@ -1,0 +1,7 @@
+<entry>
+    <title>$title</title>
+    <link href="$absolute/$url" />
+    <id>$absolute/$url</id>
+    <updated>$timestamp</updated>
+    <summary>$description</summary>
+</entry>

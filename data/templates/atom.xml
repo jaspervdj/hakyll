@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>$title</title>
+    <link href="$absolute/$url" rel="self" />
+    <link href="$absolute" />
+    <!-- We use the link as id. -->
+    <id>$absolute/$url</id>
+    <author>
+        <name>$authorName</name>
+    </author>
+    <updated>$timestamp</updated>
+    $body
+</feed>
