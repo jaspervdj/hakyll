@@ -21,24 +21,68 @@ import Text.Hakyll.Context
 import Text.Hakyll.File (toDestination, isFileMoreRecent)
 import Text.Hakyll.Hakyll
 
+-- | Type used for rendering computations that carry along dependencies.
 data RenderAction a b = RenderAction
-    { actionDependencies :: [FilePath]
-    , actionUrl          :: Maybe (Hakyll FilePath)
-    , actionFunction     :: a -> Hakyll b
+    { -- | Dependencies of the @RenderAction@.
+      actionDependencies :: [FilePath]
+    , -- | URL pointing to the result of this @RenderAction@.
+      actionUrl          :: Maybe (Hakyll FilePath)
+    , -- | The actual render function.
+      actionFunction     :: a -> Hakyll b
     }
 
-createRenderAction :: (a -> Hakyll b) -> RenderAction a b
+-- | Create a @RenderAction@ from a function.
+createRenderAction :: (a -> Hakyll b)  -- ^ Function to execute.
+                   -> RenderAction a b
 createRenderAction f = id { actionFunction = f }
 
-createSimpleRenderAction :: Hakyll b -> RenderAction () b
+-- | Create a @RenderAction@ from a simple @Hakyll@ value.
+createSimpleRenderAction :: Hakyll b -- ^ Hakyll value to pass on.
+                         -> RenderAction () b
 createSimpleRenderAction = createRenderAction . const
 
-createFileRenderAction :: FilePath -> Hakyll b -> RenderAction () b
+-- | Create a @RenderAction@ that operates on one file.
+createFileRenderAction :: FilePath          -- ^ File to operate on.
+                       -> Hakyll b          -- ^ Value to pass on.
+                       -> RenderAction () b -- ^ The resulting action.
 createFileRenderAction path action = RenderAction
     { actionDependencies = [path]
     , actionUrl          = Just $ return path
     , actionFunction     = const action
     }
+
+-- | Create a @RenderAction@ from a @ContextManipulation@.
+createManipulationAction :: ContextManipulation -- ^ Manipulation to apply.
+                         -> RenderAction Context Context
+createManipulationAction = createRenderAction . (return .)
+
+-- | Run a @RenderAction@ now.
+runRenderAction :: RenderAction () a -- ^ Render action to run.
+                -> Hakyll a          -- ^ Result of the action.
+runRenderAction action = actionFunction action ()
+
+-- | Run a @RenderAction@, but only when it is out-of-date. At this point, the
+--   @actionUrl@ field must be set.
+runRenderActionIfNeeded :: RenderAction () () -- ^ Action to run.
+                        -> Hakyll ()          -- ^ Empty result.
+runRenderActionIfNeeded action = do
+    url <- case actionUrl action of
+        (Just u) -> u
+        Nothing  -> error "No url when checking dependencies."
+    destination <- toDestination url
+    valid <- isFileMoreRecent destination $ actionDependencies action
+    unless valid $ do liftIO $ hPutStrLn stderr $ "Rendering " ++ destination
+                      runRenderAction action
+
+-- | Chain a number of @RenderAction@ computations.
+chain :: [RenderAction a a] -- ^ Actions to chain.
+      -> RenderAction a a   -- ^ Resulting action.
+chain []         = id
+chain list@(_:_) = foldl1 (>>>) list
+
+-- | This is a specialized version of @RenderAction@, a @Context@ that can be
+--   rendered.
+type Renderable = RenderAction () Context
 
 instance Category RenderAction where
     id = RenderAction
@@ -52,25 +96,3 @@ instance Category RenderAction where
         , actionUrl          = actionUrl y `mplus` actionUrl x
         , actionFunction     = actionFunction x <=< actionFunction y
         }
-
-createManipulationAction :: ContextManipulation -> RenderAction Context Context
-createManipulationAction = createRenderAction . (return .)
-
-chain :: [RenderAction a a] -> RenderAction a a
-chain []         = id
-chain list@(_:_) = foldl1 (>>>) list
-
-runRenderAction :: RenderAction () a -> Hakyll a
-runRenderAction action = actionFunction action ()
-
-runRenderActionIfNeeded :: RenderAction () () -> Hakyll ()
-runRenderActionIfNeeded action = do
-    url <- case actionUrl action of
-        (Just u) -> u
-        Nothing  -> error "No url when checking dependencies."
-    destination <- toDestination url
-    valid <- isFileMoreRecent destination $ actionDependencies action
-    unless valid $ do liftIO $ hPutStrLn stderr $ "Rendering " ++ destination
-                      runRenderAction action
-
-type Renderable = RenderAction () Context
