@@ -1,6 +1,22 @@
 -- | A Module that allows easy rendering of RSS feeds. If you use this module,
 --   you must make sure you set the `absoluteUrl` field in the main Hakyll
 --   configuration.
+--
+--   Apart from that, the main rendering functions (@renderRss@,
+--   @renderRssWith@, @renderAtom@ all @renderAtomWith@) all assume that you
+--   pass the list of @Renderable@s so that the most recent entry in the feed is
+--   the first item in the list.
+--
+--   Also note that the @Renderable@s should have (at least) the following
+--   fields to produce a correct feed:
+--
+--   - @$title@: Title of the item.
+--
+--   - @$description@: Description to appear in the feed.
+--
+--   - @$url@: URL to the item - this is usually set automatically.
+--
+--   Furthermore, the feed will not validate if an empty list is passed.
 module Text.Hakyll.Feed
     ( FeedConfiguration (..)
     , renderRss
@@ -77,17 +93,8 @@ renderFeedWith manipulation configuration renderables template itemTemplate = do
     renderChain [] renderFeedWith'
 
 -- | Render an RSS feed with a number of items.
---
---   Note that the @Renderable@s should have the following fields:
---
---   - @$title@: Title of the item.
---
---   - @$description@: Description to appear in the feed.
---
---   - @$url@: URL to the item - this is usually set automatically.
---
 renderRss :: FeedConfiguration -- ^ Feed configuration.
-          -> [Renderable]     -- ^ Items to include in the feed.
+          -> [Renderable]      -- ^ Items to include in the RSS feed.
           -> Hakyll ()
 renderRss = renderRssWith id
 
@@ -105,14 +112,19 @@ renderRssWith manipulation configuration renderables =
   where
     manipulation' = manipulation . renderRssDate
 
+-- | @ContextManipulation@ that renders a date to RSS format.
 renderRssDate :: ContextManipulation
-renderRssDate = renderDate "timestamp" "%a, %d %b %Y %H:%M:%S UT" "No date found."
+renderRssDate = renderDate "timestamp" "%a, %d %b %Y %H:%M:%S UT"
+                           "No date found."
 
+-- | Render an Atom feed with a number of items.
 renderAtom :: FeedConfiguration
            -> [Renderable]
            -> Hakyll ()
 renderAtom = renderAtomWith id
 
+-- | A version of @renderAtom@ that allows you to specify a manipulation to
+--   apply on the @Renderable@s.
 renderAtomWith :: ContextManipulation -- ^ Manipulation to apply on the items.
                -> FeedConfiguration   -- ^ Feed configuration.
                -> [Renderable]        -- ^ Items to include in the feed.
@@ -123,5 +135,6 @@ renderAtomWith manipulation configuration renderables =
   where
     manipulation' = manipulation . renderAtomDate
 
+-- | Render a date to Atom format.
 renderAtomDate :: ContextManipulation
 renderAtomDate = renderDate "timestamp" "%Y-%m-%dT%H:%M:%SZ" "No date found."
