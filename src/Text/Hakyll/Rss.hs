@@ -5,12 +5,13 @@ module Text.Hakyll.Rss
     ( RssConfiguration (..)
     , renderRss
     , renderRssWith
+    , renderRssDate
     ) where
 
 import Control.Arrow ((>>>), second)
 import Control.Monad.Reader (liftIO)
 
-import Text.Hakyll.Context (ContextManipulation)
+import Text.Hakyll.Context (ContextManipulation, renderDate)
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Render (render, renderChain)
 import Text.Hakyll.Renderables (createListingWith)
@@ -72,6 +73,11 @@ renderRssWith :: ContextManipulation -- ^ Manipulation to apply on the items.
 renderRssWith manipulation configuration renderables = do
     template <- liftIO $ getDataFileName "templates/rss.xml"
     itemTemplate <- liftIO $ getDataFileName "templates/rss-item.xml"
-    let renderRssWith' = createRssWith manipulation configuration
+    let renderRssWith' = createRssWith manipulation' configuration
                                        renderables template itemTemplate
     renderChain [] renderRssWith'
+  where
+    manipulation' = manipulation . renderRssDate
+
+renderRssDate :: ContextManipulation
+renderRssDate = renderDate "timestamp" "%a, %d %b %Y %H:%M:%S %Z" "No date found."

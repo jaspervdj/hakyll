@@ -2,4 +2,5 @@
     <title>$title</title>
     <link>$absolute/$url</link>
     <description>$description</description>
+    <pubDate>$timestamp</pubDate>
 </item>
