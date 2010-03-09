@@ -11,6 +11,7 @@ module Text.Hakyll.RenderAction
     , Renderable
     ) where
 
+import Control.Arrow
 import Control.Category
 import Control.Monad ((<=<), mplus, unless)
 import Control.Monad.Reader (liftIO)
@@ -95,4 +96,14 @@ instance Category RenderAction where
         { actionDependencies = actionDependencies x ++ actionDependencies y
         , actionUrl          = actionUrl y `mplus` actionUrl x
         , actionFunction     = actionFunction x <=< actionFunction y
+        }
+
+instance Arrow RenderAction where
+    arr f = id { actionFunction = \x -> return (f x) }
+
+    first x = RenderAction
+        { actionDependencies = actionDependencies x
+        , actionUrl          = actionUrl x
+        , actionFunction     = \(y, z) -> do y' <- (actionFunction x) y
+                                             return (y', z)
         }
