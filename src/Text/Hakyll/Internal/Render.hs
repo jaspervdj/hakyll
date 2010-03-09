@@ -40,5 +40,5 @@ writePage = createRenderAction $ \initialContext -> do
     let context = additionalContext' `M.union` M.singleton "root" (toRoot url)
     destination <- toDestination url
     makeDirectories destination
-    -- Substitute $root here, just before writing.
+    -- Substitute $root here, just before writing.
     liftIO $ writeFile destination $ finalSubstitute (fromString body) context

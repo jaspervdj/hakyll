@@ -99,11 +99,11 @@ instance Category RenderAction where
         }
 
 instance Arrow RenderAction where
-    arr f = id { actionFunction = \x -> return (f x) }
+    arr f = id { actionFunction = return . f }
 
     first x = RenderAction
         { actionDependencies = actionDependencies x
         , actionUrl          = actionUrl x
-        , actionFunction     = \(y, z) -> do y' <- (actionFunction x) y
+        , actionFunction     = \(y, z) -> do y' <- actionFunction x y
                                              return (y', z)
         }
