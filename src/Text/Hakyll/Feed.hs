@@ -28,7 +28,7 @@ import Control.Monad.Reader (liftIO)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 
-import Text.Hakyll.Context (ContextManipulation, renderDate)
+import Text.Hakyll.Context (renderDate)
 import Text.Hakyll.Hakyll (Hakyll, Context)
 import Text.Hakyll.Render (render, renderChain)
 import Text.Hakyll.Renderables (createListing)

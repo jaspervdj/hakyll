@@ -143,16 +143,16 @@ getMIMEHeader fileName =
                    Nothing  -> []
   where
     result = lookup (takeExtension fileName) [ (".css", "text/css")
-                                               , (".gif", "image/gif")
-                                               , (".htm", "text/html")
-                                               , (".html", "text/html")
-                                               , (".jpeg", "image/jpeg")
-                                               , (".jpg", "image/jpeg")
-                                               , (".js", "text/javascript")
-                                               , (".png", "image/png")
-                                               , (".txt", "text/plain")
-                                               , (".xml", "text/xml")
-                                               ]
+                                             , (".gif", "image/gif")
+                                             , (".htm", "text/html")
+                                             , (".html", "text/html")
+                                             , (".jpeg", "image/jpeg")
+                                             , (".jpg", "image/jpeg")
+                                             , (".js", "text/javascript")
+                                             , (".png", "image/png")
+                                             , (".txt", "text/plain")
+                                             , (".xml", "text/xml")
+                                             ]
 
 -- | Respond to an incoming request.
 respond :: Handle -> Server ()

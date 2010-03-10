@@ -58,6 +58,5 @@ library
                     Text.Hakyll.Internal.CompressCss
                     Text.Hakyll.Internal.FileType
                     Text.Hakyll.Internal.Page
-                    Text.Hakyll.Internal.Render
                     Text.Hakyll.Internal.Template
   other-modules:    Paths_hakyll
