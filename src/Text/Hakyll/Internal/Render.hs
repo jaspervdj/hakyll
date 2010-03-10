@@ -1,9 +1,6 @@
 -- | Internal module do some low-level rendering.
 module Text.Hakyll.Internal.Render
-    ( substitute
-    , regularSubstitute
-    , finalSubstitute
-    , pureRenderWith
+    ( pureRender
     , writePage
     ) where
 
@@ -11,21 +8,19 @@ import qualified Data.Map as M
 import Control.Monad.Reader (liftIO)
 import Data.Maybe (fromMaybe)
 
-import Text.Hakyll.Context (Context, ContextManipulation)
 import Text.Hakyll.File
 import Text.Hakyll.Hakyll
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Internal.Template
 
 -- | A pure render function.
-pureRenderWith :: ContextManipulation -- ^ Manipulation to apply on the context.
-               -> Template -- ^ Template to use for rendering.
-               -> Context -- ^ Renderable object to render with given template.
-               -> Context -- ^ The body of the result will contain the render.
-pureRenderWith manipulation template context =
+pureRender :: Template -- ^ Template to use for rendering.
+           -> Context -- ^ Renderable object to render with given template.
+           -> Context -- ^ The body of the result will contain the render.
+pureRender template context =
     -- Ignore $root when substituting here. We will only replace that in the
     -- final render (just before writing).
-    let contextIgnoringRoot = M.insert "root" "$root" (manipulation context)
+    let contextIgnoringRoot = M.insert "root" "$root" context
         body = regularSubstitute template contextIgnoringRoot
     in M.insert "body" body context
 

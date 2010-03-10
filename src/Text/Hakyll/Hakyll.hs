@@ -1,6 +1,7 @@
 -- | Module describing the Hakyll monad stack.
 module Text.Hakyll.Hakyll
-    ( HakyllConfiguration (..)
+    ( Context
+    , HakyllConfiguration (..)
     , Hakyll
     , askHakyll
     , getAdditionalContext
@@ -8,9 +9,11 @@ module Text.Hakyll.Hakyll
 
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad (liftM)
+import Data.Map (Map)
 import qualified Data.Map as M
 
-import Text.Hakyll.Context (Context)
+-- | Type for a context.
+type Context = Map String String
 
 -- | Hakyll global configuration type.
 data HakyllConfiguration = HakyllConfiguration

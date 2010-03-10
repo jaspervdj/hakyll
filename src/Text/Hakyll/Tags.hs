@@ -58,7 +58,7 @@ import Text.Hakyll.Internal.Template
 --   This is a map associating tags or categories to the appropriate pages
 --   using that tag or category. In the case of categories, each path will only
 --   appear under one category - this is not the case with tags.
-type TagMap = M.Map String [Renderable]
+type TagMap = M.Map String [HakyllAction () Context]
 
 -- | Read a tag map. This is a internally used function that can be used for
 --   tags as well as for categories.
@@ -106,7 +106,7 @@ readCategoryMap :: String -- ^ Unique identifier for the map.
 readCategoryMap = readMap $ maybeToList . M.lookup "category"
 
 withTagMap :: HakyllAction () TagMap
-           -> (String -> [Renderable] -> Hakyll ())
+           -> (String -> [HakyllAction () Context] -> Hakyll ())
            -> Hakyll ()
 withTagMap tagMap function = runHakyllAction (tagMap >>> action)
   where
@@ -154,7 +154,7 @@ renderTagCloud urlFunction minSize maxSize = createHakyllAction renderTagCloud'
 --   Note that it is your own responsibility to ensure a page with such an url
 --   exists.
 renderTagLinks :: (String -> String) -- ^ Function to produce an url for a tag.
-               -> ContextManipulation
+               -> HakyllAction Context Context
 renderTagLinks urlFunction = changeValue "tags" renderTagLinks'
   where
     renderTagLinks' = intercalate ", "

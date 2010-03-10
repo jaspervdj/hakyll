@@ -7,6 +7,7 @@ module Text.Hakyll.Paginate
 
 import Control.Applicative ((<$>))
 
+import Text.Hakyll.Hakyll (Context)
 import Text.Hakyll.Renderables
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Util (link)
@@ -54,8 +55,8 @@ defaultPaginateConfiguration = PaginateConfiguration
 --   without a link. The same goes for when we are on the first or last page for
 --   @$first@ and @$last@.
 paginate :: PaginateConfiguration
-         -> [Renderable]
-         -> [Renderable]
+         -> [HakyllAction () Context]
+         -> [HakyllAction () Context]
 paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
   where
     -- Create a link with a given label, taken from the configuration.

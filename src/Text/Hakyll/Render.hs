@@ -2,11 +2,8 @@
 --   render files to the @_site@ directory.
 module Text.Hakyll.Render 
     ( render
-    , renderWith
     , renderAndConcat
-    , renderAndConcatWith
     , renderChain
-    , renderChainWith
     , static
     , css
     ) where
@@ -17,8 +14,7 @@ import System.Directory (copyFile)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 
-import Text.Hakyll.Hakyll (Hakyll)
-import Text.Hakyll.Context (ContextManipulation, Context)
+import Text.Hakyll.Hakyll (Hakyll, Context)
 import Text.Hakyll.File
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Internal.CompressCss
@@ -28,14 +24,7 @@ import Text.Hakyll.Internal.Template (readTemplate)
 -- | Render to a Page.
 render :: FilePath                     -- ^ Template to use for rendering.
        -> HakyllAction Context Context -- ^ The render computation.
-render = renderWith id
-
--- | Render to a Page. This function allows you to manipulate the context
---   first.
-renderWith :: ContextManipulation          -- ^ Manipulation to apply first.
-           -> FilePath                     -- ^ Template to use for rendering.
-           -> HakyllAction Context Context -- ^ The render computation.
-renderWith manipulation templatePath = HakyllAction
+render templatePath = HakyllAction
     { actionDependencies = [templatePath]
     , actionUrl          = Nothing
     , actionFunction     = actionFunction'
@@ -43,7 +32,7 @@ renderWith manipulation templatePath = HakyllAction
   where
     actionFunction' context = do
         template <- readTemplate templatePath
-        return $ pureRenderWith manipulation template context
+        return $ pureRender template context
 
 -- | Render each renderable with the given templates, then concatenate the
 --   result. So, basically this function:
@@ -55,27 +44,17 @@ renderWith manipulation templatePath = HakyllAction
 --
 --   * Concatenates the result.
 --
-renderAndConcat :: [FilePath] -- ^ Templates to apply on every renderable.
-                -> [Renderable] -- ^ Renderables to render.
+renderAndConcat :: [FilePath]
+                -> [HakyllAction () Context]
                 -> HakyllAction () String
-renderAndConcat = renderAndConcatWith id
-
--- | Render each renderable with the given templates, then concatenate the
---   result. This function allows you to specify a @ContextManipulation@ to
---   apply on every @Renderable@.
-renderAndConcatWith :: ContextManipulation
-                    -> [FilePath]
-                    -> [Renderable]
-                    -> HakyllAction () String
-renderAndConcatWith manipulation templatePaths renderables = HakyllAction
+renderAndConcat templatePaths renderables = HakyllAction
     { actionDependencies = renders >>= actionDependencies
-    , actionUrl           = Nothing
+    , actionUrl          = Nothing
     , actionFunction     = actionFunction'
     }
   where
     render' = chain (map render templatePaths)
-    renders = map (>>> manipulationAction >>> render') renderables
-    manipulationAction = createManipulationAction manipulation
+    renders = map (>>> render') renderables
 
     actionFunction' _ = do
         contexts <- mapM runHakyllAction renders
@@ -91,23 +70,16 @@ renderAndConcatWith manipulation templatePaths renderables = HakyllAction
 --
 --   This code will first render @warning.html@ using @templates/notice.html@,
 --   and will then render the result with @templates/default.html@.
-renderChain :: [FilePath] -> Renderable -> Hakyll ()
-renderChain = renderChainWith id
-
--- | A more custom render chain that allows you to specify a
---   @ContextManipulation@ which to apply on the context when it is read first.
-renderChainWith :: ContextManipulation
-                -> [FilePath]
-                -> Renderable
-                -> Hakyll ()
-renderChainWith manipulation templatePaths initial =
+renderChain :: [FilePath]
+            -> HakyllAction () Context
+            -> Hakyll ()
+renderChain templatePaths initial =
     runHakyllActionIfNeeded renderChainWith'
   where
     renderChainWith' :: HakyllAction () ()
-    renderChainWith' = initial >>> manipulationAction >>> chain' >>> writePage
+    renderChainWith' = initial >>> chain' >>> writePage
 
     chain' = chain (map render templatePaths)
-    manipulationAction = createManipulationAction manipulation
 
 
 -- | Mark a certain file as static, so it will just be copied when the site is

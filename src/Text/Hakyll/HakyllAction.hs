@@ -4,11 +4,9 @@ module Text.Hakyll.HakyllAction
     , createHakyllAction
     , createSimpleHakyllAction
     , createFileHakyllAction
-    , createManipulationAction
     , chain
     , runHakyllAction
     , runHakyllActionIfNeeded
-    , Renderable
     ) where
 
 import Control.Arrow
@@ -18,7 +16,6 @@ import Control.Monad.Reader (liftIO)
 import Prelude hiding ((.), id)
 import System.IO (hPutStrLn, stderr)
 
-import Text.Hakyll.Context
 import Text.Hakyll.File (toDestination, isFileMoreRecent)
 import Text.Hakyll.Hakyll
 
@@ -52,11 +49,6 @@ createFileHakyllAction path action = HakyllAction
     , actionFunction     = const action
     }
 
--- | Create a @HakyllAction@ from a @ContextManipulation@.
-createManipulationAction :: ContextManipulation -- ^ Manipulation to apply.
-                         -> HakyllAction Context Context
-createManipulationAction = createHakyllAction . (return .)
-
 -- | Run a @HakyllAction@ now.
 runHakyllAction :: HakyllAction () a -- ^ Render action to run.
                 -> Hakyll a          -- ^ Result of the action.
@@ -80,10 +72,6 @@ chain :: [HakyllAction a a] -- ^ Actions to chain.
       -> HakyllAction a a   -- ^ Resulting action.
 chain []         = id
 chain list@(_:_) = foldl1 (>>>) list
-
--- | This is a specialized version of @HakyllAction@, a @Context@ that can be
---   rendered.
-type Renderable = HakyllAction () Context
 
 instance Category HakyllAction where
     id = HakyllAction

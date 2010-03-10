@@ -1,7 +1,6 @@
 module Text.Hakyll.Renderables
     ( createCustomPage
     , createListing
-    , createListingWith
     , createPagePath
     , combine
     , combineWithUrl
@@ -27,7 +26,7 @@ import Text.Hakyll.Internal.Page
 --   cases.
 createCustomPage :: String
                  -> [(String, Either String (HakyllAction () String))]
-                 -> Renderable
+                 -> HakyllAction () Context
 createCustomPage url association = HakyllAction
     { actionDependencies = dataDependencies
     , actionUrl          = Just $ return url
@@ -43,42 +42,30 @@ createCustomPage url association = HakyllAction
 
 -- | A @createCustomPage@ function specialized in creating listings.
 --
---   This function creates a listing of a certain list of @Renderable@s. Every
+--   This function creates a listing of a certain list of renderables. Every
 --   item in the list is created by applying the given template to every
 --   renderable. You can also specify additional context to be included in the
 --   @CustomPage@.
 --
---   > let customPage = createListingWith 
+--   > let customPage = createListing
 --   >         "index.html" -- Destination of the page.
 --   >         ["templates/postitem.html"] -- Paths to templates to render the
 --   >                                     -- items with.
 --   >         posts -- Renderables to create the list with.
 --   >         [("title", Left "Home")] -- Additional context
-createListing :: String       -- ^ Destination of the page.
-              -> [FilePath]   -- ^ Templates to render all items with.
-              -> [Renderable] -- ^ Renderables in the list.
+createListing :: String                    -- ^ Destination of the page.
+              -> [FilePath]                -- ^ Templates to render items with.
+              -> [HakyllAction () Context] -- ^ Renderables in the list.
               -> [(String, Either String (HakyllAction () String))]
-              -> Renderable
-createListing = createListingWith id
-
--- | A @createCustomPage@ function specialized in creating listings.
---
---   In addition to @createListing@, this function allows you to specify an
---   extra @ContextManipulation@ for all @Renderable@s given.
-createListingWith :: ContextManipulation -- ^ Manipulation for the renderables.
-                  -> String       -- ^ Destination of the page.
-                  -> [FilePath]   -- ^ Templates to render all items with.
-                  -> [Renderable] -- ^ Renderables in the list.
-                  -> [(String, Either String (HakyllAction () String))]
-                  -> Renderable
-createListingWith manipulation url templates renderables additional =
+              -> HakyllAction () Context
+createListing url templates renderables additional =
     createCustomPage url context
   where
     context = ("body", Right concatenation) : additional
-    concatenation = renderAndConcatWith manipulation templates renderables
+    concatenation = renderAndConcat templates renderables
 
 -- | Create a PagePath from a FilePath.
-createPagePath :: FilePath -> Renderable
+createPagePath :: FilePath -> HakyllAction () Context
 createPagePath path = HakyllAction
     { actionDependencies = [path]
     , actionUrl          = Just $ toUrl path
@@ -91,8 +78,8 @@ createPagePath path = HakyllAction
 --
 --   Since renderables are always more or less key-value maps, you can see
 --   this as a @union@ between two maps.
-combine :: Renderable -> Renderable
-        -> Renderable
+combine :: HakyllAction () Context -> HakyllAction () Context
+        -> HakyllAction () Context
 combine x y = HakyllAction
     { actionDependencies = actionDependencies x ++ actionDependencies y
     , actionUrl          = actionUrl x `mplus` actionUrl y
@@ -103,9 +90,9 @@ combine x y = HakyllAction
 -- | Combine two renderables and set a custom URL. This behaves like @combine@,
 --   except that for the @url@ field, the given URL is always chosen.
 combineWithUrl :: FilePath
-               -> Renderable
-               -> Renderable
-               -> Renderable
+               -> HakyllAction () Context
+               -> HakyllAction () Context
+               -> HakyllAction () Context
 combineWithUrl url x y = combine'
     { actionUrl          = Just $ return url
     , actionFunction     = \_ ->
