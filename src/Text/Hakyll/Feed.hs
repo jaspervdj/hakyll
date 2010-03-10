@@ -34,7 +34,7 @@ import Text.Hakyll.Context (ContextManipulation, renderDate)
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Render (render, renderChain)
 import Text.Hakyll.Renderables (createListingWith)
-import Text.Hakyll.RenderAction
+import Text.Hakyll.HakyllAction
 
 import Paths_hakyll
 
@@ -71,7 +71,7 @@ createFeedWith manipulation configuration renderables template itemTemplate =
         ] ++ updated
 
     -- Take the first timestamp, which should be the most recent.
-    updated = let action = createRenderAction $
+    updated = let action = createHakyllAction $
                                 return . fromMaybe "foo" . M.lookup "timestamp"
                   manip = createManipulationAction manipulation
                   toTuple r = ("timestamp", Right $ r >>> manip >>> action)

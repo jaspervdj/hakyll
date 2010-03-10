@@ -14,7 +14,7 @@ import Data.Maybe (fromMaybe)
 import Text.Hakyll.Context (Context, ContextManipulation)
 import Text.Hakyll.File
 import Text.Hakyll.Hakyll
-import Text.Hakyll.RenderAction
+import Text.Hakyll.HakyllAction
 import Text.Hakyll.Internal.Template
 
 -- | A pure render function.
@@ -31,8 +31,8 @@ pureRenderWith manipulation template context =
 
 -- | Write a page to the site destination. Final action after render
 --   chains and such.
-writePage :: RenderAction Context ()
-writePage = createRenderAction $ \initialContext -> do
+writePage :: HakyllAction Context ()
+writePage = createHakyllAction $ \initialContext -> do
     additionalContext' <- askHakyll getAdditionalContext
     let url = fromMaybe (error "No url defined at write time.")
                         (M.lookup "url" initialContext)

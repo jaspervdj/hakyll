@@ -8,7 +8,7 @@ module Text.Hakyll.Paginate
 import Control.Applicative ((<$>))
 
 import Text.Hakyll.Renderables
-import Text.Hakyll.RenderAction
+import Text.Hakyll.HakyllAction
 import Text.Hakyll.Util (link)
 
 -- | A configuration for a pagination.
@@ -60,7 +60,7 @@ paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
   where
     -- Create a link with a given label, taken from the configuration.
     linkWithLabel f r = Right $ case actionUrl r of
-        Just l  -> createSimpleRenderAction $ link (f configuration) <$> l
+        Just l  -> createSimpleHakyllAction $ link (f configuration) <$> l
         Nothing -> error "No link found for pagination."
 
     -- The main function that creates combined renderables by recursing over

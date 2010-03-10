@@ -14,7 +14,7 @@ import Control.Applicative ((<$>))
 
 import Text.Hakyll.File
 import Text.Hakyll.Context
-import Text.Hakyll.RenderAction
+import Text.Hakyll.HakyllAction
 import Text.Hakyll.Render
 import Text.Hakyll.Internal.Page
 
@@ -26,16 +26,16 @@ import Text.Hakyll.Internal.Page
 --   dependency checking. A @String@ is obviously more simple to use in some
 --   cases.
 createCustomPage :: String
-                 -> [(String, Either String (RenderAction () String))]
+                 -> [(String, Either String (HakyllAction () String))]
                  -> Renderable
-createCustomPage url association = RenderAction
+createCustomPage url association = HakyllAction
     { actionDependencies = dataDependencies
     , actionUrl          = Just $ return url
     , actionFunction     = \_ -> M.fromList <$> assoc'
     }
   where
     mtuple (a, b) = b >>= \b' -> return (a, b')
-    toHakyllString = second (either return runRenderAction)
+    toHakyllString = second (either return runHakyllAction)
     assoc' = mapM (mtuple . toHakyllString) $ ("url", Left url) : association
     dataDependencies = map snd association >>= getDependencies
     getDependencies (Left _) = []
@@ -57,7 +57,7 @@ createCustomPage url association = RenderAction
 createListing :: String       -- ^ Destination of the page.
               -> [FilePath]   -- ^ Templates to render all items with.
               -> [Renderable] -- ^ Renderables in the list.
-              -> [(String, Either String (RenderAction () String))]
+              -> [(String, Either String (HakyllAction () String))]
               -> Renderable
 createListing = createListingWith id
 
@@ -69,7 +69,7 @@ createListingWith :: ContextManipulation -- ^ Manipulation for the renderables.
                   -> String       -- ^ Destination of the page.
                   -> [FilePath]   -- ^ Templates to render all items with.
                   -> [Renderable] -- ^ Renderables in the list.
-                  -> [(String, Either String (RenderAction () String))]
+                  -> [(String, Either String (HakyllAction () String))]
                   -> Renderable
 createListingWith manipulation url templates renderables additional =
     createCustomPage url context
@@ -79,7 +79,7 @@ createListingWith manipulation url templates renderables additional =
 
 -- | Create a PagePath from a FilePath.
 createPagePath :: FilePath -> Renderable
-createPagePath path = RenderAction
+createPagePath path = HakyllAction
     { actionDependencies = [path]
     , actionUrl          = Just $ toUrl path
     , actionFunction     = const (readPage path)
@@ -93,11 +93,11 @@ createPagePath path = RenderAction
 --   this as a @union@ between two maps.
 combine :: Renderable -> Renderable
         -> Renderable
-combine x y = RenderAction
+combine x y = HakyllAction
     { actionDependencies = actionDependencies x ++ actionDependencies y
     , actionUrl          = actionUrl x `mplus` actionUrl y
     , actionFunction     = \_ ->
-        liftM2 M.union (runRenderAction x) (runRenderAction y)
+        liftM2 M.union (runHakyllAction x) (runHakyllAction y)
     }
 
 -- | Combine two renderables and set a custom URL. This behaves like @combine@,
@@ -109,7 +109,7 @@ combineWithUrl :: FilePath
 combineWithUrl url x y = combine'
     { actionUrl          = Just $ return url
     , actionFunction     = \_ ->
-        M.insert "url" url <$> runRenderAction combine'
+        M.insert "url" url <$> runHakyllAction combine'
     }
   where
     combine' = combine x y

@@ -20,22 +20,22 @@ import qualified Data.Map as M
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (ContextManipulation, Context)
 import Text.Hakyll.File
-import Text.Hakyll.RenderAction
+import Text.Hakyll.HakyllAction
 import Text.Hakyll.Internal.CompressCss
 import Text.Hakyll.Internal.Render
 import Text.Hakyll.Internal.Template (readTemplate)
 
 -- | Render to a Page.
 render :: FilePath                     -- ^ Template to use for rendering.
-       -> RenderAction Context Context -- ^ The render computation.
+       -> HakyllAction Context Context -- ^ The render computation.
 render = renderWith id
 
 -- | Render to a Page. This function allows you to manipulate the context
 --   first.
 renderWith :: ContextManipulation          -- ^ Manipulation to apply first.
            -> FilePath                     -- ^ Template to use for rendering.
-           -> RenderAction Context Context -- ^ The render computation.
-renderWith manipulation templatePath = RenderAction
+           -> HakyllAction Context Context -- ^ The render computation.
+renderWith manipulation templatePath = HakyllAction
     { actionDependencies = [templatePath]
     , actionUrl          = Nothing
     , actionFunction     = actionFunction'
@@ -57,7 +57,7 @@ renderWith manipulation templatePath = RenderAction
 --
 renderAndConcat :: [FilePath] -- ^ Templates to apply on every renderable.
                 -> [Renderable] -- ^ Renderables to render.
-                -> RenderAction () String
+                -> HakyllAction () String
 renderAndConcat = renderAndConcatWith id
 
 -- | Render each renderable with the given templates, then concatenate the
@@ -66,8 +66,8 @@ renderAndConcat = renderAndConcatWith id
 renderAndConcatWith :: ContextManipulation
                     -> [FilePath]
                     -> [Renderable]
-                    -> RenderAction () String
-renderAndConcatWith manipulation templatePaths renderables = RenderAction
+                    -> HakyllAction () String
+renderAndConcatWith manipulation templatePaths renderables = HakyllAction
     { actionDependencies = renders >>= actionDependencies
     , actionUrl           = Nothing
     , actionFunction     = actionFunction'
@@ -78,7 +78,7 @@ renderAndConcatWith manipulation templatePaths renderables = RenderAction
     manipulationAction = createManipulationAction manipulation
 
     actionFunction' _ = do
-        contexts <- mapM runRenderAction renders
+        contexts <- mapM runHakyllAction renders
         return $ concatMap (fromMaybe "" . M.lookup "body") contexts
 
 -- | Chain a render action for a page with a number of templates. This will
@@ -101,9 +101,9 @@ renderChainWith :: ContextManipulation
                 -> Renderable
                 -> Hakyll ()
 renderChainWith manipulation templatePaths initial =
-    runRenderActionIfNeeded renderChainWith'
+    runHakyllActionIfNeeded renderChainWith'
   where
-    renderChainWith' :: RenderAction () ()
+    renderChainWith' :: HakyllAction () ()
     renderChainWith' = initial >>> manipulationAction >>> chain' >>> writePage
 
     chain' = chain (map render templatePaths)
@@ -113,18 +113,18 @@ renderChainWith manipulation templatePaths initial =
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.
 static :: FilePath -> Hakyll ()
-static source = runRenderActionIfNeeded static'
+static source = runHakyllActionIfNeeded static'
   where
-    static' = createFileRenderAction source $ do
+    static' = createFileHakyllAction source $ do
         destination <- toDestination source
         makeDirectories destination
         liftIO $ copyFile source destination
 
 -- | Render a css file, compressing it.
 css :: FilePath -> Hakyll ()
-css source = runRenderActionIfNeeded css'
+css source = runHakyllActionIfNeeded css'
   where
-    css' = createFileRenderAction source $ do
+    css' = createFileHakyllAction source $ do
         contents <- liftIO $ readFile source
         destination <- toDestination source
         makeDirectories destination

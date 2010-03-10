@@ -48,7 +48,7 @@ import Text.Hakyll.Context
 import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Regex
 import Text.Hakyll.Renderables
-import Text.Hakyll.RenderAction
+import Text.Hakyll.HakyllAction
 import Text.Hakyll.Util
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Internal.Template
@@ -65,8 +65,8 @@ type TagMap = M.Map String [Renderable]
 readMap :: (Context -> [String]) -- ^ Function to get tags from a context.
         -> String -- ^ Unique identifier for the tagmap.
         -> [FilePath]
-        -> RenderAction () TagMap
-readMap getTagsFunction identifier paths = RenderAction
+        -> HakyllAction () TagMap
+readMap getTagsFunction identifier paths = HakyllAction
     { actionDependencies = paths
     , actionUrl          = Nothing
     , actionFunction     = actionFunction'
@@ -85,7 +85,7 @@ readMap getTagsFunction identifier paths = RenderAction
 
     readTagMap' = foldM addPaths M.empty paths
     addPaths current path = do
-        context <- runRenderAction $ createPagePath path
+        context <- runHakyllAction $ createPagePath path
         let tags = getTagsFunction context
             addPaths' = flip (M.insertWith (++)) [path]
         return $ foldr addPaths' current tags
@@ -93,7 +93,7 @@ readMap getTagsFunction identifier paths = RenderAction
 -- | Read a @TagMap@, using the @tags@ metadata field.
 readTagMap :: String -- ^ Unique identifier for the map.
            -> [FilePath] -- ^ Paths to get tags from.
-           -> RenderAction () TagMap
+           -> HakyllAction () TagMap
 readTagMap = readMap getTagsFunction
   where
     getTagsFunction = map trim . splitRegex ","
@@ -102,22 +102,22 @@ readTagMap = readMap getTagsFunction
 -- | Read a @TagMap@, using the subdirectories the pages are placed in.
 readCategoryMap :: String -- ^ Unique identifier for the map.
                 -> [FilePath] -- ^ Paths to get tags from.
-                -> RenderAction () TagMap
+                -> HakyllAction () TagMap
 readCategoryMap = readMap $ maybeToList . M.lookup "category"
 
-withTagMap :: RenderAction () TagMap
+withTagMap :: HakyllAction () TagMap
            -> (String -> [Renderable] -> Hakyll ())
            -> Hakyll ()
-withTagMap tagMap function = runRenderAction (tagMap >>> action)
+withTagMap tagMap function = runHakyllAction (tagMap >>> action)
   where
-    action = createRenderAction (mapM_ (uncurry function) . M.toList)
+    action = createHakyllAction (mapM_ (uncurry function) . M.toList)
 
 -- | Render a tag cloud.
 renderTagCloud :: (String -> String) -- ^ Function to produce an url for a tag.
                -> Float -- ^ Smallest font size, in percent.
                -> Float -- ^ Biggest font size, in percent.
-               -> RenderAction TagMap String
-renderTagCloud urlFunction minSize maxSize = createRenderAction renderTagCloud'
+               -> HakyllAction TagMap String
+renderTagCloud urlFunction minSize maxSize = createHakyllAction renderTagCloud'
   where
     renderTagCloud' tagMap =
         return $ intercalate " " $ map (renderTag tagMap) (tagCount tagMap)
