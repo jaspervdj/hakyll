@@ -1,9 +1,9 @@
 --- sidebar
 ## Navigation
 
-[home](index.html)
-[philosophy](philosophy.html)
-[about](about.html)
-[tutorials](tutorials.html)
-[reference](reference.html)
-[changelog](changelog.html)
+[home]($root/index.html)
+[philosophy]($root/philosophy.html)
+[about]($root/about.html)
+[tutorials]($root/tutorials.html)
+[reference]($root/reference.html)
+[changelog]($root/changelog.html)

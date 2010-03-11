@@ -6,6 +6,7 @@ module Text.Hakyll.Render
     , renderChain
     , static
     , css
+    , writePage
     ) where
 
 import Control.Arrow ((>>>))

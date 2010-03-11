@@ -1,6 +1,6 @@
 import Text.Hakyll
 import Text.Hakyll.Render
-import Text.Hakyll.Renderables
+import Text.Hakyll.CreateContext
 import Text.Hakyll.File
 import Text.Hakyll.Regex
 import Control.Monad.Reader (liftIO)
@@ -8,17 +8,17 @@ import System.Directory
 import Control.Monad (mapM_, liftM)
 import Data.List (sort)
 
-main = hakyll $ do
+main = hakyll "http://jaspervdj.be/hakyll" $ do
     directory css "css"
     directory static "images"
     directory static "examples"
     directory static "reference"
 
-    tutorials <- liftIO $ liftM (sort . filter (`matchesRegex` "^tutorial[0-9]*.markdown$")) $ getDirectoryContents "."
+    tutorials <- liftM sort $ getRecursiveContents "tutorials"
     let tutorialPage = createListing "tutorials.html"
-                                     "templates/tutorialitem.html"
-                                     (map createPagePath tutorials)
-                                     [("title", "Tutorials")]
+                                     ["templates/tutorialitem.html"]
+                                     (map createPage tutorials)
+                                     [("title", Left "Tutorials")]
     renderChain ["templates/tutorials.html", "templates/default.html"] $ withSidebar tutorialPage
 
     mapM_ render' $ [ "about.markdown"
@@ -29,6 +29,6 @@ main = hakyll $ do
                     ] ++ tutorials
 
   where
-    render' = renderChain ["templates/default.html"] . withSidebar . createPagePath
-    withSidebar a = a `combine` createPagePath "sidebar.markdown"
+    render' = renderChain ["templates/default.html"] . withSidebar . createPage
+    withSidebar a = a `combine` createPage "sidebar.markdown"
           
