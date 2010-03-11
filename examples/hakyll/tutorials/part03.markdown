@@ -166,3 +166,9 @@ where render = renderChain ["templates/default.html"]
 ~~~~~
 
 And now every page will include the footer.
+
+## The gist of it
+
+- Pages are just key-value mappings.
+- You can have multiple sections in every page.
+- Combine pages using the `combine` function.

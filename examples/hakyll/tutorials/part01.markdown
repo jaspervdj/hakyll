@@ -226,3 +226,9 @@ main = hakyll "http://example.com" $ do
 
 To setup your site, simply copy the contents of `_site` to your hosting provider
 using your favorite piece of software.
+
+## The gist of it
+
+- You render "pages" with "templates".
+- The most common render function is `renderChain`.
+- Hakyll also deals with static files and css.
