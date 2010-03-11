@@ -92,7 +92,7 @@ readMap getTagsFunction identifier paths = HakyllAction
         return $ foldr addPaths' current tags
 
 -- | Read a @TagMap@, using the @tags@ metadata field.
-readTagMap :: String -- ^ Unique identifier for the map.
+readTagMap :: String     -- ^ Unique identifier for the map.
            -> [FilePath] -- ^ Paths to get tags from.
            -> HakyllAction () TagMap
 readTagMap = readMap getTagsFunction
@@ -101,7 +101,7 @@ readTagMap = readMap getTagsFunction
                     . fromMaybe [] . M.lookup "tags"
 
 -- | Read a @TagMap@, using the subdirectories the pages are placed in.
-readCategoryMap :: String -- ^ Unique identifier for the map.
+readCategoryMap :: String     -- ^ Unique identifier for the map.
                 -> [FilePath] -- ^ Paths to get tags from.
                 -> HakyllAction () TagMap
 readCategoryMap = readMap $ maybeToList . M.lookup "category"
@@ -115,8 +115,8 @@ withTagMap tagMap function = runHakyllAction (tagMap >>> action)
 
 -- | Render a tag cloud.
 renderTagCloud :: (String -> String) -- ^ Function to produce an url for a tag.
-               -> Float -- ^ Smallest font size, in percent.
-               -> Float -- ^ Biggest font size, in percent.
+               -> Float              -- ^ Smallest font size, in percent.
+               -> Float              -- ^ Biggest font size, in percent.
                -> HakyllAction TagMap String
 renderTagCloud urlFunction minSize maxSize = createHakyllAction renderTagCloud'
   where

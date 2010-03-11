@@ -34,7 +34,7 @@ defaultPaginateConfiguration = PaginateConfiguration
     }
 
 -- | The most important function for pagination. This function operates on a
---   list of renderables (the pages), and basically just adds fields to them
+--   list of @Context@s (the pages), and basically just adds fields to them
 --   by combining them with a custom page.
 --
 --   The following metadata fields will be added:
@@ -65,7 +65,7 @@ paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
         Nothing -> error "No link found for pagination."
 
     -- The main function that creates combined renderables by recursing over
-    -- the list of renderables.
+    -- the list of items.
     paginate' _ [] _ = []
     paginate' maybePrev (x:xs) index = 
         let (previous, first) = case maybePrev of

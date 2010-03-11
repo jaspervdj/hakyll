@@ -69,12 +69,11 @@ createListing url templates renderables additional =
     context = ("body", Right concatenation) : additional
     concatenation = renderAndConcat templates renderables
 
--- | Combine two renderables. The url will always be taken from the first
+-- | Combine two @Context@s. The url will always be taken from the first
 --   @Renderable@. Also, if a `$key` is present in both renderables, the
---   value from the first @Renderable@ will be taken as well.
+--   value from the first @Context@ will be taken as well.
 --
---   Since renderables are always more or less key-value maps, you can see
---   this as a @union@ between two maps.
+--   You can see this as a this as a @union@ between two mappings.
 combine :: HakyllAction () Context -> HakyllAction () Context
         -> HakyllAction () Context
 combine x y = HakyllAction
@@ -84,7 +83,7 @@ combine x y = HakyllAction
         liftM2 M.union (runHakyllAction x) (runHakyllAction y)
     }
 
--- | Combine two renderables and set a custom URL. This behaves like @combine@,
+-- | Combine two @Context@s and set a custom URL. This behaves like @combine@,
 --   except that for the @url@ field, the given URL is always chosen.
 combineWithUrl :: FilePath
                -> HakyllAction () Context
@@ -92,8 +91,7 @@ combineWithUrl :: FilePath
                -> HakyllAction () Context
 combineWithUrl url x y = combine'
     { actionUrl          = Just $ return url
-    , actionFunction     = \_ ->
-        M.insert "url" url <$> runHakyllAction combine'
+    , actionFunction     = \_ -> M.insert "url" url <$> runHakyllAction combine'
     }
   where
     combine' = combine x y
