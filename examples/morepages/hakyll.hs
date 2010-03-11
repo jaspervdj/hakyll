@@ -1,13 +1,13 @@
 import Text.Hakyll (hakyll)
 import Text.Hakyll.File (directory)
 import Text.Hakyll.Render (css, static, renderChain)
-import Text.Hakyll.Renderables (createPagePath, combine)
+import Text.Hakyll.CreateContext (createPage, combine)
 
-main = hakyll $ do
+main = hakyll "http://example.com" $ do
     directory css "css"
     render "about.markdown"
     render "index.markdown"
     render "products.markdown"
   where
-    render = renderChain ["templates/default.html"] . withFooter . createPagePath
-    withFooter a = a `combine` createPagePath "footer.markdown"
+    render = renderChain ["templates/default.html"] . withFooter . createPage
+    withFooter = flip combine $ createPage "footer.markdown"
