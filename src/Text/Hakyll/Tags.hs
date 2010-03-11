@@ -46,9 +46,9 @@ import System.FilePath
 
 import Text.Hakyll.Context (Context)
 import Text.Hakyll.ContextManipulations (changeValue)
+import Text.Hakyll.CreateContext (createPage)
 import Text.Hakyll.HakyllMonad (Hakyll)
 import Text.Hakyll.Regex
-import Text.Hakyll.Renderables
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Util
 import Text.Hakyll.Internal.Cache
@@ -82,11 +82,11 @@ readMap getTagsFunction identifier paths = HakyllAction
                         else do assocMap' <- readTagMap'
                                 storeInCache (M.toAscList assocMap') fileName
                                 return assocMap'
-        return $ M.map (map createPagePath) assocMap
+        return $ M.map (map createPage) assocMap
 
     readTagMap' = foldM addPaths M.empty paths
     addPaths current path = do
-        context <- runHakyllAction $ createPagePath path
+        context <- runHakyllAction $ createPage path
         let tags = getTagsFunction context
             addPaths' = flip (M.insertWith (++)) [path]
         return $ foldr addPaths' current tags

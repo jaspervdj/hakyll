@@ -2,12 +2,11 @@
 --   you must make sure you set the `absoluteUrl` field in the main Hakyll
 --   configuration.
 --
---   Apart from that, the main rendering functions (@renderRss@,
---   @renderRssWith@, @renderAtom@ all @renderAtomWith@) all assume that you
---   pass the list of @Renderable@s so that the most recent entry in the feed is
---   the first item in the list.
+--   Apart from that, the main rendering functions (@renderRss@, @renderAtom@) 
+--   all assume that you pass the list of items so that the most recent entry
+--   in the feed is the first item in the list.
 --
---   Also note that the @Renderable@s should have (at least) the following
+--   Also note that the @Context@s should have (at least) the following
 --   fields to produce a correct feed:
 --
 --   - @$title@: Title of the item.
@@ -16,7 +15,8 @@
 --
 --   - @$url@: URL to the item - this is usually set automatically.
 --
---   Furthermore, the feed will not validate if an empty list is passed.
+--   Furthermore, the feed will be generated, but will be incorrect (it won't
+--   validate) if an empty list is passed.
 module Text.Hakyll.Feed
     ( FeedConfiguration (..)
     , renderRss
@@ -29,10 +29,10 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 
 import Text.Hakyll.Context (Context)
+import Text.Hakyll.CreateContext (createListing)
 import Text.Hakyll.ContextManipulations (renderDate)
 import Text.Hakyll.HakyllMonad (Hakyll)
 import Text.Hakyll.Render (render, renderChain)
-import Text.Hakyll.Renderables (createListing)
 import Text.Hakyll.HakyllAction
 
 import Paths_hakyll
@@ -53,8 +53,8 @@ data FeedConfiguration = FeedConfiguration
 --   The items should be sorted on date.
 createFeed :: FeedConfiguration         -- ^ Feed configuration.
            -> [HakyllAction () Context] -- ^ Items to include.
-           -> FilePath            -- ^ Feed template.
-           -> FilePath            -- ^ Item template.
+           -> FilePath                  -- ^ Feed template.
+           -> FilePath                  -- ^ Item template.
            -> HakyllAction () Context
 createFeed configuration renderables template itemTemplate =
     listing >>> render template

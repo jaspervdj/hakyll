@@ -45,12 +45,12 @@ library
                     Text.Hakyll
                     Text.Hakyll.Context
                     Text.Hakyll.ContextManipulations
+                    Text.Hakyll.CreateContext
                     Text.Hakyll.File
                     Text.Hakyll.HakyllMonad
                     Text.Hakyll.Regex
                     Text.Hakyll.Render
                     Text.Hakyll.HakyllAction
-                    Text.Hakyll.Renderables
                     Text.Hakyll.Paginate
                     Text.Hakyll.Util
                     Text.Hakyll.Tags

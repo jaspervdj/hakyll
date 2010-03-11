@@ -21,8 +21,7 @@ import Text.Hakyll.HakyllAction (HakyllAction)
 import Text.Hakyll.Context (Context)
 
 -- | Do something with a value in a @Context@, but keep the old value as well.
---   This is probably the most common function to construct a
---   @ContextManipulation@.
+--   If the key given is not present in the @Context@, nothing will happen.
 renderValue :: String             -- ^ Key of which the value should be copied.
             -> String             -- ^ Key the value should be copied to.
             -> (String -> String) -- ^ Function to apply on the value.
@@ -49,8 +48,9 @@ copyValue :: String -- ^ Source key.
           -> HakyllAction Context Context
 copyValue source destination = renderValue source destination id
 
--- | When the context has a key called @path@ in a @yyyy-mm-dd-title.extension@
---   format (default for pages), this function can render the date.
+-- | When the context has a key called @path@ in a
+--   @folder/yyyy-mm-dd-title.extension@ format (the convention for pages),
+--   this function can render the date.
 --
 --   > renderDate "date" "%B %e, %Y" "Date unknown"
 --
@@ -72,11 +72,9 @@ renderDate key format defaultValue = renderValue "path" key renderDate'
 -- | Change the extension of a file. This is only needed when you want to
 --   render, for example, mardown to @.php@ files instead of @.html@ files.
 --
---   > renderChainWith (changeExtension "php")
---   >                 ["templates/default.html"]
---   >                 (createPagePath "test.markdown")
+--   > changeExtension "php"
 --
---   Will render to @test.php@ instead of @test.html@.
+--   Will render @test.markdown@ to @test.php@ instead of @test.html@.
 changeExtension :: String -- ^ Extension to change to.
                 -> HakyllAction Context Context
 changeExtension extension = changeValue "url" changeExtension'

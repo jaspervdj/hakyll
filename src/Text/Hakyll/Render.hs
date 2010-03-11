@@ -9,6 +9,7 @@ module Text.Hakyll.Render
     ) where
 
 import Control.Arrow ((>>>))
+import Control.Applicative ((<$>))
 import Control.Monad.Reader (liftIO)
 import System.Directory (copyFile)
 import Data.Maybe (fromMaybe)
@@ -21,10 +22,10 @@ import Text.Hakyll.HakyllAction
 import Text.Hakyll.Internal.CompressCss
 import Text.Hakyll.Internal.Template
 
--- | A pure render function.
+-- | A pure render function - used internally.
 pureRender :: Template -- ^ Template to use for rendering.
-           -> Context -- ^ Renderable object to render with given template.
-           -> Context -- ^ The body of the result will contain the render.
+           -> Context  -- ^ Renderable object to render with given template.
+           -> Context  -- ^ The body of the result will contain the render.
 pureRender template context =
     -- Ignore $root when substituting here. We will only replace that in the
     -- final render (just before writing).
@@ -32,29 +33,26 @@ pureRender template context =
         body = regularSubstitute template contextIgnoringRoot
     in M.insert "body" body context
 
--- | Render to a Page.
+-- | This is the most simple render action. You render a @Context@ with a
+--   template, and get back the result.
 render :: FilePath                     -- ^ Template to use for rendering.
        -> HakyllAction Context Context -- ^ The render computation.
 render templatePath = HakyllAction
     { actionDependencies = [templatePath]
     , actionUrl          = Nothing
-    , actionFunction     = actionFunction'
+    , actionFunction     = \context ->
+        flip pureRender context <$> readTemplate templatePath
     }
-  where
-    actionFunction' context = do
-        template <- readTemplate templatePath
-        return $ pureRender template context
 
--- | Render each renderable with the given templates, then concatenate the
+-- | Render each @Context@ with the given templates, then concatenate the
 --   result. So, basically this function:
 --
---   * Takes every renderable.
+--   - Takes every @Context@.
 --
---   * Renders every renderable with all given templates. This is comparable
+--   - Renders every @Context@ with all given templates. This is comparable
 --     with a renderChain action.
 --
---   * Concatenates the result.
---
+--   - Concatenates the result and returns that as a @String@.
 renderAndConcat :: [FilePath]
                 -> [HakyllAction () Context]
                 -> HakyllAction () String
@@ -87,11 +85,8 @@ renderChain :: [FilePath]
 renderChain templatePaths initial =
     runHakyllActionIfNeeded renderChainWith'
   where
-    renderChainWith' :: HakyllAction () ()
     renderChainWith' = initial >>> chain' >>> writePage
-
-    chain' = chain (map render templatePaths)
-
+    chain' = chain $ map render templatePaths
 
 -- | Mark a certain file as static, so it will just be copied when the site is
 --   generated.

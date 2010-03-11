@@ -1,7 +1,10 @@
-module Text.Hakyll.Renderables
-    ( createCustomPage
+-- | A module that provides different ways to create a @Context@. These
+--   functions all use the @HakyllAction@ arrow, so they produce values of the
+--   type @HakyllAction () Context@.
+module Text.Hakyll.CreateContext
+    ( createPage
+    , createCustomPage
     , createListing
-    , createPagePath
     , combine
     , combineWithUrl
     ) where
@@ -17,13 +20,22 @@ import Text.Hakyll.HakyllAction
 import Text.Hakyll.Render
 import Text.Hakyll.Internal.Page
 
--- | Create a custom page.
+-- | Create a @Context@ from a page file stored on the disk. This is probably
+--   the most common way to create a @Context@.
+createPage :: FilePath -> HakyllAction () Context
+createPage path = HakyllAction
+    { actionDependencies = [path]
+    , actionUrl          = Just $ toUrl path
+    , actionFunction     = const (readPage path)
+    }
+
+-- | Create a "custom page" @Context@.
 --   
 --   The association list given maps keys to values for substitution. Note
---   that as value, you can either give a @String@ or a @Hakyll String@.
---   A @Hakyll String@ is preferred for more complex data, since it allows
---   dependency checking. A @String@ is obviously more simple to use in some
---   cases.
+--   that as value, you can either give a @String@ or a
+--   @HakyllAction () String@. The latter is preferred for more complex data,
+--   since it allows dependency checking. A @String@ is obviously more simple
+--   to use in some cases.
 createCustomPage :: String
                  -> [(String, Either String (HakyllAction () String))]
                  -> HakyllAction () Context
@@ -42,17 +54,10 @@ createCustomPage url association = HakyllAction
 
 -- | A @createCustomPage@ function specialized in creating listings.
 --
---   This function creates a listing of a certain list of renderables. Every
+--   This function creates a listing of a certain list of @Context@s. Every
 --   item in the list is created by applying the given template to every
 --   renderable. You can also specify additional context to be included in the
 --   @CustomPage@.
---
---   > let customPage = createListing
---   >         "index.html" -- Destination of the page.
---   >         ["templates/postitem.html"] -- Paths to templates to render the
---   >                                     -- items with.
---   >         posts -- Renderables to create the list with.
---   >         [("title", Left "Home")] -- Additional context
 createListing :: String                    -- ^ Destination of the page.
               -> [FilePath]                -- ^ Templates to render items with.
               -> [HakyllAction () Context] -- ^ Renderables in the list.
@@ -63,14 +68,6 @@ createListing url templates renderables additional =
   where
     context = ("body", Right concatenation) : additional
     concatenation = renderAndConcat templates renderables
-
--- | Create a PagePath from a FilePath.
-createPagePath :: FilePath -> HakyllAction () Context
-createPagePath path = HakyllAction
-    { actionDependencies = [path]
-    , actionUrl          = Just $ toUrl path
-    , actionFunction     = const (readPage path)
-    }
 
 -- | Combine two renderables. The url will always be taken from the first
 --   @Renderable@. Also, if a `$key` is present in both renderables, the
