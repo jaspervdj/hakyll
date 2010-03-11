@@ -14,7 +14,8 @@ import System.Directory (copyFile)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 
-import Text.Hakyll.Hakyll (Hakyll, Context, askHakyll, getAdditionalContext)
+import Text.Hakyll.Context (Context)
+import Text.Hakyll.HakyllMonad (Hakyll, askHakyll, getAdditionalContext)
 import Text.Hakyll.File
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Internal.CompressCss

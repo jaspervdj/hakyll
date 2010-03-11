@@ -19,8 +19,8 @@ import Control.Monad.Reader (liftIO)
 
 import Test.QuickCheck
 
-import Text.Hakyll.Hakyll (Hakyll)
 import Text.Hakyll.Context (Context)
+import Text.Hakyll.HakyllMonad (Hakyll)
 import Text.Hakyll.Internal.Cache
 
 -- | Datatype used for template substitutions.

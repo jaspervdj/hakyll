@@ -23,7 +23,7 @@ import Data.List (isPrefixOf, sortBy)
 import Data.Ord (comparing)
 import Control.Monad.Reader (liftIO)
 
-import Text.Hakyll.Hakyll
+import Text.Hakyll.HakyllMonad
 import Text.Hakyll.Internal.FileType (isRenderableFile)
 
 -- | Auxiliary function to remove pathSeparators form the start. We don't deal

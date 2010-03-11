@@ -13,7 +13,7 @@ import Text.Pandoc
 
 import Text.Hakyll.Context (Context)
 import Text.Hakyll.File
-import Text.Hakyll.Hakyll
+import Text.Hakyll.HakyllMonad
 import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 import Text.Hakyll.Util (trim)
 import Text.Hakyll.Internal.Cache

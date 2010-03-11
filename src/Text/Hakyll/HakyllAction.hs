@@ -17,7 +17,7 @@ import Prelude hiding ((.), id)
 import System.IO (hPutStrLn, stderr)
 
 import Text.Hakyll.File (toDestination, isFileMoreRecent)
-import Text.Hakyll.Hakyll
+import Text.Hakyll.HakyllMonad
 
 -- | Type used for rendering computations that carry along dependencies.
 data HakyllAction a b = HakyllAction

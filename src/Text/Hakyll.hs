@@ -22,7 +22,7 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 import System.Time (getClockTime)
 
 import Network.Hakyll.SimpleServer (simpleServer)
-import Text.Hakyll.Hakyll
+import Text.Hakyll.HakyllMonad
 import Text.Hakyll.File
 
 -- | The default hakyll configuration.

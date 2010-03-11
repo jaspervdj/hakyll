@@ -1,7 +1,6 @@
 -- | Module describing the Hakyll monad stack.
-module Text.Hakyll.Hakyll
-    ( Context
-    , HakyllConfiguration (..)
+module Text.Hakyll.HakyllMonad
+    ( HakyllConfiguration (..)
     , Hakyll
     , askHakyll
     , getAdditionalContext
@@ -9,11 +8,12 @@ module Text.Hakyll.Hakyll
 
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad (liftM)
-import Data.Map (Map)
 import qualified Data.Map as M
 
--- | Type for a context.
-type Context = Map String String
+import Text.Hakyll.Context (Context)
+
+-- | Our custom monad stack.
+type Hakyll = ReaderT HakyllConfiguration IO
 
 -- | Hakyll global configuration type.
 data HakyllConfiguration = HakyllConfiguration
@@ -31,9 +31,6 @@ data HakyllConfiguration = HakyllConfiguration
     , -- | Delay between polls in preview mode.
       previewPollDelay  :: Int
     }
-
--- | Our custom monad stack.
-type Hakyll = ReaderT HakyllConfiguration IO
 
 -- | Simplified @ask@ function for the Hakyll monad stack.
 --

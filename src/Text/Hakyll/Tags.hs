@@ -44,8 +44,9 @@ import Control.Arrow (second, (>>>))
 import Control.Applicative ((<$>))
 import System.FilePath
 
-import Text.Hakyll.Context
-import Text.Hakyll.Hakyll (Hakyll)
+import Text.Hakyll.Context (Context)
+import Text.Hakyll.ContextManipulations (changeValue)
+import Text.Hakyll.HakyllMonad (Hakyll)
 import Text.Hakyll.Regex
 import Text.Hakyll.Renderables
 import Text.Hakyll.HakyllAction

@@ -6,9 +6,10 @@ module Text.Hakyll.Internal.Cache
 
 import Control.Monad ((<=<))
 import Control.Monad.Reader (liftIO)
-import Text.Hakyll.Hakyll (Hakyll)
-import Text.Hakyll.File
 import Data.Binary
+
+import Text.Hakyll.File
+import Text.Hakyll.HakyllMonad (Hakyll)
 
 -- | We can store all datatypes instantiating @Binary@ to the cache. The cache
 --   directory is specified by the @HakyllConfiguration@, usually @_cache@.

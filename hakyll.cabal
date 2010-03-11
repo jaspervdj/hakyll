@@ -44,8 +44,9 @@ library
   exposed-modules:  Network.Hakyll.SimpleServer
                     Text.Hakyll
                     Text.Hakyll.Context
+                    Text.Hakyll.ContextManipulations
                     Text.Hakyll.File
-                    Text.Hakyll.Hakyll
+                    Text.Hakyll.HakyllMonad
                     Text.Hakyll.Regex
                     Text.Hakyll.Render
                     Text.Hakyll.HakyllAction

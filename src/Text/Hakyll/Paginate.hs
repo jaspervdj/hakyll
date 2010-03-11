@@ -7,7 +7,7 @@ module Text.Hakyll.Paginate
 
 import Control.Applicative ((<$>))
 
-import Text.Hakyll.Hakyll (Context)
+import Text.Hakyll.Context (Context)
 import Text.Hakyll.Renderables
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Util (link)
