@@ -76,8 +76,16 @@ our functions when it is really needed. In this particular case, `test` would
 only be executed if either `test.markdown` or `template.html` were recently
 changed.
 
+## So what's renderChain then?
+
+Now, we have done pretty much the same as we did with the `renderChain` function
+in the first part. That's right, the `renderChain` is more or less implemented
+like this. So, you will probably use `renderChain` in most cases, but it's
+handy if you know how it works.
+
 ## The gist of it
 
 - Arrows really aren't complicated.
 - Compose them using `>>>`.
 - `HakyllAction` tracks dependencies for you. Use it.
+- In most cases, you will just use `renderChain`.

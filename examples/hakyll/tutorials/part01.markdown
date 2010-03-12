@@ -60,7 +60,7 @@ main = hakyll "http://example.com" $ do
     liftIO $ putStrLn "I'm in your computer, generating your site!"
 ~~~~~
 
-Note how we wrap everyting in the `hakyll` function. This is useful because
+Note how we wrap everything in the `hakyll` function. This is useful because
 it will generate a very nice main function. We also pass the full site URL to
 the `hakyll` function. If you don't have an URL for your site yet, it doesn't
 really matter for now; just fill in anything then. The URL is only used for
@@ -83,7 +83,7 @@ One way to write such a `Context`, is a page.
 Another important concept in Hakyll is pages. Pages are text files that can be
 written in markdown, html, rst... basically anything Pandoc supports.
 Furthermore, they can also contain some metadata. The metadata is placed in the
-file header and surrouded by `---` lines. Each line should contain a
+file header and surrounded by `---` lines. Each line should contain a
 `key: value` pair. Let's have a look at the `index.markdown` page.
 
     ---
