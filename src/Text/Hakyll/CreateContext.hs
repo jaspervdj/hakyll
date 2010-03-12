@@ -36,7 +36,7 @@ createPage path = HakyllAction
 --   @HakyllAction () String@. The latter is preferred for more complex data,
 --   since it allows dependency checking. A @String@ is obviously more simple
 --   to use in some cases.
-createCustomPage :: String
+createCustomPage :: FilePath
                  -> [(String, Either String (HakyllAction () String))]
                  -> HakyllAction () Context
 createCustomPage url association = HakyllAction
@@ -58,7 +58,7 @@ createCustomPage url association = HakyllAction
 --   item in the list is created by applying the given template to every
 --   renderable. You can also specify additional context to be included in the
 --   @CustomPage@.
-createListing :: String                    -- ^ Destination of the page.
+createListing :: FilePath                  -- ^ Destination of the page.
               -> [FilePath]                -- ^ Templates to render items with.
               -> [HakyllAction () Context] -- ^ Renderables in the list.
               -> [(String, Either String (HakyllAction () String))]
