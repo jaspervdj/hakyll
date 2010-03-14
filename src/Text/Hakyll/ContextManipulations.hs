@@ -6,6 +6,7 @@ module Text.Hakyll.ContextManipulations
     , copyValue
     , renderDate
     , changeExtension
+    , renderBody
     ) where
 
 import Control.Arrow (arr)
@@ -80,3 +81,13 @@ changeExtension :: String -- ^ Extension to change to.
 changeExtension extension = changeValue "url" changeExtension'
   where
     changeExtension' = flip addExtension extension . dropExtension
+
+-- | Change the body of a file using a certain manipulation.
+--
+--   > import Data.Char (toUpper)
+--   > renderBody (map toUpper)
+--
+--   Will put the entire body of the page in UPPERCASE.
+renderBody :: (String -> String)
+           -> HakyllAction Context Context
+renderBody = renderValue "body" "body"
