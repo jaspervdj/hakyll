@@ -3,6 +3,5 @@
     <link>$absolute/$url</link>
     <description>$description</description>
     <pubDate>$timestamp</pubDate>
-    <!-- We use the link as id. -->
     <guid>$absolute/$url</guid>
 </item>

@@ -3,7 +3,6 @@
     <title>$title</title>
     <link href="$absolute/$url" rel="self" />
     <link href="$absolute" />
-    <!-- We use the link as id. -->
     <id>$absolute/$url</id>
     <author>
         <name>$authorName</name>
