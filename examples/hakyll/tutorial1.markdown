@@ -195,7 +195,7 @@ our example would become:
 ~~~~~{.haskell}
 import Text.Hakyll (hakyll)
 import Text.Hakyll.Render (css)
-import Text.File (directory)
+import Text.Hakyll.File (directory)
 main = hakyll $ do
     directory css "css"
 ~~~~~
