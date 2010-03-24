@@ -28,8 +28,9 @@ main = hakyll "http://example.com" $ do
     renderPostList "posts.html" "All posts" renderablePosts
 
     -- Render post list per tag
-    withTagMap tagMap $ \tag posts ->
-        renderPostList (tagToUrl tag) ("Posts tagged " ++ tag) (map (>>> postManipulation) posts)
+    let renderListForTag tag posts = renderPostList (tagToUrl tag) ("Posts tagged " ++ tag)
+                                                    (map (>>> postManipulation) posts)
+    withTagMap tagMap renderPostList
 
     -- Render index, including recent posts.
     let tagCloud = tagMap >>> renderTagCloud tagToUrl 100 200
