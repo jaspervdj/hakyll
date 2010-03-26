@@ -34,7 +34,6 @@ main = hakyll "http://example.com" $ do
     mapM_ (renderChain ["templates/post.html", "templates/default.html"]) postPages
 
     -- Render RSS feed.
-    let 
     renderRss myFeedConfiguration $
         map (>>> copyValue "body" "description") (take 3 postPages)
 

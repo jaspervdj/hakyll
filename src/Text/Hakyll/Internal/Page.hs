@@ -42,10 +42,11 @@ getRenderFunction Text     = id
 getRenderFunction fileType = writeHtmlString writerOptions
                            . readFunction fileType (readOptions fileType)
   where
-    readFunction ReStructuredText = readRST
-    readFunction LaTeX            = readLaTeX
-    readFunction Markdown         = readMarkdown
-    readFunction t                = error $ "Cannot render file " ++ show t
+    readFunction ReStructuredText        = readRST
+    readFunction LaTeX                   = readLaTeX
+    readFunction Markdown                = readMarkdown
+    readFunction LiterateHaskellMarkdown = readMarkdown
+    readFunction t                       = error $ "Cannot render " ++ show t
 
     readOptions LiterateHaskellMarkdown =
         readerOptions { stateLiterateHaskell = True }
