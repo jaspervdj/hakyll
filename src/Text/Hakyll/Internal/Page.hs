@@ -38,6 +38,7 @@ writerOptions = defaultWriterOptions
 -- | Get a render function for a given extension.
 getRenderFunction :: FileType -> (String -> String)
 getRenderFunction Html     = id
+getRenderFunction Text     = id
 getRenderFunction fileType = writeHtmlString writerOptions
                            . readFunction fileType (readOptions fileType)
   where

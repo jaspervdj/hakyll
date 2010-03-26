@@ -55,9 +55,9 @@ library
                     Text.Hakyll.Util
                     Text.Hakyll.Tags
                     Text.Hakyll.Feed
+  other-modules:    Paths_hakyll
                     Text.Hakyll.Internal.Cache
                     Text.Hakyll.Internal.CompressCss
                     Text.Hakyll.Internal.FileType
                     Text.Hakyll.Internal.Page
                     Text.Hakyll.Internal.Template
-  other-modules:    Paths_hakyll

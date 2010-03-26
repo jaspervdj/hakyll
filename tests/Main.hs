@@ -5,15 +5,14 @@ import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
 
 import CompressCss
-import Context
 import File
 import Page
 import Regex
 import Template
 import Util
 
+-- | Run all tests.
 main = defaultMain [ compressCssGroup
-                   , contextGroup
                    , fileGroup
                    , pageGroup
                    , regexGroup

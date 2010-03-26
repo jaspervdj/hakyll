@@ -1,3 +1,4 @@
+-- | Module testing @Text.Hakyll.Internal.CompressCss@.
 module CompressCss 
     ( compressCssGroup
     ) where
@@ -21,15 +22,21 @@ compressCssGroup = testGroup "CompressCss"
     , testCase "test_compressCss_4" test_compressCss_4
     ]
 
--- Css compression should always decrease the text length.
+-- | Css compression should always decrease the text length.
 prop_compressCss_length str = length str >= length (compressCss str)
 
--- Compress Css test cases.
+-- | compressCss test case 1.
 test_compressCss_1 = compressCss "a {  \n color  : red;  }" @?= "a{color:red}"
+
+-- | compressCss test case 2.
 test_compressCss_2 = compressCss "img {border  :none;;;;  }"
                    @?= "img{border:none}"
+
+-- | compressCss test case 3.
 test_compressCss_3 =
     compressCss "p {font-size  : 90%;} h1 {color  :white;;;  }"
     @?= "p{font-size:90%}h1{color:white}"
+
+-- | compressCss test case 4.
 test_compressCss_4 = compressCss "a { /* /* red is pretty cool */ color: red; }"
                    @?= "a{color:red}"

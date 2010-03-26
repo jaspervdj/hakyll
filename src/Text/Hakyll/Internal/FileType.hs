@@ -14,6 +14,7 @@ data FileType = Html
               | LiterateHaskellMarkdown
               | Markdown
               | ReStructuredText
+              | Text
               | UnknownFileType
               deriving (Eq, Ord, Show, Read)
 
@@ -33,6 +34,8 @@ getFileType = getFileType' . takeExtension
     getFileType' ".mkdwn"    = Markdown
     getFileType' ".rst"      = ReStructuredText
     getFileType' ".tex"      = LaTeX
+    getFileType' ".text"     = Text
+    getFileType' ".txt"      = Text
     getFileType' _           = UnknownFileType
 
 -- | Check if a certain @FileType@ is renderable.
