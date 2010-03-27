@@ -39,7 +39,6 @@ module Text.Hakyll.Tags
 import qualified Data.Map as M
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe, maybeToList)
-import Control.Monad (foldM)
 import Control.Arrow (second, (>>>))
 import Control.Applicative ((<$>))
 import System.FilePath
@@ -84,12 +83,20 @@ readMap getTagsFunction identifier paths = HakyllAction
                                 return assocMap'
         return $ M.map (map createPage) assocMap
 
-    readTagMap' = foldM addPaths M.empty paths
-    addPaths current path = do
+    -- TODO: preserve order
+    readTagMap' :: Hakyll (M.Map String [FilePath])
+    readTagMap' = do
+        pairs' <- concat <$> mapM pairs paths
+        return $ M.fromListWith (flip (++)) pairs'
+
+    -- | Read a page, and return an association list where every tag is
+    -- associated with some paths. Of course, this will always be just one
+    -- @FilePath@ here.
+    pairs :: FilePath -> Hakyll [(String, [FilePath])]
+    pairs path = do
         context <- runHakyllAction $ createPage path
         let tags = getTagsFunction context
-            addPaths' = flip (M.insertWith (++)) [path]
-        return $ foldr addPaths' current tags
+        return $ map (\tag -> (tag, [path])) tags
 
 -- | Read a @TagMap@, using the @tags@ metadata field.
 readTagMap :: String     -- ^ Unique identifier for the map.

@@ -82,16 +82,14 @@ instance Category HakyllAction where
 
     x . y = HakyllAction
         { actionDependencies = actionDependencies x ++ actionDependencies y
-        , actionUrl          = actionUrl y `mplus` actionUrl x
+        , actionUrl          = actionUrl x `mplus` actionUrl y
         , actionFunction     = actionFunction x <=< actionFunction y
         }
 
 instance Arrow HakyllAction where
     arr f = id { actionFunction = return . f }
 
-    first x = HakyllAction
-        { actionDependencies = actionDependencies x
-        , actionUrl          = actionUrl x
-        , actionFunction     = \(y, z) -> do y' <- actionFunction x y
-                                             return (y', z)
+    first x = x
+        { actionFunction = \(y, z) -> do y' <- actionFunction x y
+                                         return (y', z)
         }
