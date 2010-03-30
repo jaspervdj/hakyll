@@ -10,7 +10,7 @@ import Text.Hakyll.CreateContext (createPage, createCustomPage, createListing)
 import Text.Hakyll.ContextManipulations (renderDate, copyValue, changeValue)
 import Text.Hakyll.Util (link)
 import Data.Map (toList)
-import Control.Monad (mapM_, liftM, (<=<))
+import Control.Monad (forM_, liftM, (<=<))
 import Data.Either (Either(..))
 
 main = hakyll "http://example.com" $ do
@@ -34,38 +34,43 @@ main = hakyll "http://example.com" $ do
     withTagMap categoryMap renderListForCategory
 
     -- Render index, including recent posts.
+    let categoryList' = categoryMap >>> categoryList
     let index = createListing "index.html"
                               ["templates/postitem.html"]
                               (take 3 renderablePosts)
                               [ ("title", Left "Home")
-                              , ("categories", Right $ categoryMap >>> categoryList)
+                              , ("categories", Right $ categoryList')
                               ]
     renderChain ["index.html", "templates/default.html"] index
 
     -- Render all posts.
-    mapM_ (renderChain ["templates/post.html"
-                       ,"templates/default.html"
-                       ]) renderablePosts
+    forM_ renderablePosts $ renderChain [ "templates/post.html"
+                                        , "templates/default.html"
+                                        ]
 
     -- Render rss feed
     renderRss myFeedConfiguration $
         map (>>> copyValue "body" "description") (take 3 renderablePosts)
 
-    where postManipulation =   renderDate "date" "%B %e, %Y" "Date unknown"
-                           >>> renderCategoryLink
+  where
+    postManipulation =   renderDate "date" "%B %e, %Y" "Date unknown"
+                     >>> renderCategoryLink
 
-          renderCategoryLink = changeValue "category" (\c -> link c $ categoryToUrl c)
+    renderCategoryLink =
+      changeValue "category" (\c -> link c $ categoryToUrl c)
 
-          categoryToUrl category = "$root/categories/" ++ removeSpaces category ++ ".html"
+    categoryToUrl c = "$root/categories/" ++ removeSpaces c ++ ".html"
 
-          categoryList = arr $ uncurry categoryListItem <=< toList
+    categoryList = arr $ uncurry categoryListItem <=< toList
 
-          categoryListItem category posts = "<li>" ++ link category (categoryToUrl category)
-                                          ++ " - " ++ show (length posts) ++ " items.</li>"
+    categoryListItem category posts =
+        "<li>" ++ link category (categoryToUrl category)
+        ++ " - " ++ show (length posts) ++ " items.</li>"
 
-          renderPostList url title posts = do
-              let list = createListing url ["templates/postitem.html"] posts [("title", Left title)]
-              renderChain ["posts.html", "templates/default.html"] list
+    renderPostList url title posts = do
+        let list = createListing url ["templates/postitem.html"]
+                                 posts [("title", Left title)]
+        renderChain ["posts.html", "templates/default.html"] list
 
 myFeedConfiguration = FeedConfiguration
     { feedUrl         = "rss.xml"

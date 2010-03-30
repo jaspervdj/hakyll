@@ -9,7 +9,7 @@ import Text.Hakyll.CreateContext (createPage, createCustomPage, createListing)
 import Text.Hakyll.ContextManipulations (copyValue)
 import Text.Hakyll.Feed (FeedConfiguration (..), renderRss)
 import Data.List (sort)
-import Control.Monad (mapM_, liftM)
+import Control.Monad (forM_, liftM)
 import Control.Monad.Reader (liftIO)
 import Data.Either (Either(..))
 
@@ -22,16 +22,20 @@ main = hakyll "http://example.com" $ do
     let postPages = map createPage postPaths
 
     -- Render index, including recent posts.
-    let index = createListing "index.html" ["templates/postitem.html"] (take 3 postPages) [("title", Left "Home")]
+    let index = createListing "index.html" ["templates/postitem.html"]
+                              (take 3 postPages) [("title", Left "Home")]
     renderChain ["index.html", "templates/default.html"] index
 
     -- Render all posts list.
-    let posts = createListing "posts.html" ["templates/postitem.html"] postPages [("title", Left "All posts")]
+    let posts = createListing "posts.html" ["templates/postitem.html"]
+                              postPages [("title", Left "All posts")]
     renderChain ["posts.html", "templates/default.html"] posts
 
     -- Render all posts.
     liftIO $ putStrLn "Generating posts..."
-    mapM_ (renderChain ["templates/post.html", "templates/default.html"]) postPages
+    forM_ postPages $ renderChain [ "templates/post.html"
+                                  , "templates/default.html"
+                                  ]
 
     -- Render RSS feed.
     renderRss myFeedConfiguration $

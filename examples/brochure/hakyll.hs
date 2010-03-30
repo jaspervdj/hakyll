@@ -8,5 +8,6 @@ main = hakyll "http://example.com" $ do
     render "about.rst"
     render "index.markdown"
     render "code.lhs"
-    where render = renderChain ["templates/default.html"]
-                 . createPage
+  where
+    render = renderChain ["templates/default.html"]
+           . createPage

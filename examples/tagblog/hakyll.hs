@@ -10,7 +10,7 @@ import Text.Hakyll.CreateContext (createPage, createCustomPage, createListing)
 import Text.Hakyll.ContextManipulations (renderDate, copyValue)
 import Data.List (sort)
 import Data.Map (toList)
-import Control.Monad (mapM_, liftM)
+import Control.Monad (forM_, liftM)
 import Data.Either (Either(..))
 
 main = hakyll "http://example.com" $ do
@@ -28,9 +28,10 @@ main = hakyll "http://example.com" $ do
     renderPostList "posts.html" "All posts" renderablePosts
 
     -- Render post list per tag
-    let renderListForTag tag posts = renderPostList (tagToUrl tag) ("Posts tagged " ++ tag)
-                                                    (map (>>> postManipulation) posts)
-    withTagMap tagMap renderPostList
+    let renderListForTag tag posts =
+            renderPostList (tagToUrl tag) ("Posts tagged " ++ tag)
+                           (map (>>> postManipulation) posts)
+    withTagMap tagMap renderListForTag
 
     -- Render index, including recent posts.
     let tagCloud = tagMap >>> renderTagCloud tagToUrl 100 200
@@ -43,22 +44,24 @@ main = hakyll "http://example.com" $ do
     renderChain ["index.html", "templates/default.html"] index
 
     -- Render all posts.
-    mapM_ (renderChain ["templates/post.html"
-                       ,"templates/default.html"
-                       ]) renderablePosts
+    forM_ renderablePosts $ renderChain [ "templates/post.html"
+                                        , "templates/default.html"
+                                        ]
 
     -- Render rss feed
     renderRss myFeedConfiguration $
         map (>>> copyValue "body" "description") (take 3 renderablePosts)
 
-    where postManipulation =   renderDate "date" "%B %e, %Y" "Date unknown"
-                           >>> renderTagLinks tagToUrl 
+  where
+    postManipulation =   renderDate "date" "%B %e, %Y" "Date unknown"
+                     >>> renderTagLinks tagToUrl 
 
-          tagToUrl tag = "$root/tags/" ++ removeSpaces tag ++ ".html"
+    tagToUrl tag = "$root/tags/" ++ removeSpaces tag ++ ".html"
 
-          renderPostList url title posts = do
-              let list = createListing url ["templates/postitem.html"] posts [("title", Left title)]
-              renderChain ["posts.html", "templates/default.html"] list
+    renderPostList url title posts = do
+        let list = createListing url ["templates/postitem.html"]
+                                 posts [("title", Left title)]
+        renderChain ["posts.html", "templates/default.html"] list
 
 myFeedConfiguration = FeedConfiguration
     { feedUrl         = "rss.xml"
