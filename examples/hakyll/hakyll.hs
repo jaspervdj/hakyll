@@ -5,7 +5,7 @@ import Text.Hakyll.File
 import Text.Hakyll.Regex
 import Control.Monad.Reader (liftIO)
 import System.Directory
-import Control.Monad (mapM_, liftM)
+import Control.Monad (mapM_, forM_, liftM)
 import Data.List (sort)
 
 main = hakyll "http://jaspervdj.be/hakyll" $ do
@@ -19,16 +19,22 @@ main = hakyll "http://jaspervdj.be/hakyll" $ do
                                      ["templates/tutorialitem.html"]
                                      (map createPage tutorials)
                                      [("title", Left "Tutorials")]
-    renderChain ["templates/tutorials.html", "templates/default.html"] $ withSidebar tutorialPage
+    renderChain ["templates/tutorials.html", "templates/default.html"]
+                (withSidebar tutorialPage)
 
-    mapM_ render' $ [ "about.markdown"
-                    , "index.markdown"
-                    , "philosophy.markdown"
-                    , "reference.markdown"
-                    , "changelog.markdown"
-                    ] ++ tutorials
+    mapM_ (render' ["templates/default.html"]) $ 
+        [ "about.markdown"
+        , "index.markdown"
+        , "philosophy.markdown"
+        , "reference.markdown"
+        , "changelog.markdown"
+        ] 
+
+    forM_ tutorials $ render' [ "templates/tutorial.html"
+                              , "templates/default.html"
+                              ] 
 
   where
-    render' = renderChain ["templates/default.html"] . withSidebar . createPage
+    render' templates = renderChain templates . withSidebar . createPage
     withSidebar a = a `combine` createPage "sidebar.markdown"
           
