@@ -1,9 +1,0 @@
-<?xml version="1.0" ?>
-<rss version="2.0">
-    <channel>
-        <title>The SimpleBlog</title>
-        <link>http://example.com</link>
-        <description>Simple blog in hakyll</description>
-        $items
-    </channel> 
-</rss>
