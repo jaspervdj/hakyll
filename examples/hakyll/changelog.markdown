@@ -2,6 +2,16 @@
 title: Changelog
 ---
 
+## Hakyll 2.0
+
+March 31, 2010
+
+- Rewrite of the API to a clean, Arrow based API.
+- Added built-in support for RSS and Atom.
+- Added more documentation.
+- Added pagination.
+- Many bugfixes.
+
 ## Hakyll 1.4
 
 February 17, 2010
