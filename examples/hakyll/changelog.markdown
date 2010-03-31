@@ -47,6 +47,37 @@ January 19, 2010
 
 ## Hakyll 1.0
 
-January 14, 2010
+January 14, 2009
 
 - First stable release.
+- Custom templating system.
+- Added `$root` key for relative URL's.
+
+## Hakyll 0.4
+
+January 8, 2010
+
+- Added examples.
+- Added `ContextManipulation` type.
+
+## Hakyll 0.3
+
+December 28, 2009
+
+- Added a general `directory` function.
+- Added CSS compression.
+- Added tag support.
+- Added a simple HTTP server for testing purposes.
+
+## Hakyll 0.2
+
+December 16, 2010
+
+- Abstracted `Renderable` type.
+- Added simple caching and dependency checking.
+
+## Hakyll 0.1
+
+December 5, 2009
+
+- Initial release.
