@@ -1,6 +1,6 @@
 ---
 title: Interlude
-what: some various tips and tricks about Hakyll
+what: gives some various tips and tricks about Hakyll
 ---
 
 ## Auto-compilation

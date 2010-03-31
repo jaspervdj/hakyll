@@ -108,3 +108,7 @@ pre code {
     padding: 8px;
     margin-bottom: 2em;
 }
+
+p.caption {
+    display: none;
+}

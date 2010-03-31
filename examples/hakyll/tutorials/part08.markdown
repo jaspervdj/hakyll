@@ -95,3 +95,10 @@ an arrow of this function. The `arr` function solves this problem easily.
 We then add this to our index page, and we are done. Feel free to hack around
 with the source code. If you still have questions, feel free to ask them at the
 [google discussion group](http://groups.google.com/group/hakyll).
+
+## The gist of it
+
+- Hakyll supports categories as well as tags.
+- Tags are actually a generalization of categories.
+- Use `readCategoryMap` to read categories.
+- You need to write some custom functions to render category lists etc.
