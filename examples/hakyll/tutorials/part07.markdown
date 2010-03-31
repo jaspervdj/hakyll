@@ -58,3 +58,9 @@ A few examples:
 
 The benefit of this is simply prettier URL's. That is, if you consider
 `example.com/about` prettier than `example.com/about.html`.
+
+## The gist of it
+
+- Auto-compilation is handy, but a rebuild is recommended before deploying your
+  site.
+- You can enable pretty URL's in Hakyll. It is, however, not the default.

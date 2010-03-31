@@ -70,8 +70,8 @@ runHakyllActionIfNeeded action = do
 -- | Chain a number of @HakyllAction@ computations.
 chain :: [HakyllAction a a] -- ^ Actions to chain.
       -> HakyllAction a a   -- ^ Resulting action.
-chain []         = id
-chain list@(_:_) = foldl1 (>>>) list
+chain []   = id
+chain list = foldl1 (>>>) list
 
 instance Category HakyllAction where
     id = HakyllAction
