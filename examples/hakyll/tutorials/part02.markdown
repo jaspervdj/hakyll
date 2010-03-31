@@ -71,10 +71,10 @@ runHakyllActionIfNeeded test
 ## Aso, the point emerges
 
 The `runHakyllActionIfNeeded` suggests why we use arrows. `HakyllAction` is more
-than just a function, it also tracks dependencies. This Hakyll to only execute
-our functions when it is really needed. In this particular case, `test` would
-only be executed if either `test.markdown` or `template.html` were recently
-changed.
+than just a function, it also tracks dependencies. This causes Hakyll to only
+execute our functions when it is really needed. In this particular case, `test`
+would only be executed if either `test.markdown` or `template.html` were
+recently changed.
 
 ## So what's renderChain then?
 
