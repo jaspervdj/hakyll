@@ -33,7 +33,7 @@ tutorial available. Please unzip it in the brochure directory we just created.
 We'll first have a look at what we're going to create (because we're curious
 and all that).
 
-[zip file]: examples/brochure.zip
+[zip file]: $root/examples/brochure.zip
 
 ~~~~~
 [jasper@alice brochure]$ ghc --make hakyll.hs 

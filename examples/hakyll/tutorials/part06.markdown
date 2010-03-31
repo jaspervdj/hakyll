@@ -5,7 +5,7 @@ what: enhances our blog with tags and explains context manipulations.
 
 ## Context manipulations
 
-Here, have [a zip file](examples/tagblog.zip) for this tutorial.
+Here, have [a zip file]($root/examples/tagblog.zip) for this tutorial.
 
 You probably remember that `Context` objects are just key-value mappings. We can
 render those with templates, and then the `$key`'s in the template get

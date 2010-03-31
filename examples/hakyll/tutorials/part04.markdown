@@ -10,7 +10,7 @@ advanced: we are going to create a simple blog system.
 
 A [zip file] containing the source for this tutorial is also available.
 
-[zip file]: examples/simpleblog.zip
+[zip file]: $root/examples/simpleblog.zip
 
 Blogs, as you probably know, are composed of posts. In Hakyll, we're going
 to use simple pages for posts. All posts are located in the `posts`

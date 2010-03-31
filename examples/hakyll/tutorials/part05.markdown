@@ -8,7 +8,7 @@ what: adds an rss feed to the simple blog
 In this tutorial, we're going to add an RSS feed to the blog we wrote in the
 previous part. Here is a [zip file] containing the source.
 
-[zip file]: examples/feedblog.zip
+[zip file]: $root/examples/feedblog.zip
 
 You will be glad to hear that Hakyll has native support for RSS as well as Atom
 feeds[^1]. This simplifies our object a lot.

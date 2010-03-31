@@ -16,7 +16,7 @@ many-to-many relation, and categories are a simple 1-to-many relation.
 
 This is also the reason you can "simulate" categories using tags. In this
 tutorial we will adapt the blog to use categories instead of tags. Here is
-[a zip file](examples/categoryblog.zip) containing the files used in this
+[a zip file]($root/examples/categoryblog.zip) containing the files used in this
 tutorial.
 
 ## About category support

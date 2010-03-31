@@ -98,7 +98,7 @@ Now that we have the tools, we'll get on to the example. This time, we'll
 be making a more advanced brochure site. Here [is a zip file] containing the
 source code for the tutorial.
 
-[is a zip file]: examples/morepages.zip
+[is a zip file]: $root/examples/morepages.zip
 
 Every page consists of three sections, originally named `section1`, `section2`
 and `section3`. So our pages look more or less like this:
