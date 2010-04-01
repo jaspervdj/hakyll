@@ -3,12 +3,15 @@ module Template
     ) where
 
 import qualified Data.Map as M
+import Control.Applicative ((<$>))
+import Control.Monad (replicateM)
 
 import Data.Binary
 import Test.Framework (testGroup)
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
 import Test.HUnit
+import Test.QuickCheck
 
 import Text.Hakyll.Internal.Template
 
@@ -19,6 +22,35 @@ templateGroup = testGroup "Template"
     , testCase "test_substitute_1" test_substitute_1
     , testCase "test_substitute_2" test_substitute_2
     ]
+
+-- | Generate arbitrary templates from a given length.
+arbitraryTemplate :: Int -> Gen Template
+arbitraryTemplate 0 = return End
+arbitraryTemplate length' = oneof [ do chunk <- chunk'
+                                       Chunk chunk <$> template'
+                                  , do key <- key'
+                                       Identifier key <$> template'
+                                  , EscapeCharacter <$> template'
+                                  ]
+  where
+    template' = arbitraryTemplate (length' - 1)
+    -- Generate keys.
+    key' = do l <- choose (5, 10)
+              replicateM l $ choose ('a', 'z')
+    -- Generate non-empty chunks.
+    chunk' = do string <- arbitrary
+                let sanitized = filter (/= '$') string
+                return $ if null sanitized then "foo"
+                                           else sanitized
+
+-- | Make @Template@ testable.
+instance Arbitrary Template where
+    arbitrary = choose (0, 20) >>= arbitraryTemplate
+
+    shrink (Chunk chunk template) = [template, Chunk chunk End]
+    shrink (Identifier key template) = [template, Identifier key End]
+    shrink (EscapeCharacter template) = [template, EscapeCharacter End]
+    shrink End = []
 
 -- Test encoding/decoding of templates.
 prop_template_encode_id :: Template -> Bool

@@ -1,5 +1,5 @@
 module Text.Hakyll.Internal.Template
-    ( Template
+    ( Template (..)
     , fromString
     , readTemplate
     , substitute
@@ -11,13 +11,10 @@ import qualified Data.Map as M
 import Data.List (isPrefixOf)
 import Data.Char (isAlphaNum)
 import Data.Binary
-import Control.Monad (liftM, liftM2, replicateM)
-import Control.Applicative ((<$>))
+import Control.Monad (liftM, liftM2)
 import Data.Maybe (fromMaybe)
 import System.FilePath ((</>))
 import Control.Monad.Reader (liftIO)
-
-import Test.QuickCheck
 
 import Text.Hakyll.Context (Context)
 import Text.Hakyll.HakyllMonad (Hakyll)
@@ -91,32 +88,3 @@ instance Binary Template where
                          2 -> liftM EscapeCharacter get
                          3 -> return End
                          _ -> error "Error reading template"
-
--- | Generate arbitrary templates from a given length.
-arbitraryTemplate :: Int -> Gen Template
-arbitraryTemplate 0 = return End
-arbitraryTemplate length' = oneof [ do chunk <- chunk'
-                                       Chunk chunk <$> template'
-                                  , do key <- key'
-                                       Identifier key <$> template'
-                                  , EscapeCharacter <$> template'
-                                  ]
-  where
-    template' = arbitraryTemplate (length' - 1)
-    -- Generate keys.
-    key' = do l <- choose (5, 10)
-              replicateM l $ choose ('a', 'z')
-    -- Generate non-empty chunks.
-    chunk' = do string <- arbitrary
-                let sanitized = filter (/= '$') string
-                return $ if null sanitized then "foo"
-                                           else sanitized
-
--- | Make @Template@ testable.
-instance Arbitrary Template where
-    arbitrary = choose (0, 20) >>= arbitraryTemplate
-
-    shrink (Chunk chunk template) = [template, Chunk chunk End]
-    shrink (Identifier key template) = [template, Identifier key End]
-    shrink (EscapeCharacter template) = [template, EscapeCharacter End]
-    shrink End = []

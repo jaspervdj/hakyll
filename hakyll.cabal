@@ -39,8 +39,7 @@ library
                     old-locale >= 1,
                     old-time >= 1,
                     time >= 1,
-                    binary >= 0.5,
-                    QuickCheck >= 2
+                    binary >= 0.5
   exposed-modules:  Network.Hakyll.SimpleServer
                     Text.Hakyll
                     Text.Hakyll.Context
