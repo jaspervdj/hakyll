@@ -22,6 +22,7 @@ import Text.Hakyll
 pageGroup = testGroup "Page"
     [ testCase "test_readPage_1" test_readPage_1
     , testCase "test_readPage_2" test_readPage_2
+    , testCase "test_readPage_3" test_readPage_3
     ]
 
 -- | An abstract function to test page reading.
@@ -59,3 +60,11 @@ test_readPage_2 = test_readPage fileName content assertion @? "test_readPage_2"
                         ]
     assertion page =  M.lookup "someSection" page == Just "This is a section.\n"
                    && M.lookup "body" page == Just "This is the body.\n"
+
+-- | readPage test case 3.
+test_readPage_3 = test_readPage fileName content assertion @? "test_readPage_3"
+  where
+    fileName  = "test_readPage_3.txt"
+    content   = unlines [ "No metadata here, sorry."
+                        ]
+    assertion page =  M.lookup "body" page == Just "No metadata here, sorry.\n"
