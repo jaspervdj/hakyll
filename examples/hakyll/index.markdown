@@ -21,6 +21,14 @@ configuration.
 - An easy templating system.
 - Hakyll also features a simple http server for previewing your site.
 
+## See some examples
+
+Some sites written in Hakyll:
+
+- Public page of [Liam O'Conner](http://liamoc.net/)
+- Personal home page and blog of [Chris Done](http://chrisdone.com/)
+- Personal home page and blog of [Jasper Van der Jeugt](http://jaspervdj.be/)
+
 ## Getting Started
 
 You can get the latest version from hackage using `cabal install hakyll`. I
