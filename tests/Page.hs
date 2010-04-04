@@ -23,6 +23,7 @@ pageGroup = testGroup "Page"
     [ testCase "test_readPage_1" test_readPage_1
     , testCase "test_readPage_2" test_readPage_2
     , testCase "test_readPage_3" test_readPage_3
+    , testCase "test_readPage_4" test_readPage_4
     ]
 
 -- | An abstract function to test page reading.
@@ -68,3 +69,20 @@ test_readPage_3 = test_readPage fileName content assertion @? "test_readPage_3"
     content   = unlines [ "No metadata here, sorry."
                         ]
     assertion page =  M.lookup "body" page == Just "No metadata here, sorry.\n"
+
+-- | readPage test case 4.
+test_readPage_4 = test_readPage fileName content assertion @? "test_readPage_4"
+  where
+    fileName  = "test_readPage_4.txt"
+    content   = unlines [ "--- section"
+                        , "This is a section."
+                        , "---"
+                        , "Header"
+                        , "------"
+                        , "The header is not a separate section."
+                        ]
+    assertion page = M.lookup "body" page == Just body
+    body = unlines [ "Header"
+                   , "------"
+                   , "The header is not a separate section."
+                   ]

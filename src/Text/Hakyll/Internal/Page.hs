@@ -8,6 +8,7 @@ import Data.List (isPrefixOf)
 import Data.Char (isSpace)
 import Control.Monad.Reader (liftIO)
 import System.FilePath
+import Control.Monad.State (State, evalState, get, put)
 
 import Text.Pandoc
 
@@ -53,16 +54,25 @@ getRenderFunction fileType = writeHtmlString writerOptions
     readOptions _                       = readerOptions
 
 -- | Split a page into sections.
-splitAtDelimiters :: [String] -> [[String]]
-splitAtDelimiters [] = []
-splitAtDelimiters ls@(x:xs)
-    | isDelimiter x = let (content, rest) = break isDelimiter xs
-                      in (x : content) : splitAtDelimiters rest
-    | otherwise = [ls]
+splitAtDelimiters :: [String] -> State (Maybe String) [[String]]
+splitAtDelimiters [] = return []
+splitAtDelimiters ls@(x:xs) = do
+    delimiter <- get
+    if not (isDelimiter delimiter x)
+        then return [ls]
+        else do let proper = takeWhile (== '-') x
+                    (content, rest) = break (isDelimiter $ Just proper) xs
+                put $ Just proper
+                rest' <- splitAtDelimiters rest
+                return $ (x : content) : rest'
+  where
+    isDelimiter old = case old of
+        Nothing  -> isPossibleDelimiter
+        (Just d) -> (== d) . takeWhile (== '-')
 
 -- | Check if the given string is a metadata delimiter.
-isDelimiter :: String -> Bool
-isDelimiter = isPrefixOf "---"
+isPossibleDelimiter :: String -> Bool
+isPossibleDelimiter = isPrefixOf "---"
 
 -- | Read one section of a page.
 readSection :: (String -> String) -- ^ Render function.
@@ -76,7 +86,7 @@ readSection renderFunction isFirst ls
     | isFirst = readSimpleMetaData (tail ls)
     | otherwise = body (tail ls)
   where
-    isDelimiter' = isDelimiter (head ls)
+    isDelimiter' = isPossibleDelimiter (head ls)
     isNamedDelimiter = head ls `matchesRegex` "^----*  *[a-zA-Z0-9][a-zA-Z0-9]*"
     body ls' = [("body", renderFunction $ unlines ls')]
 
@@ -100,7 +110,7 @@ readPageFromFile path = do
     -- Read file.
     contents <- liftIO $ readFile path
     url <- toUrl path
-    let sections = splitAtDelimiters $ lines contents
+    let sections = evalState (splitAtDelimiters $ lines contents) Nothing
         sectionsData = concat $ zipWith ($) sectionFunctions sections
         context = M.fromList $
             ("url", url) : ("path", path) : category ++ sectionsData
