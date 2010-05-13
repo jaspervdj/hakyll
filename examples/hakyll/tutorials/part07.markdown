@@ -3,6 +3,16 @@ title: Interlude
 what: gives some various tips and tricks about Hakyll
 ---
 
+## Syntax-highlighting
+
+Pandoc (which Hakyll uses as a backend) offers powerful syntax highlighting.
+To enable this, Pandoc needs to be compiled with highlighting support. If this
+is not the case, you can fix this using:
+
+~~~~~
+[jasper@alice ~]$ cabal install --reinstall -fhighlighting pandoc
+~~~~~
+
 ## Auto-compilation
 
 Hakyll features a simple _auto-compilation_ mode. This is invoked by running
