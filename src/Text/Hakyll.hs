@@ -21,19 +21,39 @@ import System.Environment (getArgs, getProgName)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 import System.Time (getClockTime)
 
+import Text.Pandoc
+
 import Network.Hakyll.SimpleServer (simpleServer)
 import Text.Hakyll.HakyllMonad
 import Text.Hakyll.File
 
+-- | The default reader options for pandoc parsing.
+defaultPandocParserState :: ParserState
+defaultPandocParserState = defaultParserState
+    { -- The following option causes pandoc to read smart typography, a nice
+      -- and free bonus.
+      stateSmart = True
+    }
+
+-- | The default writer options for pandoc rendering.
+defaultPandocWriterOptions :: WriterOptions
+defaultPandocWriterOptions = defaultWriterOptions
+    { -- This option causes literate haskell to be written using '>' marks in
+      -- html, which I think is a good default.
+      writerLiterateHaskell = True
+    }
+
 -- | The default hakyll configuration.
 defaultHakyllConfiguration :: HakyllConfiguration
 defaultHakyllConfiguration = HakyllConfiguration
-    { absoluteUrl       = ""
-    , additionalContext = M.empty
-    , siteDirectory     = "_site"
-    , cacheDirectory    = "_cache"
-    , enableIndexUrl    = False
-    , previewPollDelay  = 1000000
+    { absoluteUrl         = ""
+    , additionalContext   = M.empty
+    , siteDirectory       = "_site"
+    , cacheDirectory      = "_cache"
+    , enableIndexUrl      = False
+    , previewPollDelay    = 1000000
+    , pandocParserState   = defaultPandocParserState
+    , pandocWriterOptions = defaultPandocWriterOptions
     }
 
 -- | Main function to run Hakyll with the default configuration. The

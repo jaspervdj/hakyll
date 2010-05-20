@@ -26,4 +26,5 @@ you will have to license your code under a GPL-compatible license.
 ## Authors
 
 Hakyll was originally written by [Jasper Van der Jeugt](http://jaspervdj.be). It
-also received contributions from [seschwar](http://github.com/seschwar).
+also received contributions from [seschwar](http://github.com/seschwar) and
+[JD Marble](http://github.com/jdmarble/).

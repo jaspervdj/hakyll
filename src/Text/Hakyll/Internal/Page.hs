@@ -1,5 +1,5 @@
 -- | A module for dealing with @Page@s. This module is mostly internally used.
-module Text.Hakyll.Internal.Page 
+module Text.Hakyll.Internal.Page
     ( readPage
     ) where
 
@@ -20,28 +20,15 @@ import Text.Hakyll.Util (trim)
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Internal.FileType
 
--- | The default reader options for pandoc parsing.
-readerOptions :: ParserState
-readerOptions = defaultParserState
-    { -- The following option causes pandoc to read smart typography, a nice
-      -- and free bonus.
-      stateSmart = True
-    }
-
--- | The default writer options for pandoc rendering.
-writerOptions :: WriterOptions
-writerOptions = defaultWriterOptions
-    { -- This option causes literate haskell to be written using '>' marks in
-      -- html, which I think is a good default.
-      writerLiterateHaskell = True
-    }
-
 -- | Get a render function for a given extension.
-getRenderFunction :: FileType -> (String -> String)
-getRenderFunction Html     = id
-getRenderFunction Text     = id
-getRenderFunction fileType = writeHtmlString writerOptions
-                           . readFunction fileType (readOptions fileType)
+getRenderFunction :: FileType -> Hakyll (String -> String)
+getRenderFunction Html     = return id
+getRenderFunction Text     = return id
+getRenderFunction fileType = do
+    parserState <- askHakyll pandocParserState
+    writerOptions <- askHakyll pandocWriterOptions
+    return $ writeHtmlString writerOptions
+           . readFunction fileType (readOptions parserState fileType)
   where
     readFunction ReStructuredText        = readRST
     readFunction LaTeX                   = readLaTeX
@@ -49,9 +36,9 @@ getRenderFunction fileType = writeHtmlString writerOptions
     readFunction LiterateHaskellMarkdown = readMarkdown
     readFunction t                       = error $ "Cannot render " ++ show t
 
-    readOptions LiterateHaskellMarkdown =
-        readerOptions { stateLiterateHaskell = True }
-    readOptions _                       = readerOptions
+    readOptions options LiterateHaskellMarkdown = options
+        { stateLiterateHaskell = True }
+    readOptions options _                       = options
 
 -- | Split a page into sections.
 splitAtDelimiters :: [String] -> State (Maybe String) [[String]]
@@ -103,8 +90,8 @@ readSection renderFunction isFirst ls
 --   has a @.markdown@ extension, it will be rendered using pandoc.
 readPageFromFile :: FilePath -> Hakyll Context
 readPageFromFile path = do
-    let renderFunction = getRenderFunction $ getFileType path
-        sectionFunctions = map (readSection renderFunction)
+    renderFunction <- getRenderFunction $ getFileType path
+    let sectionFunctions = map (readSection renderFunction)
                                (True : repeat False)
 
     -- Read file.
