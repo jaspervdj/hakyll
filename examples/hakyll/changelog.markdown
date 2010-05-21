@@ -2,6 +2,14 @@
 title: Changelog
 ---
 
+## Hakyll 2.1
+
+May 21, 2010
+
+- Expose pandoc options to HakyllConfiguration.
+- Allow dashes in pages.
+- Some typo's and bugs fixed.
+
 ## Hakyll 2.0
 
 March 31, 2010
