@@ -11,7 +11,7 @@ module Text.Hakyll.HakyllAction
 
 import Control.Arrow
 import Control.Category
-import Control.Monad ((<=<), mplus, unless)
+import Control.Monad ((<=<), unless)
 import Control.Monad.Reader (liftIO)
 import Prelude hiding ((.), id)
 import System.IO (hPutStrLn, stderr)
@@ -24,7 +24,8 @@ data HakyllAction a b = HakyllAction
     { -- | Dependencies of the @HakyllAction@.
       actionDependencies :: [FilePath]
     , -- | URL pointing to the result of this @HakyllAction@.
-      actionUrl          :: Maybe (Hakyll FilePath)
+      actionUrl          :: Either (Hakyll FilePath)
+                                   (Hakyll FilePath -> Hakyll FilePath)
     , -- | The actual render function.
       actionFunction     :: a -> Hakyll b
     }
@@ -45,7 +46,7 @@ createFileHakyllAction :: FilePath          -- ^ File to operate on.
                        -> HakyllAction () b -- ^ The resulting action.
 createFileHakyllAction path action = HakyllAction
     { actionDependencies = [path]
-    , actionUrl          = Just $ return path
+    , actionUrl          = Left $ return path
     , actionFunction     = const action
     }
 
@@ -60,8 +61,8 @@ runHakyllActionIfNeeded :: HakyllAction () () -- ^ Action to run.
                         -> Hakyll ()          -- ^ Empty result.
 runHakyllActionIfNeeded action = do
     url <- case actionUrl action of
-        (Just u) -> u
-        Nothing  -> error "No url when checking dependencies."
+        Left u  -> u
+        Right _ -> error "No url when checking dependencies."
     destination <- toDestination url
     valid <- isFileMoreRecent destination $ actionDependencies action
     unless valid $ do liftIO $ hPutStrLn stderr $ "Rendering " ++ destination
@@ -76,13 +77,17 @@ chain list = foldl1 (>>>) list
 instance Category HakyllAction where
     id = HakyllAction
         { actionDependencies = []
-        , actionUrl          = Nothing
+        , actionUrl          = Right id
         , actionFunction     = return
         }
 
     x . y = HakyllAction
         { actionDependencies = actionDependencies x ++ actionDependencies y
-        , actionUrl          = actionUrl x `mplus` actionUrl y
+        , actionUrl          = case actionUrl x of
+            Left ux  -> Left ux
+            Right fx -> case actionUrl y of
+                Left uy  -> Left (fx uy)
+                Right fy -> Right (fx . fy)
         , actionFunction     = actionFunction x <=< actionFunction y
         }
 

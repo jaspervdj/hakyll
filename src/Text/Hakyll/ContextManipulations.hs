@@ -3,12 +3,14 @@
 module Text.Hakyll.ContextManipulations
     ( renderValue
     , changeValue
+    , changeUrl
     , copyValue
     , renderDate
     , changeExtension
     , renderBody
     ) where
 
+import Control.Monad (liftM)
 import Control.Arrow (arr)
 import System.Locale (defaultTimeLocale)
 import System.FilePath (takeFileName, addExtension, dropExtension)
@@ -18,7 +20,7 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 
 import Text.Hakyll.Regex (substituteRegex)
-import Text.Hakyll.HakyllAction (HakyllAction)
+import Text.Hakyll.HakyllAction (HakyllAction (..))
 import Text.Hakyll.Context (Context)
 
 -- | Do something with a value in a @Context@, but keep the old value as well.
@@ -42,6 +44,14 @@ changeValue :: String             -- ^ Key to change.
             -> (String -> String) -- ^ Function to apply on the value.
             -> HakyllAction Context Context
 changeValue key = renderValue key key
+
+-- | Change the URL of a page. This requires a special function, so dependency
+-- handling can happen correctly.
+-- 
+changeUrl :: (String -> String)            -- ^ Function to change URL with.
+          -> HakyllAction Context Context  -- ^ Resulting action.
+changeUrl f = let action = changeValue "url" f
+              in action {actionUrl = Right $ liftM f}
 
 -- | Copy a value from one key to another in a @Context@.
 copyValue :: String -- ^ Source key.

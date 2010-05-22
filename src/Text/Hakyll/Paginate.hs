@@ -61,8 +61,8 @@ paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
   where
     -- Create a link with a given label, taken from the configuration.
     linkWithLabel f r = Right $ case actionUrl r of
-        Just l  -> createSimpleHakyllAction $ link (f configuration) <$> l
-        Nothing -> error "No link found for pagination."
+        Left l  -> createSimpleHakyllAction $ link (f configuration) <$> l
+        Right _ -> error "No link found for pagination."
 
     -- The main function that creates combined renderables by recursing over
     -- the list of items.

@@ -11,7 +11,7 @@ module Text.Hakyll.CreateContext
 
 import qualified Data.Map as M
 import Control.Arrow (second)
-import Control.Monad (liftM2, mplus)
+import Control.Monad (liftM2)
 import Control.Applicative ((<$>))
 
 import Text.Hakyll.File
@@ -25,7 +25,7 @@ import Text.Hakyll.Internal.Page
 createPage :: FilePath -> HakyllAction () Context
 createPage path = HakyllAction
     { actionDependencies = [path]
-    , actionUrl          = Just $ toUrl path
+    , actionUrl          = Left $ toUrl path
     , actionFunction     = const (readPage path)
     }
 
@@ -41,7 +41,7 @@ createCustomPage :: FilePath
                  -> HakyllAction () Context
 createCustomPage url association = HakyllAction
     { actionDependencies = dataDependencies
-    , actionUrl          = Just $ return url
+    , actionUrl          = Left $ return url
     , actionFunction     = \_ -> M.fromList <$> assoc'
     }
   where
@@ -78,7 +78,7 @@ combine :: HakyllAction () Context -> HakyllAction () Context
         -> HakyllAction () Context
 combine x y = HakyllAction
     { actionDependencies = actionDependencies x ++ actionDependencies y
-    , actionUrl          = actionUrl x `mplus` actionUrl y
+    , actionUrl          = actionUrl x
     , actionFunction     = \_ ->
         liftM2 M.union (runHakyllAction x) (runHakyllAction y)
     }
@@ -90,7 +90,7 @@ combineWithUrl :: FilePath
                -> HakyllAction () Context
                -> HakyllAction () Context
 combineWithUrl url x y = combine'
-    { actionUrl          = Just $ return url
+    { actionUrl          = Left $ return url
     , actionFunction     = \_ -> M.insert "url" url <$> runHakyllAction combine'
     }
   where

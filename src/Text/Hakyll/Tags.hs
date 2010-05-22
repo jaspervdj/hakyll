@@ -68,7 +68,7 @@ readMap :: (Context -> [String]) -- ^ Function to get tags from a context.
         -> HakyllAction () TagMap
 readMap getTagsFunction identifier paths = HakyllAction
     { actionDependencies = paths
-    , actionUrl          = Nothing
+    , actionUrl          = Right id
     , actionFunction     = actionFunction'
     } 
   where

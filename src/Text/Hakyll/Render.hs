@@ -40,7 +40,7 @@ render :: FilePath                     -- ^ Template to use for rendering.
        -> HakyllAction Context Context -- ^ The render computation.
 render templatePath = HakyllAction
     { actionDependencies = [templatePath]
-    , actionUrl          = Nothing
+    , actionUrl          = Right id
     , actionFunction     = \context ->
         flip pureRender context <$> readTemplate templatePath
     }
@@ -59,7 +59,7 @@ renderAndConcat :: [FilePath]
                 -> HakyllAction () String
 renderAndConcat templatePaths renderables = HakyllAction
     { actionDependencies = renders >>= actionDependencies
-    , actionUrl          = Nothing
+    , actionUrl          = Right id
     , actionFunction     = actionFunction'
     }
   where
