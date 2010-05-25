@@ -102,7 +102,8 @@ createGetResponse :: Request -> Server Response
 createGetResponse request = do
     -- Construct the complete fileName of the requested resource.
     config <- ask
-    let uri = requestURI request
+    let -- Drop everything after a '?'.
+        uri = takeWhile ((/=) '?') $ requestURI request
         log' = writeChan (logChannel config)
     isDirectory <- liftIO $ doesDirectoryExist $ documentRoot config ++ uri
     let fileName =
