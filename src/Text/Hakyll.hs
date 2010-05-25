@@ -1,4 +1,4 @@
--- | This is the main Hakyll module, exporting the important @hakyl@ function.
+-- | This is the main Hakyll module, exporting the important @hakyll@ function.
 --
 --   Most configurations would use this @hakyll@ function more or less as the
 --   main function:
