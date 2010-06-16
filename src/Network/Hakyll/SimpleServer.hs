@@ -188,8 +188,12 @@ respond handle = do
 
 -- | Start a simple http server on the given 'PortNumber', serving the given
 --   directory.
-simpleServer :: PortNumber -> FilePath -> IO ()
-simpleServer port root = do
+--
+simpleServer :: PortNumber  -- ^ Port to listen on.
+             -> FilePath    -- ^ Root directory to serve.
+             -> IO ()       -- ^ Optional pre-respond action.
+             -> IO ()
+simpleServer port root preRespond = do
     -- Channel to send logs to
     logChan <- newChan
 
@@ -200,6 +204,7 @@ simpleServer port root = do
 
           -- When a client connects, respond in a separate thread.
         listen socket = do (handle, _, _) <- accept socket
+                           preRespond
                            forkIO (runReaderT (respond handle) config)
 
     -- Handle logging in a separate thread
