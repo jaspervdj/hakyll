@@ -2,6 +2,10 @@
 title: Changelog
 ---
 
+## Hakyll 2.1.1
+
+- Fix issues in autocompilation/preview mode.
+
 ## Hakyll 2.1
 
 May 21, 2010
