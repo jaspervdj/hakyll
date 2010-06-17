@@ -51,6 +51,10 @@ import Text.Hakyll.Hakyll
 myHakyllConfiguration :: HakyllConfiguration
 myHakyllConfiguration = defaultHakyllConfiguration
     { enableIndexUrl = True
+    , -- Also set the absoluteUrl field, instead of passing
+      -- it directly to the hakyll function. If you do not
+      -- do this, rendered feeds will be invalid!
+      absoluteUrl = "http://jaspervdj.be"
     }
 
 main = hakyllWithConfiguration HakyllConfiguration $ do
