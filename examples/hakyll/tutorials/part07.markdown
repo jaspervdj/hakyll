@@ -78,3 +78,18 @@ The benefit of this is simply prettier URL's. That is, if you consider
 - Auto-compilation is handy, but a rebuild is recommended before deploying your
   site.
 - You can enable pretty URL's in Hakyll. It is, however, not the default.
+
+## Default values
+
+At some point, you might want to use a number of global key-value pairs, for
+example, `$author`. There are two possible ways to achieve this.
+
+- There is an option in `HakyllConfiguration` supporting this, called
+  `additionalContext`. For an example on how to use `HakyllConfiguration`, see
+  the pretty URL's section above.
+
+- Another option is to use a `defaults.markdown` file, simply containing some
+  metadata, and then `combine` this file with other pages. The advantage is
+  that autocompilation mode will pick up changes in this file[^1].
+
+[^1]: Original idea by zenzike.
