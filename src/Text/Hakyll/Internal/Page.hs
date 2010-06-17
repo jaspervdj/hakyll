@@ -22,8 +22,9 @@ import Text.Hakyll.Internal.FileType
 
 -- | Get a render function for a given extension.
 getRenderFunction :: FileType -> Hakyll (String -> String)
-getRenderFunction Html     = return id
-getRenderFunction Text     = return id
+getRenderFunction Html = return id
+getRenderFunction Text = return id
+getRenderFunction UnknownFileType = return id
 getRenderFunction fileType = do
     parserState <- askHakyll pandocParserState
     writerOptions <- askHakyll pandocWriterOptions

@@ -7,18 +7,18 @@ module Text.Hakyll.Internal.Template
     , finalSubstitute
     ) where
 
-import qualified Data.Map as M
 import Data.List (isPrefixOf)
 import Data.Char (isAlphaNum)
 import Data.Binary
 import Control.Monad (liftM, liftM2)
 import Data.Maybe (fromMaybe)
 import System.FilePath ((</>))
-import Control.Monad.Reader (liftIO)
+import qualified Data.Map as M
 
 import Text.Hakyll.Context (Context)
 import Text.Hakyll.HakyllMonad (Hakyll)
 import Text.Hakyll.Internal.Cache
+import Text.Hakyll.Internal.Page
 
 -- | Datatype used for template substitutions.
 data Template = Chunk String Template
@@ -44,11 +44,15 @@ fromString string
 readTemplate :: FilePath -> Hakyll Template
 readTemplate path = do
     isCacheMoreRecent' <- isCacheMoreRecent fileName [path]
-    if isCacheMoreRecent' then getFromCache fileName
-                          else do content <- liftIO $ readFile path
-                                  let template = fromString content
-                                  storeInCache template fileName
-                                  return template
+    if isCacheMoreRecent'
+        then getFromCache fileName
+        else do
+            page <- readPage path
+            let body = fromMaybe (error $ "No body in template " ++ fileName)
+                                 (M.lookup "body" page)
+                template = fromString body
+            storeInCache template fileName
+            return template
   where 
     fileName = "templates" </> path
 
