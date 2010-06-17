@@ -48,16 +48,12 @@ It can be enabled this way:
 import Text.Hakyll
 import Text.Hakyll.Hakyll
 
-myHakyllConfiguration :: HakyllConfiguration
-myHakyllConfiguration = defaultHakyllConfiguration
+myConfig :: HakyllConfiguration
+myConfig = (defaultHakyllConfiguration "http://jaspervdj.be")
     { enableIndexUrl = True
-    , -- Also set the absoluteUrl field, instead of passing
-      -- it directly to the hakyll function. If you do not
-      -- do this, rendered feeds will be invalid!
-      absoluteUrl = "http://jaspervdj.be"
     }
 
-main = hakyllWithConfiguration HakyllConfiguration $ do
+main = hakyllWithConfiguration myConfig $ do
     -- Further code here
 ~~~~~
 
