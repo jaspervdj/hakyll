@@ -44,9 +44,10 @@ defaultPandocWriterOptions = defaultWriterOptions
 
 -- | The default hakyll configuration.
 --
-defaultHakyllConfiguration :: HakyllConfiguration
-defaultHakyllConfiguration = HakyllConfiguration
-    { absoluteUrl         = ""
+defaultHakyllConfiguration :: String               -- ^ Absolute site URL.
+                           -> HakyllConfiguration  -- ^ Default config.
+defaultHakyllConfiguration absoluteUrl' = HakyllConfiguration
+    { absoluteUrl         = absoluteUrl'
     , additionalContext   = M.empty
     , siteDirectory       = "_site"
     , cacheDirectory      = "_cache"
@@ -64,7 +65,7 @@ hakyll :: String    -- ^ Absolute URL of your site. Used in certain cases.
        -> IO ()
 hakyll absolute = hakyllWithConfiguration configuration
   where
-    configuration = defaultHakyllConfiguration { absoluteUrl = absolute }
+    configuration = defaultHakyllConfiguration absolute
 
 -- | Main function to run hakyll with a custom configuration.
 --
