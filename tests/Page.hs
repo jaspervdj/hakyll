@@ -35,7 +35,8 @@ test_readPage fileName content assertion = do
     temporaryDir <- getTemporaryDirectory
     let temporaryFile = temporaryDir </> fileName
     writeFile temporaryFile content
-    page <- runReaderT (readPage temporaryFile) defaultHakyllConfiguration
+    page <- runReaderT (readPage temporaryFile)
+                       (defaultHakyllConfiguration "http://examples.com")
     removeFile temporaryFile
     return $ assertion page
 
@@ -48,7 +49,7 @@ test_readPage_1 = test_readPage fileName content assertion @? "test_readPage_1"
                         , "---"
                         , "This is a simple test."
                         ]
-    assertion page = M.lookup "author" page == Just "Eric Cartman"
+    assertion page = M.lookup "author" (unContext page) == Just "Eric Cartman"
 
 -- | readPage test case 2.
 test_readPage_2 = test_readPage fileName content assertion @? "test_readPage_2"
@@ -59,8 +60,10 @@ test_readPage_2 = test_readPage fileName content assertion @? "test_readPage_2"
                         , "---"
                         , "This is the body."
                         ]
-    assertion page =  M.lookup "someSection" page == Just "This is a section.\n"
-                   && M.lookup "body" page == Just "This is the body.\n"
+    assertion page =
+        let m = unContext page
+        in M.lookup "someSection" m == Just "This is a section.\n"
+           && M.lookup "body" m == Just "This is the body.\n"
 
 -- | readPage test case 3.
 test_readPage_3 = test_readPage fileName content assertion @? "test_readPage_3"
@@ -68,7 +71,8 @@ test_readPage_3 = test_readPage fileName content assertion @? "test_readPage_3"
     fileName  = "test_readPage_3.txt"
     content   = unlines [ "No metadata here, sorry."
                         ]
-    assertion page =  M.lookup "body" page == Just "No metadata here, sorry.\n"
+    assertion page =
+        M.lookup "body" (unContext page) == Just "No metadata here, sorry.\n"
 
 -- | readPage test case 4.
 test_readPage_4 = test_readPage fileName content assertion @? "test_readPage_4"
@@ -81,7 +85,7 @@ test_readPage_4 = test_readPage fileName content assertion @? "test_readPage_4"
                         , "------"
                         , "The header is not a separate section."
                         ]
-    assertion page = M.lookup "body" page == Just body
+    assertion page = M.lookup "body" (unContext page) == Just body
     body = unlines [ "Header"
                    , "------"
                    , "The header is not a separate section."

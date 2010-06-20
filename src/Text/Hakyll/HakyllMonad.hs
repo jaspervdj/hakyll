@@ -12,7 +12,7 @@ import qualified Data.Map as M
 
 import Text.Pandoc (ParserState, WriterOptions)
 
-import Text.Hakyll.Context (Context)
+import Text.Hakyll.Context (Context (..))
 
 -- | Our custom monad stack.
 type Hakyll = ReaderT HakyllConfiguration IO
@@ -50,5 +50,5 @@ askHakyll = flip liftM ask
 
 getAdditionalContext :: HakyllConfiguration -> Context
 getAdditionalContext configuration =
-    M.insert "absolute" (absoluteUrl configuration)
-             (additionalContext configuration)
+    let (Context c) = additionalContext configuration
+    in Context $ M.insert "absolute" (absoluteUrl configuration) c

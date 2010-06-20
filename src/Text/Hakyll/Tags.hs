@@ -43,7 +43,7 @@ import Control.Arrow (second, (>>>))
 import Control.Applicative ((<$>))
 import System.FilePath
 
-import Text.Hakyll.Context (Context)
+import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.ContextManipulations (changeValue)
 import Text.Hakyll.CreateContext (createPage)
 import Text.Hakyll.HakyllMonad (Hakyll)
@@ -105,13 +105,13 @@ readTagMap :: String     -- ^ Unique identifier for the map.
 readTagMap = readMap getTagsFunction
   where
     getTagsFunction = map trim . splitRegex ","
-                    . fromMaybe [] . M.lookup "tags"
+                    . fromMaybe [] . M.lookup "tags" . unContext
 
 -- | Read a @TagMap@, using the subdirectories the pages are placed in.
 readCategoryMap :: String     -- ^ Unique identifier for the map.
                 -> [FilePath] -- ^ Paths to get tags from.
                 -> HakyllAction () TagMap
-readCategoryMap = readMap $ maybeToList . M.lookup "category"
+readCategoryMap = readMap $ maybeToList . M.lookup "category" . unContext
 
 withTagMap :: HakyllAction () TagMap
            -> (String -> [HakyllAction () Context] -> Hakyll ())
@@ -131,7 +131,7 @@ renderTagCloud urlFunction minSize maxSize = createHakyllAction renderTagCloud'
         return $ intercalate " " $ map (renderTag tagMap) (tagCount tagMap)
 
     renderTag tagMap (tag, count) = 
-        finalSubstitute linkTemplate $ M.fromList
+        finalSubstitute linkTemplate $ Context $ M.fromList
             [ ("size", sizeTag tagMap count)
             , ("url", urlFunction tag)
             , ("tag", tag)

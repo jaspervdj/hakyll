@@ -42,7 +42,7 @@ createCustomPage :: FilePath
 createCustomPage url association = HakyllAction
     { actionDependencies = dataDependencies
     , actionUrl          = Left $ return url
-    , actionFunction     = \_ -> M.fromList <$> assoc'
+    , actionFunction     = \_ -> Context . M.fromList <$> assoc'
     }
   where
     mtuple (a, b) = b >>= \b' -> return (a, b')
@@ -80,7 +80,8 @@ combine x y = HakyllAction
     { actionDependencies = actionDependencies x ++ actionDependencies y
     , actionUrl          = actionUrl x
     , actionFunction     = \_ ->
-        liftM2 M.union (runHakyllAction x) (runHakyllAction y)
+        Context <$> liftM2 (M.union) (unContext <$> runHakyllAction x)
+                                     (unContext <$> runHakyllAction y)
     }
 
 -- | Combine two @Context@s and set a custom URL. This behaves like @combine@,
@@ -91,7 +92,8 @@ combineWithUrl :: FilePath
                -> HakyllAction () Context
 combineWithUrl url x y = combine'
     { actionUrl          = Left $ return url
-    , actionFunction     = \_ -> M.insert "url" url <$> runHakyllAction combine'
+    , actionFunction     = \_ ->
+        Context . M.insert "url" url . unContext <$> runHakyllAction combine'
     }
   where
     combine' = combine x y

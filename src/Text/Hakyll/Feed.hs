@@ -28,7 +28,7 @@ import Control.Monad.Reader (liftIO)
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 
-import Text.Hakyll.Context (Context)
+import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.CreateContext (createListing)
 import Text.Hakyll.ContextManipulations (renderDate)
 import Text.Hakyll.HakyllMonad (Hakyll)
@@ -69,8 +69,8 @@ createFeed configuration renderables template itemTemplate =
         ] ++ updated
 
     -- Take the first timestamp, which should be the most recent.
-    updated = let action = createHakyllAction $
-                                return . fromMaybe "foo" . M.lookup "timestamp"
+    updated = let action = createHakyllAction $ return . fromMaybe "foo" 
+                                              . M.lookup "timestamp" . unContext
                   toTuple r = ("timestamp", Right $ r >>> action)
               in map toTuple $ take 1 renderables
             

@@ -12,7 +12,7 @@ import Control.Monad.State (State, evalState, get, put)
 
 import Text.Pandoc
 
-import Text.Hakyll.Context (Context)
+import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.File
 import Text.Hakyll.HakyllMonad
 import Text.Hakyll.Regex (substituteRegex, matchesRegex)
@@ -103,7 +103,7 @@ readPageFromFile path = do
         context = M.fromList $
             ("url", url) : ("path", path) : category ++ sectionsData
 
-    return context
+    return $ Context context
   where
     category = let dirs = splitDirectories $ takeDirectory path
                in [("category", last dirs) | not (null dirs)]

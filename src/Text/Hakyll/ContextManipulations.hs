@@ -21,7 +21,7 @@ import qualified Data.Map as M
 
 import Text.Hakyll.Regex (substituteRegex)
 import Text.Hakyll.HakyllAction (HakyllAction (..))
-import Text.Hakyll.Context (Context)
+import Text.Hakyll.Context (Context (..))
 
 -- | Do something with a value in a @Context@, but keep the old value as well.
 --   If the key given is not present in the @Context@, nothing will happen.
@@ -29,7 +29,7 @@ renderValue :: String             -- ^ Key of which the value should be copied.
             -> String             -- ^ Key the value should be copied to.
             -> (String -> String) -- ^ Function to apply on the value.
             -> HakyllAction Context Context
-renderValue source destination f = arr $ \context ->
+renderValue source destination f = arr $ \(Context context) -> Context $
     case M.lookup source context of
         Nothing      -> context
         (Just value) -> M.insert destination (f value) context

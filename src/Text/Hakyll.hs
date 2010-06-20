@@ -15,7 +15,7 @@ module Text.Hakyll
 
 import Control.Monad.Reader (runReaderT, liftIO, ask)
 import Control.Monad (when)
-import qualified Data.Map as M
+import Data.Monoid (mempty)
 import System.Environment (getArgs, getProgName)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 
@@ -48,7 +48,7 @@ defaultHakyllConfiguration :: String               -- ^ Absolute site URL.
                            -> HakyllConfiguration  -- ^ Default config.
 defaultHakyllConfiguration absoluteUrl' = HakyllConfiguration
     { absoluteUrl         = absoluteUrl'
-    , additionalContext   = M.empty
+    , additionalContext   = mempty
     , siteDirectory       = "_site"
     , cacheDirectory      = "_cache"
     , enableIndexUrl      = False

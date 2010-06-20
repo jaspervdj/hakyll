@@ -7,6 +7,7 @@ module Text.Hakyll.Internal.Template
     , finalSubstitute
     ) where
 
+import Control.Applicative ((<$>))
 import Data.List (isPrefixOf)
 import Data.Char (isAlphaNum)
 import Data.Binary
@@ -15,7 +16,7 @@ import Data.Maybe (fromMaybe)
 import System.FilePath ((</>))
 import qualified Data.Map as M
 
-import Text.Hakyll.Context (Context)
+import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.HakyllMonad (Hakyll)
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Internal.Page
@@ -47,7 +48,7 @@ readTemplate path = do
     if isCacheMoreRecent'
         then getFromCache fileName
         else do
-            page <- readPage path
+            page <- unContext <$> readPage path
             let body = fromMaybe (error $ "No body in template " ++ fileName)
                                  (M.lookup "body" page)
                 template = fromString body
@@ -65,7 +66,7 @@ substitute escaper (Chunk chunk template) context =
 substitute escaper (Identifier key template) context =
     replacement ++ substitute escaper template context
   where
-    replacement = fromMaybe ('$' : key) $ M.lookup key context
+    replacement = fromMaybe ('$' : key) $ M.lookup key $ unContext context
 substitute escaper (EscapeCharacter template) context =
     escaper ++ substitute escaper template context
 substitute _ End _ = []
