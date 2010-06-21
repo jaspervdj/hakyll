@@ -1,6 +1,6 @@
 ---
 title: Interlude
-what: gives some various tips and tricks about Hakyll
+what: gives some various tips and tricks about Hakyll (quite handy, read this!)
 ---
 
 ## Syntax-highlighting
@@ -69,12 +69,6 @@ A few examples:
 The benefit of this is simply prettier URL's. That is, if you consider
 `example.com/about` prettier than `example.com/about.html`.
 
-## The gist of it
-
-- Auto-compilation is handy, but a rebuild is recommended before deploying your
-  site.
-- You can enable pretty URL's in Hakyll. It is, however, not the default.
-
 ## Default values
 
 At some point, you might want to use a number of global key-value pairs, for
@@ -89,3 +83,20 @@ example, `$author`. There are two possible ways to achieve this.
   that autocompilation mode will pick up changes in this file[^1].
 
 [^1]: Original idea by zenzike.
+
+## Markup in templates
+
+Most of the examples in these tutorials use HTML for templates. However, since
+Hakyll 2.2, it is possible use other markup languages in your templates. Simply
+use an appropriate extension, and Hakyll will pick it up. For example, you could
+write your `templates/post.markdown` template as:
+
+    # $title
+
+    _On $date_
+
+    $body
+
+__Warning__: you shouldn't use markdown for your "root" template, as these
+templates will never insert things like the doctype for you -- so you always
+need at least one top-level HTML template.

@@ -2,6 +2,10 @@
 title: Changelog
 ---
 
+## Hakyll 2.2
+
+- Allow markup languages in templates.
+
 ## Hakyll 2.1.1
 
 - Fix issues in autocompilation/preview mode.
