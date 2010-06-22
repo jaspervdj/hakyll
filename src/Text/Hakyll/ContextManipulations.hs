@@ -6,13 +6,14 @@ module Text.Hakyll.ContextManipulations
     , changeUrl
     , copyValue
     , renderDate
+    , renderDateWithLocale
     , changeExtension
     , renderBody
     ) where
 
 import Control.Monad (liftM)
 import Control.Arrow (arr)
-import System.Locale (defaultTimeLocale)
+import System.Locale (TimeLocale, defaultTimeLocale)
 import System.FilePath (takeFileName, addExtension, dropExtension)
 import Data.Time.Format (parseTime, formatTime)
 import Data.Time.Clock (UTCTime)
@@ -66,11 +67,24 @@ copyValue source destination = renderValue source destination id
 --   > renderDate "date" "%B %e, %Y" "Date unknown"
 --
 --   Will render something like @January 32, 2010@.
+--
 renderDate :: String -- ^ Key in which the rendered date should be placed.
            -> String -- ^ Format to use on the date.
            -> String -- ^ Default key, in case the date cannot be parsed.
            -> HakyllAction Context Context
-renderDate key format defaultValue = renderValue "path" key renderDate'
+renderDate = renderDateWithLocale defaultTimeLocale
+
+-- | This is an extended version of 'renderDate' that allows you to specify a
+-- time locale that is used for outputting the date. For more details, see
+-- 'renderDate'.
+--
+renderDateWithLocale :: TimeLocale  -- ^ Output time locale.
+                     -> String      -- ^ Destination key.
+                     -> String      -- ^ Format to use on the date.
+                     -> String      -- ^ Default key.
+                     -> HakyllAction Context Context
+renderDateWithLocale locale key format defaultValue =
+    renderValue "path" key renderDate'
   where
     renderDate' filePath = fromMaybe defaultValue $ do
         let dateString = substituteRegex "^([0-9]*-[0-9]*-[0-9]*).*" "\\1"
@@ -78,7 +92,7 @@ renderDate key format defaultValue = renderValue "path" key renderDate'
         time <- parseTime defaultTimeLocale
                           "%Y-%m-%d"
                           dateString :: Maybe UTCTime
-        return $ formatTime defaultTimeLocale format time
+        return $ formatTime locale format time
 
 -- | Change the extension of a file. This is only needed when you want to
 --   render, for example, mardown to @.php@ files instead of @.html@ files.
