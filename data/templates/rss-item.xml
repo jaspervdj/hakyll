@@ -1,7 +1,7 @@
 <item>
     <title>$title</title>
     <link>$absolute/$url</link>
-    <description>$description</description>
+    <description><![CDATA[$description]]></description>
     <pubDate>$timestamp</pubDate>
     <guid>$absolute/$url</guid>
 </item>

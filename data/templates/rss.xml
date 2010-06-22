@@ -3,7 +3,7 @@
     <channel>
         <title>$title</title>
         <link>$absolute</link>
-        <description>$description</description>
+        <description><![CDATA[$description]]></description>
         <atom:link href="$absolute/$url" rel="self"
                    type="application/rss+xml" />
         <lastBuildDate>$timestamp</lastBuildDate>
