@@ -2,6 +2,11 @@
 title: Changelog
 ---
 
+## Hakyll 2.2.1
+
+- Allow custom time locale for `renderDate`.
+- Render RSS feeds with `CDATA` sections.
+
 ## Hakyll 2.2
 
 - Allow markup languages in templates.
