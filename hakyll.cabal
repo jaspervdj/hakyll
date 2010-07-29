@@ -28,18 +28,18 @@ library
   ghc-options:      -Wall
   hs-source-dirs:   src
   build-depends:    base >= 4 && < 5,
-                    filepath == 1.1.*,
-                    directory == 1.0.*,
-                    containers == 0.3.*,
-                    pandoc == 1.5.*,
-                    regex-base == 0.93.*,
-                    regex-tdfa == 1.1.*,
-                    network == 2.2.*,
-                    mtl == 1.1.*,
-                    old-locale == 1.0.*,
-                    old-time == 1.0.*,
-                    time == 1.2.*,
-                    binary == 0.5.*
+                    filepath == 1.*,
+                    directory == 1.*,
+                    containers == 0.*,
+                    pandoc == 1.*,
+                    regex-base >= 0.93,
+                    regex-tdfa >= 1.1,
+                    network == 2.*,
+                    mtl == 1.*,
+                    old-locale == 1.*,
+                    old-time == 1.*,
+                    time == 1.*,
+                    binary >= 0.5
   exposed-modules:  Network.Hakyll.SimpleServer
                     Text.Hakyll
                     Text.Hakyll.Context
