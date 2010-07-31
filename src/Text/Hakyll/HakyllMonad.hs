@@ -1,6 +1,7 @@
 -- | Module describing the Hakyll monad stack.
 module Text.Hakyll.HakyllMonad
     ( HakyllConfiguration (..)
+    , PreviewMode (..)
     , Hakyll
     , askHakyll
     , getAdditionalContext
@@ -15,9 +16,17 @@ import Text.Pandoc (ParserState, WriterOptions)
 import Text.Hakyll.Context (Context (..))
 
 -- | Our custom monad stack.
+--
 type Hakyll = ReaderT HakyllConfiguration IO
 
+-- | Preview mode.
+--
+data PreviewMode = BuildOnRequest
+                 | BuildOnInterval
+                 deriving (Show, Eq, Ord)
+
 -- | Hakyll global configuration type.
+--
 data HakyllConfiguration = HakyllConfiguration
     { -- | Absolute URL of the site.
       absoluteUrl         :: String
@@ -30,6 +39,8 @@ data HakyllConfiguration = HakyllConfiguration
       cacheDirectory      :: FilePath
     , -- | Enable index links.
       enableIndexUrl      :: Bool
+    , -- | The preview mode used
+      previewMode         :: PreviewMode
     , -- | Pandoc parsing options
       pandocParserState   :: ParserState
     , -- | Pandoc writer options

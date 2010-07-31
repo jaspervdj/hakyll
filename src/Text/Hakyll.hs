@@ -13,16 +13,19 @@ module Text.Hakyll
     , hakyllWithConfiguration
     ) where
 
+import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Reader (runReaderT, liftIO, ask)
 import Control.Monad (when)
 import Data.Monoid (mempty)
 import System.Environment (getArgs, getProgName)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
+import System.Time (getClockTime)
 
 import Text.Pandoc
 
 import Network.Hakyll.SimpleServer (simpleServer)
 import Text.Hakyll.HakyllMonad
+import Text.Hakyll.File
 
 -- | The default reader options for pandoc parsing.
 --
@@ -52,6 +55,7 @@ defaultHakyllConfiguration absoluteUrl' = HakyllConfiguration
     , siteDirectory       = "_site"
     , cacheDirectory      = "_cache"
     , enableIndexUrl      = False
+    , previewMode         = BuildOnRequest
     , pandocParserState   = defaultPandocParserState
     , pandocWriterOptions = defaultPandocWriterOptions
     }
@@ -74,13 +78,35 @@ hakyllWithConfiguration configuration buildFunction = do
     args <- getArgs
     let f = case args of ["build"]      -> buildFunction
                          ["clean"]      -> clean
-                         ["preview", p] -> server (read p) buildFunction
-                         ["preview"]    -> server 8000 buildFunction
+                         ["preview", p] -> preview (read p) 
+                         ["preview"]    -> preview defaultPort
                          ["rebuild"]    -> clean >> buildFunction
                          ["server", p]  -> server (read p) (return ())
-                         ["server"]     -> server 8000 (return ())
+                         ["server"]     -> server defaultPort (return ())
                          _              -> help
     runReaderT f configuration
+  where
+    preview port = case previewMode configuration of
+        BuildOnRequest  -> server port buildFunction
+        BuildOnInterval -> do
+            let pIO = runReaderT (previewThread buildFunction) configuration
+            _ <- liftIO $ forkIO pIO
+            server port (return ())
+
+    defaultPort = 8000
+
+-- | A preview thread that periodically recompiles the site.
+--
+previewThread :: Hakyll ()  -- ^ Build function
+              -> Hakyll ()  -- ^ Result
+previewThread buildFunction = run =<< liftIO getClockTime
+  where
+    delay = 1000000
+    run time = do liftIO $ threadDelay delay
+                  contents <- getRecursiveContents "."
+                  valid <- isMoreRecent time contents
+                  when valid buildFunction
+                  run =<< liftIO getClockTime
 
 -- | Clean up directories.
 --
