@@ -12,9 +12,7 @@ module Text.Hakyll.HakyllAction
 import Control.Arrow
 import Control.Category
 import Control.Monad ((<=<), unless)
-import Control.Monad.Reader (liftIO)
 import Prelude hiding ((.), id)
-import System.IO (hPutStrLn, stderr)
 
 import Text.Hakyll.File (toDestination, isFileMoreRecent)
 import Text.Hakyll.HakyllMonad
@@ -65,7 +63,7 @@ runHakyllActionIfNeeded action = do
         Right _ -> error "No url when checking dependencies."
     destination <- toDestination url
     valid <- isFileMoreRecent destination $ actionDependencies action
-    unless valid $ do liftIO $ hPutStrLn stderr $ "Rendering " ++ destination
+    unless valid $ do logHakyll $ "Rendering " ++ destination
                       runHakyllAction action
 
 -- | Chain a number of @HakyllAction@ computations.

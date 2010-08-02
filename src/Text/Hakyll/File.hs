@@ -5,6 +5,7 @@ module Text.Hakyll.File
     , toCache
     , toUrl
     , toRoot
+    , inDirectory
     , inHakyllDirectory
     , removeSpaces
     , makeDirectories
@@ -87,6 +88,15 @@ toRoot = emptyException . joinPath . map parent . splitPath
     emptyException [] = "."
     emptyException x  = x
 
+-- | Check if a file is in a given directory.
+--
+inDirectory :: FilePath  -- ^ File path
+            -> FilePath  -- ^ Directory
+            -> Bool      -- ^ Result
+inDirectory path dir = case splitDirectories path of
+    [] -> False
+    (x : _) -> x == dir
+
 -- | Check if a file is in a Hakyll directory. With a Hakyll directory, we mean
 -- a directory that should be "ignored" such as the @_site@ or @_cache@
 -- directory.
@@ -101,11 +111,8 @@ toRoot = emptyException . joinPath . map parent . splitPath
 --
 inHakyllDirectory :: FilePath -> Hakyll Bool
 inHakyllDirectory path =
-    or <$> mapM (liftM inDirectory . askHakyll) [siteDirectory, cacheDirectory]
-  where
-    inDirectory dir = case splitDirectories path of
-        [] -> False
-        (x : _) -> x == dir
+    or <$> mapM (liftM (inDirectory path) . askHakyll)
+                [siteDirectory, cacheDirectory]
 
 -- | Swaps spaces for '-'.
 removeSpaces :: FilePath -> FilePath
@@ -123,17 +130,21 @@ makeDirectories path = liftIO $ createDirectoryIfMissing True dir
 
 -- | Get all contents of a directory. Note that files starting with a dot (.)
 --   will be ignored.
+--
 getRecursiveContents :: FilePath -> Hakyll [FilePath]
 getRecursiveContents topdir = do
-    names <- liftIO $ getDirectoryContents topdir
-    let properNames = filter isProper names
-    paths <- forM properNames $ \name -> do
-        let path = topdir </> name
-        isDirectory <- liftIO $ doesDirectoryExist path
-        if isDirectory
-            then getRecursiveContents path
-            else return [path]
-    return (concat paths)
+    topdirExists <- liftIO $ doesDirectoryExist topdir
+    if topdirExists
+        then do names <- liftIO $ getDirectoryContents topdir
+                let properNames = filter isProper names
+                paths <- forM properNames $ \name -> do
+                    let path = topdir </> name
+                    isDirectory <- liftIO $ doesDirectoryExist path
+                    if isDirectory
+                        then getRecursiveContents path
+                        else return [normalise path]
+                return (concat paths)
+        else return []
   where
     isProper = not . (== '.') . head
 

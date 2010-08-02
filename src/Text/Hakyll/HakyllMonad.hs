@@ -5,11 +5,14 @@ module Text.Hakyll.HakyllMonad
     , Hakyll
     , askHakyll
     , getAdditionalContext
+    , logHakyll
     ) where
 
+import Control.Monad.Trans (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad (liftM)
 import qualified Data.Map as M
+import System.IO (hPutStrLn, stderr)
 
 import Text.Pandoc (ParserState, WriterOptions)
 
@@ -65,3 +68,8 @@ getAdditionalContext :: HakyllConfiguration -> Context
 getAdditionalContext configuration =
     let (Context c) = additionalContext configuration
     in Context $ M.insert "absolute" (absoluteUrl configuration) c
+
+-- | Write some log information.
+--
+logHakyll :: String -> Hakyll ()
+logHakyll = liftIO . hPutStrLn stderr
