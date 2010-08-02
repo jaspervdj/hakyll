@@ -59,6 +59,8 @@ data HakyllConfiguration = HakyllConfiguration
 askHakyll :: (HakyllConfiguration -> a) -> Hakyll a
 askHakyll = flip liftM ask
 
+-- | Obtain the globally available, additional context.
+--
 getAdditionalContext :: HakyllConfiguration -> Context
 getAdditionalContext configuration =
     let (Context c) = additionalContext configuration

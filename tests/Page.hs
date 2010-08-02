@@ -35,8 +35,7 @@ test_readPage fileName content assertion = do
     temporaryDir <- getTemporaryDirectory
     let temporaryFile = temporaryDir </> fileName
     writeFile temporaryFile content
-    page <- runReaderT (readPage temporaryFile)
-                       (defaultHakyllConfiguration "http://examples.com")
+    page <- runDefaultHakyll (readPage temporaryFile)
     removeFile temporaryFile
     return $ assertion page
 

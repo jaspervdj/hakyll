@@ -5,6 +5,7 @@ module Text.Hakyll.File
     , toCache
     , toUrl
     , toRoot
+    , inHakyllDirectory
     , removeSpaces
     , makeDirectories
     , getRecursiveContents
@@ -16,6 +17,7 @@ module Text.Hakyll.File
     ) where
 
 import System.Directory
+import Control.Applicative ((<$>))
 import System.FilePath
 import System.Time (ClockTime)
 import Control.Monad
@@ -84,6 +86,26 @@ toRoot = emptyException . joinPath . map parent . splitPath
     parent = const ".."
     emptyException [] = "."
     emptyException x  = x
+
+-- | Check if a file is in a Hakyll directory. With a Hakyll directory, we mean
+-- a directory that should be "ignored" such as the @_site@ or @_cache@
+-- directory.
+--
+-- Example:
+--
+-- > inHakyllDirectory "_cache/pages/index.html"
+--
+-- Result:
+--
+-- > True
+--
+inHakyllDirectory :: FilePath -> Hakyll Bool
+inHakyllDirectory path =
+    or <$> mapM (liftM inDirectory . askHakyll) [siteDirectory, cacheDirectory]
+  where
+    inDirectory dir = case splitDirectories path of
+        [] -> False
+        (x : _) -> x == dir
 
 -- | Swaps spaces for '-'.
 removeSpaces :: FilePath -> FilePath

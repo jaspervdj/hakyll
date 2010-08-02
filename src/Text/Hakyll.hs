@@ -11,6 +11,7 @@ module Text.Hakyll
     ( defaultHakyllConfiguration
     , hakyll
     , hakyllWithConfiguration
+    , runDefaultHakyll
     ) where
 
 import Control.Concurrent (forkIO, threadDelay)
@@ -144,3 +145,10 @@ server port preRespond = do
     root <- askHakyll siteDirectory
     let preRespondIO = runReaderT preRespond configuration
     liftIO $ simpleServer (fromIntegral port) root preRespondIO
+
+-- | Run a Hakyll action with default settings. This is mostly aimed at testing
+-- code.
+--
+runDefaultHakyll :: Hakyll a -> IO a
+runDefaultHakyll f =
+    runReaderT f $ defaultHakyllConfiguration "http://example.com"
