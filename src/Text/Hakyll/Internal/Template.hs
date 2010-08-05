@@ -10,8 +10,6 @@ module Text.Hakyll.Internal.Template
 import Control.Applicative ((<$>))
 import Data.List (isPrefixOf)
 import Data.Char (isAlphaNum)
-import Data.Binary
-import Control.Monad (liftM, liftM2)
 import Data.Maybe (fromMaybe)
 import System.FilePath ((</>))
 import qualified Data.Map as M
@@ -20,13 +18,8 @@ import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.HakyllMonad (Hakyll)
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Internal.Page
-
--- | Datatype used for template substitutions.
-data Template = Chunk String Template
-              | Identifier String Template
-              | EscapeCharacter Template
-              | End
-              deriving (Show, Read, Eq)
+import Text.Hakyll.Internal.Template.Template
+import Text.Hakyll.Internal.Template.Hamlet
 
 -- | Construct a @Template@ from a string.
 fromString :: String -> Template
@@ -48,14 +41,20 @@ readTemplate path = do
     if isCacheMoreRecent'
         then getFromCache fileName
         else do
-            page <- unContext <$> readPage path
-            let body = fromMaybe (error $ "No body in template " ++ fileName)
-                                 (M.lookup "body" page)
-                template = fromString body
+            template <- if isHamletRTFile path
+                            then readHamletTemplate
+                            else readDefaultTemplate
             storeInCache template fileName
             return template
   where 
     fileName = "templates" </> path
+    readDefaultTemplate = do
+        page <- unContext <$> readPage path
+        let body = fromMaybe (error $ "No body in template " ++ fileName)
+                             (M.lookup "body" page)
+        return $ fromString body
+
+    readHamletTemplate = fromHamletRT <$> readHamletRT path
 
 -- | Substitutes @$identifiers@ in the given @Template@ by values from the given
 --   "Context". When a key is not found, it is left as it is. You can specify
@@ -80,16 +79,3 @@ regularSubstitute = substitute "$$"
 --   escaped characters.
 finalSubstitute :: Template -> Context -> String
 finalSubstitute = substitute "$"
-    
-instance Binary Template where
-    put (Chunk string template) = put (0 :: Word8) >> put string >> put template
-    put (Identifier key template) = put (1 :: Word8) >> put key >> put template
-    put (EscapeCharacter template) = put (2 :: Word8) >> put template
-    put (End) = put (3 :: Word8)
-
-    get = do tag <- getWord8
-             case tag of 0 -> liftM2 Chunk get get
-                         1 -> liftM2 Identifier get get
-                         2 -> liftM EscapeCharacter get
-                         3 -> return End
-                         _ -> error "Error reading template"

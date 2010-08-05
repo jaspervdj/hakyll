@@ -23,6 +23,7 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 import System.Time (getClockTime)
 
 import Text.Pandoc
+import Text.Hamlet (defaultHamletSettings)
 
 import Network.Hakyll.SimpleServer (simpleServer)
 import Text.Hakyll.HakyllMonad
@@ -59,6 +60,7 @@ defaultHakyllConfiguration absoluteUrl' = HakyllConfiguration
     , previewMode         = BuildOnRequest
     , pandocParserState   = defaultPandocParserState
     , pandocWriterOptions = defaultPandocWriterOptions
+    , hamletSettings      = defaultHamletSettings
     }
 
 -- | Main function to run Hakyll with the default configuration. The

@@ -15,6 +15,7 @@ import qualified Data.Map as M
 import System.IO (hPutStrLn, stderr)
 
 import Text.Pandoc (ParserState, WriterOptions)
+import Text.Hamlet (HamletSettings)
 
 import Text.Hakyll.Context (Context (..))
 
@@ -48,6 +49,8 @@ data HakyllConfiguration = HakyllConfiguration
       pandocParserState   :: ParserState
     , -- | Pandoc writer options
       pandocWriterOptions :: WriterOptions
+    , -- | Hamlet settings (if you use hamlet for templates)
+      hamletSettings      :: HamletSettings
     }
 
 -- | Simplified @ask@ function for the Hakyll monad stack.

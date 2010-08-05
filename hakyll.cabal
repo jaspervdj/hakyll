@@ -38,8 +38,9 @@ library
                     mtl == 1.*,
                     old-locale == 1.*,
                     old-time == 1.*,
-                    time == 1.*,
-                    binary >= 0.5
+                    time >= 1.2,
+                    binary >= 0.5,
+                    hamlet == 0.4.2
   exposed-modules:  Network.Hakyll.SimpleServer
                     Text.Hakyll
                     Text.Hakyll.Context
@@ -61,3 +62,5 @@ library
                     Text.Hakyll.Internal.FileType
                     Text.Hakyll.Internal.Page
                     Text.Hakyll.Internal.Template
+                    Text.Hakyll.Internal.Template.Template
+                    Text.Hakyll.Internal.Template.Hamlet
