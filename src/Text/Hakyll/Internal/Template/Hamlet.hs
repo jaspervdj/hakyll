@@ -6,13 +6,14 @@ module Text.Hakyll.Internal.Template.Hamlet
     , fromHamletRT
     ) where
 
+import Control.Exception (try)
 import Control.Monad.Trans (liftIO)
 import System.FilePath (takeExtension)
 
 import Text.Hamlet.RT
 
 import Text.Hakyll.Internal.Template.Template
-import Text.Hakyll.HakyllMonad (Hakyll, askHakyll, hamletSettings)
+import Text.Hakyll.HakyllMonad (Hakyll, askHakyll, hamletSettings, logHakyll)
 
 -- | Determine if a file is a hamlet template by extension.
 --
@@ -26,7 +27,17 @@ readHamletRT :: FilePath         -- ^ Filename of the template
 readHamletRT fileName = do
     settings <- askHakyll hamletSettings
     string <- liftIO $ readFile fileName
-    liftIO $ parseHamletRT settings string 
+    result <- liftIO $ try $ parseHamletRT settings string
+    case result of
+        Left (HamletParseException s) -> error' s
+        Left (HamletUnsupportedDocException d) -> error' $ show d
+        Left (HamletRenderException s) -> error' s
+        Right x -> return x
+  where
+    error' s = do
+        logHakyll $ "Parse of hamlet file " ++ fileName ++ " failed."
+        logHakyll s
+        error "Parse failed."
 
 -- | Convert a 'HamletRT' to a 'Template'
 --
