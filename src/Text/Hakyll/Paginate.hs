@@ -1,4 +1,5 @@
 -- | Module aimed to paginate web pages.
+--
 module Text.Hakyll.Paginate
     ( PaginateConfiguration (..)
     , defaultPaginateConfiguration
@@ -13,6 +14,7 @@ import Text.Hakyll.HakyllAction
 import Text.Hakyll.Util (link)
 
 -- | A configuration for a pagination.
+--
 data PaginateConfiguration = PaginateConfiguration
     { -- | Label for the link to the previous page.
       previousLabel :: String
@@ -25,6 +27,7 @@ data PaginateConfiguration = PaginateConfiguration
     }
 
 -- | A simple default configuration for pagination.
+--
 defaultPaginateConfiguration :: PaginateConfiguration
 defaultPaginateConfiguration = PaginateConfiguration
     { previousLabel = "Previous"
@@ -54,6 +57,7 @@ defaultPaginateConfiguration = PaginateConfiguration
 --   When @$previous@ or @$next@ are not available, they will be just a label
 --   without a link. The same goes for when we are on the first or last page for
 --   @$first@ and @$last@.
+--
 paginate :: PaginateConfiguration
          -> [HakyllAction () Context]
          -> [HakyllAction () Context]
@@ -61,7 +65,8 @@ paginate configuration renderables = paginate' Nothing renderables (1 :: Int)
   where
     -- Create a link with a given label, taken from the configuration.
     linkWithLabel f r = Right $ case actionUrl r of
-        Left l  -> createSimpleHakyllAction $ link (f configuration) <$> l
+        Left l  -> createSimpleHakyllAction $
+            link (f configuration) . ("$root/" ++) <$> l
         Right _ -> error "No link found for pagination."
 
     -- The main function that creates combined renderables by recursing over
