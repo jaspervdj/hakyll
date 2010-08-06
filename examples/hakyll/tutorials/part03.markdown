@@ -1,6 +1,6 @@
 ---
 title: How to write pages
-what: elaborates a little on writing pages and templates
+what: elaborates a little on writing pages
 ---
 
 ## The structure of a Page

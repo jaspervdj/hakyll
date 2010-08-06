@@ -1,84 +1,157 @@
 ---
-title: Creating feeds
-what: adds an rss feed to the simple blog
+title: Creating a Blog
+what: creates a simple blog
 ---
 
-## Adding Feeds
+## Creating a simple blog with Hakyll
 
-In this tutorial, we're going to add an RSS feed to the blog we wrote in the
-previous part. Here is a [zip file] containing the source.
+After we created a simple brochure site, we're going to try something more
+advanced: we are going to create a simple blog system.
 
-[zip file]: $root/examples/feedblog.zip
+A [zip file] containing the source for this tutorial is also available.
 
-You will be glad to hear that Hakyll has native support for RSS as well as Atom
-feeds[^1]. This simplifies our object a lot.
+[zip file]: $root/examples/simpleblog.zip
 
-[^1]: Since Hakyll-2.0
-
-This is the first time that the absolute URL of your site you have to give to
-the `hakyll` function actually matters. That's because the specifications of
-those feed formats dictate you need the full URL of them.
-
-## Creating a configuration
-
-The first thing to do is creating a configuration for your feed. You could
-place this code outside of your main function, as is done in the example.
+Blogs, as you probably know, are composed of posts. In Hakyll, we're going
+to use simple pages for posts. All posts are located in the `posts`
+directory. But we're not going to use the `directory` command here - you will
+see why later. First, some trivial things like css.
 
 ~~~~~{.haskell}
-myFeedConfiguration = FeedConfiguration
-    { feedUrl         = "rss.xml"
-    , feedTitle       = "SimpleBlog RSS feed."
-    , feedDescription = "Simple demo of a feed created with Hakyll."
-    , feedAuthorName  = "Jasper Van der Jeugt"
-    }
+main = hakyll "http://example.com" $ do
+    directory css "css"
 ~~~~~
 
-Note that we enter the url of the feed in our configuration. So the function
-to render our feed only takes two arguments, the configuration and a list of
-items to put in the feed. Let's put the three most recent posts in our feed.
+## Finding the posts
+
+`Text.Hakyll.File` contains a handy function `getRecursiveContents`, which will
+provide us with all the blog posts. The blog posts have a
+`yyyy-mm-dd-title.extension` naming scheme. This is just a simple trick so we
+can sort them easily (sorting on filename implies sorting on date). You could of
+course name them whatever you want, but it's always a good idea to stick to the
+conventions. They contain some metadata, too:
+
+    title: A first post
+    author: Julius Caesar
+    date: November 5, 2009
+    ---
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+    Vivamus pretium leo adipiscing lectus iaculis lobortis.
+    Vivamus scelerisque velit dignissim metus...
+
+Now, we find the posts and sort them reversed, so the most recent post will
+become the first item in the list:
 
 ~~~~~{.haskell}
-renderRss myFeedConfiguration (take 3 postPages)
+postPaths <- liftM (reverse . sort) $ getRecursiveContents "posts"
 ~~~~~
 
-## But it's not that easy
-
-If you look at our generated RSS feed (build the site), you will see
-`$description` tags appearing in our final render. We don't want that! How
-did they get there in the first place?
-
-To render feeds, Hakyll expects a number of fields in the renderables you put
-in the feed. They are:
-
-- `$title`: Title of the item. This is set in our posts, since we use a `title`
-  metadata field.
-- `$url`: Url of the item. This is automatically set by Hakyll, so you shouldn't
-  worry about it.
-- `$description`: A description of our item to appear in the feed reader.
-
-The latter is obviously the problem: we don't have a description in our posts.
-In fact, we would like to copy the `$body` key to the `$description` key, so
-people can read the full post in their feed readers.
-
-## Where arrows come in
-
-The `Text.Hakyll.ContextManipulations` module contains a number of simple
-functions that create Arrows for us. One of these functions is `copyValue`,
-which takes a source and a destination key. So, we need to pass our
-items through this Arrow first.
+Our `postPaths` value is now of the type `[FilePath]`. We want to be able to
+render all posts, so we pass them to the `createPage` function.
 
 ~~~~~{.haskell}
-renderRss myFeedConfiguration $
-    map (>>> copyValue "body" "description") (take 3 postPages)
+let postPages = map createPage postPaths
 ~~~~~
 
-And that's that, now our feed gets rendered properly. Exercise for the reader
-is to add a Atom feed[^2].
+We have two templates we want to render our posts with: first we would like to
+render them using `templates/post.html`, and we want to render the result
+using `templates/default.html`. This can be done with the `renderChain`
+function:
 
-[^2]: Hint: look around in the [reference]($root/reference.html).
+~~~~~{.haskell}
+mapM_ (renderChain [ "templates/post.html"
+                   , "templates/default.html"
+                   ]) postPages
+~~~~~
+
+Remember that the `renderChain` works by rendering the item using the first
+template, creating a new page with the render result in the `$body` field, and
+so on until it has been rendered with all templates.
+
+Now, we have the posts rendered. What is left is to generate some kind of index
+page with links to those posts. We want one general list showing all posts, and
+we want to show a few recent posts on the index page.
+
+## Creating listings.
+
+`createPage` is the easiest way of reading a `Context`. But in this case, we
+want something more custom, so we'll use the `createCustomPage` function. This
+allows us to create a more specific `Context`.
+
+~~~~~{.haskell}
+createCustomPage :: FilePath
+                 -> [(String, Either String (HakyllAction () String)]
+                 -> HakyllAction () Context
+~~~~~
+
+The first argument is the `url` of the page to generate. For our index page,
+this will be, `index.html`. The second argument is obviously our `key: value`
+mapping. But why the `Either`? This, once again, is about dependency handling.
+The idea is that you can choose which type to use for the value:
+
+- `String`: Simply a `String`.
+- `HakyllAction () String`: Here, you can give an `HakyllAction` Arrow action
+  that can produce a String. However - this action _will not be executed_ when
+  the file in `_site` is up-to-date.
+
+However, in this specific case - a list of posts - there is an easier, and more
+high-level approach than `createCustomPage`[^1]. Let's look at the type
+signature of `createListing`:
+
+~~~~~{.haskell}
+createListing :: FilePath
+              -> [FilePath]
+              -> [HakyllAction () Context]
+              -> [(String, Either String (HakyllAction () String)]
+              -> HakyllAction () Context
+~~~~~
+
+[^1]: Since Hakyll-1.3 onwards.
+
+The first argument is the destination url. For our blog, this is of course
+`index.html`. The second argument is a list templates to render _each_ `Context`
+with. We use only `templates/postitem.html` here. This is, as you can see, a
+simple template:
+
+~~~~~{.html}
+<li>
+    <a href="$$root/$url">$title</a>
+    - <em>$date</em> - by <em>$author</em>
+</li>
+~~~~~
+
+We then give a list of @Context@s to render. For our index, these are the 3 last
+posts.  The last argument of the `createListing` functions lets you specify
+additional key-value pairs, like in `createCustomPage`. We use this to set the
+title of our page. So, we create our index page using:
+
+~~~~~{.haskell}
+let index = createListing "index.html"
+                          ["templates/postitem.html"]
+                          (take 3 postPages)
+                          [("title", Left "Home")]
+~~~~~
+
+The result of this will be a `HakyllAction () Context`. This `Context`'s `$body`
+will contain a concatenation of all the 3 posts, rendered with the
+`templates/postitem.html` template.
+
+Now, we only have to render it: first using the `index.html` template - which
+adds some more information to our index - then using the
+`templates/default.html` template.
+
+~~~~~{.haskell}
+renderChain ["index.html", "templates/default.html"] index
+~~~~~
+
+Note that the `index.html` in the `renderChain` list is also a template. Now,
+you might want to take your time to read the `index.html` template and the other
+files in the zip so you understand what is going on here.
 
 ## The gist of it
 
-- Hakyll has native support for RSS and Atom feeds.
-- The items must contain `$title` and `$description` fields.
-- Arrows can be used to copy values in a `Context`.
+- You can find blogposts using `getRecursiveContents`.
+- The convention is to call them `yyyy-mm-dd-rest-of-title.extension`. This
+  allows us to sort them easily.
+- You can use `createCustomPage` or `createListing` to create custom pages and
+  simple listings.

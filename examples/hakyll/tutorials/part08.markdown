@@ -1,104 +1,85 @@
 ---
-title: CategoryBlog
-what: explains how to use categories instead of tags
+title: Interlude
+what: gives some various tips and tricks about Hakyll (quite handy, read this!)
 ---
 
-## Categories
+## Syntax-highlighting
 
-Most people familiar with "tags" will also know the concept "categories".
+Pandoc (which Hakyll uses as a backend) offers powerful syntax highlighting.
+To enable this, Pandoc needs to be compiled with highlighting support. If this
+is not the case, you can fix this using:
 
-![Tags illustration]($root/images/tutorial8-tags.png)
-
-In fact, tags are harder to implement because they have to be represented as a
-many-to-many relation, and categories are a simple 1-to-many relation.
-
-![Tags illustration]($root/images/tutorial8-categories.png)
-
-This is also the reason you can "simulate" categories using tags. In this
-tutorial we will adapt the blog to use categories instead of tags. Here is
-[a zip file]($root/examples/categoryblog.zip) containing the files used in this
-tutorial.
-
-## About category support
-
-Categories are simpler, but they are usually used in custom ways. That's why
-Hakyll provides less "standard" functions to deal with them. But this gives us
-another chance to learn some of the things we can do with Hakyll.
-
-## Reading Categories
-
-Tags are located in the `tags` metadata field. Since one post can only belong
-in one category, a different approach was chosen here. The category of a post
-is determined by the subfolder it is in. Here you see the directory layout for
-our posts using categories:
-
-    posts
-    |-- coding
-    |   |-- 2009-11-05-a-first-post.markdown
-    |   |-- 2009-11-28-a-third-post.markdown
-    |   `-- 2009-12-04-this-blog-aint-dead.markdown
-    `-- random
-        |-- 2009-11-10-another-post.markdown
-        `-- 2009-12-23-almost-christmas.markdown
-
-Because we find all our posts in different subdirectories, sorting them is a
-little harder: we still want them sorted by date, so it boils down to sorting
-them by "base name". I hope it does not surprise you Hakyll provides a function
-for that:
-
-~~~~~{.haskell}
-postPaths <- liftM (reverse . sortByBaseName)
-                   (getRecursiveContents "posts")
+~~~~~
+[jasper@alice ~]$ cabal install --reinstall -fhighlighting pandoc
 ~~~~~
 
-We reverse them again, because we want the most recent posts first. Now, we can
-use the `readCategoryMap` function instead of `readTagMap`, which has the same
-signature, but assigns categories based on the folders the posts are in.
+## Auto-compilation
 
-~~~~~{.haskell}
-categoryMap <- readCategoryMap "categoryMap" renderablePosts
+Hakyll features a simple _auto-compilation_ mode. This is invoked by running
+
+~~~~~
+[jasper@alice ~]$ ./hakyll preview
+Starting hakyll server on port 8000...
 ~~~~~
 
-The rest of the `hakyll.hs` is very similar to the one in the previous
-tutorial, except we want to render a category list instead of a tag cloud.
+Now, Hakyll will recompile your site when you change files, so you can just
+refresh in your browser. There is one more thing to note: this will not update
+your site automatically when `hakyll.hs` changes. So if you make any changes to
+the configuration file, you'll have to compile it again, and then you can enter
+`preview` mode again.
 
-## Rendering a category list
+## When to rebuild
 
-Because rendering a category list is quite easy, and it would be hard to
-write a "general" function for this, hakyll does not provide such a function --
-but it is not hard to write. First, we write an auxiliary function that produces
-a list item for one category:
+If you execute a `./hakyll build`, Hakyll will build your site incrementally.
+This means it will be very fast, but it will not pick up _all_ changes.
+
+- In case you edited `hakyll.hs`, you first want to compile it again.
+- It is generally recommended to do a `./hakyll rebuild` before you deploy your
+  site.
+
+## Pretty URL's
+
+There is an option in Hakyll to produce pretty URL's, which is disabled by
+default because it can be confusing when you're first introduced to Hakyll.
+
+It can be enabled this way:
 
 ~~~~~{.haskell}
-categoryListItem category posts =
-    "<li>" ++ link category (categoryToUrl category)
-    ++ " - " ++ show (length posts) ++ " items.</li>"
+import Text.Hakyll
+import Text.Hakyll.Hakyll
+
+myConfig :: HakyllConfiguration
+myConfig = (defaultHakyllConfiguration "http://jaspervdj.be")
+    { enableIndexUrl = True
+    }
+
+main = hakyllWithConfiguration myConfig $ do
+    -- Further code here
 ~~~~~
 
-This is nothing more that some basic string concatenation to create a `li` HTML
-element. The function that applies this on every element in the `TagMap` is more
-interesting:
+The effect will be that the internal `toUrl` function will behave differently.
+A few examples:
 
-~~~~~{.haskell}
-categoryList :: HakyllAction TagMap String
-categoryList = arr $ uncurry categoryListItem <=< toList
-~~~~~
+- `about.html` will be rendered to `about/index.html`.
+- `posts/2010-02-16-a-post.markdown` will be rendered to
+  `posts/2010-02-16-a-post/index.html`.
+- However, `index.markdown` will still be rendered to `index.html`. Likewise,
+  `posts/index.html` would be rendered to `posts.index.html`.
 
-This function might seem a little harder to understand if you are not familiar
-with the `<=<` operator -- but it's just right-to-left monad composition in the
-list monad. `uncurry categoryListItem <=< toList` is a pure function we want to
-execute on the `TagMap`. But this is not possible in Hakyll[^1]. We need to make
-an arrow of this function. The `arr` function solves this problem easily.
+The benefit of this is simply prettier URL's. That is, if you consider
+`example.com/about` prettier than `example.com/about.html`.
 
-[^1]: This is a feature, not a bug. It helps dependency handling.
+## Default values
 
-We then add this to our index page, and we are done. Feel free to hack around
-with the source code. If you still have questions, feel free to ask them at the
-[google discussion group](http://groups.google.com/group/hakyll).
+At some point, you might want to use a number of global key-value pairs, for
+example, `$author`. There are two possible ways to achieve this.
 
-## The gist of it
+- There is an option in `HakyllConfiguration` supporting this, called
+  `additionalContext`. For an example on how to use `HakyllConfiguration`, see
+  the pretty URL's section above.
 
-- Hakyll supports categories as well as tags.
-- Tags are actually a generalization of categories.
-- Use `readCategoryMap` to read categories.
-- You need to write some custom functions to render category lists etc.
+- Another option is to use a `defaults.markdown` file, simply containing some
+  metadata, and then `combine` this file with other pages. The advantage is
+  that autocompilation mode will pick up changes in this file[^1].
+
+[^1]: Original idea by zenzike.
