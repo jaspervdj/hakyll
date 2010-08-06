@@ -6,7 +6,6 @@ module Text.Hakyll.Internal.Template.Hamlet
     , fromHamletRT
     ) where
 
-import Data.List (intercalate)
 import Control.Monad.Trans (liftIO)
 import System.FilePath (takeExtension)
 
@@ -29,16 +28,18 @@ readHamletRT fileName = do
     string <- liftIO $ readFile fileName
     liftIO $ parseHamletRT settings string 
 
-
 -- | Convert a 'HamletRT' to a 'Template'
 --
 fromHamletRT :: HamletRT  -- ^ Hamlet runtime template
              -> Template  -- ^ Hakyll template
-fromHamletRT (HamletRT sd) = fromSimpleDoc sd
+fromHamletRT (HamletRT sd) = Template $ map fromSimpleDoc sd
   where
-    fromSimpleDoc :: [SimpleDoc] -> Template
-    fromSimpleDoc [] = End
-    fromSimpleDoc (SDRaw chunk : xs) = Chunk chunk $ fromSimpleDoc xs
-    fromSimpleDoc (SDVar vars : xs) =
-        Identifier (intercalate "." vars) $ fromSimpleDoc xs
-    fromSimpleDoc (_ : xs) = fromSimpleDoc xs  -- Unsupported elements
+    fromSimpleDoc :: SimpleDoc -> TemplateElement
+    fromSimpleDoc (SDRaw chunk) = Chunk chunk
+    fromSimpleDoc (SDVar [var]) = Identifier var
+    fromSimpleDoc (SDVar _) =
+        error "Hakyll does not support '.' in identifier names when using \
+              \hamlet templates."
+    fromSimpleDoc _ =
+        error "Only simple $key$ identifiers are allowed when using hamlet \
+              \templates."

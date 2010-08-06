@@ -22,16 +22,22 @@ import Text.Hakyll.Internal.Template.Template
 import Text.Hakyll.Internal.Template.Hamlet
 
 -- | Construct a @Template@ from a string.
+--
 fromString :: String -> Template
-fromString [] = End
-fromString string
-    | "$$" `isPrefixOf` string = EscapeCharacter (fromString $ tail tail')
-    | "$" `isPrefixOf` string = let (key, rest) = span isAlphaNum tail'
-                                in Identifier key (fromString rest)
-    | otherwise = let (chunk, rest) = break (== '$') string
-                  in Chunk chunk (fromString rest)
+fromString = Template . fromString'
   where
-    tail' = tail string
+    fromString' [] = []
+    fromString' string
+        | "$$" `isPrefixOf` string =
+            EscapeCharacter : (fromString' $ tail tail')
+        | "$" `isPrefixOf` string =
+            let (key, rest) = span isAlphaNum tail'
+            in Identifier key : fromString' rest
+        | otherwise =
+            let (chunk, rest) = break (== '$') string
+            in Chunk chunk : fromString' rest
+      where
+        tail' = tail string
 
 -- | Read a @Template@ from a file. This function might fetch the @Template@
 --   from the cache, if available.
@@ -60,15 +66,12 @@ readTemplate path = do
 --   "Context". When a key is not found, it is left as it is. You can specify
 --   the characters used to replace escaped dollars (@$$@) here.
 substitute :: String -> Template -> Context -> String 
-substitute escaper (Chunk chunk template) context =
-    chunk ++ substitute escaper template context
-substitute escaper (Identifier key template) context =
-    replacement ++ substitute escaper template context
+substitute escaper template context = substitute' =<< unTemplate template
   where
-    replacement = fromMaybe ('$' : key) $ M.lookup key $ unContext context
-substitute escaper (EscapeCharacter template) context =
-    escaper ++ substitute escaper template context
-substitute _ End _ = []
+    substitute' (Chunk chunk) = chunk
+    substitute' (Identifier key) =
+        fromMaybe ('$' : key) $ M.lookup key $ unContext context
+    substitute' (EscapeCharacter) = escaper
 
 -- | @substitute@ for use during a chain. This will leave escaped characters as
 --   they are.
