@@ -2,6 +2,16 @@
 title: Changelog
 ---
 
+## Hakyll 2.3
+
+- Ability to choose between preview modes.
+- Simple static configuration available.
+- Support hamlet templates.
+
+## Hakyll 2.2.2
+
+- Cabal dependency fixes.
+
 ## Hakyll 2.2.1
 
 - Allow custom time locale for `renderDate`.
