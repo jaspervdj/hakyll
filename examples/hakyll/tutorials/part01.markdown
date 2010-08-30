@@ -56,6 +56,7 @@ magic going on.
 
 ~~~~~{.haskell}
 import Text.Hakyll (hakyll)
+import Control.Monad.Trans (liftIO)
 main = hakyll "http://example.com" $ do
     liftIO $ putStrLn "I'm in your computer, generating your site!"
 ~~~~~
