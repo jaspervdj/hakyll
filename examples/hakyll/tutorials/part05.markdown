@@ -102,7 +102,7 @@ signature of `createListing`:
 createListing :: FilePath
               -> [FilePath]
               -> [HakyllAction () Context]
-              -> [(String, Either String (HakyllAction () String)]
+              -> [(String, Either String (HakyllAction () String))]
               -> HakyllAction () Context
 ~~~~~
 
@@ -120,7 +120,7 @@ simple template:
 </li>
 ~~~~~
 
-We then give a list of @Context@s to render. For our index, these are the 3 last
+We then give a list of `Context`s to render. For our index, these are the 3 last
 posts.  The last argument of the `createListing` functions lets you specify
 additional key-value pairs, like in `createCustomPage`. We use this to set the
 title of our page. So, we create our index page using:
