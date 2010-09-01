@@ -80,7 +80,7 @@ allows us to create a more specific `Context`.
 
 ~~~~~{.haskell}
 createCustomPage :: FilePath
-                 -> [(String, Either String (HakyllAction () String)]
+                 -> [(String, Either String (HakyllAction () String))]
                  -> HakyllAction () Context
 ~~~~~
 
