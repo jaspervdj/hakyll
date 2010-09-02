@@ -1,8 +1,7 @@
 import Text.Hakyll
 import Text.Hakyll.Render
-import Text.Hakyll.CreateContext
 import Text.Hakyll.File
-import Text.Hakyll.Regex
+import Text.Hakyll.CreateContext
 import Control.Monad.Reader (liftIO)
 import System.Directory
 import Control.Monad (mapM_, forM_, liftM)
