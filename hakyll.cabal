@@ -1,5 +1,5 @@
 Name:               hakyll
-Version:            2.3
+Version:            2.3.1
 
 Synopsis:           A simple static site generator library.
 Description:        A simple static site generator library, mainly aimed at
@@ -38,7 +38,7 @@ library
                     mtl == 1.*,
                     old-locale == 1.*,
                     old-time == 1.*,
-                    time >= 1.2,
+                    time >= 1.1,
                     binary >= 0.5,
                     hamlet >= 0.4.2
   exposed-modules:  Network.Hakyll.SimpleServer
