@@ -25,9 +25,11 @@ configuration.
 
 Some sites written in Hakyll:
 
-- Public page of [Liam O'Conner](http://liamoc.net/)
 - Personal home page and blog of [Chris Done](http://chrisdone.com/)
 - Personal home page and blog of [Jasper Van der Jeugt](http://jaspervdj.be/)
+- [The Haskell Alphabet](http://www.cis.upenn.edu/~byorgey/haskell-alphabet/)
+  by Brent Yorgey
+- Personal home page and blog of [Nikolas Wu](http://zenzike.com/)
 
 ## Getting Started
 
