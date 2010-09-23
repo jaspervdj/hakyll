@@ -12,6 +12,20 @@ module Text.Hakyll
     , hakyll
     , hakyllWithConfiguration
     , runDefaultHakyll
+
+    , module Text.Hakyll.Context
+    , module Text.Hakyll.ContextManipulations
+    , module Text.Hakyll.CreateContext
+    , module Text.Hakyll.File
+    , module Text.Hakyll.HakyllMonad
+    , module Text.Hakyll.Regex
+    , module Text.Hakyll.Render
+    , module Text.Hakyll.HakyllAction
+    , module Text.Hakyll.Paginate
+    , module Text.Hakyll.Util
+    , module Text.Hakyll.Tags
+    , module Text.Hakyll.Feed
+    , module Text.Hakyll.Configurations.Static
     ) where
 
 import Control.Concurrent (forkIO, threadDelay)
@@ -26,8 +40,19 @@ import Text.Pandoc
 import Text.Hamlet (defaultHamletSettings)
 
 import Network.Hakyll.SimpleServer (simpleServer)
-import Text.Hakyll.HakyllMonad
+import Text.Hakyll.Context
+import Text.Hakyll.ContextManipulations
+import Text.Hakyll.CreateContext
 import Text.Hakyll.File
+import Text.Hakyll.HakyllMonad
+import Text.Hakyll.Regex
+import Text.Hakyll.Render
+import Text.Hakyll.HakyllAction
+import Text.Hakyll.Paginate
+import Text.Hakyll.Util
+import Text.Hakyll.Tags
+import Text.Hakyll.Feed
+import Text.Hakyll.Configurations.Static
 
 -- | The default reader options for pandoc parsing.
 --

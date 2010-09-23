@@ -17,6 +17,7 @@
 --
 --   Furthermore, the feed will be generated, but will be incorrect (it won't
 --   validate) if an empty list is passed.
+--
 module Text.Hakyll.Feed
     ( FeedConfiguration (..)
     , renderRss
