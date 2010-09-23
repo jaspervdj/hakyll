@@ -27,6 +27,7 @@
 --   @readTagMap@ or @readCategoryMap@ function, you also have to give a unique
 --   identifier to it. This identifier is simply for caching reasons, so Hakyll
 --   can tell different maps apart; it has no other use.
+--
 module Text.Hakyll.Tags
     ( TagMap
     , readTagMap
@@ -40,8 +41,14 @@ import qualified Data.Map as M
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe, maybeToList)
 import Control.Arrow (second, (>>>))
+import Data.Monoid (mappend)
 import Control.Applicative ((<$>))
 import System.FilePath
+
+import Text.Blaze.Renderer.String (renderHtml)
+import Text.Blaze.Html5 ((!), string, stringValue)
+import qualified Text.Blaze.Html5 as H
+import qualified Text.Blaze.Html5.Attributes as A
 
 import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.ContextManipulations (changeValue)
@@ -130,16 +137,11 @@ renderTagCloud urlFunction minSize maxSize = createHakyllAction renderTagCloud'
     renderTagCloud' tagMap =
         return $ intercalate " " $ map (renderTag tagMap) (tagCount tagMap)
 
-    renderTag tagMap (tag, count) = 
-        finalSubstitute linkTemplate $ Context $ M.fromList
-            [ ("size", sizeTag tagMap count)
-            , ("url", urlFunction tag)
-            , ("tag", tag)
-            ]
-
-    linkTemplate =
-        fromString "<a style=\"font-size: $size\" href=\"$url\">$tag</a>"
-
+    renderTag tagMap (tag, count) = renderHtml $
+        H.a ! A.style (stringValue $ "font-size: " ++ sizeTag tagMap count)
+            ! A.href (stringValue $ urlFunction tag)
+            $ string tag
+        
     sizeTag tagMap count = show (size' :: Int) ++ "%"
       where
         size' = floor $ minSize + relative tagMap count * (maxSize - minSize)

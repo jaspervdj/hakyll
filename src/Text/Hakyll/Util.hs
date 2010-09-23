@@ -7,6 +7,10 @@ module Text.Hakyll.Util
 
 import Data.Char (isSpace)
 
+import Text.Blaze.Html5 ((!), string, stringValue, a)
+import Text.Blaze.Html5.Attributes (href)
+import Text.Blaze.Renderer.String (renderHtml)
+
 -- | Trim a string (drop spaces, tabs and newlines at both sides).
 trim :: String -> String
 trim = reverse . trim' . reverse . trim'
@@ -30,5 +34,5 @@ stripHtml str = let (beforeTag, rest) = break (== '<') str
 link :: String -- ^ Link text.
      -> String -- ^ Link destination.
      -> String
-link text destination = "<a href=\"" ++ destination ++ "\">"
-                      ++ text ++ "</a>"
+link text destination = renderHtml $ a ! href (stringValue destination)
+                                       $ string text

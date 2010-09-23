@@ -40,7 +40,8 @@ library
                     old-time == 1.*,
                     time >= 1.1,
                     binary >= 0.5,
-                    hamlet >= 0.4.2
+                    hamlet >= 0.4.2,
+                    blaze-html >= 0.2 && <= 0.3
   exposed-modules:  Network.Hakyll.SimpleServer
                     Text.Hakyll
                     Text.Hakyll.Context
