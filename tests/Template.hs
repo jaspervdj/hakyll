@@ -16,6 +16,7 @@ import Test.QuickCheck
 
 import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.Internal.Template
+import Text.Hakyll.Internal.Template.Template
 
 -- Template test group.
 templateGroup = testGroup "Template"
@@ -26,33 +27,25 @@ templateGroup = testGroup "Template"
     ]
 
 -- | Generate arbitrary templates from a given length.
-arbitraryTemplate :: Int -> Gen Template
-arbitraryTemplate 0 = return End
-arbitraryTemplate length' = oneof [ do chunk <- chunk'
-                                       Chunk chunk <$> template'
-                                  , do key <- key'
-                                       Identifier key <$> template'
-                                  , EscapeCharacter <$> template'
-                                  ]
-  where
-    template' = arbitraryTemplate (length' - 1)
-    -- Generate keys.
-    key' = do l <- choose (5, 10)
-              replicateM l $ choose ('a', 'z')
-    -- Generate non-empty chunks.
-    chunk' = do string <- arbitrary
-                let sanitized = filter (/= '$') string
-                return $ if null sanitized then "foo"
-                                           else sanitized
+--
+instance Arbitrary TemplateElement where
+    arbitrary = oneof
+        -- Random chunk
+        [ Chunk <$> do
+            string <- arbitrary
+            let sanitized = filter (/= '$') string
+            return $ if null sanitized then "foo" else sanitized
+        -- Random identifier
+        , fmap Identifier $
+            choose (5, 10) >>= flip replicateM (choose ('a', 'z'))
+        -- Escape character
+        , return EscapeCharacter
+        ]
 
 -- | Make @Template@ testable.
 instance Arbitrary Template where
-    arbitrary = choose (0, 20) >>= arbitraryTemplate
-
-    shrink (Chunk chunk template) = [template, Chunk chunk End]
-    shrink (Identifier key template) = [template, Identifier key End]
-    shrink (EscapeCharacter template) = [template, EscapeCharacter End]
-    shrink End = []
+    arbitrary = Template <$> arbitrary
+    shrink = map Template . shrink . unTemplate
 
 -- Test encoding/decoding of templates.
 prop_template_encode_id :: Template -> Bool
