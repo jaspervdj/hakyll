@@ -41,7 +41,6 @@ import qualified Data.Map as M
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe, maybeToList)
 import Control.Arrow (second, (>>>))
-import Data.Monoid (mappend)
 import Control.Applicative ((<$>))
 import System.FilePath
 
@@ -58,7 +57,6 @@ import Text.Hakyll.Regex
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Util
 import Text.Hakyll.Internal.Cache
-import Text.Hakyll.Internal.Template
 
 -- | Type for a tag map.
 --
