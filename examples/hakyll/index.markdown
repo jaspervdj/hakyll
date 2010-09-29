@@ -25,6 +25,7 @@ configuration.
 
 Some sites written in Hakyll:
 
+- Blog of [Demotera](http://blog.demotera.com/), a French engineering company
 - Personal home page and blog of [Chris Done](http://chrisdone.com/)
 - Personal home page and blog of [Jasper Van der Jeugt](http://jaspervdj.be/)
 - [The Haskell Alphabet](http://www.cis.upenn.edu/~byorgey/haskell-alphabet/)
