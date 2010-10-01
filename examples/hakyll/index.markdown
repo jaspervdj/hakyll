@@ -30,7 +30,7 @@ Some sites written in Hakyll:
 - Personal home page and blog of [Jasper Van der Jeugt](http://jaspervdj.be/)
 - [The Haskell Alphabet](http://www.cis.upenn.edu/~byorgey/haskell-alphabet/)
   by Brent Yorgey
-- Personal home page and blog of [Nikolas Wu](http://zenzike.com/)
+- Personal home page and blog of [Nicolas Wu](http://zenzike.com/)
 
 ## Getting Started
 
