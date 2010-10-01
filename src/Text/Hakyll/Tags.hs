@@ -118,6 +118,8 @@ readCategoryMap :: String     -- ^ Unique identifier for the map.
                 -> HakyllAction () TagMap
 readCategoryMap = readMap $ maybeToList . M.lookup "category" . unContext
 
+-- | Perform a @Hakyll@ action on every item in the tag
+--
 withTagMap :: HakyllAction () TagMap
            -> (String -> [HakyllAction () Context] -> Hakyll ())
            -> Hakyll ()
