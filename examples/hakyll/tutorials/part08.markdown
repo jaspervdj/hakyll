@@ -52,7 +52,7 @@ It can be enabled this way:
 
 ~~~~~{.haskell}
 import Text.Hakyll
-import Text.Hakyll.Hakyll
+import Text.Hakyll.HakyllMonad
 
 myConfig :: HakyllConfiguration
 myConfig = (defaultHakyllConfiguration "http://jaspervdj.be")
