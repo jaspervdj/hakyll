@@ -6,11 +6,14 @@ module Text.Hakyll.HakyllMonad
     , askHakyll
     , getAdditionalContext
     , logHakyll
+    , forkHakyllWait
+    , concurrentHakyll
     ) where
 
 import Control.Monad.Trans (liftIO)
-import Control.Monad.Reader (ReaderT, ask)
-import Control.Monad (liftM)
+import Control.Concurrent.MVar (MVar, putMVar, newEmptyMVar, readMVar)
+import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Control.Monad (liftM, forM, forM_)
 import qualified Data.Map as M
 import System.IO (hPutStrLn, stderr)
 
@@ -76,3 +79,21 @@ getAdditionalContext configuration =
 --
 logHakyll :: String -> Hakyll ()
 logHakyll = liftIO . hPutStrLn stderr
+
+-- | Perform a concurrent hakyll action. Returns an MVar you can wait on
+--
+forkHakyllWait :: Hakyll () -> Hakyll (MVar ())
+forkHakyllWait action = do
+    mvar <- liftIO newEmptyMVar
+    config <- ask
+    liftIO $ do
+        runReaderT action config
+        putMVar mvar ()
+    return mvar
+
+-- | Perform a number of concurrent hakyll actions, and waits for them to finish
+--
+concurrentHakyll :: [Hakyll ()] -> Hakyll ()
+concurrentHakyll actions = do
+    mvars <- forM actions forkHakyllWait
+    forM_ mvars (liftIO . readMVar)
