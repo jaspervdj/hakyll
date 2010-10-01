@@ -32,6 +32,7 @@ getFileType = getFileType' . takeExtension
     getFileType' ".mdwn"     = Markdown
     getFileType' ".mkd"      = Markdown
     getFileType' ".mkdwn"    = Markdown
+    getFileType' ".page"     = Markdown
     getFileType' ".rst"      = ReStructuredText
     getFileType' ".tex"      = LaTeX
     getFileType' ".text"     = Text
