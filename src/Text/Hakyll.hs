@@ -82,6 +82,7 @@ defaultHakyllConfiguration absoluteUrl' = HakyllConfiguration
     , siteDirectory       = "_site"
     , cacheDirectory      = "_cache"
     , enableIndexUrl      = False
+    , enableNoHtmlUrl     = False
     , previewMode         = BuildOnRequest
     , pandocParserState   = defaultPandocParserState
     , pandocWriterOptions = defaultPandocWriterOptions

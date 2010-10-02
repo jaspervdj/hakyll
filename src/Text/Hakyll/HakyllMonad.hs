@@ -46,6 +46,8 @@ data HakyllConfiguration = HakyllConfiguration
       cacheDirectory      :: FilePath
     , -- | Enable index links.
       enableIndexUrl      :: Bool
+    , -- | Enable links without the .html suffix
+      enableNoHtmlUrl      :: Bool
     , -- | The preview mode used
       previewMode         :: PreviewMode
     , -- | Pandoc parsing options

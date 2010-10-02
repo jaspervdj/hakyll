@@ -64,6 +64,8 @@ toCache path = do dir <- askHakyll cacheDirectory
 --   function returns a path with a @.html@ extension instead.
 toUrl :: FilePath -> Hakyll FilePath
 toUrl path = do enableIndexUrl' <- askHakyll enableIndexUrl
+                enableNoHtmlUrl' <- askHakyll enableNoHtmlUrl
+
                 -- If the file does not have a renderable extension, like for
                 -- example favicon.ico, we don't have to change it at all.
                 return $ if not (isRenderableFile path)
@@ -72,10 +74,12 @@ toUrl path = do enableIndexUrl' <- askHakyll enableIndexUrl
                             -- unless the page is an index already.
                             else if enableIndexUrl' && not isIndex
                                 then indexUrl
-                                else withSimpleHtmlExtension
+                                else if enableNoHtmlUrl' then noExtension
+                                     else withSimpleHtmlExtension
   where
     isIndex = dropExtension (takeFileName path) == "index"
-    withSimpleHtmlExtension = flip addExtension ".html" $ dropExtension path
+    noExtension = dropExtension path
+    withSimpleHtmlExtension = flip addExtension ".html" $ noExtension
     indexUrl = dropExtension path ++ "/"
                             
 

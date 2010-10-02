@@ -106,35 +106,43 @@ createGetResponse request = do
         uri = takeWhile ((/=) '?') $ requestURI request
         log' = writeChan (logChannel config)
     isDirectory <- liftIO $ doesDirectoryExist $ documentRoot config ++ uri
-    let fileName =
-            documentRoot config ++ if isDirectory then uri ++ "/index.html"
-                                                  else uri
-
-        create200 = do
-            h <- openBinaryFile fileName ReadMode
-            contentLength <- hFileSize h
-            body <- hGetContents h
-            let mimeHeader = getMIMEHeader fileName
-                headers = ("Content-Length", show contentLength) : mimeHeader
-            return $ defaultResponse
-                { responseStatusCode = 200
-                , responsePhrase = "OK"
-                , responseHeaders = responseHeaders defaultResponse
-                    `M.union` M.fromList headers
-                , responseBody = body
-                }
+    let fileNames =
+          map (documentRoot config ++) (if isDirectory
+            then [uri ++ "/index.html", uri ++ ".html"]
+            else [uri, uri ++ ".html"] )
 
         -- Called when an error occurs during the creation of a 200 response.
         create500 e = do
             log' $ "Internal Error: " ++ show e
             return $ createErrorResponse 500 "Internal Server Error"
 
+        doesNotExist = do
+          liftIO $ log' $ "Not Found: " ++ (head fileNames)
+          return $ createErrorResponse 404 "Not Found"
+
+        doesExist fname = liftIO $ catch (create200 fname) create500
+
     -- Send back the page if found.
-    exists <- liftIO $ doesFileExist fileName
+    exists <- liftIO $ doesFileExist (head fileNames)
     if exists
-        then liftIO $ catch create200 create500
-        else do liftIO $ log' $ "Not Found: " ++ fileName
-                return $ createErrorResponse 404 "Not Found"
+        then doesExist (head fileNames)
+        else do existsHtml <- liftIO $ doesFileExist (last fileNames)
+                if existsHtml then doesExist (last fileNames)
+                              else doesNotExist
+  where
+    create200 fileName' = do
+        h <- openBinaryFile fileName' ReadMode
+        contentLength <- hFileSize h
+        body <- hGetContents h
+        let mimeHeader = getMIMEHeader fileName'
+            headers = ("Content-Length", show contentLength) : mimeHeader
+        return $ defaultResponse
+            { responseStatusCode = 200
+            , responsePhrase = "OK"
+            , responseHeaders = responseHeaders defaultResponse
+                `M.union` M.fromList headers
+            , responseBody = body
+            }
 
 -- | Get the mime header for a certain filename. This is based on the extension
 --   of the given 'FilePath'.
