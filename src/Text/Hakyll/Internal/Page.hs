@@ -71,8 +71,8 @@ readSection _ _ [] = []
 readSection renderFunction isFirst ls
     | not isDelimiter' = body ls
     | isNamedDelimiter = readSectionMetaData ls
-    | isFirst = readSimpleMetaData (tail ls)
-    | otherwise = body (tail ls)
+    | isFirst = readSimpleMetaData (drop 1 ls)
+    | otherwise = body (drop 1 ls)
   where
     isDelimiter' = isPossibleDelimiter (head ls)
     isNamedDelimiter = head ls `matchesRegex` "^----*  *[a-zA-Z0-9][a-zA-Z0-9]*"
@@ -80,7 +80,7 @@ readSection renderFunction isFirst ls
 
     readSimpleMetaData = map readPair . filter (not . all isSpace)
     readPair = trimPair . break (== ':')
-    trimPair (key, value) = (trim key, trim $ tail value)
+    trimPair (key, value) = (trim key, trim $ drop 1 value)
 
     readSectionMetaData [] = []
     readSectionMetaData (header:value) =

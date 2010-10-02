@@ -29,15 +29,13 @@ fromString = Template . fromString'
     fromString' [] = []
     fromString' string
         | "$$" `isPrefixOf` string =
-            EscapeCharacter : (fromString' $ tail tail')
+            EscapeCharacter : (fromString' $ drop 2 string)
         | "$" `isPrefixOf` string =
-            let (key, rest) = span isAlphaNum tail'
+            let (key, rest) = span isAlphaNum $ drop 1 string
             in Identifier key : fromString' rest
         | otherwise =
             let (chunk, rest) = break (== '$') string
             in Chunk chunk : fromString' rest
-      where
-        tail' = tail string
 
 -- | Read a @Template@ from a file. This function might fetch the @Template@
 --   from the cache, if available.
