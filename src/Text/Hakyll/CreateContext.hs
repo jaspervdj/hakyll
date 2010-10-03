@@ -18,7 +18,7 @@ import Control.Arrow ((>>>))
 import Text.Hakyll.Context
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Render
-import Text.Hakyll.Internal.Page
+import Text.Hakyll.Page
 import Text.Hakyll.Pandoc
 import Text.Hakyll.Internal.Cache
 

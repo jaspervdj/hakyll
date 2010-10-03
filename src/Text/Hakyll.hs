@@ -22,6 +22,8 @@ module Text.Hakyll
     , module Text.Hakyll.Render
     , module Text.Hakyll.HakyllAction
     , module Text.Hakyll.Paginate
+    , module Text.Hakyll.Page
+    , module Text.Hakyll.Pandoc
     , module Text.Hakyll.Util
     , module Text.Hakyll.Tags
     , module Text.Hakyll.Feed
@@ -49,6 +51,8 @@ import Text.Hakyll.Regex
 import Text.Hakyll.Render
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Paginate
+import Text.Hakyll.Page
+import Text.Hakyll.Pandoc
 import Text.Hakyll.Util
 import Text.Hakyll.Tags
 import Text.Hakyll.Feed

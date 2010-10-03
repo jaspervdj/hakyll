@@ -20,7 +20,7 @@ import Text.Hakyll.HakyllMonad (Hakyll)
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Pandoc
 import Text.Hakyll.Internal.Cache
-import Text.Hakyll.Internal.Page
+import Text.Hakyll.Page
 import Text.Hakyll.Internal.Template.Template
 import Text.Hakyll.Internal.Template.Hamlet
 

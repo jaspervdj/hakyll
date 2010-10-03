@@ -1,4 +1,8 @@
-module Text.Hakyll.Pandoc where
+-- | Module exporting a pandoc arrow
+--
+module Text.Hakyll.Pandoc
+    ( renderAction
+    ) where
 
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
@@ -7,7 +11,7 @@ import Control.Arrow (second)
 import Text.Pandoc
 
 import Text.Hakyll.Internal.FileType
-import Text.Hakyll.Internal.Page
+import Text.Hakyll.Page
 import Text.Hakyll.HakyllMonad
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Context

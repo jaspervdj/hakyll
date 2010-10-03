@@ -1,5 +1,5 @@
 -- | A module for dealing with @Page@s. This module is mostly internally used.
-module Text.Hakyll.Internal.Page
+module Text.Hakyll.Page
     ( PageSection (..)
     , readPage
     , readPageAction
