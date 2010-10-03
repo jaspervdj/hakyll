@@ -2,14 +2,17 @@ module Text.Hakyll.Internal.Cache
     ( storeInCache
     , getFromCache
     , isCacheMoreRecent
+    , cacheAction
     ) where
 
 import Control.Monad ((<=<))
 import Control.Monad.Reader (liftIO)
 import Data.Binary
+import System.FilePath ((</>))
 
 import Text.Hakyll.File
 import Text.Hakyll.HakyllMonad (Hakyll)
+import Text.Hakyll.HakyllAction
 
 -- | We can store all datatypes instantiating @Binary@ to the cache. The cache
 --   directory is specified by the @HakyllConfiguration@, usually @_cache@.
@@ -29,3 +32,22 @@ getFromCache = liftIO . decodeFile <=< toCache
 -- | Check if a file in the cache is more recent than a number of other files.
 isCacheMoreRecent :: FilePath -> [FilePath] -> Hakyll Bool
 isCacheMoreRecent file depends = toCache file >>= flip isFileMoreRecent depends
+
+-- | Cache an entire arrow
+--
+cacheAction :: Binary a
+            => String
+            -> HakyllAction () a
+            -> HakyllAction () a
+cacheAction key action = action { actionFunction = const cacheFunction }
+  where
+    cacheFunction = do
+        -- Construct a filename
+        fileName <- fmap (key </>) $ either id (const $ return "unknown")
+                                   $ actionUrl action
+        -- Check the cache
+        cacheOk <- isCacheMoreRecent fileName $ actionDependencies action
+        if cacheOk then getFromCache fileName
+                   else do result <- actionFunction action ()
+                           storeInCache result fileName
+                           return result

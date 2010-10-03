@@ -7,6 +7,7 @@ module Text.Hakyll.Internal.Template
     , finalSubstitute
     ) where
 
+import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
 import Data.List (isPrefixOf)
 import Data.Char (isAlphaNum)
@@ -16,6 +17,8 @@ import qualified Data.Map as M
 
 import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.HakyllMonad (Hakyll)
+import Text.Hakyll.HakyllAction
+import Text.Hakyll.Pandoc
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Internal.Page
 import Text.Hakyll.Internal.Template.Template
@@ -53,7 +56,8 @@ readTemplate path = do
   where 
     fileName = "templates" </> path
     readDefaultTemplate = do
-        page <- unContext <$> readPage path
+        page <- unContext <$>
+                    runHakyllAction (readPageAction path >>> renderAction)
         let body = fromMaybe (error $ "No body in template " ++ fileName)
                              (M.lookup "body" page)
         return $ fromString body

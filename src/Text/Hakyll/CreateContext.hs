@@ -13,21 +13,19 @@ import qualified Data.Map as M
 import Control.Arrow (second)
 import Control.Monad (liftM2)
 import Control.Applicative ((<$>))
+import Control.Arrow ((>>>))
 
-import Text.Hakyll.File
 import Text.Hakyll.Context
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Render
 import Text.Hakyll.Internal.Page
+import Text.Hakyll.Pandoc
+import Text.Hakyll.Internal.Cache
 
 -- | Create a @Context@ from a page file stored on the disk. This is probably
 --   the most common way to create a @Context@.
 createPage :: FilePath -> HakyllAction () Context
-createPage path = HakyllAction
-    { actionDependencies = [path]
-    , actionUrl          = Left $ toUrl path
-    , actionFunction     = const (readPage path)
-    }
+createPage path = cacheAction "pages" $ readPageAction path >>> renderAction
 
 -- | Create a "custom page" @Context@.
 --   
