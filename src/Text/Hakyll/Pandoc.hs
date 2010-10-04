@@ -2,11 +2,12 @@
 --
 module Text.Hakyll.Pandoc
     ( renderAction
+    , renderActionWith
     ) where
 
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
-import Control.Arrow (second)
+import Control.Arrow (second, (>>>), arr)
 
 import Text.Pandoc
 
@@ -42,11 +43,16 @@ getRenderFunction fileType = do
 --
 renderAction :: HakyllAction [PageSection] Context
 renderAction = createHakyllAction $ \sections -> do
-    let triples = map unPageSection sections
-        path = fromMaybe "unknown" $ lookup "path" 
+    let path = fromMaybe "unknown" $ lookup "path" 
                                    $ map (\(x, y, _) -> (x, y))
-                                   $ triples
+                                   $ map unPageSection sections
     render' <- getRenderFunction $ getFileType path
-    let pairs = map (\(k, v, r) -> second (if r then render' else id) (k, v))
-                    triples
-    return $ Context $ M.fromList pairs
+    runHakyllAction $ arr (const sections) >>> renderActionWith render'
+
+-- | An action to render pages, offering just a little more flexibility
+--
+renderActionWith :: (String -> String) -> HakyllAction [PageSection] Context
+renderActionWith render' = createHakyllAction $ \sections -> return $
+    Context $ M.fromList $ map (renderTriple . unPageSection) sections
+  where
+    renderTriple (k, v, r) = second (if r then render' else id) (k, v)
