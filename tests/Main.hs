@@ -12,6 +12,7 @@ import Template
 import Util
 
 -- | Run all tests.
+main :: IO ()
 main = defaultMain [ compressCssGroup
                    , fileGroup
                    , pageGroup

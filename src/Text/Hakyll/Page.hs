@@ -17,9 +17,16 @@ import Text.Hakyll.HakyllAction
 import Text.Hakyll.Regex (substituteRegex, matchesRegex)
 import Text.Hakyll.Util (trim)
 
--- | Page info handle: (key, value, needs rendering)
+-- | A page is first parsed into a number of page sections. A page section
+-- consists of:
 --
-data PageSection = PageSection {unPageSection :: [(String, String, Bool)]}
+-- * A key
+--
+-- * A value
+--
+-- * A 'Bool' flag, indicating if the value is applicable for rendering
+--
+data PageSection = PageSection {unPageSection :: (String, String, Bool)}
                  deriving (Show)
 
 -- | Split a page into sections.
@@ -48,26 +55,26 @@ isPossibleDelimiter = isPrefixOf "---"
 --
 readSection :: Bool -- ^ If this section is the first section in the page.
             -> [String] -- ^ Lines in the section.
-            -> PageSection -- ^ Key-values extracted.
-readSection _ [] = PageSection []
+            -> [PageSection] -- ^ Key-values extracted.
+readSection _ [] = []
 readSection isFirst ls
-    | not isDelimiter' = body ls
-    | isNamedDelimiter = PageSection $ readSectionMetaData ls
-    | isFirst = PageSection $ readSimpleMetaData (drop 1 ls)
-    | otherwise = body (drop 1 ls)
+    | not isDelimiter' = [body ls]
+    | isNamedDelimiter = readSectionMetaData ls
+    | isFirst = readSimpleMetaData (drop 1 ls)
+    | otherwise = [body (drop 1 ls)]
   where
     isDelimiter' = isPossibleDelimiter (head ls)
     isNamedDelimiter = head ls `matchesRegex` "^----*  *[a-zA-Z0-9][a-zA-Z0-9]*"
-    body ls' = PageSection [("body", unlines ls', True)]
+    body ls' = PageSection ("body", unlines ls', True)
 
     readSimpleMetaData = map readPair . filter (not . all isSpace)
     readPair = trimPair . break (== ':')
-    trimPair (key, value) = (trim key, trim (drop 1 value), False)
+    trimPair (key, value) = PageSection (trim key, trim (drop 1 value), False)
 
     readSectionMetaData [] = []
     readSectionMetaData (header:value) =
         let key = substituteRegex "[^a-zA-Z0-9]" "" header
-        in [(key, unlines value, True)]
+        in [PageSection (key, unlines value, True)]
 
 -- | Read a page from a file. Metadata is supported.
 --
@@ -79,14 +86,14 @@ readPage path = do
     contents <- liftIO $ readFile path
     url <- toUrl path
     let sections = evalState (splitAtDelimiters $ lines contents) Nothing
-        sectionsData = zipWith ($) sectionFunctions sections
+        sectionsData = concat $ zipWith ($) sectionFunctions sections
 
-    return $ PageSection [ ("url", url, False)
-                         , ("path", path, False)
-                         ] : category : sectionsData
+    return $ PageSection ("url", url, False)
+           : PageSection ("path", path, False)
+           : (category ++ sectionsData)
   where
     category = let dirs = splitDirectories $ takeDirectory path
-               in PageSection [("category", last dirs, False) | not (null dirs)]
+               in [PageSection ("category", last dirs, False) | not (null dirs)]
 
 -- | Read a page from a file. Metadata is supported.
 --

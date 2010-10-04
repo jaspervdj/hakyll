@@ -38,11 +38,11 @@ getRenderFunction fileType = do
         { stateLiterateHaskell = True }
     readOptions options _                       = options
 
--- | Path must be there
+-- | An action that renders the list of page sections to a context using pandoc
 --
 renderAction :: HakyllAction [PageSection] Context
 renderAction = createHakyllAction $ \sections -> do
-    let triples = unPageSection =<< sections
+    let triples = map unPageSection sections
         path = fromMaybe "unknown" $ lookup "path" 
                                    $ map (\(x, y, _) -> (x, y))
                                    $ triples

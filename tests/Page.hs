@@ -13,7 +13,8 @@ import Test.HUnit
 import System.Directory (getTemporaryDirectory, removeFile)
 import System.FilePath ((</>))
 
-import Text.Hakyll.Internal.Page
+import Text.Hakyll.Page
+import Text.Hakyll.Pandoc
 import Text.Hakyll.Context
 import Text.Hakyll.HakyllAction
 import Text.Hakyll
@@ -35,7 +36,7 @@ test_readPage fileName content assertion = do
     temporaryDir <- getTemporaryDirectory
     let temporaryFile = temporaryDir </> fileName
     writeFile temporaryFile content
-    page <- runDefaultHakyll (readPage temporaryFile)
+    page <- runDefaultHakyll (runHakyllAction $ createPage temporaryFile)
     removeFile temporaryFile
     return $ assertion page
 
