@@ -43,15 +43,19 @@ removeLeadingSeparator path
 -- | Convert a relative filepath to a filepath in the destination
 --   (default: @_site@).
 toDestination :: FilePath -> Hakyll FilePath
-toDestination url = do dir <- askHakyll siteDirectory
-                       enableIndexUrl' <- askHakyll enableIndexUrl
-                       let destination = if enableIndexUrl' && separatorEnd
-                               then dir </> noSeparator </> "index.html"
-                               else dir </> noSeparator
-                       return destination
+toDestination url = do
+    dir <- askHakyll siteDirectory
+    enableIndexUrl'  <- askHakyll enableIndexUrl
+    enableNoHtmlUrl' <- askHakyll enableNoHtmlUrl
+    let destination = dir </> if null url then ""
+                              else if enableIndexUrl' && last url == '/'
+                                   then noSeparator </> "index.html"
+                                   else if enableNoHtmlUrl' && ('.' `notElem` url)
+                                        then noSeparator ++ ".html"
+                                        else noSeparator
+    return destination
   where
     noSeparator = removeLeadingSeparator url
-    separatorEnd = not (null url) && last url == '/'
 
 -- | Convert a relative filepath to a filepath in the cache
 --   (default: @_cache@).
