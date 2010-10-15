@@ -43,6 +43,12 @@ This means it will be very fast, but it will not pick up _all_ changes.
 - It is generally recommended to do a `./hakyll rebuild` before you deploy your
   site.
 
+After rebuilding your site, all files will look as "modified" to the filesystem.
+This means that when you upload your site, it will usually transfer all files --
+this can generate more traffic than necessary, since it is possible that some
+files were not actually modified. If you use `rsync`, you can counter this using
+the `--checksum` option.
+
 ## Pretty URL's
 
 There is an option in Hakyll to produce pretty URL's, which is disabled by
