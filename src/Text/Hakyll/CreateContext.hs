@@ -10,11 +10,14 @@ module Text.Hakyll.CreateContext
     , combineWithUrl
     ) where
 
+import Prelude hiding (id)
+
 import qualified Data.Map as M
-import Control.Arrow (second, arr, (&&&))
+import Control.Arrow (second, arr, (&&&), (***))
 import Control.Monad (liftM2)
 import Control.Applicative ((<$>))
 import Control.Arrow ((>>>))
+import Control.Category (id)
 
 import Text.Hakyll.Context
 import Text.Hakyll.HakyllAction
@@ -73,9 +76,10 @@ createListing url templates renderables additional =
 --
 addField :: String                                  -- ^ Key
          -> Either String (HakyllAction () String)  -- ^ Value
-         -> HakyllAction a Context                  -- ^ Target
-         -> HakyllAction a Context                  -- ^ Result
-addField key value target = value' &&& target >>> arr (uncurry insert)
+         -> HakyllAction Context Context            -- ^ Result
+addField key value =   arr (const ()) &&& id
+                   >>> value' *** id
+                   >>> arr (uncurry insert)
   where
     value' = arr (const ()) >>> either (arr . const) id value
     insert v = Context . M.insert key v . unContext
