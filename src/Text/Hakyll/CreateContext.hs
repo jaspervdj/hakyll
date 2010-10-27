@@ -5,12 +5,13 @@ module Text.Hakyll.CreateContext
     ( createPage
     , createCustomPage
     , createListing
+    , addField
     , combine
     , combineWithUrl
     ) where
 
 import qualified Data.Map as M
-import Control.Arrow (second)
+import Control.Arrow (second, arr, (&&&))
 import Control.Monad (liftM2)
 import Control.Applicative ((<$>))
 import Control.Arrow ((>>>))
@@ -27,13 +28,14 @@ import Text.Hakyll.Internal.Cache
 createPage :: FilePath -> HakyllAction () Context
 createPage path = cacheAction "pages" $ readPageAction path >>> renderAction
 
--- | Create a "custom page" @Context@.
+-- | Create a custom page @Context@.
 --   
 --   The association list given maps keys to values for substitution. Note
 --   that as value, you can either give a @String@ or a
 --   @HakyllAction () String@. The latter is preferred for more complex data,
 --   since it allows dependency checking. A @String@ is obviously more simple
 --   to use in some cases.
+--
 createCustomPage :: FilePath
                  -> [(String, Either String (HakyllAction () String))]
                  -> HakyllAction () Context
@@ -66,6 +68,17 @@ createListing url templates renderables additional =
   where
     context = ("body", Right concatenation) : additional
     concatenation = renderAndConcat templates renderables
+
+-- | Add a field to a 'Context'.
+--
+addField :: String                                  -- ^ Key
+         -> Either String (HakyllAction () String)  -- ^ Value
+         -> HakyllAction a Context                  -- ^ Target
+         -> HakyllAction a Context                  -- ^ Result
+addField key value target = value' &&& target >>> arr (uncurry insert)
+  where
+    value' = arr (const ()) >>> either (arr . const) id value
+    insert v = Context . M.insert key v . unContext
 
 -- | Combine two @Context@s. The url will always be taken from the first
 --   @Renderable@. Also, if a `$key` is present in both renderables, the
