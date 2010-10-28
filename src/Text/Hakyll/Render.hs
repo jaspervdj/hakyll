@@ -9,7 +9,7 @@ module Text.Hakyll.Render
     , writePage
     ) where
 
-import Control.Arrow ((>>>))
+import Control.Arrow ((>>>), arr)
 import Control.Applicative ((<$>))
 import Control.Monad.Reader (liftIO)
 import System.Directory (copyFile)
@@ -67,8 +67,8 @@ renderAndConcat templatePaths renderables = HakyllAction
     renders = map (>>> render') renderables
 
     actionFunction' _ = do
-        contexts <- mapM runHakyllAction renders
-        return $ concatMap (fromMaybe "" . M.lookup "body" . unContext) contexts
+        contexts <- mapM (runHakyllAction . (>>> takeBody)) renders
+        return $ concat contexts
 
 -- | Chain a render action for a page with a number of templates. This will
 --   also write the result to the site destination. This is the preferred way

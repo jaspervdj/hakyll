@@ -21,6 +21,7 @@ import Text.Hakyll.HakyllAction
 import Text.Hakyll.Pandoc
 import Text.Hakyll.Internal.Cache
 import Text.Hakyll.Page
+import Text.Hakyll.ContextManipulations
 import Text.Hakyll.Internal.Template.Template
 import Text.Hakyll.Internal.Template.Hamlet
 
@@ -56,10 +57,9 @@ readTemplate path = do
   where 
     fileName = "templates" </> path
     readDefaultTemplate = do
-        page <- unContext <$>
-                    runHakyllAction (readPageAction path >>> renderAction)
-        let body = fromMaybe (error $ "No body in template " ++ fileName)
-                             (M.lookup "body" page)
+        body <- runHakyllAction $   readPageAction path
+                                >>> renderAction
+                                >>> takeBody
         return $ fromString body
 
     readHamletTemplate = fromHamletRT <$> readHamletRT path

@@ -9,6 +9,7 @@ module Text.Hakyll.ContextManipulations
     , renderDateWithLocale
     , changeExtension
     , renderBody
+    , takeBody
     ) where
 
 import Control.Monad (liftM)
@@ -115,3 +116,8 @@ changeExtension extension = changeValue "url" changeExtension'
 renderBody :: (String -> String)
            -> HakyllAction Context Context
 renderBody = renderValue "body" "body"
+
+-- | Get the resulting body text from a context
+--
+takeBody :: HakyllAction Context String
+takeBody = arr $ fromMaybe "" . M.lookup "body" . unContext
