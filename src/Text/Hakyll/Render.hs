@@ -9,7 +9,7 @@ module Text.Hakyll.Render
     , writePage
     ) where
 
-import Control.Arrow ((>>>), arr)
+import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
 import Control.Monad.Reader (liftIO)
 import System.Directory (copyFile)
@@ -20,6 +20,7 @@ import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.HakyllMonad (Hakyll, askHakyll, getAdditionalContext)
 import Text.Hakyll.File
 import Text.Hakyll.HakyllAction
+import Text.Hakyll.ContextManipulations
 import Text.Hakyll.Internal.CompressCss
 import Text.Hakyll.Internal.Template
 
