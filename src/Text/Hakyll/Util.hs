@@ -22,11 +22,7 @@ stripHtml :: String -> String
 stripHtml []  = []
 stripHtml str = let (beforeTag, rest) = break (== '<') str
                     (_, afterTag)     = break (== '>') rest
-                in beforeTag ++ stripHtml (tail' afterTag)
-  where
-    -- We need a failsafe tail function.
-    tail' [] = []
-    tail' xs = tail xs
+                in beforeTag ++ stripHtml (drop 1 afterTag)
 
 -- | Make a HTML link.
 --

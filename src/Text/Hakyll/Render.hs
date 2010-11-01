@@ -20,6 +20,7 @@ import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.HakyllMonad (Hakyll, askHakyll, getAdditionalContext)
 import Text.Hakyll.File
 import Text.Hakyll.HakyllAction
+import Text.Hakyll.ContextManipulations
 import Text.Hakyll.Internal.CompressCss
 import Text.Hakyll.Internal.Template
 
@@ -67,8 +68,8 @@ renderAndConcat templatePaths renderables = HakyllAction
     renders = map (>>> render') renderables
 
     actionFunction' _ = do
-        contexts <- mapM runHakyllAction renders
-        return $ concatMap (fromMaybe "" . M.lookup "body" . unContext) contexts
+        contexts <- mapM (runHakyllAction . (>>> takeBody)) renders
+        return $ concat contexts
 
 -- | Chain a render action for a page with a number of templates. This will
 --   also write the result to the site destination. This is the preferred way

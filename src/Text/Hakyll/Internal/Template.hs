@@ -7,6 +7,7 @@ module Text.Hakyll.Internal.Template
     , finalSubstitute
     ) where
 
+import Control.Arrow ((>>>))
 import Control.Applicative ((<$>))
 import Data.List (isPrefixOf)
 import Data.Char (isAlphaNum)
@@ -16,8 +17,11 @@ import qualified Data.Map as M
 
 import Text.Hakyll.Context (Context (..))
 import Text.Hakyll.HakyllMonad (Hakyll)
+import Text.Hakyll.HakyllAction
+import Text.Hakyll.Pandoc
 import Text.Hakyll.Internal.Cache
-import Text.Hakyll.Internal.Page
+import Text.Hakyll.Page
+import Text.Hakyll.ContextManipulations
 import Text.Hakyll.Internal.Template.Template
 import Text.Hakyll.Internal.Template.Hamlet
 
@@ -29,15 +33,13 @@ fromString = Template . fromString'
     fromString' [] = []
     fromString' string
         | "$$" `isPrefixOf` string =
-            EscapeCharacter : (fromString' $ tail tail')
+            EscapeCharacter : (fromString' $ drop 2 string)
         | "$" `isPrefixOf` string =
-            let (key, rest) = span isAlphaNum tail'
+            let (key, rest) = span isAlphaNum $ drop 1 string
             in Identifier key : fromString' rest
         | otherwise =
             let (chunk, rest) = break (== '$') string
             in Chunk chunk : fromString' rest
-      where
-        tail' = tail string
 
 -- | Read a @Template@ from a file. This function might fetch the @Template@
 --   from the cache, if available.
@@ -55,9 +57,9 @@ readTemplate path = do
   where 
     fileName = "templates" </> path
     readDefaultTemplate = do
-        page <- unContext <$> readPage path
-        let body = fromMaybe (error $ "No body in template " ++ fileName)
-                             (M.lookup "body" page)
+        body <- runHakyllAction $   readPageAction path
+                                >>> renderAction
+                                >>> takeBody
         return $ fromString body
 
     readHamletTemplate = fromHamletRT <$> readHamletRT path

@@ -34,7 +34,7 @@ import Text.Hakyll.Internal.FileType (isRenderableFile)
 removeLeadingSeparator :: FilePath -> FilePath
 removeLeadingSeparator [] = []
 removeLeadingSeparator path
-    | head path' `elem` pathSeparators = tail path'
+    | head path' `elem` pathSeparators = drop 1 path'
     | otherwise                        = path'
   where
     path' = if "$root" `isPrefixOf` path then drop 5 path

@@ -2,6 +2,11 @@
 title: Changelog
 ---
 
+## Hakyll 2.4
+
+- Arrow based interface to pandoc
+- Easier custom fields
+
 ## Hakyll 2.3
 
 - Ability to choose between preview modes.
