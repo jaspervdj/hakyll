@@ -2,6 +2,7 @@
 --   manipulate @Context@s.
 module Text.Hakyll.ContextManipulations
     ( renderValue
+    , renderMissingValue
     , changeValue
     , changeUrl
     , copyValue
@@ -13,7 +14,7 @@ module Text.Hakyll.ContextManipulations
     ) where
 
 import Control.Monad (liftM)
-import Control.Arrow (arr)
+import Control.Arrow (arr, (>>>))
 import System.Locale (TimeLocale, defaultTimeLocale)
 import System.FilePath (takeFileName, addExtension, dropExtension)
 import Data.Time.Format (parseTime, formatTime)
@@ -27,14 +28,26 @@ import Text.Hakyll.Context (Context (..))
 
 -- | Do something with a value in a @Context@, but keep the old value as well.
 --   If the key given is not present in the @Context@, nothing will happen.
-renderValue :: String             -- ^ Key of which the value should be copied.
-            -> String             -- ^ Key the value should be copied to.
-            -> (String -> String) -- ^ Function to apply on the value.
+--
+renderValue :: String              -- ^ Key of which the value should be copied.
+            -> String              -- ^ Key the value should be copied to.
+            -> (String -> String)  -- ^ Function to apply on the value.
             -> HakyllAction Context Context
-renderValue source destination f = arr $ \(Context context) -> Context $
+renderValue source destination f =
+    arr (Context . M.delete destination . unContext)
+        >>> renderMissingValue source destination f
+
+-- | Render a value, but do not overwrite the destination value if it already
+-- exists.
+--
+renderMissingValue :: String              -- ^ Source key
+                   -> String              -- ^ Destination key
+                   -> (String -> String)  -- ^ Function to apply on the value
+                   -> HakyllAction Context Context
+renderMissingValue source destination f = arr $ \(Context context) -> Context $
     case M.lookup source context of
         Nothing      -> context
-        (Just value) -> M.insert destination (f value) context
+        (Just value) -> M.insertWith (flip const) destination (f value) context
 
 -- | Change a value in a @Context@.
 --
