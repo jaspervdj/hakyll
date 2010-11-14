@@ -88,8 +88,11 @@ readPage path = do
     let sections = evalState (splitAtDelimiters $ lines contents) Nothing
         sectionsData = concat $ zipWith ($) sectionFunctions sections
 
+    -- Note that url, path etc. are listed first, which means can be overwritten
+    -- by section data
     return $ PageSection ("url", url, False)
            : PageSection ("path", path, False)
+           : PageSection ("title", takeBaseName path, False)
            : (category ++ sectionsData)
   where
     category = let dirs = splitDirectories $ takeDirectory path
