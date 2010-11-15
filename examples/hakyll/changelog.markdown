@@ -2,6 +2,11 @@
 title: Changelog
 ---
 
+## Hakyll 2.4.1
+
+- Add a number of utility functions
+- Fix bug in `enableIndexUrl` mode
+
 ## Hakyll 2.4
 
 - Arrow based interface to pandoc

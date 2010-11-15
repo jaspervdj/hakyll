@@ -1,5 +1,5 @@
 Name:               hakyll
-Version:            2.4
+Version:            2.4.1
 
 Synopsis:           A simple static site generator library.
 Description:        A simple static site generator library, mainly aimed at
@@ -35,7 +35,7 @@ library
                     regex-base >= 0.93,
                     regex-tdfa >= 1.1,
                     network == 2.*,
-                    mtl == 1.*,
+                    mtl >= 1,
                     old-locale == 1.*,
                     old-time == 1.*,
                     time >= 1.1,
