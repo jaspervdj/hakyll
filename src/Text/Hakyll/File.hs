@@ -40,24 +40,32 @@ removeLeadingSeparator path
     path' = if "$root" `isPrefixOf` path then drop 5 path
                                          else path
 
--- | Convert a relative filepath to a filepath in the destination
+-- | Convert a relative URL to a filepath in the destination
 --   (default: @_site@).
 toDestination :: FilePath -> Hakyll FilePath
 toDestination url = do dir <- askHakyll siteDirectory
-                       enableIndexUrl' <- askHakyll enableIndexUrl
-                       let destination = if enableIndexUrl' && separatorEnd
-                               then dir </> noSeparator </> "index.html"
-                               else dir </> noSeparator
-                       return destination
-  where
-    noSeparator = removeLeadingSeparator url
-    separatorEnd = not (null url) && last url == '/'
+                       toFilePath dir url
 
--- | Convert a relative filepath to a filepath in the cache
+-- | Convert a relative URL to a filepath in the cache
 --   (default: @_cache@).
 toCache :: FilePath -> Hakyll FilePath
 toCache path = do dir <- askHakyll cacheDirectory
-                  return $ dir </> removeLeadingSeparator path
+                  toFilePath dir path
+
+-- | Implementation of toDestination/toCache
+--
+toFilePath :: String           -- ^ Directory (site or cache)
+           -> String           -- ^ URL
+           -> Hakyll FilePath  -- ^ Resulting file path
+toFilePath dir url = do
+   enableIndexUrl' <- askHakyll enableIndexUrl
+   let destination = if enableIndexUrl' && separatorEnd
+           then dir </> noSeparator </> "index.html"
+           else dir </> noSeparator
+   return destination
+  where
+    noSeparator = removeLeadingSeparator url
+    separatorEnd = not (null url) && last url == '/'
 
 -- | Get the url for a given page. For most extensions, this would be the path
 --   itself. It's only for rendered extensions (@.markdown@, @.rst@, @.lhs@ this
