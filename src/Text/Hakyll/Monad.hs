@@ -1,5 +1,6 @@
 -- | Module describing the Hakyll monad stack.
-module Text.Hakyll.HakyllMonad
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+module Text.Hakyll.Monad
     ( HakyllConfiguration (..)
     , PreviewMode (..)
     , Hakyll
@@ -11,6 +12,7 @@ module Text.Hakyll.HakyllMonad
     ) where
 
 import Control.Monad.Trans (liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Concurrent.MVar (MVar, putMVar, newEmptyMVar, readMVar)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Control.Monad (liftM, forM, forM_)
@@ -24,7 +26,16 @@ import Text.Hakyll.Context (Context (..))
 
 -- | Our custom monad stack.
 --
-type Hakyll = ReaderT HakyllConfiguration IO
+newtype Hakyll a = Hakyll (ReaderT HakyllConfiguration IO a)
+                 deriving (Monad, Functor)
+
+instance MonadIO Hakyll where
+    liftIO = Hakyll . liftIO
+
+-- | Run a hakyll stack
+--
+runHakyll :: Hakyll a -> HakyllConfiguration -> IO a
+runHakyll (Hakyll h) = runReaderT h
 
 -- | Preview mode.
 --
@@ -56,6 +67,11 @@ data HakyllConfiguration = HakyllConfiguration
       hamletSettings      :: HamletSettings
     }
 
+-- | Get the hakyll configuration
+--
+getHakyllConfiguration :: Hakyll HakyllConfiguration
+getHakyllConfiguration = Hakyll ask
+
 -- | Simplified @ask@ function for the Hakyll monad stack.
 --
 --   Usage would typically be something like:
@@ -66,7 +82,7 @@ data HakyllConfiguration = HakyllConfiguration
 --   >     ...
 --
 askHakyll :: (HakyllConfiguration -> a) -> Hakyll a
-askHakyll = flip liftM ask
+askHakyll = flip liftM getHakyllConfiguration
 
 -- | Obtain the globally available, additional context.
 --
@@ -78,16 +94,16 @@ getAdditionalContext configuration =
 -- | Write some log information.
 --
 logHakyll :: String -> Hakyll ()
-logHakyll = liftIO . hPutStrLn stderr
+logHakyll = Hakyll . liftIO . hPutStrLn stderr
 
 -- | Perform a concurrent hakyll action. Returns an MVar you can wait on
 --
 forkHakyllWait :: Hakyll () -> Hakyll (MVar ())
 forkHakyllWait action = do
     mvar <- liftIO newEmptyMVar
-    config <- ask
+    config <- getHakyllConfiguration
     liftIO $ do
-        runReaderT action config
+        runHakyll action config
         putMVar mvar ()
     return mvar
 

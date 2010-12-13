@@ -17,6 +17,30 @@ import Text.Hakyll.HakyllMonad
 import Text.Hakyll.HakyllAction
 import Text.Hakyll.Context
 
+-- | Reader function for plain text
+--
+readText :: ParserState -> String -> Pandoc
+readText _ = Pandoc (Meta [] [] []) . return . Plain . return . Str
+
+-- | Get a read function for a given extension.
+--
+readPandoc :: HakyllAction (FileType, String) Pandoc
+readPandoc = createHakyllAction $ \(fileType, inp) -> do
+    parserState <- askHakyll pandocParserState
+    return $ readFunction fileType (readOptions parserState fileType) inp
+  where
+    readFunction ReStructuredText        = readRST
+    readFunction LaTeX                   = readLaTeX
+    readFunction Markdown                = readMarkdown
+    readFunction LiterateHaskellMarkdown = readMarkdown
+    readFunction Html                    = readHtml
+    readFunction Text                    = readText
+    readFunction t                       = error $ "Cannot render " ++ show t
+
+    readOptions options LiterateHaskellMarkdown = options
+        { stateLiterateHaskell = True }
+    readOptions options _                       = options
+
 -- | Get a render function for a given extension.
 --
 getRenderFunction :: HakyllAction FileType (String -> String)
@@ -38,6 +62,13 @@ getRenderFunction = createHakyllAction $ \fileType -> case fileType of
     readOptions options LiterateHaskellMarkdown = options
         { stateLiterateHaskell = True }
     readOptions options _                       = options
+
+-- | Get a render action
+--
+renderPandoc :: HakyllAction Pandoc String
+renderPandoc = createHakyllAction $ \p -> do
+    writerOptions <- askHakyll pandocWriterOptions
+    return $ writeHtmlString writerOptions p
 
 -- | An action that renders the list of page sections to a context using pandoc
 --
