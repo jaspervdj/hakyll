@@ -1,21 +1,25 @@
 -- | A resource represents data for a website
 --
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Text.Hakyll.Resource
     ( Metadata (..)
     , Resource (..)
     , getData
     , getMetadata
-    , getMetadataList
     ) where
 
 import Data.Monoid (Monoid, mempty, mappend)
 import Control.Applicative (Applicative, (<*>), pure)
+import Data.Map (Map)
+import qualified Data.Map as M
 
 -- | Metadata for a resource
 --
-newtype Metadata = Metadata {unMetadata :: [(String, String)]}
-                 deriving (Show, Eq, Ord, Monoid)
+newtype Metadata = Metadata {unMetadata :: Map String String}
+                 deriving (Show, Eq, Ord)
+
+instance Monoid Metadata where
+    mempty = Metadata M.empty
+    (Metadata m1) `mappend` (Metadata m2) = Metadata $ m1 `M.union` m2
 
 -- | A resource represents a data source for the website. It contains a value
 -- and a number of metadata fields
@@ -50,11 +54,4 @@ getData = resourceData
 -- | Get a metadata field from a resource
 --
 getMetadata :: String -> Resource a -> Maybe String
-getMetadata k (Resource m _) = lookup k $ unMetadata m
-
--- | Get a metadata field from a resource. If multiple fields with the same name
--- exist, they will all be returned
---
-getMetadataList :: String -> Resource a -> [String]
-getMetadataList k = map snd . filter ((== k) . fst)
-                  . unMetadata . resourceMetadata
+getMetadata k (Resource m _) = M.lookup k $ unMetadata m

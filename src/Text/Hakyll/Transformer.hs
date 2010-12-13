@@ -5,17 +5,17 @@ module Text.Hakyll.Transformer
     , transformResourceM
     , transformData
     , transformDataM
-    , transformMetaData
-    , transformMetaDataM
+    , transformMetadata
+    , transformMetadataM
     , runTransformer
     , runTransformerForced
     ) where
 
-import Data.Monoid (mappend, mempty)
+import Data.Monoid (Monoid, mappend, mempty)
 import Control.Arrow
 import Control.Category
 import Control.Applicative ((<$>))
-import Control.Monad ((<=<), unless)
+import Control.Monad ((<=<), unless, liftM2)
 import Prelude hiding ((.), id)
 
 import Text.Hakyll.Resource
@@ -33,6 +33,16 @@ data Transformer a b = Transformer
     , -- | The actual transforming function.
       transformerFunction     :: Resource a -> Hakyll (Resource b)
     }
+
+instance Monoid b => Monoid (Transformer a b) where
+    mempty = arr (const mempty)
+    mappend x y = Transformer
+        { transformerDependencies =
+            transformerDependencies x ++ transformerDependencies y
+        , transformerUrl = transformerUrl x
+        , transformerFunction = \r ->
+            liftM2 mappend (transformerFunction x r) (transformerFunction y r)
+        }
 
 instance Category Transformer where
     id = Transformer
@@ -70,11 +80,11 @@ transformDataM :: (a -> Hakyll b) -> Transformer a b
 transformDataM f = transformResourceM $ \(Resource m x) ->
     f x >>= return . Resource m
 
-transformMetaData :: (Metadata -> Metadata) -> Transformer a a
-transformMetaData = transformMetaDataM . (return .)
+transformMetadata :: (Metadata -> Metadata) -> Transformer a a
+transformMetadata = transformMetadataM . (return .)
 
-transformMetaDataM :: (Metadata -> Hakyll Metadata) -> Transformer a a
-transformMetaDataM f = transformResourceM $ \(Resource m x) -> do
+transformMetadataM :: (Metadata -> Hakyll Metadata) -> Transformer a a
+transformMetadataM f = transformResourceM $ \(Resource m x) -> do
     m' <- f m
     return $ Resource m' x
 

@@ -1,5 +1,6 @@
--- | This module exports a number of functions that produce @HakyllAction@s to
---   manipulate @Context@s.
+-- | This module exports a number of functions to manipulate metadata of
+-- resources
+--
 module Text.Hakyll.ContextManipulations
     ( renderValue
     , changeValue
@@ -8,12 +9,8 @@ module Text.Hakyll.ContextManipulations
     , renderDate
     , renderDateWithLocale
     , changeExtension
-    , renderBody
-    , takeBody
     ) where
 
-import Control.Monad (liftM)
-import Control.Arrow (arr)
 import System.Locale (TimeLocale, defaultTimeLocale)
 import System.FilePath (takeFileName, addExtension, dropExtension)
 import Data.Time.Format (parseTime, formatTime)
@@ -22,8 +19,8 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 
 import Text.Hakyll.Regex (substituteRegex)
-import Text.Hakyll.HakyllAction (HakyllAction (..))
-import Text.Hakyll.Context (Context (..))
+import Text.Hakyll.Transformer (Transformer (..), transformMetadata)
+import Text.Hakyll.Resource
 
 -- | Do something with a value in a @Context@, but keep the old value as well.
 --   If the key given is not present in the @Context@, nothing will happen.
@@ -31,35 +28,37 @@ import Text.Hakyll.Context (Context (..))
 renderValue :: String              -- ^ Key of which the value should be copied.
             -> String              -- ^ Key the value should be copied to.
             -> (String -> String)  -- ^ Function to apply on the value.
-            -> HakyllAction Context Context
-renderValue source destination f = arr $ \(Context context) -> Context $
-    case M.lookup source context of
-        Nothing      -> context
-        (Just value) -> M.insert destination (f value) context
+            -> Transformer a a     -- ^ Resulting transformer
+renderValue source destination f = transformMetadata $ \(Metadata m) ->
+    Metadata $ case M.lookup source m of
+        Nothing      -> m
+        (Just value) -> M.insert destination (f value) m
 
--- | Change a value in a @Context@.
+-- | Change a value in the metadata
 --
 --   > import Data.Char (toUpper)
 --   > changeValue "title" (map toUpper)
 --
 --   Will put the title in UPPERCASE.
-changeValue :: String             -- ^ Key to change.
-            -> (String -> String) -- ^ Function to apply on the value.
-            -> HakyllAction Context Context
+changeValue :: String              -- ^ Key to change.
+            -> (String -> String)  -- ^ Function to apply on the value.
+            -> Transformer a a
 changeValue key = renderValue key key
 
--- | Change the URL of a page. This requires a special function, so dependency
--- handling can happen correctly.
+-- | Change the URL of a page. You should always use this function instead of
+-- 'changeValue' for this, because using 'changeValue' might break dependency
+-- handling when changing the @url@ field.
 -- 
-changeUrl :: (String -> String)            -- ^ Function to change URL with.
-          -> HakyllAction Context Context  -- ^ Resulting action.
-changeUrl f = let action = changeValue "url" f
-              in action {actionUrl = Right $ liftM f}
+changeUrl :: (String -> String)  -- ^ Function to change URL with.
+          -> Transformer a a     -- ^ Resulting action.
+changeUrl f = let t = changeValue "url" f
+              in t {transformerUrl = return . f}
 
--- | Copy a value from one key to another in a @Context@.
-copyValue :: String -- ^ Source key.
-          -> String -- ^ Destination key.
-          -> HakyllAction Context Context
+-- | Copy a metadata value from one key to another
+--
+copyValue :: String           -- ^ Source key.
+          -> String           -- ^ Destination key.
+          -> Transformer a a  -- ^ Resulting transformer
 copyValue source destination = renderValue source destination id
 
 -- | When the context has a key called @path@ in a
@@ -73,7 +72,7 @@ copyValue source destination = renderValue source destination id
 renderDate :: String -- ^ Key in which the rendered date should be placed.
            -> String -- ^ Format to use on the date.
            -> String -- ^ Default key, in case the date cannot be parsed.
-           -> HakyllAction Context Context
+           -> Transformer a a
 renderDate = renderDateWithLocale defaultTimeLocale
 
 -- | This is an extended version of 'renderDate' that allows you to specify a
@@ -84,7 +83,7 @@ renderDateWithLocale :: TimeLocale  -- ^ Output time locale.
                      -> String      -- ^ Destination key.
                      -> String      -- ^ Format to use on the date.
                      -> String      -- ^ Default key.
-                     -> HakyllAction Context Context
+                     -> Transformer a a
 renderDateWithLocale locale key format defaultValue =
     renderValue "path" key renderDate'
   where
@@ -102,23 +101,8 @@ renderDateWithLocale locale key format defaultValue =
 --   > changeExtension "php"
 --
 --   Will render @test.markdown@ to @test.php@ instead of @test.html@.
-changeExtension :: String -- ^ Extension to change to.
-                -> HakyllAction Context Context
+changeExtension :: String           -- ^ Extension to change to.
+                -> Transformer a a  -- ^ Resulting transformer
 changeExtension extension = changeValue "url" changeExtension'
   where
     changeExtension' = flip addExtension extension . dropExtension
-
--- | Change the body of a file using a certain manipulation.
---
---   > import Data.Char (toUpper)
---   > renderBody (map toUpper)
---
---   Will put the entire body of the page in UPPERCASE.
-renderBody :: (String -> String)
-           -> HakyllAction Context Context
-renderBody = renderValue "body" "body"
-
--- | Get the resulting body text from a context
---
-takeBody :: HakyllAction Context String
-takeBody = arr $ fromMaybe "" . M.lookup "body" . unContext
