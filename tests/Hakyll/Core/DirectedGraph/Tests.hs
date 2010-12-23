@@ -15,9 +15,9 @@ import Hakyll.Core.DirectedGraph.ObsoleteFilter
 
 tests :: [Test]
 tests =
-    [ testCase "solveDependencies01" solveDependencies01
-    , testCase "filterObsolete01"    filterObsolete01
-    , testCase "filterObsolete02"    filterObsolete02
+    [ testCase "solveDependencies [1]" solveDependencies1
+    , testCase "filterObsolete [1]"    filterObsolete1
+    , testCase "filterObsolete [2]"    filterObsolete2
     ]
 
 node :: Ord a => a -> [a] -> (a, Set a)
@@ -32,17 +32,17 @@ testGraph01 = fromList
     , node 3 []
     ]
 
-solveDependencies01 :: Assertion
-solveDependencies01 =  result == [3, 4, 2, 6, 8] || result == [3, 4, 2, 6, 8]
-                    @? "solveDependencies01"
+solveDependencies1 :: Assertion
+solveDependencies1 =  result == [3, 4, 2, 6, 8] || result == [3, 4, 2, 6, 8]
+                    @? "solveDependencies1"
   where
     result = solveDependencies testGraph01
 
-filterObsolete01 :: Assertion
-filterObsolete01 =  nodes (filterObsolete [6] testGraph01) == S.fromList [6, 8]
-                 @? "filterObsolete01"
+filterObsolete1 :: Assertion
+filterObsolete1 =  nodes (filterObsolete [6] testGraph01) == S.fromList [6, 8]
+                 @? "filterObsolete1"
 
-filterObsolete02 :: Assertion
-filterObsolete02 =
+filterObsolete2 :: Assertion
+filterObsolete2 =
     nodes (filterObsolete [4] testGraph01) == S.fromList [4, 2, 6, 8]
-        @? "filterObsolete02"
+        @? "filterObsolete2"
