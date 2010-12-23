@@ -1,6 +1,35 @@
 -- | Module providing pattern matching and capturing on 'Identifier's.
 --
--- TODO: Documentation
+-- A very simple pattern could be, for example:
+--
+-- > foo/bar
+--
+-- This pattern will only match the @foo\/bar@ identifier.
+--
+-- To match more than one identifier, there are different captures that one can
+-- use:
+--
+-- * @*@: matches exactly one element of an identifier;
+--
+-- * @**@: matches one or more elements of an identifier.
+--
+-- Some examples:
+--
+-- * @foo\/*@ will match @foo\/bar@ and @foo\/foo@, but not @foo\/bar\/qux@ nor
+--   @foo@;
+--
+-- * @**@ will match any non-empty identifier;
+--
+-- * @foo\/**@ will match @foo\/bar@ and @foo\/bar\/qux@, but not @bar\/foo@ nor
+--   @foo@;
+--
+-- A small warning: patterns are not globs. Using @foo\/*.markdown@ will not do
+-- what you probably intended, as it will only match the file which is literally
+-- called @foo\/*.markdown@. Remember that these captures only work on elements
+-- of identifiers as a whole; not on parts of these elements.
+--
+-- Furthermore, the 'match' function allows the user to get access to the
+-- elements captured by the capture elements in the pattern.
 --
 module Hakyll.Core.Identifier.Pattern
     ( Pattern
