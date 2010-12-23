@@ -4,6 +4,7 @@
 module Hakyll.Core.DirectedGraph
     ( DirectedGraph
     , fromList
+    , nodes
     , neighbours
     , reverse
     , filter
@@ -25,6 +26,13 @@ fromList :: Ord a
          => [(a, Set a)]     -- ^ List of (node, reachable neighbours)
          -> DirectedGraph a  -- ^ Resulting directed graph
 fromList = DirectedGraph . M.fromList . map (\(t, d) -> (t, Node t d))
+
+-- | Get all nodes in the graph
+--
+nodes :: Ord a
+      => DirectedGraph a  -- ^ Graph to get the nodes from
+      -> Set a            -- ^ All nodes in the graph
+nodes = M.keysSet . unDirectedGraph
 
 -- | Get a set of reachable neighbours from a directed graph
 --
@@ -66,22 +74,3 @@ reachableNodes x graph = reachable (neighbours x graph) (S.singleton x)
         sanitize = S.filter (`S.notMember` visited)
         neighbours' = S.unions $ map (flip neighbours graph)
                                $ S.toList $ sanitize next
-
-{-
-exampleGraph :: DirectedGraph Int
-exampleGraph = fromList
-    [ makeNode 8 [2, 4, 6]
-    , makeNode 2 [4, 3]
-    , makeNode 4 [3]
-    , makeNode 6 [4]
-    , makeNode 3 []
-    ]
-  where
-    makeNode tag deps = (tag, S.fromList deps)
-
-cyclic :: DirectedGraph Int
-cyclic = fromList
-    [ (1, S.fromList [2])
-    , (2, S.fromList [1, 3])
-    ]
--}

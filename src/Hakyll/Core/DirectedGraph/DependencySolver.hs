@@ -15,7 +15,6 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 import Hakyll.Core.DirectedGraph
-import qualified Hakyll.Core.DirectedGraph as DG
 import Hakyll.Core.DirectedGraph.Internal
 
 -- | Solve a dependency graph. This function returns an order to run the
@@ -55,7 +54,7 @@ order temp stack set graph@(DirectedGraph graph')
                 -- All dependencies for node are satisfied, we can return it and
                 -- remove it from the graph
                 [] -> order (tag : temp) stackTail (S.delete tag set)
-                            (DG.filter (== tag) graph)
+                            (DirectedGraph $ M.delete tag graph')
 
                 -- There is at least one dependency left. We need to solve that
                 -- one first...
