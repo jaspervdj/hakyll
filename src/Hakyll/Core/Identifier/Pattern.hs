@@ -1,10 +1,7 @@
 -- | Module providing pattern matching and capturing on 'Identifier's.
 --
--- A very simple pattern could be, for example:
---
--- > foo/bar
---
--- This pattern will only match the @foo\/bar@ identifier.
+-- A very simple pattern could be, for example, @foo\/bar@. This pattern will
+-- only match the exact @foo\/bar@ identifier.
 --
 -- To match more than one identifier, there are different captures that one can
 -- use:
