@@ -1,4 +1,5 @@
--- | Internal structure of the DirectedGraph type. Not exported in the library.
+-- | Internal structure of the DirectedGraph type. Not exported outside of the
+-- library.
 --
 module Hakyll.Core.DirectedGraph.Internal
     ( Node (..)
