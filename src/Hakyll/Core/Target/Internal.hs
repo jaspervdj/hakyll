@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Target.Internal
     ( DependencyLookup
+    , TargetEnvironment (..)
     , TargetM (..)
     , Target
     , runTarget
