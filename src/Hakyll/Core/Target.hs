@@ -6,6 +6,7 @@ module Hakyll.Core.Target
     , TargetM
     , Target
     , runTarget
+    , getIdentifier
     , getResourceString
     ) where
 
@@ -13,13 +14,19 @@ import Control.Applicative ((<$>))
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans (liftIO)
 
+import Hakyll.Core.Identifier
 import Hakyll.Core.Target.Internal
 import Hakyll.Core.ResourceProvider
+
+-- | Get the current identifier
+--
+getIdentifier :: TargetM a Identifier
+getIdentifier = TargetM $ targetIdentifier <$> ask
 
 -- | Get the resource content as a string
 --
 getResourceString :: TargetM a String
 getResourceString = TargetM $ do
     provider <- targetResourceProvider <$> ask
-    identifier <- targetIdentifier <$> ask
+    identifier <- unTargetM getIdentifier
     liftIO $ resourceString provider identifier
