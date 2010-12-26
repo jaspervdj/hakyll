@@ -6,6 +6,8 @@ module Hakyll.Core.ResourceProvider.FileResourceProvider
 
 import Control.Applicative ((<$>))
 
+import qualified Data.ByteString.Lazy as LB
+
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Identifier
 import Hakyll.Core.Util.File
@@ -16,6 +18,7 @@ fileResourceProvider :: IO ResourceProvider
 fileResourceProvider = do
     list <- map parseIdentifier <$> getRecursiveContents "."
     return $ ResourceProvider
-        { resourceList   = list
-        , resourceString = readFile . toFilePath
+        { resourceList           = list
+        , resourceString         = readFile . toFilePath
+        , resourceLazyByteString = LB.readFile . toFilePath
         }

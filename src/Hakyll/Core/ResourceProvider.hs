@@ -8,11 +8,15 @@ module Hakyll.Core.ResourceProvider
 
 import Hakyll.Core.Identifier
 
+import qualified Data.ByteString.Lazy as LB
+
 -- | A value responsible for retrieving and listing resources
 --
 data ResourceProvider = ResourceProvider
     { -- | A list of all resources this provider is able to provide
-      resourceList   :: [Identifier]
+      resourceList           :: [Identifier]
     , -- | Retrieve a certain resource as string
-      resourceString :: Identifier -> IO String
+      resourceString         :: Identifier -> IO String
+    , -- | Retrieve a certain resource as lazy bytestring
+      resourceLazyByteString :: Identifier -> IO LB.ByteString
     }
