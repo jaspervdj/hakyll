@@ -8,7 +8,7 @@ module Hakyll.Core.Util.File
 
 import System.FilePath (normalise, takeDirectory, (</>))
 import System.Time (ClockTime)
-import Control.Monad (forM)
+import Control.Monad (forM, filterM)
 import System.Directory ( createDirectoryIfMissing, doesDirectoryExist
                         , doesFileExist, getModificationTime
                         , getDirectoryContents
@@ -48,7 +48,8 @@ isObsolete :: ClockTime    -- ^ The time to check.
            -> IO Bool
 isObsolete _ [] = return False
 isObsolete timeStamp depends = do
-    dependsModified <- mapM getModificationTime depends
+    depends' <- filterM doesFileExist depends
+    dependsModified <- mapM getModificationTime depends'
     return (timeStamp < maximum dependsModified)
 
 -- | Check if a file is obsolete, given it's dependencies. When the file does
