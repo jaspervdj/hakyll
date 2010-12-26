@@ -7,8 +7,7 @@ module Hakyll.Core.Compiler
     , Compiler
     , runCompiler
     , require
-    , target
-    , targetFromString
+    , compileFromString
     ) where
 
 import Control.Arrow (second)
@@ -76,14 +75,9 @@ require identifier = do
     addDependency identifier
     return $ TargetM $ flip targetDependencyLookup identifier <$> ask
 
--- | Construct a target inside a compiler
---
-target :: TargetM a a -> Compiler a
-target = return
-
 -- | Construct a target from a string, this string being the content of the
 -- resource.
 --
-targetFromString :: (String -> TargetM a a)  -- ^ Function to create the target
-                 -> Compiler a               -- ^ Resulting compiler
-targetFromString = target . (getResourceString >>=)
+compileFromString :: (String -> TargetM a a)  -- ^ Function to create the target
+                  -> Compiler a               -- ^ Resulting compiler
+compileFromString = return . (getResourceString >>=)
