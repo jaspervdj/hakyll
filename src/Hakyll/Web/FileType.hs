@@ -23,7 +23,7 @@ data FileType
     | ReStructuredText
     | PlainText
     | Css
-    | UnknownFileType
+    | Binary
     deriving (Eq, Ord, Show, Read)
 
 -- | Get the file type for a certain file. The type is determined by extension.
@@ -47,7 +47,7 @@ fileType = fileType' . takeExtension
     fileType' ".text"     = PlainText
     fileType' ".txt"      = PlainText
     fileType' ".css"      = Css
-    fileType' _           = UnknownFileType
+    fileType' _           = Binary  -- Treat unknown files as binary
 
 -- | Get the file type for the current file
 --
