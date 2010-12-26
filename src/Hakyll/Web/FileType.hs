@@ -20,7 +20,7 @@ data FileType
     | LaTeX
     | LiterateHaskell FileType
     | Markdown
-    | ReStructuredText
+    | Rst
     | PlainText
     | Css
     | Binary
@@ -42,7 +42,7 @@ fileType = fileType' . takeExtension
     fileType' ".mkd"      = Markdown
     fileType' ".mkdwn"    = Markdown
     fileType' ".page"     = Markdown
-    fileType' ".rst"      = ReStructuredText
+    fileType' ".rst"      = Rst
     fileType' ".tex"      = LaTeX
     fileType' ".text"     = PlainText
     fileType' ".txt"      = PlainText
