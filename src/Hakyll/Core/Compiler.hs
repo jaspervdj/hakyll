@@ -8,6 +8,7 @@ module Hakyll.Core.Compiler
     , runCompiler
     , require
     , target
+    , targetFromString
     ) where
 
 import Control.Arrow (second)
@@ -18,6 +19,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 
 import Hakyll.Core.Identifier
+import Hakyll.Core.Target
 import Hakyll.Core.Target.Internal
 
 -- | A set of dependencies
@@ -78,3 +80,10 @@ require identifier = do
 --
 target :: TargetM a a -> Compiler a
 target = return
+
+-- | Construct a target from a string, this string being the content of the
+-- resource.
+--
+targetFromString :: (String -> TargetM a a)  -- ^ Function to create the target
+                 -> Compiler a               -- ^ Resulting compiler
+targetFromString = target . (getResourceString >>=)
