@@ -4,11 +4,17 @@
 --
 module Hakyll.Core.ResourceProvider
     ( ResourceProvider (..)
+    , resourceDigest
     ) where
 
-import Hakyll.Core.Identifier
+import Control.Monad ((<=<))
+import Data.Word (Word8)
 
 import qualified Data.ByteString.Lazy as LB
+import OpenSSL.Digest.ByteString.Lazy (digest)
+import OpenSSL.Digest (MessageDigest (MD5))
+
+import Hakyll.Core.Identifier
 
 -- | A value responsible for retrieving and listing resources
 --
@@ -20,3 +26,8 @@ data ResourceProvider = ResourceProvider
     , -- | Retrieve a certain resource as lazy bytestring
       resourceLazyByteString :: Identifier -> IO LB.ByteString
     }
+
+-- | Retrieve a digest for a given resource
+--
+resourceDigest :: ResourceProvider -> Identifier -> IO [Word8]
+resourceDigest provider = digest MD5 <=< resourceLazyByteString provider
