@@ -7,8 +7,11 @@ module Hakyll.Web.Page
     , toMap
     ) where
 
+import Control.Applicative ((<$>), (<*>))
+
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.Binary (Binary, get, put)
 
 import Hakyll.Core.Writable
 
@@ -21,6 +24,10 @@ data Page a = Page
 
 instance Functor Page where
     fmap f (Page m b) = Page m (f b)
+
+instance Binary a => Binary (Page a) where
+    put (Page m b) = put m >> put b
+    get = Page <$> get <*> get
 
 instance Writable a => Writable (Page a) where
     write p (Page _ b) = write p b
