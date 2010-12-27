@@ -6,7 +6,7 @@ module Hakyll.Web.Page.Read
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Arrow (second, (***))
-import Control.Monad.State
+import Control.Monad.State (State, get, put, evalState)
 import Data.List (isPrefixOf)
 import Data.Map (Map)
 import qualified Data.Map as M
