@@ -3,7 +3,7 @@
 module Hakyll.Core.Run where
 
 import Control.Arrow ((&&&))
-import Control.Monad (msum, foldM, forM, forM_)
+import Control.Monad (foldM, forM_)
 import qualified Data.Map as M
 
 import Hakyll.Core.Route
@@ -12,18 +12,19 @@ import Hakyll.Core.ResourceProvider
 import Hakyll.Core.ResourceProvider.FileResourceProvider
 import Hakyll.Core.Rules
 import Hakyll.Core.Target
-import Hakyll.Core.Identifier
 import Hakyll.Core.DirectedGraph
 import Hakyll.Core.DirectedGraph.DependencySolver
 import Hakyll.Core.Writable
+import Hakyll.Core.Store
 
 hakyll :: Writable a => Rules a -> IO ()
 hakyll rules = do
+    store <- makeStore "_store"
     provider <- fileResourceProvider
-    hakyllWith rules provider
+    hakyllWith rules provider store
 
-hakyllWith :: Writable a => Rules a -> ResourceProvider -> IO ()
-hakyllWith rules provider = do
+hakyllWith :: Writable a => Rules a -> ResourceProvider -> Store -> IO ()
+hakyllWith rules provider store = do
     let -- Get the rule set
         ruleSet = runRules rules provider
 
@@ -63,6 +64,6 @@ hakyllWith rules provider = do
     putStrLn "DONE."
   where
     addTarget map' (id', targ) = do
-        result <- runTarget targ id' (map' M.!) provider
+        result <- runTarget targ id' (map' M.!) provider store
         putStrLn $ "Generated target: " ++ show id'
         return $ M.insert id' result map'

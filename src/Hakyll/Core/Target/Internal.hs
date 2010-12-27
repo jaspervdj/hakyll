@@ -15,6 +15,7 @@ import Control.Monad.Reader (ReaderT, runReaderT)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Store
 
 -- | A lookup with which we can get dependencies
 --
@@ -26,6 +27,7 @@ data TargetEnvironment a = TargetEnvironment
     { targetIdentifier       :: Identifier          -- ^ Identifier
     , targetDependencyLookup :: DependencyLookup a  -- ^ Dependency lookup
     , targetResourceProvider :: ResourceProvider    -- ^ To get resources
+    , targetStore            :: Store               -- ^ Store for caching
     }
 
 -- | Monad for targets. In this monad, the user can compose targets and describe
@@ -45,11 +47,13 @@ runTarget :: Target a
           -> Identifier
           -> DependencyLookup a
           -> ResourceProvider
+          -> Store
           -> IO a
-runTarget target id' lookup' provider = runReaderT (unTargetM target) env
+runTarget target id' lookup' provider store = runReaderT (unTargetM target) env
   where
     env = TargetEnvironment
         { targetIdentifier       = id'
         , targetDependencyLookup = lookup'
         , targetResourceProvider = provider
+        , targetStore            = store
         }
