@@ -18,11 +18,6 @@ import Hakyll.Web.Util.String
 --
 type LineParser = State [String]
 
--- | Check if the given string is a metadata delimiter.
---
-isPossibleDelimiter :: String -> Bool
-isPossibleDelimiter = isPrefixOf "---"
-
 -- | Read the metadata section from a page
 --
 parseMetadata :: LineParser (Map String String)
@@ -31,7 +26,7 @@ parseMetadata = get >>= \content -> case content of
     [] -> return M.empty
     -- Check if the file begins with a delimiter
     (l : ls) -> if not (isPossibleDelimiter l)
-        then -- No delimiter means no body
+        then -- No delimiter means no metadata
              return M.empty
         else do -- Break the metadata section
                 let (metadata, rest) = second (drop 1) $ break (== l) ls
@@ -40,7 +35,10 @@ parseMetadata = get >>= \content -> case content of
                 -- Parse the metadata
                 return $ M.fromList $ map parseMetadata' metadata
   where
-    parseMetadata' :: String -> (String, String)
+    -- Check if a line can be a delimiter
+    isPossibleDelimiter = isPrefixOf "---"
+
+    -- Parse a "key: value" string to a (key, value) tupple
     parseMetadata' = (trim *** trim . drop 1) . break (== ':')
 
 -- | Read the body section of a page
