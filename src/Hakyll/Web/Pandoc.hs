@@ -29,9 +29,9 @@ import Hakyll.Web.Page
 
 -- | Read a string using pandoc, with the default options
 --
-readPandoc :: FileType       -- ^ File type, determines how parsing happens
-           -> String         -- ^ String to read
-           -> Pandoc         -- ^ Resulting document
+readPandoc :: FileType  -- ^ File type, determines how parsing happens
+           -> String    -- ^ String to read
+           -> Pandoc    -- ^ Resulting document
 readPandoc = readPandocWith defaultParserState
 
 -- | Read a string using pandoc, with the supplied options
@@ -51,8 +51,8 @@ readPandocWith state fileType' = case fileType' of
 
 -- | Write a document (as HTML) using pandoc, with the default options
 --
-writePandoc :: Pandoc           -- ^ Document to write
-            -> String           -- ^ Resulting HTML
+writePandoc :: Pandoc  -- ^ Document to write
+            -> String  -- ^ Resulting HTML
 writePandoc = writePandocWith defaultWriterOptions
 
 -- | Write a document (as HTML) using pandoc, with the supplied options
@@ -64,19 +64,19 @@ writePandocWith = P.writeHtmlString
 
 -- | Read the resource using pandoc
 --
-pageReadPandoc :: Page String -> TargetM a (Page Pandoc)
+pageReadPandoc :: Page String -> TargetM (Page Pandoc)
 pageReadPandoc = pageReadPandocWith defaultParserState
 
 -- | Read the resource using pandoc
 --
-pageReadPandocWith :: P.ParserState -> Page String -> TargetM a (Page Pandoc)
+pageReadPandocWith :: P.ParserState -> Page String -> TargetM (Page Pandoc)
 pageReadPandocWith state page = do
     fileType' <- getFileType
     return $ readPandocWith state fileType' <$> page
 
 -- | Render the resource using pandoc
 --
-pageRenderPandoc :: Page String -> TargetM a (Page String)
+pageRenderPandoc :: Page String -> TargetM (Page String)
 pageRenderPandoc = pageRenderPandocWith defaultParserState defaultWriterOptions
 
 -- | Render the resource using pandoc
@@ -84,7 +84,7 @@ pageRenderPandoc = pageRenderPandocWith defaultParserState defaultWriterOptions
 pageRenderPandocWith :: P.ParserState
                      -> P.WriterOptions
                      -> Page String
-                     -> TargetM a (Page String)
+                     -> TargetM (Page String)
 pageRenderPandocWith state options page = do
     pandoc <- pageReadPandocWith state page
     return $ writePandocWith options <$> pandoc

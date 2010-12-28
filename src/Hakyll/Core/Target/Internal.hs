@@ -1,11 +1,10 @@
 -- | Internal structure of a Target, not exported outside of the library
 --
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, Rank2Types #-}
 module Hakyll.Core.Target.Internal
     ( DependencyLookup
     , TargetEnvironment (..)
     , TargetM (..)
-    , Target
     , runTarget
     ) where
 
@@ -17,18 +16,19 @@ import Control.Monad.State (StateT, evalStateT)
 import Hakyll.Core.Identifier
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Store
+import Hakyll.Core.CompiledItem
 
 -- | A lookup with which we can get dependencies
 --
-type DependencyLookup a = Identifier -> a
+type DependencyLookup = Identifier -> CompiledItem
 
 -- | Environment for the target monad
 --
-data TargetEnvironment a = TargetEnvironment
-    { targetIdentifier       :: Identifier          -- ^ Identifier
-    , targetDependencyLookup :: DependencyLookup a  -- ^ Dependency lookup
-    , targetResourceProvider :: ResourceProvider    -- ^ To get resources
-    , targetStore            :: Store               -- ^ Store for caching
+data TargetEnvironment = TargetEnvironment
+    { targetIdentifier       :: Identifier        -- ^ Identifier
+    , targetDependencyLookup :: DependencyLookup  -- ^ Dependency lookup
+    , targetResourceProvider :: ResourceProvider  -- ^ To get resources
+    , targetStore            :: Store             -- ^ Store for caching
     }
 
 -- | State for the target monad
@@ -40,20 +40,15 @@ data TargetState = TargetState
 -- | Monad for targets. In this monad, the user can compose targets and describe
 -- how they should be created.
 --
-newtype TargetM a b = TargetM
-    { unTargetM :: ReaderT (TargetEnvironment a) (StateT TargetState IO) b
+newtype TargetM a = TargetM
+    { unTargetM :: ReaderT TargetEnvironment (StateT TargetState IO) a
     } deriving (Monad, Functor, Applicative, MonadIO)
-
--- | Simplification of the 'TargetM' type for concrete cases: the type of the
--- returned item should equal the type of the dependencies.
---
-type Target a = TargetM a a
 
 -- | Run a target, yielding an actual result.
 --
-runTarget :: Target a
+runTarget :: TargetM a
           -> Identifier
-          -> DependencyLookup a
+          -> DependencyLookup
           -> ResourceProvider
           -> Store
           -> IO a

@@ -5,6 +5,9 @@ module Hakyll.Core.Run where
 import Control.Arrow ((&&&))
 import Control.Monad (foldM, forM_)
 import qualified Data.Map as M
+import Data.Monoid (mempty)
+import Data.Typeable (Typeable)
+import Data.Binary (Binary)
 
 import Hakyll.Core.Route
 import Hakyll.Core.Compiler
@@ -16,14 +19,15 @@ import Hakyll.Core.DirectedGraph
 import Hakyll.Core.DirectedGraph.DependencySolver
 import Hakyll.Core.Writable
 import Hakyll.Core.Store
+import Hakyll.Core.CompiledItem
 
-hakyll :: Writable a => Rules a -> IO ()
+hakyll :: Rules -> IO ()
 hakyll rules = do
     store <- makeStore "_store"
     provider <- fileResourceProvider
     hakyllWith rules provider store
 
-hakyllWith :: Writable a => Rules a -> ResourceProvider -> Store -> IO ()
+hakyllWith :: Rules -> ResourceProvider -> Store -> IO ()
 hakyllWith rules provider store = do
     let -- Get the rule set
         ruleSet = runRules rules provider
@@ -48,22 +52,26 @@ hakyllWith rules provider store = do
         -- Join the order with the targets again
         orderedTargets = map (id &&& (targetMap M.!)) ordered
 
-    -- Generate all the targets in order
-    map' <- foldM addTarget M.empty orderedTargets
-
-    let -- Fetch the routes
+        -- Fetch the routes
         route' = rulesRoute ruleSet
 
-    forM_ (M.toList map') $ \(id', result) ->
+    -- Generate all the targets in order
+    _ <- foldM (addTarget route') M.empty orderedTargets
+
+    putStrLn "DONE."
+  where
+    addTarget route' map' (id', targ) = do
+        compiled <- runTarget targ id' (dependencyLookup map') provider store
+        putStrLn $ "Generated target: " ++ show id'
+
         case runRoute route' id' of
             Nothing -> return ()
             Just r  -> do
                 putStrLn $ "Routing " ++ show id' ++ " to " ++ r
-                write r result
+                write r compiled
 
-    putStrLn "DONE."
-  where
-    addTarget map' (id', targ) = do
-        result <- runTarget targ id' (map' M.!) provider store
-        putStrLn $ "Generated target: " ++ show id'
-        return $ M.insert id' result map'
+        return $ M.insert id' compiled map'
+
+    dependencyLookup map' id' = case M.lookup id' map' of
+        Nothing -> error $ "dependencyLookup: " ++ show id' ++ " not found"
+        Just d  -> d

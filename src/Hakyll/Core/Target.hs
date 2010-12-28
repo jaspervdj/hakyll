@@ -4,7 +4,6 @@
 module Hakyll.Core.Target
     ( DependencyLookup
     , TargetM
-    , Target
     , runTarget
     , getIdentifier
     , getResourceString
@@ -20,12 +19,12 @@ import Hakyll.Core.ResourceProvider
 
 -- | Get the current identifier
 --
-getIdentifier :: TargetM a Identifier
+getIdentifier :: TargetM Identifier
 getIdentifier = TargetM $ targetIdentifier <$> ask
 
 -- | Get the resource content as a string
 --
-getResourceString :: TargetM a String
+getResourceString :: TargetM String
 getResourceString = TargetM $ do
     provider <- targetResourceProvider <$> ask
     identifier <- unTargetM getIdentifier

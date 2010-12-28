@@ -51,5 +51,5 @@ fileType = fileType' . takeExtension
 
 -- | Get the file type for the current file
 --
-getFileType :: TargetM a FileType
+getFileType :: TargetM FileType
 getFileType = fileType . toFilePath <$> getIdentifier

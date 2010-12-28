@@ -2,6 +2,7 @@
 -- type 'String') and number of metadata fields. This type is used to represent
 -- pages on your website.
 --
+{-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Web.Page
     ( Page (..)
     , toMap
@@ -12,6 +13,7 @@ import Control.Applicative ((<$>), (<*>))
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Binary (Binary, get, put)
+import Data.Typeable (Typeable)
 
 import Hakyll.Core.Writable
 
@@ -20,7 +22,7 @@ import Hakyll.Core.Writable
 data Page a = Page
     { pageMetadata :: Map String String
     , pageBody     :: a
-    }
+    } deriving (Show, Typeable)
 
 instance Functor Page where
     fmap f (Page m b) = Page m (f b)
