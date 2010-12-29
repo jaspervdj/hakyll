@@ -8,10 +8,12 @@ module Hakyll.Web.Pandoc
     , writePandocWith
 
       -- * Functions working on pages/targets
+    {-
     , pageReadPandoc
     , pageReadPandocWith
     , pageRenderPandoc
     , pageRenderPandocWith
+    -}
 
       -- * Default options
     , defaultParserState
@@ -23,7 +25,7 @@ import Control.Applicative ((<$>))
 import Text.Pandoc (Pandoc)
 import qualified Text.Pandoc as P
 
-import Hakyll.Core.Target
+import Hakyll.Core.Compiler
 import Hakyll.Web.FileType
 import Hakyll.Web.Page
 
@@ -62,6 +64,7 @@ writePandocWith :: P.WriterOptions  -- ^ Writer options for pandoc
                 -> String           -- ^ Resulting HTML
 writePandocWith = P.writeHtmlString
 
+{-
 -- | Read the resource using pandoc
 --
 pageReadPandoc :: Page String -> TargetM (Page Pandoc)
@@ -88,6 +91,7 @@ pageRenderPandocWith :: P.ParserState
 pageRenderPandocWith state options page = do
     pandoc <- pageReadPandocWith state page
     return $ writePandocWith options <$> pandoc
+-}
 
 -- | The default reader options for pandoc parsing in hakyll
 --

@@ -4,26 +4,32 @@
 module Hakyll.Core.Compiler
     ( Dependencies
     , CompilerM
-    , Compiler
+    , Compiler (..)
     , runCompiler
+    , getIdentifier
+    , getResourceString
     , require
-    , requireAll
-    , compileFromString
+    -- , requireAll
+    -- , compileFromString
     ) where
 
-import Control.Arrow (second)
+import Prelude hiding ((.), id)
+import Control.Arrow (second, (>>>))
 import Control.Applicative (Applicative, (<$>))
 import Control.Monad.State (State, modify, runState)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Control.Monad.Trans (liftIO)
+import Control.Monad ((<=<))
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.Typeable (Typeable)
+import Control.Category (Category, (.), id)
+import Control.Arrow (Arrow, arr, first)
+
 import Data.Binary (Binary)
+import Data.Typeable (Typeable)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
-import Hakyll.Core.Target
-import Hakyll.Core.Target.Internal
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
 import Hakyll.Core.ResourceProvider
@@ -32,65 +38,92 @@ import Hakyll.Core.ResourceProvider
 --
 type Dependencies = Set Identifier
 
--- | Add one dependency
+-- | A lookup with which we can get dependencies
 --
-addDependency :: Identifier -> CompilerM ()
-addDependency dependency = CompilerM $ modify $ addDependency'
-  where
-    addDependency' x = x
-        { compilerDependencies = S.insert dependency $ compilerDependencies x
-        }
+type DependencyLookup = Identifier -> CompiledItem
 
 -- | Environment in which a compiler runs
 --
 data CompilerEnvironment = CompilerEnvironment
     { compilerIdentifier       :: Identifier        -- ^ Target identifier
     , compilerResourceProvider :: ResourceProvider  -- ^ Resource provider
-    }
-
--- | State carried along by a compiler
---
-data CompilerState = CompilerState
-    { compilerDependencies :: Dependencies
+    , compilerDependencyLookup :: DependencyLookup  -- ^ Dependency lookup
     }
 
 -- | The compiler monad
 --
 newtype CompilerM a = CompilerM
-    { unCompilerM :: ReaderT CompilerEnvironment (State CompilerState) a
+    { unCompilerM :: ReaderT CompilerEnvironment IO a
     } deriving (Monad, Functor, Applicative)
 
--- | Simplified type for a compiler generating a target (which covers most
--- cases)
+-- | The compiler arrow
 --
-type Compiler a = CompilerM (TargetM a)
+data Compiler a b = Compiler
+    { -- TODO: Reader ResourceProvider Dependencies
+      compilerDependencies :: Dependencies
+    , compilerJob          :: a -> CompilerM b
+    }
+
+instance Category Compiler where
+    id = Compiler S.empty return
+    (Compiler d1 j1) . (Compiler d2 j2) =
+        Compiler (d1 `S.union` d2) (j1 <=< j2)
+
+instance Arrow Compiler where
+    arr f = Compiler S.empty (return . f)
+    first (Compiler d j) = Compiler d $ \(x, y) -> do
+        x' <- j x
+        return (x', y)
 
 -- | Run a compiler, yielding the resulting target and it's dependencies
 --
-runCompiler :: Compiler a -> Identifier -> ResourceProvider
-            -> (TargetM a, Dependencies)
-runCompiler compiler identifier provider = second compilerDependencies $
-    runState (runReaderT (unCompilerM compiler) env) state
+runCompiler :: Compiler () a
+            -> Identifier
+            -> ResourceProvider
+            -> DependencyLookup
+            -> IO a
+runCompiler compiler identifier provider lookup' =
+    runReaderT (unCompilerM $ compilerJob compiler ()) env
   where
-    state = CompilerState S.empty
     env = CompilerEnvironment
             { compilerIdentifier       = identifier
             , compilerResourceProvider = provider
+            , compilerDependencyLookup = lookup'
             }
 
+addDependency :: Identifier
+              -> Compiler b b
+addDependency id' = Compiler (S.singleton id') return
+
+fromCompilerM :: (a -> CompilerM b)
+              -> Compiler a b
+fromCompilerM = Compiler S.empty
+
+getIdentifier :: Compiler () Identifier
+getIdentifier = fromCompilerM $ const $ CompilerM $
+    compilerIdentifier <$> ask
+
+getResourceString :: Compiler () String
+getResourceString = getIdentifier >>> getResourceString'
+  where
+    getResourceString' = fromCompilerM $ \id' -> CompilerM $ do
+        provider <- compilerResourceProvider <$> ask
+        liftIO $ resourceString provider id'
 
 -- | Require another target. Using this function ensures automatic handling of
 -- dependencies
 --
 require :: (Binary a, Typeable a, Writable a)
         => Identifier
-        -> Compiler a
-require identifier = do
-    addDependency identifier
-    return $ TargetM $ do
-        lookup' <- targetDependencyLookup <$> ask
-        return $ unCompiledItem $ lookup' identifier
+        -> (a -> b -> c)
+        -> Compiler b c
+require identifier f = addDependency identifier >>> fromCompilerM require'
+  where
+    require' x = CompilerM $ do
+        lookup' <- compilerDependencyLookup <$> ask
+        return $ f (unCompiledItem $ lookup' identifier) x
 
+{-
 -- | Require a number of targets. Using this function ensures automatic handling
 -- of dependencies
 --
@@ -108,3 +141,4 @@ requireAll pattern = CompilerM $ do
 compileFromString :: (String -> TargetM a)  -- ^ Function to create the target
                   -> Compiler a             -- ^ Resulting compiler
 compileFromString = return . (getResourceString >>=)
+-}

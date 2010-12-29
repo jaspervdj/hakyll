@@ -7,10 +7,10 @@ module Hakyll.Web.FileType
     ) where
 
 import System.FilePath (takeExtension)
-import Control.Applicative ((<$>))
+import Control.Arrow ((>>>), arr)
 
 import Hakyll.Core.Identifier
-import Hakyll.Core.Target
+import Hakyll.Core.Compiler
 
 -- | Datatype to represent the different file types Hakyll can deal with by
 -- default
@@ -51,5 +51,5 @@ fileType = fileType' . takeExtension
 
 -- | Get the file type for the current file
 --
-getFileType :: TargetM FileType
-getFileType = fileType . toFilePath <$> getIdentifier
+getFileType :: Compiler () FileType
+getFileType = getIdentifier >>> arr (fileType . toFilePath)

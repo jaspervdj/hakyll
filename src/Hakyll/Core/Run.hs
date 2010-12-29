@@ -11,12 +11,12 @@ import Data.Binary (Binary)
 import System.FilePath ((</>))
 
 import Hakyll.Core.Route
+import Hakyll.Core.Identifier
 import Hakyll.Core.Util.File
 import Hakyll.Core.Compiler
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.ResourceProvider.FileResourceProvider
 import Hakyll.Core.Rules
-import Hakyll.Core.Target
 import Hakyll.Core.DirectedGraph
 import Hakyll.Core.DirectedGraph.Dot
 import Hakyll.Core.DirectedGraph.DependencySolver
@@ -38,22 +38,20 @@ hakyllWith rules provider store = do
         -- Get all identifiers and compilers
         compilers = rulesCompilers ruleSet
 
-        -- Get all targets
-        targets = flip map compilers $ \(id', compiler) ->
-            let (targ, deps) = runCompiler compiler id' provider
-            in (id', targ, deps)
+        -- Get all dependencies
+        dependencies = flip map compilers $ \(id', compiler) ->
+            let deps = compilerDependencies compiler
+            in (id', deps)
 
-        -- Map mapping every identifier to it's target
-        targetMap = M.fromList $ map (\(i, t, _) -> (i, t)) targets
+        -- Create a compiler map
+        compilerMap = M.fromList compilers
 
-        -- Create a dependency graph
-        graph = fromList $ map (\(i, _, d) -> (i, d)) targets
-
-        -- Solve the graph, creating a target order
+        -- Create and solve the graph, creating a compiler order
+        graph = fromList dependencies
         ordered = solveDependencies graph
 
-        -- Join the order with the targets again
-        orderedTargets = map (id &&& (targetMap M.!)) ordered
+        -- Join the order with the compilers again
+        orderedCompilers = map (id &&& (compilerMap M.!)) ordered
 
         -- Fetch the routes
         route' = rulesRoute ruleSet
@@ -62,12 +60,12 @@ hakyllWith rules provider store = do
     writeDot "dependencies.dot" show graph
 
     -- Generate all the targets in order
-    _ <- foldM (addTarget route') M.empty orderedTargets
+    _ <- foldM (addTarget route') M.empty orderedCompilers
 
     putStrLn "DONE."
   where
-    addTarget route' map' (id', targ) = do
-        compiled <- runTarget targ id' (dependencyLookup map') provider store
+    addTarget route' map' (id', comp) = do
+        compiled <- runCompiler comp id' provider (dependencyLookup map')
         putStrLn $ "Generated target: " ++ show id'
 
         case runRoute route' id' of

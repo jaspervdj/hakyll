@@ -15,7 +15,7 @@ module Hakyll.Core.Rules
 import Control.Applicative (Applicative, (<$>))
 import Control.Monad.Writer
 import Control.Monad.Reader
-import Control.Arrow (second)
+import Control.Arrow (second, (>>>), arr)
 
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
@@ -32,7 +32,7 @@ import Hakyll.Core.Writable
 --
 data RuleSet = RuleSet
     { rulesRoute     :: Route
-    , rulesCompilers :: [(Identifier, Compiler CompiledItem)]
+    , rulesCompilers :: [(Identifier, Compiler () CompiledItem)]
     }
 
 instance Monoid RuleSet where
@@ -64,12 +64,12 @@ addRoute route' = RulesM $ tell $ RuleSet route' mempty
 -- | Add a number of compilers
 --
 addCompilers :: (Binary a, Typeable a, Writable a)
-             => [(Identifier, Compiler a)]
+             => [(Identifier, Compiler () a)]
              -> Rules
 addCompilers compilers = RulesM $ tell $ RuleSet mempty $
     map (second boxCompiler) compilers
   where
-    boxCompiler = fmap (fmap compiledItem)
+    boxCompiler = (>>> arr compiledItem)
 
 -- | Add a compilation rule
 --
@@ -77,7 +77,7 @@ addCompilers compilers = RulesM $ tell $ RuleSet mempty $
 -- the given compiler
 --
 compile :: (Binary a, Typeable a, Writable a)
-        => Pattern -> Compiler a -> Rules
+        => Pattern -> Compiler () a -> Rules
 compile pattern compiler = RulesM $ do
     identifiers <- matches pattern . resourceList <$> ask
     unRulesM $ addCompilers $ zip identifiers (repeat compiler)
@@ -87,7 +87,7 @@ compile pattern compiler = RulesM $ do
 -- This sets a compiler for the given identifier
 --
 create :: (Binary a, Typeable a, Writable a)
-       => Identifier -> Compiler a -> Rules
+       => Identifier -> Compiler () a -> Rules
 create identifier compiler = addCompilers [(identifier, compiler)]
 
 -- | Add a route
