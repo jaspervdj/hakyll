@@ -7,6 +7,7 @@ module Hakyll.Core.Compiler
     , Compiler
     , runCompiler
     , require
+    , requireAll
     , compileFromString
     ) where
 
@@ -20,10 +21,12 @@ import Data.Typeable (Typeable)
 import Data.Binary (Binary)
 
 import Hakyll.Core.Identifier
+import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Target
 import Hakyll.Core.Target.Internal
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
+import Hakyll.Core.ResourceProvider
 
 -- | A set of dependencies
 --
@@ -41,7 +44,8 @@ addDependency dependency = CompilerM $ modify $ addDependency'
 -- | Environment in which a compiler runs
 --
 data CompilerEnvironment = CompilerEnvironment
-    { compilerIdentifier :: Identifier  -- ^ Target identifier
+    { compilerIdentifier       :: Identifier        -- ^ Target identifier
+    , compilerResourceProvider :: ResourceProvider  -- ^ Resource provider
     }
 
 -- | State carried along by a compiler
@@ -63,12 +67,17 @@ type Compiler a = CompilerM (TargetM a)
 
 -- | Run a compiler, yielding the resulting target and it's dependencies
 --
-runCompiler :: Compiler a -> Identifier -> (TargetM a, Dependencies)
-runCompiler compiler identifier = second compilerDependencies $
+runCompiler :: Compiler a -> Identifier -> ResourceProvider
+            -> (TargetM a, Dependencies)
+runCompiler compiler identifier provider = second compilerDependencies $
     runState (runReaderT (unCompilerM compiler) env) state
   where
-    env = CompilerEnvironment {compilerIdentifier = identifier}
     state = CompilerState S.empty
+    env = CompilerEnvironment
+            { compilerIdentifier       = identifier
+            , compilerResourceProvider = provider
+            }
+
 
 -- | Require another target. Using this function ensures automatic handling of
 -- dependencies
@@ -81,6 +90,17 @@ require identifier = do
     return $ TargetM $ do
         lookup' <- targetDependencyLookup <$> ask
         return $ unCompiledItem $ lookup' identifier
+
+-- | Require a number of targets. Using this function ensures automatic handling
+-- of dependencies
+--
+requireAll :: (Binary a, Typeable a, Writable a)
+           => Pattern
+           -> Compiler [a]
+requireAll pattern = CompilerM $ do
+    provider <- compilerResourceProvider <$> ask
+    r <- unCompilerM $ mapM require $ matches pattern $ resourceList provider
+    return $ sequence r
 
 -- | Construct a target from a string, this string being the content of the
 -- resource.

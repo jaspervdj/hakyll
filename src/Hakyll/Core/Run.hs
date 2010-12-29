@@ -8,14 +8,17 @@ import qualified Data.Map as M
 import Data.Monoid (mempty)
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
+import System.FilePath ((</>))
 
 import Hakyll.Core.Route
+import Hakyll.Core.Util.File
 import Hakyll.Core.Compiler
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.ResourceProvider.FileResourceProvider
 import Hakyll.Core.Rules
 import Hakyll.Core.Target
 import Hakyll.Core.DirectedGraph
+import Hakyll.Core.DirectedGraph.Dot
 import Hakyll.Core.DirectedGraph.DependencySolver
 import Hakyll.Core.Writable
 import Hakyll.Core.Store
@@ -37,7 +40,7 @@ hakyllWith rules provider store = do
 
         -- Get all targets
         targets = flip map compilers $ \(id', compiler) ->
-            let (targ, deps) = runCompiler compiler id'
+            let (targ, deps) = runCompiler compiler id' provider
             in (id', targ, deps)
 
         -- Map mapping every identifier to it's target
@@ -55,6 +58,9 @@ hakyllWith rules provider store = do
         -- Fetch the routes
         route' = rulesRoute ruleSet
 
+    putStrLn "Writing dependency graph to dependencies.dot..."
+    writeDot "dependencies.dot" show graph
+
     -- Generate all the targets in order
     _ <- foldM (addTarget route') M.empty orderedTargets
 
@@ -68,7 +74,9 @@ hakyllWith rules provider store = do
             Nothing -> return ()
             Just r  -> do
                 putStrLn $ "Routing " ++ show id' ++ " to " ++ r
-                write r compiled
+                let path = "_site" </> r
+                makeDirectories path
+                write path compiled
 
         return $ M.insert id' compiled map'
 
