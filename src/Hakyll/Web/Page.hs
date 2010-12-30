@@ -5,18 +5,34 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Web.Page
     ( Page (..)
+    , addField
     , toMap
     , pageRead
+    , addDefaultFields
     ) where
 
-import Control.Arrow ((>>^))
-
+import Prelude hiding (id)
+import Control.Category (id)
+import Control.Arrow ((>>^), (&&&), (>>>))
+import Control.Applicative ((<$>))
+import System.FilePath (takeBaseName)
+import Data.Maybe (fromMaybe)
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
 import Hakyll.Web.Page.Internal
 import Hakyll.Web.Page.Read
+import Hakyll.Web.Util.String
+
+-- | Add a metadata field. If the field already exists, it is not overwritten.
+--
+addField :: String  -- ^ Key
+         -> String  -- ^ Value
+         -> Page a  -- ^ Page to add it to
+         -> Page a  -- ^ Resulting page
+addField k v (Page m b) = Page (M.insertWith (flip const) k v m) b
 
 -- | Convert a page to a map. The body will be placed in the @body@ key.
 --
@@ -27,3 +43,19 @@ toMap (Page m b) = M.insert "body" b m
 --
 pageRead :: Compiler a (Page String)
 pageRead = getResourceString >>^ readPage
+
+-- | Add a number of default metadata fields to a page. These fields include:
+--
+-- * @$url@
+--
+-- * @$root@
+--
+-- * @$title@
+--
+addDefaultFields :: Compiler (Page a) (Page a)
+addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
+                 >>> (getIdentifier &&& id >>^ uncurry addTitle)
+  where
+    addRoute r = addField "url" (fromMaybe "?" r)
+               . addField "root" (fromMaybe "/" $ toSiteRoot <$> r)
+    addTitle i = addField "title" (takeBaseName $ toFilePath i)
