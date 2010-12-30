@@ -11,7 +11,7 @@ import Data.List (isPrefixOf)
 import Data.Map (Map)
 import qualified Data.Map as M
 
-import Hakyll.Web.Page
+import Hakyll.Web.Page.Internal
 import Hakyll.Web.Util.String
 
 -- | We're using a simple state monad as parser

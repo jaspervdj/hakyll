@@ -4,6 +4,7 @@
 module Hakyll.Core.Compiler
     ( Compiler
     , getIdentifier
+    , getRoute
     , getResourceString
     , require
     , requireAll
@@ -26,10 +27,18 @@ import Hakyll.Core.Writable
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Compiler.Internal
 
+-- | Get the identifier of the item that is currently being compiled
+--
 getIdentifier :: Compiler a Identifier
-getIdentifier = fromJob $ const $ CompilerM $
-    compilerIdentifier <$> ask
+getIdentifier = fromJob $ const $ CompilerM $ compilerIdentifier <$> ask
 
+-- | Get the route we are using for this item
+--
+getRoute :: Compiler a (Maybe FilePath)
+getRoute = fromJob $ const $ CompilerM $ compilerRoute <$> ask
+
+-- | Get the resource we are compiling as a string
+--
 getResourceString :: Compiler a String
 getResourceString = getIdentifier >>> getResourceString'
   where

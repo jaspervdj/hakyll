@@ -39,6 +39,7 @@ data CompilerEnvironment = CompilerEnvironment
     { compilerIdentifier       :: Identifier        -- ^ Target identifier
     , compilerResourceProvider :: ResourceProvider  -- ^ Resource provider
     , compilerDependencyLookup :: DependencyLookup  -- ^ Dependency lookup
+    , compilerRoute            :: Maybe FilePath    -- ^ Site route
     }
 
 -- | The compiler monad
@@ -67,18 +68,20 @@ instance Arrow Compiler where
 
 -- | Run a compiler, yielding the resulting target and it's dependencies
 --
-runCompilerJob :: Compiler () a
-               -> Identifier
-               -> ResourceProvider
-               -> DependencyLookup
+runCompilerJob :: Compiler () a     -- ^ Compiler to run
+               -> Identifier        -- ^ Target identifier
+               -> ResourceProvider  -- ^ Resource provider
+               -> DependencyLookup  -- ^ Dependency lookup table
+               -> Maybe FilePath    -- ^ Route
                -> IO a
-runCompilerJob compiler identifier provider lookup' =
+runCompilerJob compiler identifier provider lookup' route =
     runReaderT (unCompilerM $ compilerJob compiler ()) env
   where
     env = CompilerEnvironment
             { compilerIdentifier       = identifier
             , compilerResourceProvider = provider
             , compilerDependencyLookup = lookup'
+            , compilerRoute            = route
             }
 
 runCompilerDependencies :: Compiler () a
