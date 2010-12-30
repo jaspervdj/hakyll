@@ -14,6 +14,7 @@ import Hakyll.Core.Route
 import Hakyll.Core.Identifier
 import Hakyll.Core.Util.File
 import Hakyll.Core.Compiler
+import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.ResourceProvider.FileResourceProvider
 import Hakyll.Core.Rules
@@ -40,7 +41,7 @@ hakyllWith rules provider store = do
 
         -- Get all dependencies
         dependencies = flip map compilers $ \(id', compiler) ->
-            let deps = getDependencies compiler provider
+            let deps = runCompilerDependencies compiler provider
             in (id', deps)
 
         -- Create a compiler map
@@ -65,7 +66,7 @@ hakyllWith rules provider store = do
     putStrLn "DONE."
   where
     addTarget route' map' (id', comp) = do
-        compiled <- runCompiler comp id' provider (dependencyLookup map')
+        compiled <- runCompilerJob comp id' provider (dependencyLookup map')
         putStrLn $ "Generated target: " ++ show id'
 
         case runRoute route' id' of
