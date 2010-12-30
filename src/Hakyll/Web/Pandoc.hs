@@ -20,14 +20,13 @@ module Hakyll.Web.Pandoc
 
 import Prelude hiding (id)
 import Control.Applicative ((<$>))
-import Control.Arrow ((>>>), arr)
+import Control.Arrow ((>>^), (&&&))
 import Control.Category (id)
 
 import Text.Pandoc (Pandoc)
 import qualified Text.Pandoc as P
 
 import Hakyll.Core.Compiler
-import Hakyll.Core.Util.Arrow
 import Hakyll.Web.FileType
 import Hakyll.Web.Page
 
@@ -75,7 +74,7 @@ pageReadPandoc = pageReadPandocWith defaultParserState
 --
 pageReadPandocWith :: P.ParserState -> Compiler (Page String) (Page Pandoc)
 pageReadPandocWith state =
-    withUnitArr id getFileType >>> arr pageReadPandocWith'
+    id &&& getFileType >>^ pageReadPandocWith'
   where
     pageReadPandocWith' (p, t) = readPandocWith state t <$> p
 
@@ -90,7 +89,7 @@ pageRenderPandocWith :: P.ParserState
                      -> P.WriterOptions
                      -> Compiler (Page String) (Page String)
 pageRenderPandocWith state options =
-    pageReadPandocWith state >>> arr (fmap $ writePandocWith options)
+    pageReadPandocWith state >>^ (fmap $ writePandocWith options)
 
 -- | The default reader options for pandoc parsing in hakyll
 --

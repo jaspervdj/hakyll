@@ -7,7 +7,7 @@ module Hakyll.Web.FileType
     ) where
 
 import System.FilePath (takeExtension)
-import Control.Arrow ((>>>), arr)
+import Control.Arrow ((>>^))
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
@@ -51,5 +51,5 @@ fileType = fileType' . takeExtension
 
 -- | Get the file type for the current file
 --
-getFileType :: Compiler () FileType
-getFileType = getIdentifier >>> arr (fileType . toFilePath)
+getFileType :: Compiler a FileType
+getFileType = getIdentifier >>^ fileType . toFilePath

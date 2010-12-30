@@ -105,11 +105,11 @@ fromCompilerM :: (a -> CompilerM b)
               -> Compiler a b
 fromCompilerM = Compiler (return S.empty)
 
-getIdentifier :: Compiler () Identifier
+getIdentifier :: Compiler a Identifier
 getIdentifier = fromCompilerM $ const $ CompilerM $
     compilerIdentifier <$> ask
 
-getResourceString :: Compiler () String
+getResourceString :: Compiler a String
 getResourceString = getIdentifier >>> getResourceString'
   where
     getResourceString' = fromCompilerM $ \id' -> CompilerM $ do
