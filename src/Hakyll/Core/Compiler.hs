@@ -11,7 +11,6 @@ module Hakyll.Core.Compiler
     , getResourceString
     , require
     , requireAll
-    -- , compileFromString
     ) where
 
 import Prelude hiding ((.), id)
@@ -145,12 +144,3 @@ requireAll pattern f =
         deps <- getDeps . compilerResourceProvider <$> ask
         lookup' <- compilerDependencyLookup <$> ask
         return $ f x $ map (unCompiledItem . lookup') deps
-
-{-
--- | Construct a target from a string, this string being the content of the
--- resource.
---
-compileFromString :: (String -> TargetM a)  -- ^ Function to create the target
-                  -> Compiler a             -- ^ Resulting compiler
-compileFromString = return . (getResourceString >>=)
--}
