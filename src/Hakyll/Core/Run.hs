@@ -40,7 +40,7 @@ hakyllWith rules provider store = do
 
         -- Get all dependencies
         dependencies = flip map compilers $ \(id', compiler) ->
-            let deps = compilerDependencies compiler
+            let deps = getDependencies compiler provider
             in (id', deps)
 
         -- Create a compiler map

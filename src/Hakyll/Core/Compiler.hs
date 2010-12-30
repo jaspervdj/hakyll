@@ -6,10 +6,11 @@ module Hakyll.Core.Compiler
     , CompilerM
     , Compiler (..)
     , runCompiler
+    , getDependencies
     , getIdentifier
     , getResourceString
     , require
-    -- , requireAll
+    , requireAll
     -- , compileFromString
     ) where
 
@@ -17,9 +18,9 @@ import Prelude hiding ((.), id)
 import Control.Arrow (second, (>>>))
 import Control.Applicative (Applicative, (<$>))
 import Control.Monad.State (State, modify, runState)
-import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Control.Monad.Reader (ReaderT, Reader, ask, runReaderT, runReader)
 import Control.Monad.Trans (liftIO)
-import Control.Monad ((<=<))
+import Control.Monad ((<=<), liftM2)
 import Data.Set (Set)
 import qualified Data.Set as S
 import Control.Category (Category, (.), id)
@@ -59,18 +60,17 @@ newtype CompilerM a = CompilerM
 -- | The compiler arrow
 --
 data Compiler a b = Compiler
-    { -- TODO: Reader ResourceProvider Dependencies
-      compilerDependencies :: Dependencies
+    { compilerDependencies :: Reader ResourceProvider Dependencies
     , compilerJob          :: a -> CompilerM b
     }
 
 instance Category Compiler where
-    id = Compiler S.empty return
+    id = Compiler (return S.empty) return
     (Compiler d1 j1) . (Compiler d2 j2) =
-        Compiler (d1 `S.union` d2) (j1 <=< j2)
+        Compiler (liftM2 S.union d1 d2) (j1 <=< j2)
 
 instance Arrow Compiler where
-    arr f = Compiler S.empty (return . f)
+    arr f = Compiler (return S.empty) (return . f)
     first (Compiler d j) = Compiler d $ \(x, y) -> do
         x' <- j x
         return (x', y)
@@ -91,13 +91,19 @@ runCompiler compiler identifier provider lookup' =
             , compilerDependencyLookup = lookup'
             }
 
-addDependency :: Identifier
-              -> Compiler b b
-addDependency id' = Compiler (S.singleton id') return
+getDependencies :: Compiler () a
+                -> ResourceProvider
+                -> Dependencies
+getDependencies compiler provider =
+    runReader (compilerDependencies compiler) provider
+
+addDependencies :: (ResourceProvider -> [Identifier])
+                -> Compiler b b
+addDependencies deps = Compiler (S.fromList . deps <$> ask) return
 
 fromCompilerM :: (a -> CompilerM b)
               -> Compiler a b
-fromCompilerM = Compiler S.empty
+fromCompilerM = Compiler (return S.empty)
 
 getIdentifier :: Compiler () Identifier
 getIdentifier = fromCompilerM $ const $ CompilerM $
@@ -115,26 +121,32 @@ getResourceString = getIdentifier >>> getResourceString'
 --
 require :: (Binary a, Typeable a, Writable a)
         => Identifier
-        -> (a -> b -> c)
+        -> (b -> a -> c)
         -> Compiler b c
-require identifier f = addDependency identifier >>> fromCompilerM require'
+require identifier f =
+    addDependencies (const [identifier]) >>> fromCompilerM require'
   where
     require' x = CompilerM $ do
         lookup' <- compilerDependencyLookup <$> ask
-        return $ f (unCompiledItem $ lookup' identifier) x
+        return $ f x $ unCompiledItem $ lookup' identifier
 
-{-
 -- | Require a number of targets. Using this function ensures automatic handling
 -- of dependencies
 --
 requireAll :: (Binary a, Typeable a, Writable a)
            => Pattern
-           -> Compiler [a]
-requireAll pattern = CompilerM $ do
-    provider <- compilerResourceProvider <$> ask
-    r <- unCompilerM $ mapM require $ matches pattern $ resourceList provider
-    return $ sequence r
+           -> (b -> [a] -> c)
+           -> Compiler b c
+requireAll pattern f =
+    addDependencies getDeps >>> fromCompilerM requireAll'
+  where
+    getDeps = matches pattern . resourceList
+    requireAll' x = CompilerM $ do
+        deps <- getDeps . compilerResourceProvider <$> ask
+        lookup' <- compilerDependencyLookup <$> ask
+        return $ f x $ map (unCompiledItem . lookup') deps
 
+{-
 -- | Construct a target from a string, this string being the content of the
 -- resource.
 --

@@ -7,25 +7,27 @@ module Hakyll.Web.Pandoc
     , writePandoc
     , writePandocWith
 
-      -- * Functions working on pages/targets
-    {-
+      -- * Functions working on pages/compilers
     , pageReadPandoc
     , pageReadPandocWith
     , pageRenderPandoc
     , pageRenderPandocWith
-    -}
 
       -- * Default options
     , defaultParserState
     , defaultWriterOptions
     ) where
 
+import Prelude hiding (id)
 import Control.Applicative ((<$>))
+import Control.Arrow ((>>>), arr)
+import Control.Category (id)
 
 import Text.Pandoc (Pandoc)
 import qualified Text.Pandoc as P
 
 import Hakyll.Core.Compiler
+import Hakyll.Core.Util.Arrow
 import Hakyll.Web.FileType
 import Hakyll.Web.Page
 
@@ -64,34 +66,31 @@ writePandocWith :: P.WriterOptions  -- ^ Writer options for pandoc
                 -> String           -- ^ Resulting HTML
 writePandocWith = P.writeHtmlString
 
-{-
 -- | Read the resource using pandoc
 --
-pageReadPandoc :: Page String -> TargetM (Page Pandoc)
+pageReadPandoc :: Compiler (Page String) (Page Pandoc)
 pageReadPandoc = pageReadPandocWith defaultParserState
 
 -- | Read the resource using pandoc
 --
-pageReadPandocWith :: P.ParserState -> Page String -> TargetM (Page Pandoc)
-pageReadPandocWith state page = do
-    fileType' <- getFileType
-    return $ readPandocWith state fileType' <$> page
+pageReadPandocWith :: P.ParserState -> Compiler (Page String) (Page Pandoc)
+pageReadPandocWith state =
+    withUnitArr id getFileType >>> arr pageReadPandocWith'
+  where
+    pageReadPandocWith' (p, t) = readPandocWith state t <$> p
 
 -- | Render the resource using pandoc
 --
-pageRenderPandoc :: Page String -> TargetM (Page String)
+pageRenderPandoc :: Compiler (Page String) (Page String)
 pageRenderPandoc = pageRenderPandocWith defaultParserState defaultWriterOptions
 
 -- | Render the resource using pandoc
 --
 pageRenderPandocWith :: P.ParserState
                      -> P.WriterOptions
-                     -> Page String
-                     -> TargetM (Page String)
-pageRenderPandocWith state options page = do
-    pandoc <- pageReadPandocWith state page
-    return $ writePandocWith options <$> pandoc
--}
+                     -> Compiler (Page String) (Page String)
+pageRenderPandocWith state options =
+    pageReadPandocWith state >>> arr (fmap $ writePandocWith options)
 
 -- | The default reader options for pandoc parsing in hakyll
 --
