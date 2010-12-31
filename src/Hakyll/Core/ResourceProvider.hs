@@ -5,6 +5,7 @@
 module Hakyll.Core.ResourceProvider
     ( ResourceProvider (..)
     , resourceDigest
+    , resourceModified
     ) where
 
 import Control.Monad ((<=<))
@@ -15,6 +16,7 @@ import OpenSSL.Digest.ByteString.Lazy (digest)
 import OpenSSL.Digest (MessageDigest (MD5))
 
 import Hakyll.Core.Identifier
+import Hakyll.Core.Store
 
 -- | A value responsible for retrieving and listing resources
 --
@@ -31,3 +33,21 @@ data ResourceProvider = ResourceProvider
 --
 resourceDigest :: ResourceProvider -> Identifier -> IO [Word8]
 resourceDigest provider = digest MD5 <=< resourceLazyByteString provider
+
+-- | Check if a resource was modified
+--
+resourceModified :: ResourceProvider -> Identifier -> Store -> IO Bool
+resourceModified provider identifier store = do
+    -- Get the latest seen digest from the store
+    lastDigest <- storeGet store itemName identifier
+    -- Calculate the digest for the resource
+    newDigest <- resourceDigest provider identifier
+    -- Check digests
+    if Just newDigest == lastDigest
+        -- All is fine, not modified
+        then return False
+        -- Resource modified; store new digest
+        else do storeSet store itemName identifier newDigest
+                return True
+  where
+    itemName = "Hakyll.Core.ResourceProvider.resourceModified"

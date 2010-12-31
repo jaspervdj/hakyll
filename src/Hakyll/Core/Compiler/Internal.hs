@@ -24,6 +24,7 @@ import Control.Arrow (Arrow, arr, first)
 import Hakyll.Core.Identifier
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Store
 
 -- | A set of dependencies
 --
@@ -40,6 +41,7 @@ data CompilerEnvironment = CompilerEnvironment
     , compilerResourceProvider :: ResourceProvider  -- ^ Resource provider
     , compilerDependencyLookup :: DependencyLookup  -- ^ Dependency lookup
     , compilerRoute            :: Maybe FilePath    -- ^ Site route
+    , compilerStore            :: Store             -- ^ Compiler store
     }
 
 -- | The compiler monad
@@ -73,8 +75,9 @@ runCompilerJob :: Compiler () a     -- ^ Compiler to run
                -> ResourceProvider  -- ^ Resource provider
                -> DependencyLookup  -- ^ Dependency lookup table
                -> Maybe FilePath    -- ^ Route
+               -> Store             -- ^ Store
                -> IO a
-runCompilerJob compiler identifier provider lookup' route =
+runCompilerJob compiler identifier provider lookup' route store =
     runReaderT (unCompilerM $ compilerJob compiler ()) env
   where
     env = CompilerEnvironment
@@ -82,6 +85,7 @@ runCompilerJob compiler identifier provider lookup' route =
             , compilerResourceProvider = provider
             , compilerDependencyLookup = lookup'
             , compilerRoute            = route
+            , compilerStore            = store
             }
 
 runCompilerDependencies :: Compiler () a

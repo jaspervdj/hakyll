@@ -67,7 +67,8 @@ hakyllWith rules provider store = do
   where
     addTarget route' map' (id', comp) = do
         let url = runRoute route' id'
-        compiled <- runCompilerJob comp id' provider (dependencyLookup map') url
+        compiled <- runCompilerJob comp id' provider (dependencyLookup map')
+                                   url store
         putStrLn $ "Generated target: " ++ show id'
 
         case url of

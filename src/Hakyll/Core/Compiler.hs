@@ -8,6 +8,7 @@ module Hakyll.Core.Compiler
     , getResourceString
     , require
     , requireAll
+    , cached
     ) where
 
 import Prelude hiding ((.), id)
@@ -26,6 +27,7 @@ import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Compiler.Internal
+import Hakyll.Core.Store
 
 -- | Get the identifier of the item that is currently being compiled
 --
@@ -75,3 +77,24 @@ requireAll pattern f =
         deps <- getDeps . compilerResourceProvider <$> ask
         lookup' <- compilerDependencyLookup <$> ask
         return $ f x $ map (unCompiledItem . lookup') deps
+
+cached :: (Binary a)
+       => String
+       -> Compiler () a
+       -> Compiler () a
+cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
+    provider <- compilerResourceProvider <$> ask
+    identifier <- compilerIdentifier <$> ask
+    store <- compilerStore <$> ask
+    modified <- liftIO $ resourceModified provider identifier store
+    liftIO $ putStrLn $
+        show identifier ++ ": " ++ if modified then "MODIFIED" else "OK"
+    if modified
+        then do v <- unCompilerM $ j ()
+                liftIO $ storeSet store name identifier v
+                return v
+        else do v <- liftIO $ storeGet store name identifier
+                case v of Just v' -> return v'
+                          Nothing -> error'
+  where
+    error' = error "Hakyll.Core.Compiler.cached: Cache corrupt!"
