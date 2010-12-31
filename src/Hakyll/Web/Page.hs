@@ -14,9 +14,7 @@ module Hakyll.Web.Page
 import Prelude hiding (id)
 import Control.Category (id)
 import Control.Arrow ((>>^), (&&&), (>>>))
-import Control.Applicative ((<$>))
-import System.FilePath (takeBaseName)
-import Data.Maybe (fromMaybe)
+import System.FilePath (takeBaseName, takeDirectory)
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -54,8 +52,15 @@ pageRead = getResourceString >>^ readPage
 --
 addDefaultFields :: Compiler (Page a) (Page a)
 addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
-                 >>> (getIdentifier &&& id >>^ uncurry addTitle)
+                 >>> (getIdentifier &&& id >>^ uncurry addIdentifier)
   where
-    addRoute r = addField "url" (fromMaybe "?" r)
-               . addField "root" (fromMaybe "/" $ toSiteRoot <$> r)
-    addTitle i = addField "title" (takeBaseName $ toFilePath i)
+    -- Add root and url, based on route
+    addRoute Nothing  = id
+    addRoute (Just r) = addField "url" r
+                      . addField "root" (toSiteRoot r)
+
+    -- Add title and category, based on identifier
+    addIdentifier i = addField "title" (takeBaseName p)
+                  . addField "category" (takeBaseName $ takeDirectory p)
+      where
+        p = toFilePath i
