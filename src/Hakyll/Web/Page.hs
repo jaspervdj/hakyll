@@ -61,6 +61,6 @@ addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
 
     -- Add title and category, based on identifier
     addIdentifier i = addField "title" (takeBaseName p)
-                  . addField "category" (takeBaseName $ takeDirectory p)
+                    . addField "category" (takeBaseName $ takeDirectory p)
       where
         p = toFilePath i
