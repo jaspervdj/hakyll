@@ -5,6 +5,7 @@ module Hakyll.Core.Store
     , makeStore
     , storeSet
     , storeGet
+    , wasModified
     ) where
 
 import Control.Applicative ((<$>))
@@ -15,6 +16,7 @@ import Data.Binary (Binary, encodeFile, decodeFile)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Util.File
+import Hakyll.Core.ResourceProvider
 
 -- | Data structure used for the store
 --
@@ -51,3 +53,21 @@ storeGet store name identifier = do
               else return Nothing
   where
     path = makePath store name identifier
+
+-- | Check if a resource was modified
+--
+wasModified :: Store -> ResourceProvider -> Identifier -> IO Bool
+wasModified store provider identifier = do
+    -- Get the latest seen digest from the store
+    lastDigest <- storeGet store itemName identifier
+    -- Calculate the digest for the resource
+    newDigest <- resourceDigest provider identifier
+    -- Check digests
+    if Just newDigest == lastDigest
+        -- All is fine, not modified
+        then return False
+        -- Resource modified; store new digest
+        else do storeSet store itemName identifier newDigest
+                return True
+  where
+    itemName = "Hakyll.Core.Store.wasModified"
