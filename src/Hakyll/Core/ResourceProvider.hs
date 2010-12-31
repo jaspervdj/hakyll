@@ -4,6 +4,7 @@
 --
 module Hakyll.Core.ResourceProvider
     ( ResourceProvider (..)
+    , resourceExists
     , resourceDigest
     , resourceModified
     ) where
@@ -28,6 +29,11 @@ data ResourceProvider = ResourceProvider
     , -- | Retrieve a certain resource as lazy bytestring
       resourceLazyByteString :: Identifier -> IO LB.ByteString
     }
+
+-- | Check if a given resource exists
+--
+resourceExists :: ResourceProvider -> Identifier -> Bool
+resourceExists provider = flip elem $ resourceList provider
 
 -- | Retrieve a digest for a given resource
 --
