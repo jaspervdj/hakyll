@@ -67,8 +67,15 @@ hakyllWith rules provider store = do
   where
     addTarget route' map' (id', comp) = do
         let url = runRoute route' id'
+        
+        -- Check if the resource was modified
+        modified <- if resourceExists provider id'
+                        then resourceModified provider id' store
+                        else return False
+
+        -- Run the compiler
         compiled <- runCompilerJob comp id' provider (dependencyLookup map')
-                                   url store
+                                   url store modified
         putStrLn $ "Generated target: " ++ show id'
 
         case url of
@@ -79,6 +86,7 @@ hakyllWith rules provider store = do
                 makeDirectories path
                 write path compiled
 
+        putStrLn ""
         return $ M.insert id' compiled map'
 
     dependencyLookup map' id' = case M.lookup id' map' of

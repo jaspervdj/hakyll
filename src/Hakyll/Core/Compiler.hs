@@ -83,10 +83,9 @@ cached :: (Binary a)
        -> Compiler () a
        -> Compiler () a
 cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
-    provider <- compilerResourceProvider <$> ask
     identifier <- compilerIdentifier <$> ask
     store <- compilerStore <$> ask
-    modified <- liftIO $ resourceModified provider identifier store
+    modified <- compilerResourceModified <$> ask
     liftIO $ putStrLn $
         show identifier ++ ": " ++ if modified then "MODIFIED" else "OK"
     if modified

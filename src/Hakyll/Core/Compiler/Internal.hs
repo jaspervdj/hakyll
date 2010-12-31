@@ -37,11 +37,18 @@ type DependencyLookup = Identifier -> CompiledItem
 -- | Environment in which a compiler runs
 --
 data CompilerEnvironment = CompilerEnvironment
-    { compilerIdentifier       :: Identifier        -- ^ Target identifier
-    , compilerResourceProvider :: ResourceProvider  -- ^ Resource provider
-    , compilerDependencyLookup :: DependencyLookup  -- ^ Dependency lookup
-    , compilerRoute            :: Maybe FilePath    -- ^ Site route
-    , compilerStore            :: Store             -- ^ Compiler store
+    { -- | Target identifier
+      compilerIdentifier       :: Identifier
+    , -- | Resource provider
+      compilerResourceProvider :: ResourceProvider
+    , -- | Dependency lookup
+      compilerDependencyLookup :: DependencyLookup
+    , -- | Site route
+      compilerRoute            :: Maybe FilePath
+    , -- | Compiler store
+      compilerStore            :: Store
+    , -- | Flag indicating if the underlying resource was modified
+      compilerResourceModified :: Bool
     }
 
 -- | The compiler monad
@@ -76,8 +83,9 @@ runCompilerJob :: Compiler () a     -- ^ Compiler to run
                -> DependencyLookup  -- ^ Dependency lookup table
                -> Maybe FilePath    -- ^ Route
                -> Store             -- ^ Store
+               -> Bool              -- ^ Was the resource modified?
                -> IO a
-runCompilerJob compiler identifier provider lookup' route store =
+runCompilerJob compiler identifier provider lookup' route store modified =
     runReaderT (unCompilerM $ compilerJob compiler ()) env
   where
     env = CompilerEnvironment
@@ -86,6 +94,7 @@ runCompilerJob compiler identifier provider lookup' route store =
             , compilerDependencyLookup = lookup'
             , compilerRoute            = route
             , compilerStore            = store
+            , compilerResourceModified = modified
             }
 
 runCompilerDependencies :: Compiler () a
