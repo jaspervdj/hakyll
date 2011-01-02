@@ -29,16 +29,16 @@ instance Writable Template where
 data TemplateElement
     = Chunk String
     | Identifier String
-    | EscapeCharacter
+    | Escaped String
     deriving (Show, Eq, Typeable)
 
 instance Binary TemplateElement where
     put (Chunk string)    = putWord8 0 >> put string
     put (Identifier key)  = putWord8 1 >> put key
-    put (EscapeCharacter) = putWord8 2
+    put (Escaped key) = putWord8 2 >> put key
 
     get = getWord8 >>= \tag -> case tag of
-            0 -> Chunk <$> get
+            0 -> Chunk      <$> get
             1 -> Identifier <$> get
-            2 -> return EscapeCharacter
+            2 -> Escaped    <$> get
             _ -> error "Error reading cached template"
