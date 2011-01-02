@@ -56,8 +56,8 @@ addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
   where
     -- Add root and url, based on route
     addRoute Nothing  = id
-    addRoute (Just r) = addField "url" r
-                      . addField "root" (toSiteRoot r)
+    addRoute (Just r) = addField "url" (toUrl r)
+                      . addField "root" (toSiteRoot $ toUrl r)
 
     -- Add title and category, based on identifier
     addIdentifier i = addField "title" (takeBaseName p)

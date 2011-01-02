@@ -6,23 +6,9 @@ module Text.Hakyll.Internal.CompressCss
     ) where
 
 import Data.Char (isSpace)
-import Data.Maybe (listToMaybe)
 import Data.List (isPrefixOf)
-import Text.Regex.Posix ((=~~))
 
--- | A simple (but inefficient) regex replace funcion
---
-replaceAll :: String              -- ^ Pattern
-           -> (String -> String)  -- ^ Replacement (called on capture)
-           -> String              -- ^ Source string
-           -> String              -- ^ Result
-replaceAll pattern f source =
-    case listToMaybe (source =~~ pattern) of
-        Nothing     -> source
-        Just (o, l) ->
-            let (before, tmp) = splitAt o source
-                (capture, after) = splitAt l tmp
-            in before ++ f capture ++ replaceAll pattern f after
+import Hakyll.Web.Util.String
 
 -- | Compress CSS to speed up your site.
 --
