@@ -3,12 +3,13 @@
 module Hakyll.Core.Run where
 
 import Control.Arrow ((&&&))
-import Control.Monad (foldM, forM_)
+import Control.Monad (foldM, forM_, forM)
 import qualified Data.Map as M
 import Data.Monoid (mempty)
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
 import System.FilePath ((</>))
+import Control.Applicative ((<$>))
 
 import Hakyll.Core.Route
 import Hakyll.Core.Identifier
@@ -60,18 +61,23 @@ hakyllWith rules provider store = do
     putStrLn "Writing dependency graph to dependencies.dot..."
     writeDot "dependencies.dot" show graph
 
-    -- Generate all the targets in order
-    _ <- foldM (addTarget route') M.empty orderedCompilers
-
-    putStrLn "DONE."
-  where
-    addTarget route' map' (id', comp) = do
-        let url = runRoute route' id'
-        
-        -- Check if the resource was modified
+    -- Check which items are up-to-date: modified will be a Map Identifier Bool
+    modifiedMap <- fmap M.fromList $ forM orderedCompilers $ \(id', _) -> do
         modified <- if resourceExists provider id'
                         then resourceModified provider id' store
                         else return False
+        return (id', modified)
+
+    -- Generate all the targets in order
+    _ <- foldM (addTarget route' modifiedMap) M.empty orderedCompilers
+
+    putStrLn "DONE."
+  where
+    addTarget route' modifiedMap map' (id', comp) = do
+        let url = runRoute route' id'
+        
+        -- Check if the resource was modified
+        let modified = modifiedMap M.! id'
 
         -- Run the compiler
         compiled <- runCompilerJob comp id' provider (dependencyLookup map')
