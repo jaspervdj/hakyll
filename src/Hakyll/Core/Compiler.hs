@@ -6,6 +6,7 @@ module Hakyll.Core.Compiler
     , getIdentifier
     , getRoute
     , getResourceString
+    , storeResult
     , require
     , requireAll
     , cached
@@ -17,6 +18,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans (liftIO)
 import Control.Category (Category, (.))
+import Data.Maybe (fromMaybe)
 
 import Data.Binary (Binary)
 import Data.Typeable (Typeable)
@@ -48,6 +50,28 @@ getResourceString = getIdentifier >>> getResourceString'
         provider <- compilerResourceProvider <$> ask
         liftIO $ resourceString provider id'
 
+-- | Store a finished item in the cache
+--
+storeResult :: Store -> Identifier -> CompiledItem -> IO ()
+storeResult store identifier (CompiledItem x) =
+    storeSet store "Hakyll.Core.Compiler.storeResult" identifier x
+
+-- | Auxiliary: get a dependency
+--
+getDependencyOrResult :: (Binary a, Writable a, Typeable a)
+                      => Identifier -> CompilerM a
+getDependencyOrResult identifier = CompilerM $ do
+    lookup' <- compilerDependencyLookup <$> ask
+    store <- compilerStore <$> ask
+    case lookup' identifier of
+        -- Found in the dependency lookup
+        Just r  -> return $ unCompiledItem r
+        -- Not found here, try the main cache
+        Nothing -> fmap (fromMaybe error') $ liftIO $
+            storeGet store "Hakyll.Core.Compiler.storeResult" identifier
+  where
+    error' = error "Hakyll.Core.Compiler.getDependency: Not found"
+
 -- | Require another target. Using this function ensures automatic handling of
 -- dependencies
 --
@@ -58,9 +82,9 @@ require :: (Binary a, Typeable a, Writable a)
 require identifier f =
     fromDependencies (const [identifier]) >>> fromJob require'
   where
-    require' x = CompilerM $ do
-        lookup' <- compilerDependencyLookup <$> ask
-        return $ f x $ unCompiledItem $ lookup' identifier
+    require' x = do
+        y <- getDependencyOrResult identifier
+        return $ f x y
 
 -- | Require a number of targets. Using this function ensures automatic handling
 -- of dependencies
@@ -75,8 +99,8 @@ requireAll pattern f =
     getDeps = matches pattern . resourceList
     requireAll' x = CompilerM $ do
         deps <- getDeps . compilerResourceProvider <$> ask
-        lookup' <- compilerDependencyLookup <$> ask
-        return $ f x $ map (unCompiledItem . lookup') deps
+        items <- mapM (unCompilerM . getDependencyOrResult) deps
+        return $ f x items
 
 cached :: (Binary a)
        => String

@@ -7,6 +7,7 @@ module Hakyll.Core.DirectedGraph.ObsoleteFilter
     ( filterObsolete
     ) where
 
+import Data.Set (Set)
 import qualified Data.Set as S
 
 import Hakyll.Core.DirectedGraph
@@ -16,10 +17,11 @@ import qualified Hakyll.Core.DirectedGraph as DG
 -- contains these items
 --
 filterObsolete :: Ord a
-               => [a]              -- ^ List of obsolete items
+               => Set a            -- ^ Obsolete items
                -> DirectedGraph a  -- ^ Dependency graph
                -> DirectedGraph a  -- ^ Resulting dependency graph
 filterObsolete obsolete graph =
     let reversed = DG.reverse graph
-        allObsolete = S.unions $ map (flip reachableNodes reversed) obsolete
+        allObsolete = S.unions $ map (flip reachableNodes reversed)
+                               $ S.toList obsolete
     in DG.filter (`S.member` allObsolete) graph

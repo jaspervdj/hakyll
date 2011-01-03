@@ -32,7 +32,7 @@ type Dependencies = Set Identifier
 
 -- | A lookup with which we can get dependencies
 --
-type DependencyLookup = Identifier -> CompiledItem
+type DependencyLookup = Identifier -> Maybe CompiledItem
 
 -- | Environment in which a compiler runs
 --

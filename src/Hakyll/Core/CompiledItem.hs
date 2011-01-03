@@ -4,7 +4,7 @@
 --
 {-# LANGUAGE ExistentialQuantification #-}
 module Hakyll.Core.CompiledItem
-    ( CompiledItem
+    ( CompiledItem (..)
     , compiledItem
     , unCompiledItem
     ) where
