@@ -3,10 +3,10 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Compiler
     ( Compiler
+    , runCompiler
     , getIdentifier
     , getRoute
     , getResourceString
-    , storeResult
     , require
     , requireAll
     , cached
@@ -31,6 +31,23 @@ import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store
 
+-- | Run a compiler, yielding the resulting target and it's dependencies. This
+-- version of 'runCompilerJob' also stores the result
+--
+runCompiler :: Compiler () CompiledItem  -- ^ Compiler to run
+            -> Identifier                -- ^ Target identifier
+            -> ResourceProvider          -- ^ Resource provider
+            -> DependencyLookup          -- ^ Dependency lookup table
+            -> Maybe FilePath            -- ^ Route
+            -> Store                     -- ^ Store
+            -> Bool                      -- ^ Was the resource modified?
+            -> IO CompiledItem           -- ^ Resulting item
+runCompiler compiler identifier provider lookup' route store modified = do
+    CompiledItem result <- runCompilerJob
+        compiler identifier provider lookup' route store modified
+    storeSet store "Hakyll.Core.Compiler.runCompiler" identifier result
+    return $ CompiledItem result
+
 -- | Get the identifier of the item that is currently being compiled
 --
 getIdentifier :: Compiler a Identifier
@@ -50,12 +67,6 @@ getResourceString = getIdentifier >>> getResourceString'
         provider <- compilerResourceProvider <$> ask
         liftIO $ resourceString provider id'
 
--- | Store a finished item in the cache
---
-storeResult :: Store -> Identifier -> CompiledItem -> IO ()
-storeResult store identifier (CompiledItem x) =
-    storeSet store "Hakyll.Core.Compiler.storeResult" identifier x
-
 -- | Auxiliary: get a dependency
 --
 getDependencyOrResult :: (Binary a, Writable a, Typeable a)
@@ -68,7 +79,7 @@ getDependencyOrResult identifier = CompilerM $ do
         Just r  -> return $ unCompiledItem r
         -- Not found here, try the main cache
         Nothing -> fmap (fromMaybe error') $ liftIO $
-            storeGet store "Hakyll.Core.Compiler.storeResult" identifier
+            storeGet store "Hakyll.Core.Compiler.runCompiler" identifier
   where
     error' = error "Hakyll.Core.Compiler.getDependency: Not found"
 

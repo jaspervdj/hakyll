@@ -91,8 +91,8 @@ hakyllWith rules provider store = do
         let isModified = id' `S.member` modified'
 
         -- Run the compiler
-        compiled <- runCompilerJob comp id' provider (dependencyLookup map')
-                                   url store isModified
+        compiled <- runCompiler comp id' provider (dependencyLookup map')
+                                url store isModified
         putStrLn $ "Generated target: " ++ show id'
 
         case url of
@@ -102,9 +102,6 @@ hakyllWith rules provider store = do
                 let path = "_site" </> r
                 makeDirectories path
                 write path compiled
-
-        -- Store it in the cache
-        storeResult store id' compiled
 
         putStrLn ""
         return $ M.insert id' compiled map'
