@@ -8,7 +8,9 @@ module Hakyll.Core.Writable
     ) where
 
 import System.Directory (copyFile)
+import Data.Word (Word8)
 
+import qualified Data.ByteString as SB
 import Data.Binary (Binary)
 import Data.Typeable (Typeable)
 
@@ -20,6 +22,9 @@ class Writable a where
 
 instance Writable [Char] where
     write = writeFile
+
+instance Writable [Word8] where
+    write p = SB.writeFile p . SB.pack
 
 -- | Newtype construct around 'FilePath' which will copy the file directly
 --

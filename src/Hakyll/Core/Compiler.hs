@@ -37,15 +37,14 @@ import Hakyll.Core.Store
 runCompiler :: Compiler () CompiledItem  -- ^ Compiler to run
             -> Identifier                -- ^ Target identifier
             -> ResourceProvider          -- ^ Resource provider
-            -> DependencyLookup          -- ^ Dependency lookup table
             -> Maybe FilePath            -- ^ Route
             -> Store                     -- ^ Store
             -> Bool                      -- ^ Was the resource modified?
             -> IO CompiledItem           -- ^ Resulting item
-runCompiler compiler identifier provider lookup' route store modified = do
+runCompiler compiler identifier provider route store modified = do
     -- Run the compiler job
     CompiledItem result <- runCompilerJob
-        compiler identifier provider lookup' route store modified
+        compiler identifier provider route store modified
 
     -- Store a copy in the cache and return
     storeSet store "Hakyll.Core.Compiler.runCompiler" identifier result
@@ -72,17 +71,12 @@ getResourceString = getIdentifier >>> getResourceString'
 
 -- | Auxiliary: get a dependency
 --
-getDependencyOrResult :: (Binary a, Writable a, Typeable a)
+getDependency :: (Binary a, Writable a, Typeable a)
                       => Identifier -> CompilerM a
-getDependencyOrResult identifier = CompilerM $ do
-    lookup' <- compilerDependencyLookup <$> ask
+getDependency identifier = CompilerM $ do
     store <- compilerStore <$> ask
-    case lookup' identifier of
-        -- Found in the dependency lookup
-        Just r  -> return $ unCompiledItem r
-        -- Not found here, try the main cache
-        Nothing -> fmap (fromMaybe error') $ liftIO $
-            storeGet store "Hakyll.Core.Compiler.runCompiler" identifier
+    fmap (fromMaybe error') $ liftIO $
+        storeGet store "Hakyll.Core.Compiler.runCompiler" identifier
   where
     error' = error $  "Hakyll.Core.Compiler.getDependency: "
                    ++ show identifier
@@ -99,7 +93,7 @@ require identifier f =
     fromDependencies (const [identifier]) >>> fromJob require'
   where
     require' x = do
-        y <- getDependencyOrResult identifier
+        y <- getDependency identifier
         return $ f x y
 
 -- | Require a number of targets. Using this function ensures automatic handling
@@ -115,10 +109,10 @@ requireAll pattern f =
     getDeps = matches pattern . resourceList
     requireAll' x = CompilerM $ do
         deps <- getDeps . compilerResourceProvider <$> ask
-        items <- mapM (unCompilerM . getDependencyOrResult) deps
+        items <- mapM (unCompilerM . getDependency) deps
         return $ f x items
 
-cached :: (Binary a)
+cached :: (Binary a, Typeable a, Writable a)
        => String
        -> Compiler () a
        -> Compiler () a

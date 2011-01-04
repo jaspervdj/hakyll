@@ -80,19 +80,18 @@ hakyllWith rules provider store = do
     putStrLn $ show ordered
 
     -- Generate all the targets in order
-    _ <- foldM (addTarget route' modified') M.empty orderedCompilers
+    _ <- mapM (addTarget route' modified') orderedCompilers
 
     putStrLn "DONE."
   where
-    addTarget route' modified' map' (id', comp) = do
+    addTarget route' modified' (id', comp) = do
         let url = runRoute route' id'
         
         -- Check if the resource was modified
         let isModified = id' `S.member` modified'
 
         -- Run the compiler
-        compiled <- runCompiler comp id' provider (dependencyLookup map')
-                                url store isModified
+        compiled <- runCompiler comp id' provider url store isModified
         putStrLn $ "Generated target: " ++ show id'
 
         case url of
@@ -104,9 +103,6 @@ hakyllWith rules provider store = do
                 write path compiled
 
         putStrLn ""
-        return $ M.insert id' compiled map'
-
-    dependencyLookup map' id' = M.lookup id' map'
 
 -- | Return a set of modified identifiers
 --
