@@ -108,6 +108,8 @@ hakyllWith rules provider store = do
 
     dependencyLookup map' id' = M.lookup id' map'
 
+-- | Return a set of modified identifiers
+--
 modified :: ResourceProvider     -- ^ Resource provider
          -> Store                -- ^ Store
          -> [Identifier]         -- ^ Identifiers to check

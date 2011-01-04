@@ -43,8 +43,11 @@ runCompiler :: Compiler () CompiledItem  -- ^ Compiler to run
             -> Bool                      -- ^ Was the resource modified?
             -> IO CompiledItem           -- ^ Resulting item
 runCompiler compiler identifier provider lookup' route store modified = do
+    -- Run the compiler job
     CompiledItem result <- runCompilerJob
         compiler identifier provider lookup' route store modified
+
+    -- Store a copy in the cache and return
     storeSet store "Hakyll.Core.Compiler.runCompiler" identifier result
     return $ CompiledItem result
 
@@ -81,7 +84,9 @@ getDependencyOrResult identifier = CompilerM $ do
         Nothing -> fmap (fromMaybe error') $ liftIO $
             storeGet store "Hakyll.Core.Compiler.runCompiler" identifier
   where
-    error' = error "Hakyll.Core.Compiler.getDependency: Not found"
+    error' = error $  "Hakyll.Core.Compiler.getDependency: "
+                   ++ show identifier
+                   ++ " not found in the cache, the cache might be corrupted"
 
 -- | Require another target. Using this function ensures automatic handling of
 -- dependencies
