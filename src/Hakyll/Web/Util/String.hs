@@ -3,6 +3,7 @@
 module Hakyll.Web.Util.String
     ( trim
     , replaceAll
+    , splitAll
     , toUrl
     , toSiteRoot
     ) where
@@ -34,6 +35,20 @@ replaceAll pattern f source = replaceAll' source
             let (before, tmp) = splitAt o src
                 (capture, after) = splitAt l tmp
             in before ++ f capture ++ replaceAll' after
+
+-- | A simple regex split function. The resulting list will contain no empty
+-- strings.
+--
+splitAll :: String    -- ^ Pattern
+         -> String    -- ^ String to split
+         -> [String]  -- ^ Result
+splitAll pattern = filter (not . null) . splitAll'
+  where
+    splitAll' src = case listToMaybe (src =~~ pattern) of
+        Nothing     -> [src]
+        Just (o, l) ->
+            let (before, tmp) = splitAt o src
+            in before : splitAll' (drop l tmp)
 
 -- | Convert a filepath to an URL starting from the site root
 --

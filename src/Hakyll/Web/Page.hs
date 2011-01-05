@@ -5,6 +5,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Web.Page
     ( Page (..)
+    , getField
     , addField
     , toMap
     , pageRead
@@ -15,6 +16,7 @@ import Prelude hiding (id)
 import Control.Category (id)
 import Control.Arrow ((>>^), (&&&), (>>>))
 import System.FilePath (takeBaseName, takeDirectory)
+import Data.Maybe (fromMaybe)
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -23,6 +25,14 @@ import Hakyll.Core.Compiler
 import Hakyll.Web.Page.Internal
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Util.String
+
+-- | Get a metadata field. If the field does not exist, the empty string is
+-- returned.
+--
+getField :: String  -- ^ Key
+         -> Page a  -- ^ Page
+         -> String  -- ^ Value
+getField key = fromMaybe "" . M.lookup key . pageMetadata
 
 -- | Add a metadata field. If the field already exists, it is not overwritten.
 --
