@@ -37,8 +37,8 @@ import Hakyll.Core.Writable
 -- * The compiler will produce more compilers. These new compilers need to be
 --   added to the runtime if possible, since other items might depend upon them.
 --
-data CompileRule = ItemRule CompiledItem
-                 | AddCompilersRule [(Identifier, Compiler () CompiledItem)]
+data CompileRule = CompileRule CompiledItem
+                 | MetaCompileRule [(Identifier, Compiler () CompiledItem)]
 
 -- | A collection of rules for the compilation process
 --
@@ -81,7 +81,7 @@ tellCompilers :: (Binary a, Typeable a, Writable a)
 tellCompilers compilers = RulesM $ tell $ RuleSet mempty $
     map (second boxCompiler) compilers
   where
-    boxCompiler = (>>> arr compiledItem >>> arr ItemRule)
+    boxCompiler = (>>> arr compiledItem >>> arr CompileRule)
 
 -- | Add a compilation rule
 --
@@ -119,4 +119,4 @@ addCompilers :: (Binary a, Typeable a, Writable a)
 addCompilers identifier compiler = RulesM $ tell $ RuleSet mempty $
     [(identifier, compiler >>^ makeRule)]
   where
-    makeRule = AddCompilersRule . map (second (>>^ compiledItem))
+    makeRule = MetaCompileRule . map (second (>>^ compiledItem))

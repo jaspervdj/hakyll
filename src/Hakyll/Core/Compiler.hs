@@ -52,7 +52,7 @@ runCompiler compiler identifier provider route' store modified = do
         -- In case we compiled an item, we will store a copy in the cache first,
         -- before we return control. This makes sure the compiled item can later
         -- be accessed by e.g. require.
-        ItemRule (CompiledItem x) ->
+        CompileRule (CompiledItem x) ->
             storeSet store "Hakyll.Core.Compiler.runCompiler" identifier x
 
         -- Otherwise, we do nothing here

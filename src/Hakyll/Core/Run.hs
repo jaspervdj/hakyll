@@ -141,7 +141,7 @@ runCompilers ((id', compiler) : compilers) = Hakyll $ do
     result <- liftIO $ runCompiler compiler id' provider url store isModified
     liftIO $ putStrLn $ "Generated target: " ++ show id'
 
-    let ItemRule compiled = result
+    let CompileRule compiled = result
 
     case url of
         Nothing -> return ()
