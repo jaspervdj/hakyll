@@ -1,7 +1,12 @@
 -- | This is the module which binds it all together
 --
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Run where
 
+import Control.Applicative
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Monad.Trans
 import Control.Arrow ((&&&))
 import Control.Monad (foldM, forM_, forM, filterM)
 import Data.Map (Map)
@@ -34,10 +39,26 @@ hakyll :: Rules -> IO ()
 hakyll rules = do
     store <- makeStore "_store"
     provider <- fileResourceProvider
-    hakyllWith rules provider store
+    evalStateT
+        (runReaderT
+            (unHakyll (hakyllWith rules provider store)) undefined) undefined
 
-hakyllWith :: Rules -> ResourceProvider -> Store -> IO ()
-hakyllWith rules provider store = do
+data HakyllState = HakyllState
+    { hakyllCompilers :: [(Identifier, Compiler () CompileRule)]
+    }
+
+data HakyllEnvironment = HakyllEnvironment
+    { hakyllRoute            :: Route
+    , hakyllResourceProvider :: ResourceProvider
+    , hakyllStore            :: Store
+    }
+
+newtype Hakyll a = Hakyll
+    { unHakyll :: ReaderT HakyllEnvironment (StateT HakyllState IO) a
+    } deriving (Functor, Applicative, Monad)
+
+hakyllWith :: Rules -> ResourceProvider -> Store -> Hakyll ()
+hakyllWith rules provider store = Hakyll $ do
     let -- Get the rule set
         ruleSet = runRules rules provider
 
@@ -55,17 +76,19 @@ hakyllWith rules provider store = do
         -- Create the graph
         graph = fromList dependencies
 
-    putStrLn "Writing dependency graph to dependencies.dot..."
-    writeDot "dependencies.dot" show graph
+    liftIO $ do
+        putStrLn "Writing dependency graph to dependencies.dot..."
+        writeDot "dependencies.dot" show graph
 
     -- Check which items are up-to-date
-    modified' <- modified provider store $ map fst compilers
+    modified' <- liftIO $ modified provider store $ map fst compilers
 
     let -- Try to reduce the graph
         reducedGraph = filterObsolete modified' graph
 
-    putStrLn "Writing reduced graph to reduced.dot..."
-    writeDot "reduced.dot" show reducedGraph
+    liftIO $ do
+        putStrLn "Writing reduced graph to reduced.dot..."
+        writeDot "reduced.dot" show reducedGraph
 
     let -- Solve the graph
         ordered = solveDependencies reducedGraph
@@ -76,13 +99,10 @@ hakyllWith rules provider store = do
         -- Fetch the routes
         route' = rulesRoute ruleSet
 
-    putStrLn $ show reducedGraph
-    putStrLn $ show ordered
-
     -- Generate all the targets in order
     _ <- mapM (addTarget route' modified') orderedCompilers
 
-    putStrLn "DONE."
+    liftIO $ putStrLn "DONE."
   where
     addTarget route' modified' (id', comp) = do
         let url = runRoute route' id'
@@ -91,18 +111,19 @@ hakyllWith rules provider store = do
         let isModified = id' `S.member` modified'
 
         -- Run the compiler
-        ItemRule compiled <- runCompiler comp id' provider url store isModified
-        putStrLn $ "Generated target: " ++ show id'
+        ItemRule compiled <- liftIO $
+            runCompiler comp id' provider url store isModified
+        liftIO $ putStrLn $ "Generated target: " ++ show id'
 
         case url of
             Nothing -> return ()
-            Just r  -> do
+            Just r  -> liftIO $ do
                 putStrLn $ "Routing " ++ show id' ++ " to " ++ r
                 let path = "_site" </> r
                 makeDirectories path
                 write path compiled
 
-        putStrLn ""
+        liftIO $ putStrLn ""
 
 -- | Return a set of modified identifiers
 --
