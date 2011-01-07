@@ -34,11 +34,14 @@ module Hakyll.Core.Identifier.Pattern
     , match
     , doesMatch
     , matches
+    , fromCapture
+    , fromCaptures
     ) where
 
 import Data.List (intercalate)
 import Control.Monad (msum)
 import Data.Maybe (isJust)
+import Data.Monoid (mempty, mappend)
 
 import GHC.Exts (IsString, fromString)
 
@@ -78,8 +81,8 @@ parsePattern = Pattern . map toPattern . unIdentifier . parseIdentifier
 
 -- | Match an identifier against a pattern, generating a list of captures
 --
-match :: Pattern -> Identifier -> Maybe [[String]]
-match (Pattern p) (Identifier i) = match' p i
+match :: Pattern -> Identifier -> Maybe [Identifier]
+match (Pattern p) (Identifier i) = fmap (map Identifier) $ match' p i
 
 -- | Check if an identifier matches a pattern
 --
@@ -115,3 +118,22 @@ match' (m : ms) (s : ss) = case m of
     CaptureMany ->
         let take' (i, t) = fmap (i :) $ match' ms t
         in msum $ map take' $ splits (s : ss)
+
+-- | Create an identifier from a pattern by filling in the captures with a given
+-- string
+--
+fromCapture :: Pattern -> Identifier -> Identifier
+fromCapture pattern = fromCaptures pattern . repeat
+
+-- | Create an identifier from a pattern by filling in the captures with the
+-- given list of strings
+--
+fromCaptures :: Pattern -> [Identifier] -> Identifier
+fromCaptures (Pattern []) _ = mempty
+fromCaptures (Pattern (m : ms)) [] = case m of
+    Literal l -> Identifier [l] `mappend` fromCaptures (Pattern ms) []
+    _         -> error $  "Hakyll.Core.Identifier.Pattern.fromCaptures: "
+                       ++ "identifier list exhausted"
+fromCaptures (Pattern (m : ms)) ids@(i : is) = case m of
+    Literal l -> Identifier [l] `mappend` fromCaptures (Pattern ms) ids
+    _         -> i `mappend` fromCaptures (Pattern ms) is

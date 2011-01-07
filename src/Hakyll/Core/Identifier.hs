@@ -10,6 +10,7 @@
 --
 -- * @error/404@
 --
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Identifier
     ( Identifier (..)
     , parseIdentifier
@@ -17,6 +18,7 @@ module Hakyll.Core.Identifier
     ) where
 
 import Control.Arrow (second)
+import Data.Monoid (Monoid)
 
 import GHC.Exts (IsString, fromString)
 import System.FilePath (joinPath)
@@ -24,7 +26,7 @@ import System.FilePath (joinPath)
 -- | An identifier used to uniquely identify a value
 --
 newtype Identifier = Identifier {unIdentifier :: [String]}
-                   deriving (Eq, Ord)
+                   deriving (Eq, Ord, Monoid)
 
 instance Show Identifier where
     show = toFilePath
