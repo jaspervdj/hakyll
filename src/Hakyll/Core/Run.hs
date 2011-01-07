@@ -100,7 +100,11 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
 
     -- Check which items are up-to-date. This only needs to happen for the new
     -- compilers
-    modified' <- liftIO $ modified provider store $ map fst compilers
+    oldModified <- hakyllModified <$> ask 
+    newModified <- liftIO $ modified provider store $ map fst newCompilers
+    let modified' = oldModified `S.union` newModified
+
+    liftIO $ putStrLn $ show modified'
 
     let -- Try to reduce the graph using this modified information
         reducedGraph = filterObsolete modified' graph
@@ -111,12 +115,14 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
         -- Join the order with the compilers again
         orderedCompilers = map (id &&& (compilerMap M.!)) ordered
 
+    liftIO $ putStrLn "Adding compilers..."
+
     -- Now run the ordered list of compilers
     local (updateModified modified') $ unHakyll $ runCompilers orderedCompilers
   where
     -- Add the modified information for the new compilers
     updateModified modified' env = env
-        { hakyllModified = hakyllModified env `S.union` modified'
+        { hakyllModified = modified'
         }
 
 runCompilers :: [(Identifier, Compiler () CompileRule)]
