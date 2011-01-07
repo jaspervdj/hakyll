@@ -31,25 +31,34 @@ import Hakyll.Core.Writable
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store
+import Hakyll.Core.Rules
 
 -- | Run a compiler, yielding the resulting target and it's dependencies. This
 -- version of 'runCompilerJob' also stores the result
 --
-runCompiler :: Compiler () CompiledItem  -- ^ Compiler to run
-            -> Identifier                -- ^ Target identifier
-            -> ResourceProvider          -- ^ Resource provider
-            -> Maybe FilePath            -- ^ Route
-            -> Store                     -- ^ Store
-            -> Bool                      -- ^ Was the resource modified?
-            -> IO CompiledItem           -- ^ Resulting item
-runCompiler compiler identifier provider route store modified = do
+runCompiler :: Compiler () CompileRule  -- ^ Compiler to run
+            -> Identifier               -- ^ Target identifier
+            -> ResourceProvider         -- ^ Resource provider
+            -> Maybe FilePath           -- ^ Route
+            -> Store                    -- ^ Store
+            -> Bool                     -- ^ Was the resource modified?
+            -> IO CompileRule           -- ^ Resulting item
+runCompiler compiler identifier provider route' store modified = do
     -- Run the compiler job
-    CompiledItem result <- runCompilerJob
-        compiler identifier provider route store modified
+    result <- runCompilerJob compiler identifier provider route' store modified
 
-    -- Store a copy in the cache and return
-    storeSet store "Hakyll.Core.Compiler.runCompiler" identifier result
-    return $ CompiledItem result
+    -- Inspect the result
+    case result of
+        -- In case we compiled an item, we will store a copy in the cache first,
+        -- before we return control. This makes sure the compiled item can later
+        -- be accessed by e.g. require.
+        ItemRule (CompiledItem x) ->
+            storeSet store "Hakyll.Core.Compiler.runCompiler" identifier x
+
+        -- Otherwise, we do nothing here
+        _ -> return ()
+
+    return result
 
 -- | Get the identifier of the item that is currently being compiled
 --

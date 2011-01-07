@@ -91,7 +91,7 @@ hakyllWith rules provider store = do
         let isModified = id' `S.member` modified'
 
         -- Run the compiler
-        compiled <- runCompiler comp id' provider url store isModified
+        ItemRule compiled <- runCompiler comp id' provider url store isModified
         putStrLn $ "Generated target: " ++ show id'
 
         case url of
