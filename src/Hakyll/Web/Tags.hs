@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Web.Tags
     ( Tags (..)
     , readTagsWith
@@ -5,17 +6,29 @@ module Hakyll.Web.Tags
     , readCategories
     ) where
 
+import Control.Applicative ((<$>))
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import Data.Typeable (Typeable)
+import Data.Binary (Binary, get, put)
+
 import Hakyll.Web.Page
 import Hakyll.Web.Util.String
+import Hakyll.Core.Writable
 
 -- | Data about tags
 --
 data Tags a = Tags
     { tagsMap :: Map String [Page a]
-    } deriving (Show)
+    } deriving (Show, Typeable)
+
+instance Binary a => Binary (Tags a) where
+    get = Tags <$> get
+    put (Tags m) = put m
+
+instance Writable (Tags a) where
+    write _ _ = return ()
 
 -- | Higher-level function to read tags
 --
