@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Run where
 
+import Prelude hiding (reverse)
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
@@ -30,7 +31,6 @@ import Hakyll.Core.Rules
 import Hakyll.Core.DirectedGraph
 import Hakyll.Core.DirectedGraph.Dot
 import Hakyll.Core.DirectedGraph.DependencySolver
-import Hakyll.Core.DirectedGraph.ObsoleteFilter
 import Hakyll.Core.Writable
 import Hakyll.Core.Store
 import Hakyll.Core.CompiledItem
@@ -49,6 +49,7 @@ hakyll rules = do
         , hakyllResourceProvider = provider
         , hakyllStore            = store
         , hakyllModified         = S.empty
+        , hakyllObsolete         = S.empty
         }
 
 data HakyllEnvironment = HakyllEnvironment
@@ -56,6 +57,7 @@ data HakyllEnvironment = HakyllEnvironment
     , hakyllResourceProvider :: ResourceProvider
     , hakyllStore            :: Store
     , hakyllModified         :: Set Identifier
+    , hakyllObsolete         :: Set Identifier
     }
 
 newtype Hakyll a = Hakyll
@@ -98,19 +100,22 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
         -- Create the dependency graph
         graph = fromList dependencies
 
+    liftIO $ writeDot "dependencies.dot" show graph
+
     -- Check which items are up-to-date. This only needs to happen for the new
     -- compilers
     oldModified <- hakyllModified <$> ask 
     newModified <- liftIO $ modified provider store $ map fst newCompilers
+    oldObsolete <- hakyllObsolete <$> ask
+
     let modified' = oldModified `S.union` newModified
+        
+        -- Find obsolete items
+        obsolete = reachableNodes (oldObsolete `S.union` modified') $
+            reverse graph
 
-    liftIO $ putStrLn $ show modified'
-
-    let -- Try to reduce the graph using this modified information
-        reducedGraph = filterObsolete modified' graph
-
-    let -- Solve the graph
-        ordered = solveDependencies reducedGraph
+         -- Solve the graph, retain only the obsolete items
+        ordered = filter (`S.member` obsolete) $ solveDependencies graph
 
         -- Join the order with the compilers again
         orderedCompilers = map (id &&& (compilerMap M.!)) ordered
@@ -118,11 +123,13 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
     liftIO $ putStrLn "Adding compilers..."
 
     -- Now run the ordered list of compilers
-    local (updateModified modified') $ unHakyll $ runCompilers orderedCompilers
+    local (updateEnv modified' obsolete) $
+        unHakyll $ runCompilers orderedCompilers
   where
     -- Add the modified information for the new compilers
-    updateModified modified' env = env
+    updateEnv modified' obsolete env = env
         { hakyllModified = modified'
+        , hakyllObsolete = obsolete
         }
 
 runCompilers :: [(Identifier, Compiler () CompileRule)]

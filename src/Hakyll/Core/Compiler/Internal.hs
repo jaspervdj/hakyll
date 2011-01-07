@@ -10,6 +10,7 @@ module Hakyll.Core.Compiler.Internal
     , runCompilerDependencies
     , fromJob
     , fromDependencies
+    , fromDependency
     ) where
 
 import Prelude hiding ((.), id)
@@ -101,3 +102,8 @@ fromJob = Compiler (return S.empty)
 fromDependencies :: (ResourceProvider -> [Identifier])
                  -> Compiler b b
 fromDependencies deps = Compiler (S.fromList . deps <$> ask) return
+
+-- | Wait until another compiler has finished before running this compiler
+--
+fromDependency :: Identifier -> Compiler a a
+fromDependency = fromDependencies . const . return

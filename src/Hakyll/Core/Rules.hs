@@ -117,6 +117,7 @@ addCompilers :: (Binary a, Typeable a, Writable a)
              -> Rules
              -- ^ Resulting rules
 addCompilers identifier compiler = RulesM $ tell $ RuleSet mempty $
-    [(identifier, compiler >>^ makeRule)]
+    [(identifier, compiler >>> arr makeRule )]
   where
-    makeRule = MetaCompileRule . map (second (>>^ CompileRule . compiledItem))
+    makeRule = MetaCompileRule . map (second box)
+    box = (>>> fromDependency identifier >>^ CompileRule . compiledItem)

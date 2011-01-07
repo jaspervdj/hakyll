@@ -7,11 +7,10 @@ module Hakyll.Core.DirectedGraph
     , nodes
     , neighbours
     , reverse
-    , filter
     , reachableNodes
     ) where
 
-import Prelude hiding (reverse, filter)
+import Prelude hiding (reverse)
 import Data.Monoid (mconcat)
 import Data.Set (Set)
 import Data.Maybe (fromMaybe)
@@ -53,24 +52,16 @@ reverse = mconcat . map reverse' . M.toList . unDirectedGraph
     reverse' (id', Node _ neighbours') = fromList $
         zip (S.toList neighbours') $ repeat $ S.singleton id'
 
--- | Filter a directed graph (i.e. remove nodes based on a predicate)
+-- | Find all reachable nodes from a given set of nodes in the directed graph
 --
-filter :: Ord a
-       => (a -> Bool)      -- ^ Predicate
-       -> DirectedGraph a  -- ^ Graph
-       -> DirectedGraph a  -- ^ Resulting graph
-filter predicate =
-    DirectedGraph . M.filterWithKey (\k _ -> predicate k) . unDirectedGraph
-
--- | Find all reachable nodes from a given node in the directed graph
---
-reachableNodes :: Ord a => a -> DirectedGraph a -> Set a
-reachableNodes x graph = reachable (neighbours x graph) (S.singleton x)
+reachableNodes :: Ord a => Set a -> DirectedGraph a -> Set a
+reachableNodes set graph = reachable (setNeighbours set) set
   where
     reachable next visited
         | S.null next = visited
         | otherwise = reachable (sanitize neighbours') (next `S.union` visited)
       where
         sanitize = S.filter (`S.notMember` visited)
-        neighbours' = S.unions $ map (flip neighbours graph)
-                               $ S.toList $ sanitize next
+        neighbours' = setNeighbours (sanitize next)
+
+    setNeighbours = S.unions . map (flip neighbours graph) . S.toList
