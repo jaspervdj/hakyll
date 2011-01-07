@@ -38,7 +38,7 @@ import Hakyll.Core.Writable
 --   added to the runtime if possible, since other items might depend upon them.
 --
 data CompileRule = CompileRule CompiledItem
-                 | MetaCompileRule [(Identifier, Compiler () CompiledItem)]
+                 | MetaCompileRule [(Identifier, Compiler () CompileRule)]
 
 -- | A collection of rules for the compilation process
 --
@@ -119,4 +119,4 @@ addCompilers :: (Binary a, Typeable a, Writable a)
 addCompilers identifier compiler = RulesM $ tell $ RuleSet mempty $
     [(identifier, compiler >>^ makeRule)]
   where
-    makeRule = MetaCompileRule . map (second (>>^ compiledItem))
+    makeRule = MetaCompileRule . map (second (>>^ CompileRule . compiledItem))
