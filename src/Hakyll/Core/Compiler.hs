@@ -7,6 +7,7 @@ module Hakyll.Core.Compiler
     , getIdentifier
     , getRoute
     , getResourceString
+    , waitFor
     , require
     , requireAll
     , cached
@@ -82,6 +83,11 @@ getDependency identifier = CompilerM $ do
                    ++ show identifier
                    ++ " not found in the cache, the cache might be corrupted"
 
+-- | Wait until another compiler has finished before running this compiler
+--
+waitFor :: Identifier -> Compiler a a
+waitFor = fromDependencies . const . return
+
 -- | Require another target. Using this function ensures automatic handling of
 -- dependencies
 --
@@ -90,7 +96,7 @@ require :: (Binary a, Typeable a, Writable a)
         -> (b -> a -> c)
         -> Compiler b c
 require identifier f =
-    fromDependencies (const [identifier]) >>> fromJob require'
+    waitFor identifier >>> fromJob require'
   where
     require' x = do
         y <- getDependency identifier
