@@ -141,17 +141,23 @@ runCompilers ((id', compiler) : compilers) = Hakyll $ do
     result <- liftIO $ runCompiler compiler id' provider url store isModified
     liftIO $ putStrLn $ "Generated target: " ++ show id'
 
-    let CompileRule compiled = result
+    case result of
+        -- Compile rule for one item, easy stuff
+        CompileRule compiled -> do
+            case url of
+                Nothing -> return ()
+                Just r  -> liftIO $ do
+                    putStrLn $ "Routing " ++ show id' ++ " to " ++ r
+                    let path = "_site" </> r
+                    makeDirectories path
+                    write path compiled
 
-    case url of
-        Nothing -> return ()
-        Just r  -> liftIO $ do
-            putStrLn $ "Routing " ++ show id' ++ " to " ++ r
-            let path = "_site" </> r
-            makeDirectories path
-            write path compiled
+            liftIO $ putStrLn ""
 
-    liftIO $ putStrLn ""
+            -- Continue for the remaining compilers
+            unHakyll $ runCompilers compilers 
 
-    -- Continue for the remaining compilers
-    unHakyll $ runCompilers compilers 
+        -- Metacompiler, slightly more complicated
+        MetaCompileRule newCompilers -> do
+            -- Actually I was just kidding, it's not hard at all
+            unHakyll $ addNewCompilers compilers newCompilers
