@@ -41,27 +41,39 @@ hakyll rules = do
     provider <- fileResourceProvider
     let ruleSet = runRules rules provider
         compilers = rulesCompilers ruleSet
-    runReaderT (unHakyll (addNewCompilers [] compilers)) $
-        env ruleSet provider store
+
+        -- Extract the reader/state
+        reader = unHakyll $ addNewCompilers [] compilers
+        state' = runReaderT reader $ env ruleSet provider store
+
+    evalStateT state' state
   where
     env ruleSet provider store = HakyllEnvironment
         { hakyllRoute            = rulesRoute ruleSet
         , hakyllResourceProvider = provider
         , hakyllStore            = store
-        , hakyllModified         = S.empty
-        , hakyllObsolete         = S.empty
+        }
+
+    state = HakyllState
+        { hakyllModified = S.empty
+        , hakyllObsolete = S.empty
+        , hakyllGraph    = mempty
         }
 
 data HakyllEnvironment = HakyllEnvironment
     { hakyllRoute            :: Route
     , hakyllResourceProvider :: ResourceProvider
     , hakyllStore            :: Store
-    , hakyllModified         :: Set Identifier
-    , hakyllObsolete         :: Set Identifier
+    }
+
+data HakyllState = HakyllState
+    { hakyllModified :: Set Identifier
+    , hakyllObsolete :: Set Identifier
+    , hakyllGraph    :: DirectedGraph Identifier
     }
 
 newtype Hakyll a = Hakyll
-    { unHakyll :: ReaderT HakyllEnvironment IO a
+    { unHakyll :: ReaderT HakyllEnvironment (StateT HakyllState IO) a
     } deriving (Functor, Applicative, Monad)
 
 -- | Return a set of modified identifiers
@@ -104,9 +116,9 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
 
     -- Check which items are up-to-date. This only needs to happen for the new
     -- compilers
-    oldModified <- hakyllModified <$> ask 
+    oldModified <- hakyllModified <$> get 
     newModified <- liftIO $ modified provider store $ map fst newCompilers
-    oldObsolete <- hakyllObsolete <$> ask
+    oldObsolete <- hakyllObsolete <$> get
 
     let modified' = oldModified `S.union` newModified
         
@@ -122,12 +134,13 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
 
     liftIO $ putStrLn "Adding compilers..."
 
+    modify $ updateState modified' obsolete
+
     -- Now run the ordered list of compilers
-    local (updateEnv modified' obsolete) $
-        unHakyll $ runCompilers orderedCompilers
+    unHakyll $ runCompilers orderedCompilers
   where
     -- Add the modified information for the new compilers
-    updateEnv modified' obsolete env = env
+    updateState modified' obsolete state = state
         { hakyllModified = modified'
         , hakyllObsolete = obsolete
         }
@@ -142,7 +155,7 @@ runCompilers ((id', compiler) : compilers) = Hakyll $ do
     route' <- hakyllRoute <$> ask
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
-    modified' <- hakyllModified <$> ask
+    modified' <- hakyllModified <$> get
 
     let -- Determine the URL
         url = runRoute route' id'
