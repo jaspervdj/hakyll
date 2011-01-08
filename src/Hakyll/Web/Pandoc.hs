@@ -50,7 +50,7 @@ readPandocWith state fileType' = case fileType' of
     Markdown          -> P.readMarkdown state
     Rst               -> P.readRST state
     t                 -> error $
-        "readPandoc: I don't know how to read " ++ show t
+        "Hakyll.Web.readPandocWith: I don't know how to read " ++ show t
 
 -- | Write a document (as HTML) using pandoc, with the default options
 --

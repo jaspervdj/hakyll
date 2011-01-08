@@ -36,4 +36,4 @@ unCompiledItem :: (Binary a, Typeable a, Writable a)
                -> a
 unCompiledItem (CompiledItem x) = case cast x of
     Just x' -> x'
-    Nothing -> error "unCompiledItem: Unsupported type"
+    Nothing -> error "Hakyll.Core.CompiledItem.unCompiledItem: Unsupported type"

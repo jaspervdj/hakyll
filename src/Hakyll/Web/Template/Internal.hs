@@ -41,4 +41,5 @@ instance Binary TemplateElement where
             0 -> Chunk      <$> get
             1 -> Identifier <$> get
             2 -> Escaped    <$> get
-            _ -> error "Error reading cached template"
+            _ -> error $  "Hakyll.Web.Template.Internal: "
+                       ++ "Error reading cached template"

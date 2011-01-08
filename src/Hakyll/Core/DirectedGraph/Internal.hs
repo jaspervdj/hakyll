@@ -24,8 +24,11 @@ data Node a = Node
 --
 appendNodes :: Ord a => Node a -> Node a -> Node a
 appendNodes (Node t1 n1) (Node t2 n2)
-    | t1 /= t2 = error "appendNodes: Appending differently tagged nodes"
+    | t1 /= t2 = error'
     | otherwise = Node t1 (n1 `S.union` n2)
+  where
+    error' = error $  "Hakyll.Core.DirectedGraph.Internal.appendNodes: "
+                   ++ "Appending differently tagged nodes"
 
 -- | Type used to represent a directed graph
 --

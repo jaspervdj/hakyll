@@ -60,8 +60,11 @@ order temp stack set graph@(DirectedGraph graph')
                 -- one first...
                 (dep : _) -> if (nodeTag dep) `S.member` set
                     -- The dependency is already in our stack - cycle detected!
-                    then error "order: Cycle detected!"  -- TODO: Dump cycle
+                    then cycleError
                     -- Continue with the dependency
                     else order temp (dep : node : stackTail)
                                     (S.insert (nodeTag dep) set)
                                     graph
+  where
+    cycleError = error $  "Hakyll.Core.DirectedGraph.DependencySolver.order: "
+                       ++ "Cycle detected!"  -- TODO: Dump cycle
