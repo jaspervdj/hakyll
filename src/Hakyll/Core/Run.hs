@@ -12,7 +12,7 @@ import Control.Arrow ((&&&))
 import Control.Monad (foldM, forM_, forM, filterM)
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.Monoid (mempty)
+import Data.Monoid (mempty, mappend)
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
 import System.FilePath ((</>))
@@ -56,7 +56,6 @@ hakyll rules = do
 
     state = HakyllState
         { hakyllModified = S.empty
-        , hakyllObsolete = S.empty
         , hakyllGraph    = mempty
         }
 
@@ -68,7 +67,6 @@ data HakyllEnvironment = HakyllEnvironment
 
 data HakyllState = HakyllState
     { hakyllModified :: Set Identifier
-    , hakyllObsolete :: Set Identifier
     , hakyllGraph    :: DirectedGraph Identifier
     }
 
@@ -98,7 +96,10 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
 
-    let -- All compilers
+    let -- Create a set of new compilers
+        newCompilerIdentifiers = S.fromList $ map fst newCompilers
+
+        -- All compilers
         compilers = oldCompilers ++ newCompilers
 
         -- Get all dependencies for the compilers
@@ -110,39 +111,44 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
         compilerMap = M.fromList compilers
 
         -- Create the dependency graph
-        graph = fromList dependencies
+        currentGraph = fromList dependencies
 
-    liftIO $ writeDot "dependencies.dot" show graph
+    -- Find the old graph and append the new graph to it. This forms the
+    -- complete graph
+    completeGraph <- (mappend currentGraph) . hakyllGraph <$> get
+
+    liftIO $ writeDot "dependencies.dot" show completeGraph
 
     -- Check which items are up-to-date. This only needs to happen for the new
     -- compilers
     oldModified <- hakyllModified <$> get 
     newModified <- liftIO $ modified provider store $ map fst newCompilers
-    oldObsolete <- hakyllObsolete <$> get
 
     let modified' = oldModified `S.union` newModified
         
-        -- Find obsolete items
-        obsolete = reachableNodes (oldObsolete `S.union` modified') $
-            reverse graph
+        -- Find obsolete items. Every item that is reachable from a modified
+        -- item is considered obsolete. From these obsolete items, we are only
+        -- interested in ones that are in the current subgraph.
+        obsolete = S.filter (`S.member` newCompilerIdentifiers)
+                 $ reachableNodes modified' $ reverse completeGraph
 
-         -- Solve the graph, retain only the obsolete items
-        ordered = filter (`S.member` obsolete) $ solveDependencies graph
+        -- Solve the graph and retain only the obsolete items
+        ordered = filter (`S.member` obsolete) $ solveDependencies currentGraph
 
         -- Join the order with the compilers again
         orderedCompilers = map (id &&& (compilerMap M.!)) ordered
 
     liftIO $ putStrLn "Adding compilers..."
 
-    modify $ updateState modified' obsolete
+    modify $ updateState modified' completeGraph
 
     -- Now run the ordered list of compilers
     unHakyll $ runCompilers orderedCompilers
   where
     -- Add the modified information for the new compilers
-    updateState modified' obsolete state = state
+    updateState modified' graph state = state
         { hakyllModified = modified'
-        , hakyllObsolete = obsolete
+        , hakyllGraph    = graph
         }
 
 runCompilers :: [(Identifier, Compiler () CompileRule)]
