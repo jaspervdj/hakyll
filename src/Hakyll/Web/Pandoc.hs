@@ -89,7 +89,7 @@ pageRenderPandocWith :: P.ParserState
                      -> P.WriterOptions
                      -> Compiler (Page String) (Page String)
 pageRenderPandocWith state options =
-    pageReadPandocWith state >>^ (fmap $ writePandocWith options)
+    pageReadPandocWith state >>^ fmap (writePandocWith options)
 
 -- | The default reader options for pandoc parsing in hakyll
 --

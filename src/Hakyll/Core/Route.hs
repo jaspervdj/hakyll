@@ -59,8 +59,8 @@ idRoute = Route $ Just . toFilePath
 -- > Just "posts/the-art-of-trolling.html"
 --
 setExtension :: String -> Route
-setExtension exension = Route $ fmap (flip replaceExtension exension)
-                              . unRoute idRoute
+setExtension extension = Route $ fmap (`replaceExtension` extension)
+                               . unRoute idRoute
 
 -- | Modify a route: apply the route if the identifier matches the given
 -- pattern, fail otherwise.

@@ -65,12 +65,12 @@ reachableNodes set graph = reachable (setNeighbours set) set
         sanitize' = S.filter (`S.notMember` visited)
         neighbours' = setNeighbours (sanitize' next)
 
-    setNeighbours = S.unions . map (flip neighbours graph) . S.toList
+    setNeighbours = S.unions . map (`neighbours` graph) . S.toList
     
 -- | Remove all dangling pointers, i.e. references to notes that do 
 -- not actually exist in the graph.
 --
 sanitize :: Ord a => DirectedGraph a -> DirectedGraph a
-sanitize (DirectedGraph graph) = DirectedGraph $ M.map sanitize' $ graph
+sanitize (DirectedGraph graph) = DirectedGraph $ M.map sanitize' graph
   where
     sanitize' (Node t n) = Node t $ S.filter (`M.member` graph) n

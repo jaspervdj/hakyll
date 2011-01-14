@@ -16,8 +16,8 @@ import qualified Data.Set as S
 -- | A node in the directed graph
 --
 data Node a = Node
-    { nodeTag        :: a        -- ^ Tag identifying the node
-    , nodeNeighbours :: (Set a)  -- ^ Edges starting at this node
+    { nodeTag        :: a      -- ^ Tag identifying the node
+    , nodeNeighbours :: Set a  -- ^ Edges starting at this node
     } deriving (Show)
 
 -- | Append two nodes. Useful for joining graphs.

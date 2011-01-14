@@ -116,7 +116,7 @@ addCompilers :: (Binary a, Typeable a, Writable a)
              -- ^ Compiler generating the other compilers
              -> Rules
              -- ^ Resulting rules
-addCompilers identifier compiler = RulesM $ tell $ RuleSet mempty $
+addCompilers identifier compiler = RulesM $ tell $ RuleSet mempty
     [(identifier, compiler >>> arr makeRule )]
   where
     makeRule = MetaCompileRule . map (second box)

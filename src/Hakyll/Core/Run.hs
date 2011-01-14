@@ -16,7 +16,6 @@ import Data.Monoid (mempty, mappend)
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
 import System.FilePath ((</>))
-import Control.Applicative ((<$>))
 import Data.Set (Set)
 import qualified Data.Set as S
 
@@ -115,7 +114,7 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
 
     -- Find the old graph and append the new graph to it. This forms the
     -- complete graph
-    completeGraph <- (mappend currentGraph) . hakyllGraph <$> get
+    completeGraph <- mappend currentGraph . hakyllGraph <$> get
 
     liftIO $ writeDot "dependencies.dot" show completeGraph
 
@@ -190,6 +189,6 @@ runCompilers ((id', compiler) : compilers) = Hakyll $ do
             unHakyll $ runCompilers compilers 
 
         -- Metacompiler, slightly more complicated
-        MetaCompileRule newCompilers -> do
+        MetaCompileRule newCompilers ->
             -- Actually I was just kidding, it's not hard at all
             unHakyll $ addNewCompilers compilers newCompilers

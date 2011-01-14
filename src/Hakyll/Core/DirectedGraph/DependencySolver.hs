@@ -10,7 +10,7 @@ module Hakyll.Core.DirectedGraph.DependencySolver
 import Prelude
 import qualified Prelude as P
 import Data.Set (Set)
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -48,7 +48,7 @@ order temp stack set graph@(DirectedGraph graph')
             -- Check which dependencies are still in the graph
             let tag = nodeTag node
                 deps = S.toList $ nodeNeighbours node
-                unsatisfied = catMaybes $ map (flip M.lookup graph') deps
+                unsatisfied = mapMaybe (`M.lookup` graph') deps
             in case unsatisfied of
                 
                 -- All dependencies for node are satisfied, we can return it and
@@ -58,7 +58,7 @@ order temp stack set graph@(DirectedGraph graph')
 
                 -- There is at least one dependency left. We need to solve that
                 -- one first...
-                (dep : _) -> if (nodeTag dep) `S.member` set
+                (dep : _) -> if nodeTag dep `S.member` set
                     -- The dependency is already in our stack - cycle detected!
                     then cycleError
                     -- Continue with the dependency

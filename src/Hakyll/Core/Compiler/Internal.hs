@@ -92,8 +92,7 @@ runCompilerJob compiler identifier provider route store modified =
 runCompilerDependencies :: Compiler () a
                         -> ResourceProvider
                         -> Dependencies
-runCompilerDependencies compiler provider =
-    runReader (compilerDependencies compiler) provider
+runCompilerDependencies compiler = runReader (compilerDependencies compiler)
 
 fromJob :: (a -> CompilerM b)
         -> Compiler a b
