@@ -95,10 +95,7 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
 
-    let -- Create a set of new compilers
-        newCompilerIdentifiers = S.fromList $ map fst newCompilers
-
-        -- All compilers
+    let -- All compilers
         compilers = oldCompilers ++ newCompilers
 
         -- Get all dependencies for the compilers
@@ -128,7 +125,7 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
         -- Find obsolete items. Every item that is reachable from a modified
         -- item is considered obsolete. From these obsolete items, we are only
         -- interested in ones that are in the current subgraph.
-        obsolete = S.filter (`S.member` newCompilerIdentifiers)
+        obsolete = S.filter (`member` currentGraph)
                  $ reachableNodes modified' $ reverse completeGraph
 
         -- Solve the graph and retain only the obsolete items

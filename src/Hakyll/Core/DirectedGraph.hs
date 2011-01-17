@@ -4,6 +4,7 @@
 module Hakyll.Core.DirectedGraph
     ( DirectedGraph
     , fromList
+    , member
     , nodes
     , neighbours
     , reverse
@@ -26,6 +27,14 @@ fromList :: Ord a
          => [(a, Set a)]     -- ^ List of (node, reachable neighbours)
          -> DirectedGraph a  -- ^ Resulting directed graph
 fromList = DirectedGraph . M.fromList . map (\(t, d) -> (t, Node t d))
+
+-- | Check if a node lies in the given graph
+--
+member :: Ord a
+       => a                -- ^ Node to check for
+       -> DirectedGraph a  -- ^ Directed graph to check in
+       -> Bool             -- ^ If the node lies in the graph
+member n = M.member n . unDirectedGraph
 
 -- | Get all nodes in the graph
 --
