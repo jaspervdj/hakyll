@@ -5,8 +5,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Web.Page
     ( Page (..)
-    , getField
-    , addField
     , toMap
     , pageRead
     , addDefaultFields
@@ -16,7 +14,6 @@ import Prelude hiding (id)
 import Control.Category (id)
 import Control.Arrow ((>>^), (&&&), (>>>))
 import System.FilePath (takeBaseName, takeDirectory)
-import Data.Maybe (fromMaybe)
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -24,23 +21,8 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
 import Hakyll.Web.Page.Internal
 import Hakyll.Web.Page.Read
+import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Util.String
-
--- | Get a metadata field. If the field does not exist, the empty string is
--- returned.
---
-getField :: String  -- ^ Key
-         -> Page a  -- ^ Page
-         -> String  -- ^ Value
-getField key = fromMaybe "" . M.lookup key . pageMetadata
-
--- | Add a metadata field. If the field already exists, it is not overwritten.
---
-addField :: String  -- ^ Key
-         -> String  -- ^ Value
-         -> Page a  -- ^ Page to add it to
-         -> Page a  -- ^ Resulting page
-addField k v (Page m b) = Page (M.insertWith (flip const) k v m) b
 
 -- | Convert a page to a map. The body will be placed in the @body@ key.
 --
@@ -56,9 +38,11 @@ pageRead = getResourceString >>^ readPage
 --
 -- * @$url@
 --
--- * @$root@
+-- * @$category@
 --
 -- * @$title@
+--
+-- * @$path@
 --
 addDefaultFields :: Compiler (Page a) (Page a)
 addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
@@ -66,10 +50,11 @@ addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
   where
     -- Add root and url, based on route
     addRoute Nothing  = id
-    addRoute (Just r) = addField "url" (toUrl r)
+    addRoute (Just r) = setField "url" (toUrl r)
 
     -- Add title and category, based on identifier
-    addIdentifier i = addField "title" (takeBaseName p)
-                    . addField "category" (takeBaseName $ takeDirectory p)
+    addIdentifier i = setField "title" (takeBaseName p)
+                    . setField "category" (takeBaseName $ takeDirectory p)
+                    . setField "path" p
       where
         p = toFilePath i

@@ -49,6 +49,7 @@ import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
 import Hakyll.Web.Page
+import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Util.String
 import Hakyll.Core.Writable
 
