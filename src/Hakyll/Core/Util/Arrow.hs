@@ -4,6 +4,7 @@ module Hakyll.Core.Util.Arrow
     ( constA
     , sequenceA
     , unitA
+    , mapA
     ) where
 
 import Control.Arrow (Arrow, (&&&), arr, (>>^))
@@ -23,3 +24,8 @@ sequenceA = foldl reduce $ constA []
 unitA :: Arrow a
       => a b ()
 unitA = constA ()
+
+mapA :: Arrow a
+     => (b -> c)
+     -> a [b] [c]
+mapA = arr . map
