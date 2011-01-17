@@ -11,6 +11,7 @@ module Hakyll.Core.Compiler
     , require
     , requireAll
     , cached
+    , unsafeCompiler
     ) where
 
 import Prelude hiding ((.), id)
@@ -142,3 +143,9 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
                           Nothing -> error'
   where
     error' = error "Hakyll.Core.Compiler.cached: Cache corrupt!"
+
+-- | Create an unsafe compiler from a function in IO
+--
+unsafeCompiler :: (a -> IO b)   -- ^ Function to lift
+               -> Compiler a b  -- ^ Resulting compiler
+unsafeCompiler f = fromJob $ CompilerM . liftIO . f
