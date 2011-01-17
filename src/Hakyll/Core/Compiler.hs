@@ -90,7 +90,8 @@ getDependency identifier = CompilerM $ do
   where
     error' = error $  "Hakyll.Core.Compiler.getDependency: "
                    ++ show identifier
-                   ++ " not found in the cache, the cache might be corrupted"
+                   ++ " not found in the cache, the cache might be corrupted or"
+                   ++ " the item you are referring to might not exist"
 
 -- | Require another target. Using this function ensures automatic handling of
 -- dependencies
