@@ -9,7 +9,9 @@ module Hakyll.Core.Compiler
     , getResourceString
     , fromDependency
     , require
+    , requireA
     , requireAll
+    , requireAllA
     , cached
     , unsafeCompiler
     ) where
@@ -108,6 +110,14 @@ require identifier f =
         y <- getDependency identifier
         return $ f x y
 
+-- | Arrow-based variant of 'require'
+--
+requireA :: (Binary a, Typeable a, Writable a)
+         => Identifier
+         -> Compiler (b, a) c
+         -> Compiler b c
+requireA identifier = (require identifier (,) >>>)
+
 -- | Require a number of targets. Using this function ensures automatic handling
 -- of dependencies
 --
@@ -123,6 +133,14 @@ requireAll pattern f =
         deps <- getDeps . compilerResourceProvider <$> ask
         items <- mapM (unCompilerM . getDependency) deps
         return $ f x items
+
+-- | Arrow-based variant of 'require'
+--
+requireAllA :: (Binary a, Typeable a, Writable a)
+            => Pattern
+            -> Compiler (b, [a]) c
+            -> Compiler b c
+requireAllA pattern = (requireAll pattern (,) >>>)
 
 cached :: (Binary a, Typeable a, Writable a)
        => String
