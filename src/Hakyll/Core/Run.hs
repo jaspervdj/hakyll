@@ -135,6 +135,7 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
         orderedCompilers = map (id &&& (compilerMap M.!)) ordered
 
     liftIO $ putStrLn "Adding compilers..."
+    liftIO $ putStrLn $ "Added: " ++ show (map fst orderedCompilers)
 
     modify $ updateState modified' completeGraph
 
