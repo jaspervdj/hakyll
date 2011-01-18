@@ -58,12 +58,12 @@ createFeed :: Template           -- ^ Feed template
            -> String             -- ^ Resulting feed
 createFeed feedTemplate itemTemplate url configuration items =
     pageBody $ applyTemplate feedTemplate
-             $ setField "timestamp" timestamp
-             $ setField "title" (feedTitle configuration)
+             $ setField "timestamp"   timestamp
+             $ setField "title"       (feedTitle configuration)
              $ setField "description" (feedDescription configuration)
-             $ setField "authorName" (feedDescription configuration)
-             $ setField "root" (feedRoot configuration)
-             $ setField "url" url
+             $ setField "authorName"  (feedDescription configuration)
+             $ setField "root"        (feedRoot configuration)
+             $ setField "url"         url
              $ fromBody body
   where
     -- Preprocess items
