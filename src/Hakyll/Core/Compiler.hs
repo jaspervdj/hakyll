@@ -134,7 +134,7 @@ requireAll pattern f =
         items <- mapM (unCompilerM . getDependency) deps
         return $ f x items
 
--- | Arrow-based variant of 'require'
+-- | Arrow-based variant of 'requireAll'
 --
 requireAllA :: (Binary a, Typeable a, Writable a)
             => Pattern
