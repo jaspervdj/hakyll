@@ -2,9 +2,9 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>$title</title>
-        <link>$absolute</link>
+        <link>$root</link>
         <description><![CDATA[$description]]></description>
-        <atom:link href="$absolute/$url" rel="self"
+        <atom:link href="$root$url" rel="self"
                    type="application/rss+xml" />
         <lastBuildDate>$timestamp</lastBuildDate>
         $body
