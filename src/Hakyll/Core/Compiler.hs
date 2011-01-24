@@ -8,8 +8,10 @@ module Hakyll.Core.Compiler
     , getRoute
     , getResourceString
     , fromDependency
+    , require_
     , require
     , requireA
+    , requireAll_
     , requireAll
     , requireAllA
     , cached
@@ -17,11 +19,11 @@ module Hakyll.Core.Compiler
     ) where
 
 import Prelude hiding ((.), id)
-import Control.Arrow ((>>>))
+import Control.Arrow ((>>>), (&&&), arr)
 import Control.Applicative ((<$>))
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans (liftIO)
-import Control.Category (Category, (.))
+import Control.Category (Category, (.), id)
 import Data.Maybe (fromMaybe)
 
 import Data.Binary (Binary)
@@ -85,7 +87,7 @@ getResourceString = getIdentifier >>> getResourceString'
 -- | Auxiliary: get a dependency
 --
 getDependency :: (Binary a, Writable a, Typeable a)
-                      => Identifier -> CompilerM a
+              => Identifier -> CompilerM a
 getDependency identifier = CompilerM $ do
     store <- compilerStore <$> ask
     fmap (fromMaybe error') $ liftIO $
@@ -96,6 +98,15 @@ getDependency identifier = CompilerM $ do
                    ++ " not found in the cache, the cache might be corrupted or"
                    ++ " the item you are referring to might not exist"
 
+
+-- | Variant of 'require' which drops the current value
+--
+require_ :: (Binary a, Typeable a, Writable a)
+         => Identifier
+         -> Compiler b a
+require_ identifier =
+    fromDependency identifier >>> fromJob (const $ getDependency identifier)
+
 -- | Require another target. Using this function ensures automatic handling of
 -- dependencies
 --
@@ -103,12 +114,7 @@ require :: (Binary a, Typeable a, Writable a)
         => Identifier
         -> (b -> a -> c)
         -> Compiler b c
-require identifier f =
-    fromDependency identifier >>> fromJob require'
-  where
-    require' x = do
-        y <- getDependency identifier
-        return $ f x y
+require identifier = requireA identifier . arr . uncurry
 
 -- | Arrow-based variant of 'require'
 --
@@ -116,7 +122,19 @@ requireA :: (Binary a, Typeable a, Writable a)
          => Identifier
          -> Compiler (b, a) c
          -> Compiler b c
-requireA identifier = (require identifier (,) >>>)
+requireA identifier = (id &&& require_ identifier >>>)
+
+-- | Variant of 'requireAll' which drops the current value
+--
+requireAll_ :: (Binary a, Typeable a, Writable a)
+            => Pattern
+            -> Compiler b [a]
+requireAll_ pattern = fromDependencies getDeps >>> fromJob requireAll_'
+  where
+    getDeps = matches pattern . resourceList
+    requireAll_' = const $ CompilerM $ do
+        deps <- getDeps . compilerResourceProvider <$> ask
+        mapM (unCompilerM . getDependency) deps
 
 -- | Require a number of targets. Using this function ensures automatic handling
 -- of dependencies
@@ -125,14 +143,7 @@ requireAll :: (Binary a, Typeable a, Writable a)
            => Pattern
            -> (b -> [a] -> c)
            -> Compiler b c
-requireAll pattern f =
-    fromDependencies getDeps >>> fromJob requireAll'
-  where
-    getDeps = matches pattern . resourceList
-    requireAll' x = CompilerM $ do
-        deps <- getDeps . compilerResourceProvider <$> ask
-        items <- mapM (unCompilerM . getDependency) deps
-        return $ f x items
+requireAll pattern = requireAllA pattern . arr . uncurry
 
 -- | Arrow-based variant of 'requireAll'
 --
@@ -140,7 +151,7 @@ requireAllA :: (Binary a, Typeable a, Writable a)
             => Pattern
             -> Compiler (b, [a]) c
             -> Compiler b c
-requireAllA pattern = (requireAll pattern (,) >>>)
+requireAllA pattern = (id &&& requireAll_ pattern >>>)
 
 cached :: (Binary a, Typeable a, Writable a)
        => String
