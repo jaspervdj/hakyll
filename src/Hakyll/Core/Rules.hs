@@ -109,6 +109,8 @@ route pattern route' = tellRoute $ ifMatch pattern route'
 
 -- | Add a compiler that produces other compilers over time
 --
+-- TODO: Rename to metaCompile? Auto-generate identifier?
+--
 addCompilers :: (Binary a, Typeable a, Writable a)
              => Identifier
              -- ^ Identifier for this compiler

@@ -14,7 +14,7 @@ module Hakyll.Core.Compiler.Internal
     ) where
 
 import Prelude hiding ((.), id)
-import Control.Applicative (Applicative, (<$>))
+import Control.Applicative (Applicative, pure, (<*>), (<$>))
 import Control.Monad.Reader (ReaderT, Reader, ask, runReaderT, runReader)
 import Control.Monad ((<=<), liftM2)
 import Data.Set (Set)
@@ -57,6 +57,14 @@ data Compiler a b = Compiler
     { compilerDependencies :: Reader ResourceProvider Dependencies
     , compilerJob          :: a -> CompilerM b
     }
+
+instance Functor (Compiler a) where
+    fmap f (Compiler d j) = Compiler d $ fmap f . j
+
+instance Applicative (Compiler a) where
+    pure = Compiler (return S.empty) . const . return
+    (Compiler d1 f) <*> (Compiler d2 j) =
+        Compiler (liftM2 S.union d1 d2) $ \x -> f x <*> j x
 
 instance Category Compiler where
     id = Compiler (return S.empty) return
