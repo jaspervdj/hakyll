@@ -35,6 +35,7 @@ module Hakyll.Core.Identifier.Pattern
     , doesMatch
     , matches
     , fromCapture
+    , fromCaptureString
     , fromCaptures
     ) where
 
@@ -122,8 +123,28 @@ match' (m : ms) (s : ss) = case m of
 -- | Create an identifier from a pattern by filling in the captures with a given
 -- string
 --
+-- Example:
+--
+-- > fromCapture (parsePattern "tags/*") (parseIdentifier "foo")
+--
+-- Result:
+--
+-- > "tags/foo"
+--
 fromCapture :: Pattern -> Identifier -> Identifier
 fromCapture pattern = fromCaptures pattern . repeat
+
+-- | Simplified version of 'fromCapture' which takes a 'String' instead of an
+-- 'Identifier'
+--
+-- > fromCaptureString (parsePattern "tags/*") "foo"
+--
+-- Result:
+--
+-- > "tags/foo"
+--
+fromCaptureString :: Pattern -> String -> Identifier
+fromCaptureString pattern = fromCapture pattern . parseIdentifier
 
 -- | Create an identifier from a pattern by filling in the captures with the
 -- given list of strings
