@@ -3,6 +3,7 @@
 module Hakyll.Web.Page.Metadata
     ( getField
     , setField
+    , setFieldA
     , renderField
     , changeField
     , copyField
@@ -10,6 +11,9 @@ module Hakyll.Web.Page.Metadata
     , renderDateFieldWith
     ) where
 
+import Prelude hiding (id)
+import Control.Category (id)
+import Control.Arrow (Arrow, (>>>), (***), arr)
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe)
 import Data.Time.Clock (UTCTime)
@@ -37,6 +41,15 @@ setField :: String  -- ^ Key
          -> Page a  -- ^ Resulting page
 setField k v (Page m b) = Page (M.insertWith (flip const) k v m) b
 
+-- | Arrow-based variant of 'setField'. Because of it's type, this function is
+-- very usable together with the different 'require' functions.
+--
+setFieldA :: Arrow a
+          => String                            -- ^ Key
+          -> a x String                        -- ^ Value arrow
+          -> a (Page String, x) (Page String)  -- ^ Resulting arrow
+setFieldA k v = id *** v >>> arr (uncurry $ flip $ setField k)
+
 -- | Do something with a metadata value, but keep the old value as well. If the
 -- key given is not present in the metadata, nothing will happen. If the source
 -- and destination keys are the same, the value will be changed (but you should
@@ -48,8 +61,8 @@ renderField :: String              -- ^ Key of which the value should be copied
             -> Page a              -- ^ Page on which this should be applied
             -> Page a              -- ^ Resulting page
 renderField src dst f page = case M.lookup src (pageMetadata page) of
-    Nothing      -> page
-    (Just value) -> setField dst (f value) page
+    Nothing    -> page
+    Just value -> setField dst (f value) page
 
 -- | Change a metadata value.
 --
