@@ -1,7 +1,7 @@
 -- | This module provides a monadic DSL in which the user can specify the
 -- different rules used to run the compilers
 --
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
 module Hakyll.Core.Rules
     ( CompileRule (..)
     , RuleSet (..)
@@ -11,13 +11,15 @@ module Hakyll.Core.Rules
     , compile
     , create
     , route
-    , addCompilers
+    , metaCompile
+    , metaCompileWith
     ) where
 
 import Control.Applicative (Applicative, (<$>))
 import Control.Monad.Writer
 import Control.Monad.Reader
 import Control.Arrow (second, (>>>), arr, (>>^))
+import Control.Monad.State
 
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
@@ -52,10 +54,16 @@ instance Monoid RuleSet where
     mappend (RuleSet r1 c1) (RuleSet r2 c2) =
         RuleSet (mappend r1 r2) (mappend c1 c2)
 
+-- | Rule state
+--
+data RuleState = RuleState
+    { rulesMetaCompilerIndex :: Int
+    } deriving (Show)
+
 -- | The monad used to compose rules
 --
 newtype RulesM a = RulesM
-    { unRulesM :: ReaderT ResourceProvider (Writer RuleSet) a
+    { unRulesM :: ReaderT ResourceProvider (WriterT RuleSet (State RuleState)) a
     } deriving (Monad, Functor, Applicative)
 
 -- | Simplification of the RulesM type; usually, it will not return any
@@ -66,7 +74,10 @@ type Rules = RulesM ()
 -- | Run a Rules monad, resulting in a 'RuleSet'
 --
 runRules :: Rules -> ResourceProvider -> RuleSet
-runRules rules provider = execWriter $ runReaderT (unRulesM rules) provider
+runRules rules provider =
+    evalState (execWriterT $ runReaderT (unRulesM rules) provider) state
+  where
+    state = RuleState {rulesMetaCompilerIndex = 0}
 
 -- | Add a route
 --
@@ -109,16 +120,34 @@ route pattern route' = tellRoute $ ifMatch pattern route'
 
 -- | Add a compiler that produces other compilers over time
 --
--- TODO: Rename to metaCompile? Auto-generate identifier?
+metaCompile :: (Binary a, Typeable a, Writable a)
+            => Compiler () [(Identifier, Compiler () a)]   
+            -- ^ Compiler generating the other compilers
+            -> Rules
+            -- ^ Resulting rules
+metaCompile compiler = RulesM $ do
+    -- Create an identifier from the state
+    state <- get
+    let index = rulesMetaCompilerIndex state
+        id' = fromCaptureString "Hakyll.Core.Rules.metaCompile/*" (show index)
+
+    -- Update the state with a new identifier
+    put $ state {rulesMetaCompilerIndex = index + 1}
+
+    -- Fallback to 'metaCompileWith' with now known identifier
+    unRulesM $ metaCompileWith id' compiler
+
+-- | Version of 'metaCompile' that allows you to specify a custom identifier for
+-- the metacompiler.
 --
-addCompilers :: (Binary a, Typeable a, Writable a)
-             => Identifier
-             -- ^ Identifier for this compiler
-             -> Compiler () [(Identifier, Compiler () a)]   
-             -- ^ Compiler generating the other compilers
-             -> Rules
-             -- ^ Resulting rules
-addCompilers identifier compiler = RulesM $ tell $ RuleSet mempty
+metaCompileWith :: (Binary a, Typeable a, Writable a)
+                => Identifier
+                -- ^ Identifier for this compiler
+                -> Compiler () [(Identifier, Compiler () a)]   
+                -- ^ Compiler generating the other compilers
+                -> Rules
+                -- ^ Resulting rules
+metaCompileWith identifier compiler = RulesM $ tell $ RuleSet mempty
     [(identifier, compiler >>> arr makeRule )]
   where
     makeRule = MetaCompileRule . map (second box)
