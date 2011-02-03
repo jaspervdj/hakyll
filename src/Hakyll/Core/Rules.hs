@@ -28,7 +28,7 @@ import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Compiler.Internal
-import Hakyll.Core.Route
+import Hakyll.Core.Routes
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
 
@@ -45,7 +45,7 @@ data CompileRule = CompileRule CompiledItem
 -- | A collection of rules for the compilation process
 --
 data RuleSet = RuleSet
-    { rulesRoute     :: Route
+    { rulesRoutes    :: Routes
     , rulesCompilers :: [(Identifier, Compiler () CompileRule)]
     }
 
@@ -81,7 +81,7 @@ runRules rules provider =
 
 -- | Add a route
 --
-tellRoute :: Route -> Rules
+tellRoute :: Routes -> Rules
 tellRoute route' = RulesM $ tell $ RuleSet route' mempty
 
 -- | Add a number of compilers
@@ -115,7 +115,7 @@ create identifier compiler = tellCompilers [(identifier, compiler)]
 
 -- | Add a route
 --
-route :: Pattern -> Route -> Rules
+route :: Pattern -> Routes -> Rules
 route pattern route' = tellRoute $ ifMatch pattern route'
 
 -- | Add a compiler that produces other compilers over time

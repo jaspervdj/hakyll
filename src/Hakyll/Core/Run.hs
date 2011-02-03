@@ -16,7 +16,7 @@ import System.FilePath ((</>))
 import Data.Set (Set)
 import qualified Data.Set as S
 
-import Hakyll.Core.Route
+import Hakyll.Core.Routes
 import Hakyll.Core.Identifier
 import Hakyll.Core.Util.File
 import Hakyll.Core.Compiler
@@ -48,7 +48,7 @@ run configuration rules = do
   where
     env ruleSet provider store = RuntimeEnvironment
         { hakyllConfiguration    = configuration
-        , hakyllRoute            = rulesRoute ruleSet
+        , hakyllRoutes           = rulesRoutes ruleSet
         , hakyllResourceProvider = provider
         , hakyllStore            = store
         }
@@ -60,7 +60,7 @@ run configuration rules = do
 
 data RuntimeEnvironment = RuntimeEnvironment
     { hakyllConfiguration    :: HakyllConfiguration
-    , hakyllRoute            :: Route
+    , hakyllRoutes           :: Routes
     , hakyllResourceProvider :: ResourceProvider
     , hakyllStore            :: Store
     }
@@ -156,31 +156,28 @@ runCompilers :: [(Identifier, Compiler () CompileRule)]
 runCompilers [] = return ()
 runCompilers ((id', compiler) : compilers) = Runtime $ do
     -- Obtain information
-    route' <- hakyllRoute <$> ask
+    routes <- hakyllRoutes <$> ask
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
     modified' <- hakyllModified <$> get
 
-    let -- Determine the URL
-        url = runRoute route' id'
-    
-        -- Check if the resource was modified
+    let -- Check if the resource was modified
         isModified = id' `S.member` modified'
 
     -- Run the compiler
-    result <- liftIO $ runCompiler compiler id' provider url store isModified
+    result <- liftIO $ runCompiler compiler id' provider routes store isModified
     liftIO $ putStrLn $ "Generated target: " ++ show id'
 
     case result of
         -- Compile rule for one item, easy stuff
         CompileRule compiled -> do
-            case url of
-                Nothing -> return ()
-                Just r  -> do
-                    liftIO $ putStrLn $ "Routing " ++ show id' ++ " to " ++ r
+            case runRoutes routes id' of
+                Nothing  -> return ()
+                Just url -> do
+                    liftIO $ putStrLn $ "Routing " ++ show id' ++ " to " ++ url
                     destination <-
                         destinationDirectory . hakyllConfiguration <$> ask
-                    let path = destination </> r
+                    let path = destination </> url
                     liftIO $ makeDirectories path
                     liftIO $ write path compiled
 

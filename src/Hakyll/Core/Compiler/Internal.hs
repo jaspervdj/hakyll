@@ -25,6 +25,7 @@ import Control.Arrow (Arrow, arr, first)
 import Hakyll.Core.Identifier
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Store
+import Hakyll.Core.Routes
 
 -- | A set of dependencies
 --
@@ -37,8 +38,8 @@ data CompilerEnvironment = CompilerEnvironment
       compilerIdentifier       :: Identifier
     , -- | Resource provider
       compilerResourceProvider :: ResourceProvider
-    , -- | Site route
-      compilerRoute            :: Maybe FilePath
+    , -- | Site routes
+      compilerRoutes           :: Routes
     , -- | Compiler store
       compilerStore            :: Store
     , -- | Flag indicating if the underlying resource was modified
@@ -82,7 +83,7 @@ instance Arrow Compiler where
 runCompilerJob :: Compiler () a     -- ^ Compiler to run
                -> Identifier        -- ^ Target identifier
                -> ResourceProvider  -- ^ Resource provider
-               -> Maybe FilePath    -- ^ Route
+               -> Routes            -- ^ Route
                -> Store             -- ^ Store
                -> Bool              -- ^ Was the resource modified?
                -> IO a
@@ -92,7 +93,7 @@ runCompilerJob compiler identifier provider route store modified =
     env = CompilerEnvironment
             { compilerIdentifier       = identifier
             , compilerResourceProvider = provider
-            , compilerRoute            = route
+            , compilerRoutes           = route
             , compilerStore            = store
             , compilerResourceModified = modified
             }

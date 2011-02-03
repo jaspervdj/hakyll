@@ -37,6 +37,7 @@ import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store
 import Hakyll.Core.Rules
+import Hakyll.Core.Routes
 
 -- | Run a compiler, yielding the resulting target and it's dependencies. This
 -- version of 'runCompilerJob' also stores the result
@@ -44,13 +45,13 @@ import Hakyll.Core.Rules
 runCompiler :: Compiler () CompileRule  -- ^ Compiler to run
             -> Identifier               -- ^ Target identifier
             -> ResourceProvider         -- ^ Resource provider
-            -> Maybe FilePath           -- ^ Route
+            -> Routes                   -- ^ Route
             -> Store                    -- ^ Store
             -> Bool                     -- ^ Was the resource modified?
             -> IO CompileRule           -- ^ Resulting item
-runCompiler compiler identifier provider route' store modified = do
+runCompiler compiler identifier provider routes store modified = do
     -- Run the compiler job
-    result <- runCompilerJob compiler identifier provider route' store modified
+    result <- runCompilerJob compiler identifier provider routes store modified
 
     -- Inspect the result
     case result of
@@ -73,7 +74,10 @@ getIdentifier = fromJob $ const $ CompilerM $ compilerIdentifier <$> ask
 -- | Get the route we are using for this item
 --
 getRoute :: Compiler a (Maybe FilePath)
-getRoute = fromJob $ const $ CompilerM $ compilerRoute <$> ask
+getRoute = fromJob $ const $ CompilerM $ do
+    identifier <- compilerIdentifier <$> ask
+    routes <- compilerRoutes <$> ask
+    return $ runRoutes routes identifier
 
 -- | Get the resource we are compiling as a string
 --
