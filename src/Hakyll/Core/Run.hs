@@ -1,20 +1,17 @@
 -- | This is the module which binds it all together
 --
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module Hakyll.Core.Run where
+module Hakyll.Core.Run
+    ( run
+    ) where
 
 import Prelude hiding (reverse)
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Monad.Trans
 import Control.Arrow ((&&&))
-import Control.Monad (foldM, forM_, forM, filterM)
-import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Monoid (mempty, mappend)
-import Data.Typeable (Typeable)
-import Data.Binary (Binary)
 import System.FilePath ((</>))
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -32,45 +29,49 @@ import Hakyll.Core.DirectedGraph.Dot
 import Hakyll.Core.DirectedGraph.DependencySolver
 import Hakyll.Core.Writable
 import Hakyll.Core.Store
-import Hakyll.Core.CompiledItem
+import Hakyll.Core.Configuration
 
-hakyll :: Rules -> IO ()
-hakyll rules = do
-    store <- makeStore "_store"
+-- | Run all rules needed
+--
+run :: HakyllConfiguration -> Rules -> IO ()
+run configuration rules = do
+    store <- makeStore $ storeDirectory configuration
     provider <- fileResourceProvider
     let ruleSet = runRules rules provider
         compilers = rulesCompilers ruleSet
 
         -- Extract the reader/state
-        reader = unHakyll $ addNewCompilers [] compilers
+        reader = unRuntime $ addNewCompilers [] compilers
         state' = runReaderT reader $ env ruleSet provider store
 
     evalStateT state' state
   where
-    env ruleSet provider store = HakyllEnvironment
-        { hakyllRoute            = rulesRoute ruleSet
+    env ruleSet provider store = RuntimeEnvironment
+        { hakyllConfiguration    = configuration
+        , hakyllRoute            = rulesRoute ruleSet
         , hakyllResourceProvider = provider
         , hakyllStore            = store
         }
 
-    state = HakyllState
+    state = RuntimeState
         { hakyllModified = S.empty
         , hakyllGraph    = mempty
         }
 
-data HakyllEnvironment = HakyllEnvironment
-    { hakyllRoute            :: Route
+data RuntimeEnvironment = RuntimeEnvironment
+    { hakyllConfiguration    :: HakyllConfiguration
+    , hakyllRoute            :: Route
     , hakyllResourceProvider :: ResourceProvider
     , hakyllStore            :: Store
     }
 
-data HakyllState = HakyllState
+data RuntimeState = RuntimeState
     { hakyllModified :: Set Identifier
     , hakyllGraph    :: DirectedGraph Identifier
     }
 
-newtype Hakyll a = Hakyll
-    { unHakyll :: ReaderT HakyllEnvironment (StateT HakyllState IO) a
+newtype Runtime a = Runtime
+    { unRuntime :: ReaderT RuntimeEnvironment (StateT RuntimeState IO) a
     } deriving (Functor, Applicative, Monad)
 
 -- | Return a set of modified identifiers
@@ -89,8 +90,8 @@ addNewCompilers :: [(Identifier, Compiler () CompileRule)]
                 -- ^ Remaining compilers yet to be run
                 -> [(Identifier, Compiler () CompileRule)]
                 -- ^ Compilers to add
-                -> Hakyll ()
-addNewCompilers oldCompilers newCompilers = Hakyll $ do
+                -> Runtime ()
+addNewCompilers oldCompilers newCompilers = Runtime $ do
     -- Get some information
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
@@ -140,7 +141,7 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
     modify $ updateState modified' completeGraph
 
     -- Now run the ordered list of compilers
-    unHakyll $ runCompilers orderedCompilers
+    unRuntime $ runCompilers orderedCompilers
   where
     -- Add the modified information for the new compilers
     updateState modified' graph state = state
@@ -150,10 +151,10 @@ addNewCompilers oldCompilers newCompilers = Hakyll $ do
 
 runCompilers :: [(Identifier, Compiler () CompileRule)]
              -- ^ Ordered list of compilers
-             -> Hakyll ()
+             -> Runtime ()
              -- ^ No result
 runCompilers [] = return ()
-runCompilers ((id', compiler) : compilers) = Hakyll $ do
+runCompilers ((id', compiler) : compilers) = Runtime $ do
     -- Obtain information
     route' <- hakyllRoute <$> ask
     provider <- hakyllResourceProvider <$> ask
@@ -175,18 +176,20 @@ runCompilers ((id', compiler) : compilers) = Hakyll $ do
         CompileRule compiled -> do
             case url of
                 Nothing -> return ()
-                Just r  -> liftIO $ do
-                    putStrLn $ "Routing " ++ show id' ++ " to " ++ r
-                    let path = "_site" </> r
-                    makeDirectories path
-                    write path compiled
+                Just r  -> do
+                    liftIO $ putStrLn $ "Routing " ++ show id' ++ " to " ++ r
+                    destination <-
+                        destinationDirectory . hakyllConfiguration <$> ask
+                    let path = destination </> r
+                    liftIO $ makeDirectories path
+                    liftIO $ write path compiled
 
             liftIO $ putStrLn ""
 
             -- Continue for the remaining compilers
-            unHakyll $ runCompilers compilers 
+            unRuntime $ runCompilers compilers 
 
         -- Metacompiler, slightly more complicated
         MetaCompileRule newCompilers ->
             -- Actually I was just kidding, it's not hard at all
-            unHakyll $ addNewCompilers compilers newCompilers
+            unRuntime $ addNewCompilers compilers newCompilers
