@@ -20,7 +20,7 @@ import Control.Monad ((<=<), liftM2)
 import Data.Set (Set)
 import qualified Data.Set as S
 import Control.Category (Category, (.), id)
-import Control.Arrow (Arrow, arr, first)
+import Control.Arrow (Arrow, ArrowChoice, arr, first, left)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.ResourceProvider
@@ -77,6 +77,11 @@ instance Arrow Compiler where
     first (Compiler d j) = Compiler d $ \(x, y) -> do
         x' <- j x
         return (x', y)
+
+instance ArrowChoice Compiler where
+    left (Compiler d j) = Compiler d $ \e -> case e of
+        Left l  -> Left  <$> j l
+        Right r -> Right <$> return r
 
 -- | Run a compiler, yielding the resulting target and it's dependencies
 --
