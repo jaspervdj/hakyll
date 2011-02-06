@@ -149,7 +149,7 @@ renderTagCloud urlFunction minSize maxSize = createHakyllAction renderTagCloud'
     minCount = minimum . map snd . tagCount
     maxCount = maximum . map snd . tagCount
     relative tagMap count = (count - minCount tagMap) /
-                            (maxCount tagMap - minCount tagMap)
+                            (1 + maxCount tagMap - minCount tagMap)
 
     tagCount = map (second $ fromIntegral . length) . M.toList
 
