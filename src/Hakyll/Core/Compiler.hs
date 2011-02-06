@@ -6,6 +6,7 @@ module Hakyll.Core.Compiler
     , runCompiler
     , getIdentifier
     , getRoute
+    , getRouteFor
     , getResourceString
     , fromDependency
     , require_
@@ -74,8 +75,12 @@ getIdentifier = fromJob $ const $ CompilerM $ compilerIdentifier <$> ask
 -- | Get the route we are using for this item
 --
 getRoute :: Compiler a (Maybe FilePath)
-getRoute = fromJob $ const $ CompilerM $ do
-    identifier <- compilerIdentifier <$> ask
+getRoute = getIdentifier >>> getRouteFor
+
+-- | Get the route for a specified item
+--
+getRouteFor :: Compiler Identifier (Maybe FilePath)
+getRouteFor = fromJob $ \identifier -> CompilerM $ do
     routes <- compilerRoutes <$> ask
     return $ runRoutes routes identifier
 
