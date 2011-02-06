@@ -116,7 +116,7 @@ renderTagCloud urlFunction minSize maxSize (Tags tags) = renderHtml $
         in show (size' :: Int) ++ "%"
 
     -- Find out the relative count of a tag: on a scale from 0 to 1
-    relative count = (fromIntegral count - minCount) / (maxCount - minCount)
+    relative count = (fromIntegral count - minCount) / (1 + maxCount - minCount)
 
     -- The minimum and maximum count found, as doubles
     (minCount, maxCount)
