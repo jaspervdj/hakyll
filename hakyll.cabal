@@ -41,7 +41,7 @@ library
                     time >= 1.1,
                     binary >= 0.5,
                     hamlet >= 0.4.2,
-                    blaze-html >= 0.2 && <= 0.3
+                    blaze-html >= 0.4
   exposed-modules:  Network.Hakyll.SimpleServer
                     Text.Hakyll
                     Text.Hakyll.Context
