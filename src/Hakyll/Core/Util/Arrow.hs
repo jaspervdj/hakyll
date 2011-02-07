@@ -7,7 +7,9 @@ module Hakyll.Core.Util.Arrow
     , mapA
     ) where
 
-import Control.Arrow (Arrow, (&&&), arr, (>>^))
+import Control.Arrow ( Arrow, ArrowChoice, (&&&), arr, (>>^), (|||)
+                     , (>>>), (***)
+                     )
 
 constA :: Arrow a
        => c
@@ -25,7 +27,10 @@ unitA :: Arrow a
       => a b ()
 unitA = constA ()
 
-mapA :: Arrow a
-     => (b -> c)
+mapA :: ArrowChoice a
+     => a b c
      -> a [b] [c]
-mapA = arr . map
+mapA f = arr listEither >>> arr id ||| (f *** mapA f >>> arr (uncurry (:)))
+  where
+    listEither []       = Left []
+    listEither (x : xs) = Right (x, xs)
