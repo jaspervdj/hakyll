@@ -69,7 +69,7 @@ instance Applicative (Compiler a) where
 
 instance Category Compiler where
     id = Compiler (return S.empty) return
-    (Compiler d1 j1) . (Compiler d2 j2) =
+    ~(Compiler d1 j1) . ~(Compiler d2 j2) =
         Compiler (liftM2 S.union d1 d2) (j1 <=< j2)
 
 instance Arrow Compiler where

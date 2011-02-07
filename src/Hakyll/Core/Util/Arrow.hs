@@ -7,6 +7,8 @@ module Hakyll.Core.Util.Arrow
     , mapA
     ) where
 
+import Prelude hiding (id)
+import Control.Category (id)
 import Control.Arrow ( Arrow, ArrowChoice, (&&&), arr, (>>^), (|||)
                      , (>>>), (***)
                      )
@@ -30,7 +32,7 @@ unitA = constA ()
 mapA :: ArrowChoice a
      => a b c
      -> a [b] [c]
-mapA f = arr listEither >>> arr id ||| (f *** mapA f >>> arr (uncurry (:)))
+mapA f = arr listEither >>> id ||| (f *** mapA f >>> arr (uncurry (:)))
   where
     listEither []       = Left []
     listEither (x : xs) = Right (x, xs)
