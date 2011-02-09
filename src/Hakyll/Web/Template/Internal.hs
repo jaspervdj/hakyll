@@ -29,17 +29,17 @@ instance Writable Template where
 data TemplateElement
     = Chunk String
     | Identifier String
-    | Escaped String
+    | Escaped
     deriving (Show, Eq, Typeable)
 
 instance Binary TemplateElement where
     put (Chunk string)    = putWord8 0 >> put string
     put (Identifier key)  = putWord8 1 >> put key
-    put (Escaped key) = putWord8 2 >> put key
+    put (Escaped) = putWord8 2
 
     get = getWord8 >>= \tag -> case tag of
             0 -> Chunk      <$> get
             1 -> Identifier <$> get
-            2 -> Escaped    <$> get
+            2 -> return Escaped
             _ -> error $  "Hakyll.Web.Template.Internal: "
                        ++ "Error reading cached template"

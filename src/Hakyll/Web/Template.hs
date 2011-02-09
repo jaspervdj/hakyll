@@ -21,17 +21,22 @@ readTemplate = Template . readTemplate'
     readTemplate' [] = []
     readTemplate' string
         | "$$" `isPrefixOf` string =
-            let (key, rest) = readIdentifier $ drop 2 string
-            in Escaped key : readTemplate' rest
+            Escaped : readTemplate' (drop 2 string)
         | "$" `isPrefixOf` string =
-            let (key, rest) = readIdentifier $ drop 1 string
-            in Identifier key : readTemplate' rest
+            case readIdentifier (drop 1 string) of
+                Just (key, rest) -> Identifier key : readTemplate' rest
+                Nothing          -> Chunk "$" : readTemplate' (drop 1 string)
         | otherwise =
             let (chunk, rest) = break (== '$') string
             in Chunk chunk : readTemplate' rest
 
-    -- Parse an identifier into (identifier, rest)
-    readIdentifier = span isAlphaNum
+    -- Parse an identifier into (identifier, rest) if it's valid, and return
+    -- Nothing otherwise
+    readIdentifier string =
+        let (identifier, rest) = span isAlphaNum string
+        in if not (null identifier) && "$" `isPrefixOf` rest
+            then Just (identifier, drop 1 rest)
+            else Nothing
 
 -- | Substitutes @$identifiers@ in the given @Template@ by values from the given
 --   "Page". When a key is not found, it is left as it is. You can specify
@@ -44,7 +49,7 @@ applyTemplate template page =
     substitute (Chunk chunk) = chunk
     substitute (Identifier key) =
         fromMaybe ('$' : key) $ M.lookup key $ toMap page
-    substitute (Escaped key) = '$' : key
+    substitute (Escaped) = "$"
 
 -- | Apply a page as it's own template. This is often very useful to fill in
 -- certain keys like @$root@ and @$url@.
