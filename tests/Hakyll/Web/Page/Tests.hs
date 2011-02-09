@@ -15,8 +15,7 @@ import Hakyll.Web.Page.Read
 import TestSuite.Util
 
 tests :: [Test]
-tests = fromAssertions "applyTemplate"
-    -- Hakyll templates
+tests = fromAssertions "readPage"
     [ Page (M.singleton "foo" "bar") "body\n" @=? readPage
         "---        \n\
         \foo: bar   \n\
