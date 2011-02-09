@@ -20,7 +20,7 @@ import Hakyll.Core.Writable
 data Page a = Page
     { pageMetadata :: Map String String
     , pageBody     :: a
-    } deriving (Show, Typeable)
+    } deriving (Eq, Show, Typeable)
 
 instance Monoid a => Monoid (Page a) where
     mempty = Page M.empty mempty
