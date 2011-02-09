@@ -11,13 +11,10 @@ import Test.HUnit hiding (Test)
 
 import Hakyll.Core.DirectedGraph
 import Hakyll.Core.DirectedGraph.DependencySolver
-import Hakyll.Core.DirectedGraph.ObsoleteFilter
 
 tests :: [Test]
 tests =
     [ testCase "solveDependencies [1]" solveDependencies1
-    , testCase "filterObsolete [1]"    filterObsolete1
-    , testCase "filterObsolete [2]"    filterObsolete2
     ]
 
 node :: Ord a => a -> [a] -> (a, Set a)
@@ -37,12 +34,3 @@ solveDependencies1 =  result == [3, 4, 2, 6, 8] || result == [3, 4, 2, 6, 8]
                     @? "solveDependencies1"
   where
     result = solveDependencies testGraph01
-
-filterObsolete1 :: Assertion
-filterObsolete1 =  nodes (filterObsolete [6] testGraph01) == S.fromList [6, 8]
-                 @? "filterObsolete1"
-
-filterObsolete2 :: Assertion
-filterObsolete2 =
-    nodes (filterObsolete [4] testGraph01) == S.fromList [4, 2, 6, 8]
-        @? "filterObsolete2"

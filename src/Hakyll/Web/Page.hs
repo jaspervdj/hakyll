@@ -6,6 +6,7 @@
 module Hakyll.Web.Page
     ( Page (..)
     , fromBody
+    , fromMap
     , toMap
     , pageRead
     , addDefaultFields
@@ -15,6 +16,7 @@ import Prelude hiding (id)
 import Control.Category (id)
 import Control.Arrow ((>>^), (&&&), (>>>))
 import System.FilePath (takeBaseName, takeDirectory)
+import Data.Monoid (Monoid, mempty)
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -29,6 +31,11 @@ import Hakyll.Web.Util.String
 --
 fromBody :: a -> Page a
 fromBody = Page M.empty
+
+-- | Create a metadata page, without a body
+--
+fromMap :: Monoid a => Map String String -> Page a
+fromMap m = Page m mempty
 
 -- | Convert a page to a map. The body will be placed in the @body@ key.
 --
