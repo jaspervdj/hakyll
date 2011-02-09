@@ -17,6 +17,7 @@ module Hakyll.Core.Compiler
     , requireAllA
     , cached
     , unsafeCompiler
+    , mapCompiler
     ) where
 
 import Prelude hiding ((.), id)
@@ -187,3 +188,9 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
 unsafeCompiler :: (a -> IO b)   -- ^ Function to lift
                -> Compiler a b  -- ^ Resulting compiler
 unsafeCompiler f = fromJob $ CompilerM . liftIO . f
+
+-- | Map over a compiler
+--
+mapCompiler :: Compiler a b
+            -> Compiler [a] [b]
+mapCompiler (Compiler d j) = Compiler d $ mapM j

@@ -60,11 +60,11 @@ data Compiler a b = Compiler
     }
 
 instance Functor (Compiler a) where
-    fmap f (Compiler d j) = Compiler d $ fmap f . j
+    fmap f ~(Compiler d j) = Compiler d $ fmap f . j
 
 instance Applicative (Compiler a) where
     pure = Compiler (return S.empty) . const . return
-    (Compiler d1 f) <*> (Compiler d2 j) =
+    ~(Compiler d1 f) <*> ~(Compiler d2 j) =
         Compiler (liftM2 S.union d1 d2) $ \x -> f x <*> j x
 
 instance Category Compiler where
@@ -74,12 +74,12 @@ instance Category Compiler where
 
 instance Arrow Compiler where
     arr f = Compiler (return S.empty) (return . f)
-    first (Compiler d j) = Compiler d $ \(x, y) -> do
+    first ~(Compiler d j) = Compiler d $ \(x, y) -> do
         x' <- j x
         return (x', y)
 
 instance ArrowChoice Compiler where
-    left (Compiler d j) = Compiler d $ \e -> case e of
+    left ~(Compiler d j) = Compiler d $ \e -> case e of
         Left l  -> Left  <$> j l
         Right r -> Right <$> return r
 

@@ -45,9 +45,9 @@ setField k v (Page m b) = Page (M.insertWith (flip const) k v m) b
 -- very usable together with the different 'require' functions.
 --
 setFieldA :: Arrow a
-          => String                            -- ^ Key
-          -> a x String                        -- ^ Value arrow
-          -> a (Page String, x) (Page String)  -- ^ Resulting arrow
+          => String                  -- ^ Key
+          -> a x String              -- ^ Value arrow
+          -> a (Page b, x) (Page b)  -- ^ Resulting arrow
 setFieldA k v = id *** v >>> arr (uncurry $ flip $ setField k)
 
 -- | Do something with a metadata value, but keep the old value as well. If the

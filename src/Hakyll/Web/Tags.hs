@@ -19,32 +19,37 @@
 -- is to place pages in subdirectories.
 --
 -- An example, the page @posts\/coding\/2010-01-28-hakyll-categories.markdown@
--- Tags or categories are read using the @readTags@ and @readCategories@
+-- Tags or categories are read using the @readTags@ and @readCategory@
 -- functions. This module only provides functions to work with tags:
 -- categories are represented as tags. This is perfectly possible: categories
 -- only have an additional restriction that a page can only have one category
 -- (instead of multiple tags).
 --
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, Arrows #-}
 module Hakyll.Web.Tags
     ( Tags (..)
     , readTagsWith
     , readTags
-    , readCategories
+    , readCategory
     , renderTagCloud
+    , renderTagsField
+    , renderCategoryField
     ) where
 
+import Prelude hiding (id)
+import Control.Category (id)
 import Control.Applicative ((<$>))
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.List (intersperse)
-import Control.Arrow (second, (&&&))
+import Control.Arrow (arr, (&&&), (>>>), (***), (<<^), returnA)
+import Data.Maybe (catMaybes, fromMaybe)
+import Data.Monoid (mconcat)
 
 import Data.Typeable (Typeable)
 import Data.Binary (Binary, get, put)
-import Data.Monoid (mconcat)
 import Text.Blaze.Renderer.String (renderHtml)
-import Text.Blaze (Html, (!), toHtml, toValue)
+import Text.Blaze ((!), toHtml, toValue)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
@@ -52,6 +57,8 @@ import Hakyll.Web.Page
 import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Util.String
 import Hakyll.Core.Writable
+import Hakyll.Core.Identifier
+import Hakyll.Core.Compiler
 
 -- | Data about tags
 --
@@ -65,6 +72,16 @@ instance Binary a => Binary (Tags a) where
 
 instance Writable (Tags a) where
     write _ _ = return ()
+
+-- | Obtain tags from a page
+--
+getTags :: Page a -> [String]
+getTags = map trim . splitAll "," . getField "tags"
+
+-- | Obtain categories from a page
+--
+getCategory :: Page a -> [String]
+getCategory = return . getField "category"
 
 -- | Higher-level function to read tags
 --
@@ -83,42 +100,80 @@ readTagsWith f pages = Tags
 -- | Read a tagmap using the @tags@ metadata field
 --
 readTags :: [Page a] -> Tags a
-readTags = readTagsWith $ map trim . splitAll "," . getField "tags"
+readTags = readTagsWith getTags
 
 -- | Read a tagmap using the @category@ metadata field
 --
-readCategories :: [Page a] -> Tags a
-readCategories = readTagsWith $ return . getField "category"
+readCategory :: [Page a] -> Tags a
+readCategory = readTagsWith getCategory
 
 -- | Render a tag cloud in HTML
 --
-renderTagCloud :: (String -> String)  -- ^ Function to produce an url for a tag
-               -> Double              -- ^ Smallest font size, in percent
-               -> Double              -- ^ Biggest font size, in percent
-               -> Tags a              -- ^ Tags structure to render
-               -> String              -- ^ Resulting HTML
-renderTagCloud urlFunction minSize maxSize (Tags tags) = renderHtml $
-    mconcat $ intersperse " " $ map (uncurry renderTag) withCount
+renderTagCloud :: (String -> Identifier)    -- ^ Produce a link for a tag
+               -> Double                    -- ^ Smallest font size, in percent
+               -> Double                    -- ^ Biggest font size, in percent
+               -> Compiler (Tags a) String  -- ^ Tag cloud renderer
+renderTagCloud makeUrl minSize maxSize = proc (Tags tags) -> do
+    -- In tags' we create a list: [((tag, route), count)]
+    tags' <- mapCompiler ((id &&& (getRouteFor <<^ makeUrl)) *** arr length)
+                -< M.toList tags
+
+    let -- Absolute frequencies of the pages
+        freqs = map snd tags'
+
+        -- Find out the relative count of a tag: on a scale from 0 to 1
+        relative count = (fromIntegral count - min') / (1 + max' - min')
+
+        -- Show the relative size of one 'count' in percent
+        size count =
+            let size' = floor $ minSize + relative count * (maxSize - minSize)
+            in show (size' :: Int) ++ "%"
+
+        -- The minimum and maximum count found, as doubles
+        (min', max')
+            | null freqs = (0, 1)
+            | otherwise = (minimum &&& maximum) $ map fromIntegral freqs
+
+        -- Create a link for one item
+        makeLink ((tag, url), count) =
+            H.a ! A.style (toValue $ "font-size: " ++ size count)
+                ! A.href (toValue $ fromMaybe "/" url)
+                $ toHtml tag
+
+    -- Render and return the HTML
+    returnA -< renderHtml $ mconcat $ intersperse " " $ map makeLink tags'
+
+-- | Render tags with links
+--
+renderTagsFieldWith :: (Page a -> [String])        -- ^ Function to get the tags
+                    -> String                      -- ^ Destination key
+                    -> (String -> Identifier)      -- ^ Create a link for a tag
+                    -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
+renderTagsFieldWith tags destination makeUrl =
+    id &&& arr tags >>> setFieldA destination renderTags
   where
-    -- Tags composed with their count
-    withCount = map (second $ fromIntegral . length) $ M.toList tags
+    -- Compiler creating a comma-separated HTML string for a list of tags
+    renderTags :: Compiler [String] String
+    renderTags =   arr (map $ id &&& makeUrl)
+               >>> mapCompiler (id *** getRouteFor)
+               >>> arr (map $ uncurry renderLink)
+               >>> arr (renderHtml . mconcat . intersperse ", " . catMaybes)
 
-    -- Render one tag, given it's count
-    renderTag :: String -> Int -> Html
-    renderTag tag count =
-        H.a ! A.style (toValue $ "font-size: " ++ size count)
-            ! A.href (toValue $ urlFunction tag)
-            $ toHtml tag
+    -- Render one tag link
+    renderLink _   Nothing         = Nothing
+    renderLink tag (Just filePath) = Just $
+        H.a ! A.href (toValue $ toUrl filePath) $ toHtml tag
 
-    -- Show the relative size of one 'count' in percent
-    size count =
-        let size' = floor $ minSize + relative count * (maxSize - minSize)
-        in show (size' :: Int) ++ "%"
+-- | Render tags with links
+--
+renderTagsField :: String                      -- ^ Destination key
+                -> (String -> Identifier)      -- ^ Create a link for a tag
+                -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
+renderTagsField = renderTagsFieldWith getTags
 
-    -- Find out the relative count of a tag: on a scale from 0 to 1
-    relative count = (fromIntegral count - minCount) / (1 + maxCount - minCount)
-
-    -- The minimum and maximum count found, as doubles
-    (minCount, maxCount)
-        | null withCount = (0, 1)
-        | otherwise = (minimum &&& maximum) $ map (fromIntegral . snd) withCount
+-- | Render the category in a link
+--
+renderCategoryField :: String                      -- ^ Destination key
+                    -> (String -> Identifier)      -- ^ Create a category link
+                    -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
+renderCategoryField = renderTagsFieldWith getCategory
