@@ -3,9 +3,12 @@
 module Hakyll.Web
     ( defaultPageRead
     , defaultTemplateRead
+    , defaultHamletTemplateRead
+    , defaultHamletTemplateReadWith
     , defaultRelativizeUrls
     , defaultCopyFile
     , defaultCompressCss
+    , defaultApplyTemplate
     ) where
 
 import Prelude hiding (id)
@@ -52,3 +55,7 @@ defaultCopyFile = getIdentifier >>^ CopyFile . toFilePath
 
 defaultCompressCss :: Compiler () String
 defaultCompressCss = getResourceString >>^ compressCss
+
+defaultApplyTemplate :: Identifier                            -- ^ Template
+                     -> Compiler (Page String) (Page String)  -- ^ Compiler
+defaultApplyTemplate identifier = require identifier (flip applyTemplate)
