@@ -12,7 +12,7 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 import Hakyll.Core.Configuration
 import Hakyll.Core.Run
 import Hakyll.Core.Rules
-import Hakyll.Network.Server
+import Hakyll.Web.Preview.Server
 
 -- | This usualy is the function with which the user runs the hakyll compiler
 --

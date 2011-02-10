@@ -1,7 +1,7 @@
 -- | Implements a basic static file server for previewing options
 --
 {-# LANGUAGE OverloadedStrings #-}
-module Hakyll.Network.Server
+module Hakyll.Web.Preview.Server
     ( staticServer
     ) where
 
@@ -12,7 +12,7 @@ import System.FilePath ((</>))
 import System.Directory (doesFileExist)
 
 import qualified Data.ByteString as SB
-import Snap.Util.FileServe (fileServeSingle)
+import Snap.Util.FileServe (serveFile)
 import Snap.Types (Snap, rqURI, getRequest, writeBS)
 import Snap.Http.Server ( httpServe, setAccessLog, setErrorLog, addListen
                         , ConfigListen (..), emptyConfig
@@ -54,7 +54,7 @@ static directory preServe = do
         -- Found, serve
         Just f  -> do
             liftIO $ preServe f
-            fileServeSingle f
+            serveFile f
 
 -- | Main method, runs a static server in the given directory
 --
