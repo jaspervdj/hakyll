@@ -8,7 +8,7 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 
 import Hakyll.Web.Template.Internal
-import Hakyll.Web.Template.Read.Hakyll (readTemplate)
+import Hakyll.Web.Template.Read
 import Hakyll.Web.Page
 
 -- | Substitutes @$identifiers@ in the given @Template@ by values from the given

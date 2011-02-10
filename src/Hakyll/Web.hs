@@ -20,8 +20,7 @@ import Hakyll.Core.Identifier
 import Hakyll.Web.Page
 import Hakyll.Web.Pandoc
 import Hakyll.Web.Template
-import Hakyll.Web.Template.Read.Hakyll
-import Hakyll.Web.Template.Read.Hamlet
+import Hakyll.Web.Template.Read
 import Hakyll.Web.RelativizeUrls
 import Hakyll.Web.Util.String
 import Hakyll.Web.CompressCss

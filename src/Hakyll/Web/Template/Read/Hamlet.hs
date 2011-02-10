@@ -6,12 +6,8 @@ module Hakyll.Web.Template.Read.Hamlet
     , readHamletTemplateWith
     ) where
 
-import Control.Monad.Trans (liftIO)
-import System.FilePath (takeExtension)
-
 import Text.Hamlet (HamletSettings (..), defaultHamletSettings)
 import Text.Hamlet.RT
-import Control.Failure
 
 import Hakyll.Web.Template.Internal
 

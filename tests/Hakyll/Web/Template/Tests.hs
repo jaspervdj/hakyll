@@ -11,8 +11,7 @@ import qualified Data.Map as M
 
 import Hakyll.Web.Page
 import Hakyll.Web.Template
-import Hakyll.Web.Template.Read.Hakyll
-import Hakyll.Web.Template.Read.Hamlet
+import Hakyll.Web.Template.Read
 import TestSuite.Util
 
 tests :: [Test]

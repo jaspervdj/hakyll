@@ -10,6 +10,7 @@ module Hakyll
     , module Hakyll.Core.Util.Arrow
     , module Hakyll.Core.Util.File
     , module Hakyll.Core.Writable
+    , module Hakyll.Main
     , module Hakyll.Web
     , module Hakyll.Web.CompressCss
     , module Hakyll.Web.Feed
@@ -33,6 +34,7 @@ import Hakyll.Core.Rules
 import Hakyll.Core.Util.Arrow
 import Hakyll.Core.Util.File
 import Hakyll.Core.Writable
+import Hakyll.Main
 import Hakyll.Web
 import Hakyll.Web.CompressCss
 import Hakyll.Web.Feed

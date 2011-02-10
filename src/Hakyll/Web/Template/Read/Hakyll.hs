@@ -6,7 +6,6 @@ module Hakyll.Web.Template.Read.Hakyll
 
 import Data.List (isPrefixOf)
 import Data.Char (isAlphaNum)
-import Data.Maybe (fromMaybe)
 
 import Hakyll.Web.Template.Internal
 
