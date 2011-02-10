@@ -7,6 +7,7 @@ module Hakyll.Core.Util.File
     , isFileInternal
     ) where
 
+import Control.Applicative ((<$>))
 import System.Time (ClockTime)
 import Control.Monad (forM, filterM)
 import Data.List (isPrefixOf)
@@ -27,22 +28,24 @@ makeDirectories :: FilePath -> IO ()
 makeDirectories = createDirectoryIfMissing True . takeDirectory
 
 -- | Get all contents of a directory. Note that files starting with a dot (.)
---   will be ignored.
+-- will be ignored.
 --
-getRecursiveContents :: FilePath -> IO [FilePath]
-getRecursiveContents topdir = do
+getRecursiveContents :: Bool           -- ^ Include directories?
+                     -> FilePath       -- ^ Directory to search
+                     -> IO [FilePath]  -- ^ List of files found
+getRecursiveContents includeDirs topdir = do
     topdirExists <- doesDirectoryExist topdir
-    if topdirExists
-        then do names <- getDirectoryContents topdir
-                let properNames = filter isProper names
-                paths <- forM properNames $ \name -> do
-                    let path = topdir </> name
-                    isDirectory <- doesDirectoryExist path
-                    if isDirectory
-                        then getRecursiveContents path
-                        else return [normalise path]
-                return (concat paths)
-        else return []
+    if not topdirExists
+        then return []
+        else do
+            names <- filter isProper <$> getDirectoryContents topdir
+            paths <- forM names $ \name -> do
+                let path = normalise $ topdir </> name
+                isDirectory <- doesDirectoryExist path
+                if isDirectory then getRecursiveContents includeDirs path
+                               else return [path]
+            return $ if includeDirs then topdir : concat paths
+                                    else concat paths
   where
     isProper = not . (== ".") . take 1
 

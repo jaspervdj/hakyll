@@ -16,7 +16,7 @@ import Hakyll.Core.Util.File
 --
 fileResourceProvider :: IO ResourceProvider
 fileResourceProvider = do
-    list <- map parseIdentifier <$> getRecursiveContents "."
+    list <- map parseIdentifier <$> getRecursiveContents False "."
     return ResourceProvider
         { resourceList           = list
         , resourceString         = readFile . toFilePath
