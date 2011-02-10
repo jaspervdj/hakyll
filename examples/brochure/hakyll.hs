@@ -1,13 +1,18 @@
-import Text.Hakyll (hakyll)
-import Text.Hakyll.File (directory)
-import Text.Hakyll.Render (css, static, renderChain)
-import Text.Hakyll.CreateContext (createPage)
+{-# LANGUAGE OverloadedStrings #-}
+import Control.Arrow ((>>>))
+import Control.Monad (forM_)
 
-main = hakyll "http://example.com" $ do
-    directory css "css"
-    render "about.rst"
-    render "index.markdown"
-    render "code.lhs"
-  where
-    render = renderChain ["templates/default.html"]
-           . createPage
+import Hakyll
+
+main :: IO ()
+main = hakyll $ do
+    route   "css/*" idRoute
+    compile "css/*" defaultCompressCss
+
+    compile "templates/*" defaultTemplateRead
+
+    forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
+        route   page $ setExtension "html"
+        compile page $ defaultPageRead
+            >>> require "templates/default.html" (flip applyTemplate)
+            >>> defaultRelativizeUrls
