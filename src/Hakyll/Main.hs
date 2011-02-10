@@ -5,6 +5,7 @@ module Hakyll.Main
     , hakyllWith
     ) where
 
+import Control.Concurrent (forkIO)
 import Control.Monad (when)
 import System.Environment (getProgName, getArgs)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
@@ -12,6 +13,7 @@ import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 import Hakyll.Core.Configuration
 import Hakyll.Core.Run
 import Hakyll.Core.Rules
+import Hakyll.Web.Preview.INotify
 import Hakyll.Web.Preview.Server
 
 -- | This usualy is the function with which the user runs the hakyll compiler
@@ -29,8 +31,8 @@ hakyllWith configuration rules = do
         ["build"]      -> build configuration rules
         ["clean"]      -> clean configuration
         ["help"]       -> help
-        ["preview"]    -> putStrLn "Not implemented"
-        ["preview", p] -> putStrLn "Not implemented"
+        ["preview"]    -> preview configuration rules 8000
+        ["preview", p] -> preview configuration rules (read p)
         ["rebuild"]    -> rebuild configuration rules
         ["server"]     -> server configuration 8000
         ["server", p]  -> server configuration (read p)
@@ -73,6 +75,16 @@ help = do
         , name ++ " rebuild         Clean up and build again"
         , name ++ " server [port]   Run a local test server"
         ]
+
+-- | Preview the site
+--
+preview :: HakyllConfiguration -> Rules -> Int -> IO ()
+preview configuration rules port = do
+    -- Fork a thread polling for changes
+    _ <- forkIO $ previewPoll configuration "." $ build configuration rules
+    
+    -- Run the server in the main thread
+    server configuration port
 
 -- | Rebuild the site
 --

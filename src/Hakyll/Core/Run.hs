@@ -25,7 +25,6 @@ import Hakyll.Core.ResourceProvider
 import Hakyll.Core.ResourceProvider.FileResourceProvider
 import Hakyll.Core.Rules
 import Hakyll.Core.DirectedGraph
-import Hakyll.Core.DirectedGraph.Dot
 import Hakyll.Core.DirectedGraph.DependencySolver
 import Hakyll.Core.Writable
 import Hakyll.Core.Store
@@ -113,8 +112,6 @@ addNewCompilers oldCompilers newCompilers = Runtime $ do
     -- Find the old graph and append the new graph to it. This forms the
     -- complete graph
     completeGraph <- mappend currentGraph . hakyllGraph <$> get
-
-    liftIO $ writeDot "dependencies.dot" show completeGraph
 
     -- Check which items are up-to-date. This only needs to happen for the new
     -- compilers
