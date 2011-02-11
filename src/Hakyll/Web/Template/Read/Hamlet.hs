@@ -35,7 +35,7 @@ fromHamletRT (HamletRT sd) = Template $ map fromSimpleDoc sd
   where
     fromSimpleDoc :: SimpleDoc -> TemplateElement
     fromSimpleDoc (SDRaw chunk) = Chunk chunk
-    fromSimpleDoc (SDVar [var]) = Identifier var
+    fromSimpleDoc (SDVar [var]) = Key var
     fromSimpleDoc (SDVar _) = error
         "Hakyll.Web.Template.Read.Hamlet.fromHamletRT: \
         \Hakyll does not support '.' in identifier names when using \

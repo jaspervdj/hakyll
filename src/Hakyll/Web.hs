@@ -3,8 +3,7 @@
 module Hakyll.Web
     ( defaultPageRead
     , defaultTemplateRead
-    , defaultHamletTemplateRead
-    , defaultHamletTemplateReadWith
+    , defaultTemplateReadWith
     , defaultRelativizeUrls
     , defaultCopyFile
     , defaultCompressCss
@@ -15,7 +14,7 @@ import Prelude hiding (id)
 import Control.Category (id)
 import Control.Arrow (arr, (>>>), (>>^), (&&&))
 
-import Text.Hamlet (HamletSettings, defaultHamletSettings)
+import Text.Hamlet (HamletSettings)
 
 import Hakyll.Core.Compiler
 import Hakyll.Core.Writable
@@ -23,7 +22,6 @@ import Hakyll.Core.Identifier
 import Hakyll.Web.Page
 import Hakyll.Web.Pandoc
 import Hakyll.Web.Template
-import Hakyll.Web.Template.Read
 import Hakyll.Web.RelativizeUrls
 import Hakyll.Web.Util.String
 import Hakyll.Web.CompressCss
@@ -39,16 +37,11 @@ defaultRelativizeUrls = getRoute &&& id >>^ uncurry relativize
     relativize (Just r) = fmap (relativizeUrls $ toSiteRoot r)
 
 defaultTemplateRead :: Compiler () Template
-defaultTemplateRead = cached "Hakyll.Web.defaultTemplateRead" $
-    getResourceString >>^ readTemplate
+defaultTemplateRead = cached "Hakyll.Web.defaultTemplateRead" $ templateRead
 
-defaultHamletTemplateRead :: Compiler () Template
-defaultHamletTemplateRead = defaultHamletTemplateReadWith defaultHamletSettings
-
-defaultHamletTemplateReadWith :: HamletSettings -> Compiler () Template
-defaultHamletTemplateReadWith settings =
-    cached "Hakyll.Web.defaultHamletTemplateReadWith" $
-        getResourceString >>^ readHamletTemplateWith settings
+defaultTemplateReadWith :: HamletSettings -> Compiler () Template
+defaultTemplateReadWith settings = cached "Hakyll.Web.defaultTemplateReadWith" $
+    templateReadWith settings
 
 defaultCopyFile :: Compiler () CopyFile
 defaultCopyFile = getIdentifier >>^ CopyFile . toFilePath
