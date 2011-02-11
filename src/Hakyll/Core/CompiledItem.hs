@@ -1,6 +1,11 @@
 -- | A module containing a box datatype representing a compiled item. This
--- item can be of any type, given that a few restrictions hold (e.g. we want
--- a 'Typeable' instance to perform type-safe casts).
+-- item can be of any type, given that a few restrictions hold:
+--
+-- * we need a 'Typeable' instance to perform type-safe casts;
+--
+-- * we need a 'Binary' instance so we can serialize these items to the cache;
+--
+-- * we need a 'Writable' instance so the results can be saved.
 --
 {-# LANGUAGE ExistentialQuantification #-}
 module Hakyll.Core.CompiledItem

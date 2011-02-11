@@ -38,7 +38,7 @@ import Hakyll.Core.Writable
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store
-import Hakyll.Core.Rules
+import Hakyll.Core.Rules.Internal
 import Hakyll.Core.Routes
 
 -- | Run a compiler, yielding the resulting target and it's dependencies. This

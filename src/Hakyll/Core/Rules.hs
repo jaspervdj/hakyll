@@ -1,13 +1,19 @@
--- | This module provides a monadic DSL in which the user can specify the
--- different rules used to run the compilers
+-- | This module provides a declarative DSL in which the user can specify the
+-- different rules used to run the compilers.
+--
+-- The convention is to just list all items in the 'RulesM' monad, routes and
+-- compilation rules.
+--
+-- A typical usage example would be:
+--
+-- > main = hakyll $ do
+-- >     route   "posts/*" (setExtension "html")
+-- >     compile "posts/*" someCompiler
 --
 {-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
 module Hakyll.Core.Rules
-    ( CompileRule (..)
-    , RuleSet (..)
-    , RulesM
+    ( RulesM
     , Rules
-    , runRules
     , compile
     , create
     , route
@@ -15,12 +21,12 @@ module Hakyll.Core.Rules
     , metaCompileWith
     ) where
 
-import Control.Applicative (Applicative, (<$>))
-import Control.Monad.Writer (WriterT, execWriterT, tell)
-import Control.Monad.Reader (ReaderT, runReaderT, ask)
+import Control.Applicative ((<$>))
+import Control.Monad.Writer (tell)
+import Control.Monad.Reader (ask)
 import Control.Arrow (second, (>>>), arr, (>>^))
-import Control.Monad.State (State, evalState, get, put)
-import Data.Monoid (Monoid, mempty, mappend)
+import Control.Monad.State (get, put)
+import Data.Monoid (mempty)
 
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
@@ -32,53 +38,7 @@ import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Routes
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
-
--- | Output of a compiler rule
---
--- * The compiler will produce a simple item. This is the most common case.
---
--- * The compiler will produce more compilers. These new compilers need to be
---   added to the runtime if possible, since other items might depend upon them.
---
-data CompileRule = CompileRule CompiledItem
-                 | MetaCompileRule [(Identifier, Compiler () CompileRule)]
-
--- | A collection of rules for the compilation process
---
-data RuleSet = RuleSet
-    { rulesRoutes    :: Routes
-    , rulesCompilers :: [(Identifier, Compiler () CompileRule)]
-    }
-
-instance Monoid RuleSet where
-    mempty = RuleSet mempty mempty
-    mappend (RuleSet r1 c1) (RuleSet r2 c2) =
-        RuleSet (mappend r1 r2) (mappend c1 c2)
-
--- | Rule state
---
-data RuleState = RuleState
-    { rulesMetaCompilerIndex :: Int
-    } deriving (Show)
-
--- | The monad used to compose rules
---
-newtype RulesM a = RulesM
-    { unRulesM :: ReaderT ResourceProvider (WriterT RuleSet (State RuleState)) a
-    } deriving (Monad, Functor, Applicative)
-
--- | Simplification of the RulesM type; usually, it will not return any
--- result.
---
-type Rules = RulesM ()
-
--- | Run a Rules monad, resulting in a 'RuleSet'
---
-runRules :: Rules -> ResourceProvider -> RuleSet
-runRules rules provider =
-    evalState (execWriterT $ runReaderT (unRulesM rules) provider) state
-  where
-    state = RuleState {rulesMetaCompilerIndex = 0}
+import Hakyll.Core.Rules.Internal
 
 -- | Add a route
 --
@@ -95,10 +55,11 @@ tellCompilers compilers = RulesM $ tell $ RuleSet mempty $
   where
     boxCompiler = (>>> arr compiledItem >>> arr CompileRule)
 
--- | Add a compilation rule
+-- | Add a compilation rule to the rules.
 --
 -- This instructs all resources matching the given pattern to be compiled using
--- the given compiler
+-- the given compiler. When no resources match the given pattern, nothing will
+-- happen. In this case, you might want to have a look at 'create'.
 --
 compile :: (Binary a, Typeable a, Writable a)
         => Pattern -> Compiler () a -> Rules
@@ -108,18 +69,32 @@ compile pattern compiler = RulesM $ do
 
 -- | Add a compilation rule
 --
--- This sets a compiler for the given identifier
+-- This sets a compiler for the given identifier. No resource is needed, since
+-- we are creating the item from scratch.
 --
 create :: (Binary a, Typeable a, Writable a)
        => Identifier -> Compiler () a -> Rules
 create identifier compiler = tellCompilers [(identifier, compiler)]
 
--- | Add a route
+-- | Add a route.
+--
+-- This adds a route for all items matching the given pattern.
 --
 route :: Pattern -> Routes -> Rules
 route pattern route' = tellRoute $ ifMatch pattern route'
 
--- | Add a compiler that produces other compilers over time
+-- | Apart from regular compilers, one is also able to specify metacompilers.
+-- Metacompilers are a special class of compilers: they are compilers which
+-- produce other compilers.
+--
+-- And indeed, we can see that the first argument to 'metaCompile' is a
+-- 'Compiler' which produces a list of ('Identifier', 'Compiler') pairs. The
+-- idea is simple: 'metaCompile' produces a list of compilers, and the
+-- corresponding identifiers.
+--
+-- For simple hakyll systems, it is no need for this construction. More
+-- formally, it is only needed when the content of one or more items determines
+-- which items must be rendered.
 --
 metaCompile :: (Binary a, Typeable a, Writable a)
             => Compiler () [(Identifier, Compiler () a)]   

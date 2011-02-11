@@ -89,3 +89,4 @@ library
                     Hakyll.Web.Page.Internal
                     Hakyll.Core.Compiler.Internal
                     Hakyll.Core.DirectedGraph.Internal
+                    Hakyll.Core.Rules.Internal
