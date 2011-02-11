@@ -2,9 +2,28 @@
 -- This is where the 'Routes' type comes in; it determines where a certain
 -- target should be written.
 --
--- When a route is applied (using 'runRoute'), it either returns a 'Just'
--- 'FilePath' (meaning the target should be written to that file path), or
--- 'Nothing' (meaning this target should not be written anywhere).
+-- Suppose we have an item @foo\/bar.markdown@. We can render this to
+-- @foo\/bar.html@ using:
+--
+-- > route "foo/bar.markdown" (setExtension ".html")
+--
+-- If we do not want to change the extension, we can use 'idRoute', the simplest
+-- route available:
+--
+-- > route "foo/bar.markdown" idRoute
+--
+-- That will route @foo\/bar.markdown@ to @foo\/bar.markdown@.
+--
+-- Note that the extension says nothing about the content! If you set the
+-- extension to @.html@, it is your own responsibility to ensure that the
+-- content is indeed HTML.
+--
+-- Finally, some special cases:
+--
+-- * If there is no route for an item, this item will not be routed, so it will
+--   not appear in your site directory.
+--
+-- * If an item matches multiple routes, the first rule will be chosen.
 --
 module Hakyll.Core.Routes
     ( Routes
