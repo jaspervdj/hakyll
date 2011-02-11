@@ -12,6 +12,7 @@ module Hakyll.Core.Routes
     , idRoute
     , setExtension
     , ifMatch
+    , customRoute
     ) where
 
 import Data.Monoid (Monoid, mempty, mappend)
@@ -69,3 +70,8 @@ ifMatch :: Pattern -> Routes -> Routes
 ifMatch pattern (Routes route) = Routes $ \id' ->
     if doesMatch pattern id' then route id'
                              else Nothing
+
+-- | Create a custom route. This should almost always be used with 'ifMatch'.
+--
+customRoute :: (Identifier -> FilePath) -> Routes
+customRoute f = Routes $ Just . f
