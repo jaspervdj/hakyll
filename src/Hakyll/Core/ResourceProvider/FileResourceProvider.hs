@@ -16,9 +16,12 @@ import Hakyll.Core.Util.File
 --
 fileResourceProvider :: IO ResourceProvider
 fileResourceProvider = do
+    -- Retrieve a list of identifiers
     list <- map parseIdentifier <$> getRecursiveContents False "."
+
+    -- Construct a resource provider
     return ResourceProvider
-        { resourceList           = list
-        , resourceString         = readFile . toFilePath
-        , resourceLazyByteString = LB.readFile . toFilePath
+        { resourceList           = map Resource list
+        , resourceString         = readFile . toFilePath . unResource
+        , resourceLazyByteString = LB.readFile . toFilePath . unResource
         }

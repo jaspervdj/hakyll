@@ -65,9 +65,9 @@ tellCompilers compilers = RulesM $ tell $ RuleSet mempty $
 compile :: (Binary a, Typeable a, Writable a)
         => Pattern -> Compiler Resource a -> Rules
 compile pattern compiler = RulesM $ do
-    identifiers <- matches pattern . resourceList <$> ask
-    unRulesM $ tellCompilers $ zip identifiers $ repeat $
-        constA Resource >>> compiler
+    identifiers <- matches pattern . map unResource . resourceList <$> ask
+    unRulesM $ tellCompilers $ flip map identifiers $ \identifier ->
+        (identifier, constA (Resource identifier) >>> compiler)
 
 -- | Add a compilation rule
 --

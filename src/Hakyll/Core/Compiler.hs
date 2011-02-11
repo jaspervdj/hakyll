@@ -88,11 +88,9 @@ getRouteFor = fromJob $ \identifier -> CompilerM $ do
 -- | Get the resource we are compiling as a string
 --
 getResourceString :: Compiler Resource String
-getResourceString = getIdentifier >>> getResourceString'
-  where
-    getResourceString' = fromJob $ \id' -> CompilerM $ do
-        provider <- compilerResourceProvider <$> ask
-        liftIO $ resourceString provider id'
+getResourceString = fromJob $ \resource -> CompilerM $ do
+    provider <- compilerResourceProvider <$> ask
+    liftIO $ resourceString provider resource
 
 -- | Auxiliary: get a dependency
 --
@@ -141,7 +139,7 @@ requireAll_ :: (Binary a, Typeable a, Writable a)
             -> Compiler b [a]
 requireAll_ pattern = fromDependencies getDeps >>> fromJob requireAll_'
   where
-    getDeps = matches pattern . resourceList
+    getDeps = matches pattern . map unResource . resourceList
     requireAll_' = const $ CompilerM $ do
         deps <- getDeps . compilerResourceProvider <$> ask
         mapM (unCompilerM . getDependency) deps
@@ -174,7 +172,7 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
     liftIO $ putStrLn $
         show identifier ++ ": " ++ if modified then "MODIFIED" else "OK"
     if modified
-        then do v <- unCompilerM $ j Resource
+        then do v <- unCompilerM $ j $ Resource identifier
                 liftIO $ storeSet store name identifier v
                 return v
         else do v <- liftIO $ storeGet store name identifier

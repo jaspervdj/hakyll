@@ -82,8 +82,9 @@ modified :: ResourceProvider     -- ^ Resource provider
          -> [Identifier]         -- ^ Identifiers to check
          -> IO (Set Identifier)  -- ^ Modified resources
 modified provider store ids = fmap S.fromList $ flip filterM ids $ \id' ->
-    if resourceExists provider id' then resourceModified provider id' store
-                                   else return False
+    if resourceExists provider id'
+        then resourceModified provider (Resource id') store
+        else return False
 
 -- | Add a number of compilers and continue using these compilers
 --
