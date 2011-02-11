@@ -39,6 +39,7 @@ import Hakyll.Core.Routes
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
 import Hakyll.Core.Rules.Internal
+import Hakyll.Core.Util.Arrow
 
 -- | Add a route
 --
@@ -62,10 +63,11 @@ tellCompilers compilers = RulesM $ tell $ RuleSet mempty $
 -- happen. In this case, you might want to have a look at 'create'.
 --
 compile :: (Binary a, Typeable a, Writable a)
-        => Pattern -> Compiler () a -> Rules
+        => Pattern -> Compiler Resource a -> Rules
 compile pattern compiler = RulesM $ do
     identifiers <- matches pattern . resourceList <$> ask
-    unRulesM $ tellCompilers $ zip identifiers (repeat compiler)
+    unRulesM $ tellCompilers $ zip identifiers $ repeat $
+        constA Resource >>> compiler
 
 -- | Add a compilation rule
 --

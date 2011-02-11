@@ -3,7 +3,8 @@
 -- the concrete instance.
 --
 module Hakyll.Core.ResourceProvider
-    ( ResourceProvider (..)
+    ( Resource (..)
+    , ResourceProvider (..)
     , resourceExists
     , resourceDigest
     , resourceModified
@@ -18,6 +19,10 @@ import OpenSSL.Digest (MessageDigest (MD5))
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Store
+
+-- | A resource
+--
+data Resource = Resource
 
 -- | A value responsible for retrieving and listing resources
 --

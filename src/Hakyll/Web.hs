@@ -19,6 +19,7 @@ import Text.Hamlet (HamletSettings)
 import Hakyll.Core.Compiler
 import Hakyll.Core.Writable
 import Hakyll.Core.Identifier
+import Hakyll.Core.ResourceProvider
 import Hakyll.Web.Page
 import Hakyll.Web.Pandoc
 import Hakyll.Web.Template
@@ -26,7 +27,7 @@ import Hakyll.Web.RelativizeUrls
 import Hakyll.Web.Util.String
 import Hakyll.Web.CompressCss
 
-defaultPageRead :: Compiler () (Page String)
+defaultPageRead :: Compiler Resource (Page String)
 defaultPageRead = cached "Hakyll.Web.defaultPageRead" $
     pageRead >>> addDefaultFields >>> arr applySelf >>> pageRenderPandoc
 
@@ -36,17 +37,17 @@ defaultRelativizeUrls = getRoute &&& id >>^ uncurry relativize
     relativize Nothing = id
     relativize (Just r) = fmap (relativizeUrls $ toSiteRoot r)
 
-defaultTemplateRead :: Compiler () Template
+defaultTemplateRead :: Compiler Resource Template
 defaultTemplateRead = cached "Hakyll.Web.defaultTemplateRead" $ templateRead
 
-defaultTemplateReadWith :: HamletSettings -> Compiler () Template
+defaultTemplateReadWith :: HamletSettings -> Compiler Resource Template
 defaultTemplateReadWith settings = cached "Hakyll.Web.defaultTemplateReadWith" $
     templateReadWith settings
 
-defaultCopyFile :: Compiler () CopyFile
+defaultCopyFile :: Compiler Resource CopyFile
 defaultCopyFile = getIdentifier >>^ CopyFile . toFilePath
 
-defaultCompressCss :: Compiler () String
+defaultCompressCss :: Compiler Resource String
 defaultCompressCss = getResourceString >>^ compressCss
 
 defaultApplyTemplate :: Identifier                            -- ^ Template

@@ -87,7 +87,7 @@ getRouteFor = fromJob $ \identifier -> CompilerM $ do
 
 -- | Get the resource we are compiling as a string
 --
-getResourceString :: Compiler a String
+getResourceString :: Compiler Resource String
 getResourceString = getIdentifier >>> getResourceString'
   where
     getResourceString' = fromJob $ \id' -> CompilerM $ do
@@ -165,8 +165,8 @@ requireAllA pattern = (id &&& requireAll_ pattern >>>)
 
 cached :: (Binary a, Typeable a, Writable a)
        => String
-       -> Compiler () a
-       -> Compiler () a
+       -> Compiler Resource a
+       -> Compiler Resource a
 cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
     identifier <- compilerIdentifier <$> ask
     store <- compilerStore <$> ask
@@ -174,7 +174,7 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
     liftIO $ putStrLn $
         show identifier ++ ": " ++ if modified then "MODIFIED" else "OK"
     if modified
-        then do v <- unCompilerM $ j ()
+        then do v <- unCompilerM $ j Resource
                 liftIO $ storeSet store name identifier v
                 return v
         else do v <- liftIO $ storeGet store name identifier

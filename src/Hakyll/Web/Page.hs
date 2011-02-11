@@ -68,6 +68,7 @@ import Data.Ord (comparing)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
+import Hakyll.Core.ResourceProvider
 import Hakyll.Web.Page.Internal
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Page.Metadata
@@ -90,7 +91,7 @@ toMap (Page m b) = M.insert "body" b m
 
 -- | Read a page (do not render it)
 --
-pageRead :: Compiler a (Page String)
+pageRead :: Compiler Resource (Page String)
 pageRead = getResourceString >>^ readPage
 
 -- | Add a number of default metadata fields to a page. These fields include:
