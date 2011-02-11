@@ -6,9 +6,11 @@ module Hakyll.Core.Run
     ) where
 
 import Prelude hiding (reverse)
-import Control.Applicative
-import Control.Monad.Reader
-import Control.Monad.State
+import Control.Monad (filterM)
+import Control.Monad.Trans (liftIO)
+import Control.Applicative (Applicative, (<$>))
+import Control.Monad.Reader (ReaderT, runReaderT, ask)
+import Control.Monad.State (StateT, evalStateT, get, modify)
 import Control.Arrow ((&&&))
 import qualified Data.Map as M
 import Data.Monoid (mempty, mappend)

@@ -16,10 +16,11 @@ module Hakyll.Core.Rules
     ) where
 
 import Control.Applicative (Applicative, (<$>))
-import Control.Monad.Writer
-import Control.Monad.Reader
+import Control.Monad.Writer (WriterT, execWriterT, tell)
+import Control.Monad.Reader (ReaderT, runReaderT, ask)
 import Control.Arrow (second, (>>>), arr, (>>^))
-import Control.Monad.State
+import Control.Monad.State (State, evalState, get, put)
+import Data.Monoid (Monoid, mempty, mappend)
 
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
