@@ -1,3 +1,46 @@
+-- | This module provides means for reading and applying 'Template's.
+--
+-- Templates are tools to convert data (pages) into a string. They are
+-- perfectly suited for laying out your site.
+--
+-- Let's look at an example template:
+--
+-- > <html>
+-- >     <head>
+-- >         <title>My crazy homepage - $title$</title>
+-- >     </head>
+-- >     <body>
+-- >         <div id="header">
+-- >             <h1>My crazy homepage - $title$</h1>
+-- >         </div>
+-- >         <div id="content">
+-- >             $body$
+-- >         </div>
+-- >         <div id="footer">
+-- >             By reading this you agree that I now own your soul
+-- >         </div>
+-- >     </body>
+-- > </html>
+--
+-- We can use this template to render a 'Page' which has a body and a @$title$@
+-- metadata field.
+--
+-- As you can see, the format is very simple -- @$key$@ is used to render the
+-- @$key$@ field from the page, everything else is literally copied. If you want
+-- to literally insert @\"$key$\"@ into your page (for example, when you're
+-- writing a Hakyll tutorial) you can use
+--
+-- > <p>
+-- >     A literal $$key$$.
+-- > </p>
+--
+-- Because of it's simplicity, these templates can be used for more than HTML:
+-- you could make, for example, CSS or JS templates as well.
+--
+-- In addition to the native format, Hakyll also supports hamlet templates. For
+-- more information on hamlet templates, please refer to:
+-- <http://hackage.haskell.org/package/hamlet>.
+--
 module Hakyll.Web.Template
     ( Template
     , applyTemplate
