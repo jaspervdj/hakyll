@@ -14,8 +14,8 @@ module Hakyll.Web.Pandoc
     , pageRenderPandocWith
 
       -- * Default options
-    , defaultParserState
-    , defaultWriterOptions
+    , defaultHakyllParserState
+    , defaultHakyllWriterOptions
     ) where
 
 import Prelude hiding (id)
@@ -23,8 +23,7 @@ import Control.Applicative ((<$>))
 import Control.Arrow ((>>^), (&&&))
 import Control.Category (id)
 
-import Text.Pandoc (Pandoc)
-import qualified Text.Pandoc as P
+import Text.Pandoc
 
 import Hakyll.Core.Compiler
 import Hakyll.Web.FileType
@@ -35,20 +34,20 @@ import Hakyll.Web.Page
 readPandoc :: FileType  -- ^ File type, determines how parsing happens
            -> String    -- ^ String to read
            -> Pandoc    -- ^ Resulting document
-readPandoc = readPandocWith defaultParserState
+readPandoc = readPandocWith defaultHakyllParserState
 
 -- | Read a string using pandoc, with the supplied options
 --
-readPandocWith :: P.ParserState  -- ^ Parser options
-               -> FileType       -- ^ File type, determines how parsing happens
-               -> String         -- ^ String to read
-               -> Pandoc         -- ^ Resulting document
+readPandocWith :: ParserState  -- ^ Parser options
+               -> FileType     -- ^ File type, determines how parsing happens
+               -> String       -- ^ String to read
+               -> Pandoc       -- ^ Resulting document
 readPandocWith state fileType' = case fileType' of
-    Html              -> P.readHtml state
-    LaTeX             -> P.readLaTeX state
-    LiterateHaskell t -> readPandocWith state {P.stateLiterateHaskell = True} t
-    Markdown          -> P.readMarkdown state
-    Rst               -> P.readRST state
+    Html              -> readHtml state
+    LaTeX             -> readLaTeX state
+    LiterateHaskell t -> readPandocWith state {stateLiterateHaskell = True} t
+    Markdown          -> readMarkdown state
+    Rst               -> readRST state
     t                 -> error $
         "Hakyll.Web.readPandocWith: I don't know how to read " ++ show t
 
@@ -56,23 +55,23 @@ readPandocWith state fileType' = case fileType' of
 --
 writePandoc :: Pandoc  -- ^ Document to write
             -> String  -- ^ Resulting HTML
-writePandoc = writePandocWith defaultWriterOptions
+writePandoc = writePandocWith defaultHakyllWriterOptions
 
 -- | Write a document (as HTML) using pandoc, with the supplied options
 --
-writePandocWith :: P.WriterOptions  -- ^ Writer options for pandoc
-                -> Pandoc           -- ^ Document to write
-                -> String           -- ^ Resulting HTML
-writePandocWith = P.writeHtmlString
+writePandocWith :: WriterOptions  -- ^ Writer options for pandoc
+                -> Pandoc         -- ^ Document to write
+                -> String         -- ^ Resulting HTML
+writePandocWith = writeHtmlString
 
 -- | Read the resource using pandoc
 --
 pageReadPandoc :: Compiler (Page String) (Page Pandoc)
-pageReadPandoc = pageReadPandocWith defaultParserState
+pageReadPandoc = pageReadPandocWith defaultHakyllParserState
 
 -- | Read the resource using pandoc
 --
-pageReadPandocWith :: P.ParserState -> Compiler (Page String) (Page Pandoc)
+pageReadPandocWith :: ParserState -> Compiler (Page String) (Page Pandoc)
 pageReadPandocWith state =
     id &&& getFileType >>^ pageReadPandocWith'
   where
@@ -81,30 +80,31 @@ pageReadPandocWith state =
 -- | Render the resource using pandoc
 --
 pageRenderPandoc :: Compiler (Page String) (Page String)
-pageRenderPandoc = pageRenderPandocWith defaultParserState defaultWriterOptions
+pageRenderPandoc =
+    pageRenderPandocWith defaultHakyllParserState defaultHakyllWriterOptions
 
 -- | Render the resource using pandoc
 --
-pageRenderPandocWith :: P.ParserState
-                     -> P.WriterOptions
+pageRenderPandocWith :: ParserState
+                     -> WriterOptions
                      -> Compiler (Page String) (Page String)
 pageRenderPandocWith state options =
     pageReadPandocWith state >>^ fmap (writePandocWith options)
 
 -- | The default reader options for pandoc parsing in hakyll
 --
-defaultParserState :: P.ParserState
-defaultParserState = P.defaultParserState
+defaultHakyllParserState :: ParserState
+defaultHakyllParserState = defaultParserState
     { -- The following option causes pandoc to read smart typography, a nice
       -- and free bonus.
-      P.stateSmart = True
+      stateSmart = True
     }
 
 -- | The default writer options for pandoc rendering in hakyll
 --
-defaultWriterOptions :: P.WriterOptions
-defaultWriterOptions = P.defaultWriterOptions
+defaultHakyllWriterOptions :: WriterOptions
+defaultHakyllWriterOptions = defaultWriterOptions
     { -- This option causes literate haskell to be written using '>' marks in
       -- html, which I think is a good default.
-      P.writerLiterateHaskell = True
+      writerLiterateHaskell = True
     }

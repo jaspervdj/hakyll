@@ -2,7 +2,7 @@
 import Hakyll
 import Control.Monad (forM_)
 import Control.Arrow ((>>>), arr)
-import Text.Pandoc (writerTableOfContents, writerTemplate, writerStandalone)
+import Text.Pandoc
 
 main :: IO ()
 main = hakyll $ do
@@ -25,7 +25,7 @@ main = hakyll $ do
     -- Tutorial
     route   "tutorial.markdown" $ setExtension "html"
     compile "tutorial.markdown" $ pageRead
-        >>> pageRenderPandocWith defaultParserState withToc
+        >>> pageRenderPandocWith defaultHakyllParserState withToc
         >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
         >>> defaultApplyTemplate "templates/default.html"
         >>> defaultRelativizeUrls
@@ -36,7 +36,7 @@ main = hakyll $ do
     -- Templates
     compile "templates/*" defaultTemplateRead
   where
-    withToc = defaultWriterOptions
+    withToc = defaultHakyllWriterOptions
         { writerTableOfContents = True
         , writerTemplate = "<h2>Table of contents</h2>\n$toc$\n$body$"
         , writerStandalone = True
