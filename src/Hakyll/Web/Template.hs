@@ -73,7 +73,7 @@ applyTemplate template page =
   where
     substitute (Chunk chunk) = chunk
     substitute (Key key) =
-        fromMaybe ('$' : key) $ M.lookup key $ toMap page
+        fromMaybe ("$" ++ key ++ "$") $ M.lookup key $ toMap page
     substitute (Escaped) = "$"
 
 -- | Apply a page as it's own template. This is often very useful to fill in
