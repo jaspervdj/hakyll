@@ -109,7 +109,10 @@ items it matches -- and matching is done using the `"css/*"` [pattern].
 example, `css/screen.css` will be routed to `css/screen.css` -- not very
 exciting.
 
-[pattern]: TODO: link
+Note that a [pattern] matches [identifiers], it doesn't match filenames.
+
+[pattern]: /reference/Hakyll-Core-Identifier-Pattern.html
+[identifiers]: /reference/Hakyll-Core-Identifier.html
 
 ~~~~~{.haskell}
 route   "css/*" idRoute
