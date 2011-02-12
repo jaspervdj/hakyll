@@ -75,6 +75,10 @@ h3 {
     text-transform: uppercase;
 }
 
+h1 a, h2 a, h3 a {
+    text-decoration: none;
+}
+
 div.column {
     width: 50%;
     float: left;

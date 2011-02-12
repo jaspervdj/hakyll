@@ -1,5 +1,6 @@
-The Hakyll Tutorial
-===================
+---
+title: Tutorial
+---
 
 Why static websites?
 --------------------
