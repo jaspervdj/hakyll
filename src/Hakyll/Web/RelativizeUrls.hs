@@ -1,3 +1,19 @@
+-- | This module exposes a function which can relativize URL's on a webpage.
+--
+-- This means that one can deploy the resulting site on
+-- @http:\/\/example.com\/@, but also on @http:\/\/example.com\/some-folder\/@
+-- without having to change anything (simply copy over the files).
+--
+-- To use it, you should use absolute URL's from the site root everywhere. For
+-- example, use
+--
+-- > <img src="/images/lolcat.png" alt="Funny zomgroflcopter" />
+--
+-- in a blogpost. When running this through the relativize URL's module, this
+-- will result in (suppose your blogpost is located at @\/posts\/foo.html@:
+--
+-- > <img src="../images/lolcat.png" alt="Funny zomgroflcopter" />
+--
 module Hakyll.Web.RelativizeUrls
     ( relativizeUrls
     ) where

@@ -73,7 +73,7 @@ main = hakyll $ do
     forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
         route   page $ setExtension "html"
         compile page $ defaultPageRead
-            >>> require "templates/default.html" (flip applyTemplate)
+            >>> defaultApplyTemplate "templates/default.html"
             >>> defaultRelativizeUrls
 ~~~~~
 
@@ -133,7 +133,7 @@ Next, we're going to render some pages. We're going to style the results a
 little, so we're going to need a [template]. We simply compile a template using
 the `defaultTemplateRead` compiler, it's good enough in most cases.
 
-[template]: TODO: link
+[template]: /reference/Hakyll-Web-Template.html
 
 We don't use a route for these templates, after all, we don't want to route them
 anywhere, we just want to use them to style our pages a little.
@@ -141,6 +141,13 @@ anywhere, we just want to use them to style our pages a little.
 ~~~~~{.haskell}
 compile "templates/*" defaultTemplateRead
 ~~~~~
+
+We can conclude that some rules do not *directly* add an output page on our
+site. In this case, we compile the template so it is available to the compiler
+later[^1].
+
+[^1]: Actually, since the rules DSL is declarative, we could also add the
+      template compile rule at the bottom -- this would make no difference.
 
 Now, it's time to actually render our pages. We use the `forM_` monad combinator
 so we can describe all files at once.
@@ -162,10 +169,13 @@ DSL there.
 ### The Compiler DSL
 
 The gist of it is that the `Compiler a b` type has two parameters -- it is an
-Arrow, and we can chain compilers using the `>>>` operator.
+Arrow, and we can chain compilers using the `>>>` operator. The [compiler]
+reference page has some more information on this subject.
+
+[compiler]: /reference/Hakyll-Core-Compiler.html
 
 ~~~~~{.haskell}
 compile page $ defaultPageRead
-    >>> require "templates/default.html" (flip applyTemplate)
+    >>> defaultApplyTemplate "templates/default.html"
     >>> defaultRelativizeUrls
 ~~~~~

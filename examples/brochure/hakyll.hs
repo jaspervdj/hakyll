@@ -14,5 +14,5 @@ main = hakyll $ do
     forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
         route   page $ setExtension "html"
         compile page $ defaultPageRead
-            >>> require "templates/default.html" (flip applyTemplate)
+            >>> defaultApplyTemplate "templates/default.html"
             >>> defaultRelativizeUrls
