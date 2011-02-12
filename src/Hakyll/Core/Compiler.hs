@@ -1,4 +1,88 @@
--- | A Compiler manages targets and dependencies between targets.
+-- | A Compiler manages targets and dependencies between targets
+--
+-- The most distinguishing property of a 'Compiler' is that it is an Arrow. A
+-- compiler of the type @Compiler a b@ is simply a compilation phase which takes
+-- an @a@ as input, and produces a @b@ as output.
+--
+-- Compilers are chained using the '>>>' arrow operation. If we have a compiler
+--
+-- > getResourceString :: Compiler Resource String
+--
+-- which reads the resource, and a compiler
+--
+-- > readPage :: Compiler String (Page String)
+--
+-- we can chain these two compilers to get a
+--
+-- > (getResourceString >>> readPage) :: Compiler Resource (Page String)
+--
+-- Most compilers can be created by combining smaller compilers using '>>>'.
+--
+-- More advanced constructions are also possible using arrow, and sometimes
+-- these are needed. For a good introduction to arrow, you can refer to
+--
+-- <http://en.wikibooks.org/wiki/Haskell/Understanding_arrows>
+--
+-- A construction worth writing a few paragraphs about here are the 'require'
+-- functions. Different variants of this function are exported here, but they
+-- all serve more or less the same goal.
+--
+-- When you use only '>>>' to chain your compilers, you get a linear pipeline --
+-- it is not possible to add extra items from other compilers along the way.
+-- This is where the 'require' functions come in.
+--
+-- This function allows you to reference other items, which are then added to
+-- the pipeline. Let's look at this crappy ASCII illustration which represents
+-- a pretty common scenario:
+--
+-- > read resource >>> pandoc render >>> layout >>> relativize URL's
+-- >
+-- > @templates/fancy.html@
+--
+-- We want to construct a pipeline of compilers to go from our resource to a
+-- proper webpage. However, the @layout@ compiler takes more than just the
+-- rendered page as input: it needs the @templates/fancy.html@ template as well.
+--
+-- This is an example of where we need the @require@ function. We can solve
+-- this using a construction that looks like:
+--
+-- > ... >>> pandoc render >>> require >>> layout >>> ...
+-- >                              |
+-- > @templates/fancy.html@ ------/
+--
+-- This illustration can help us understand the type signature of 'require'.
+--
+-- > require :: (Binary a, Typeable a, Writable a)
+-- >         => Identifier
+-- >         -> (b -> a -> c)
+-- >         -> Compiler b c
+--
+-- Let's look at it in detail:
+--
+-- > (Binary a, Typeable a, Writable a)
+-- 
+-- These are constraints for the @a@ type. @a@ (the template) needs to have
+-- certain properties for it to be required.
+--
+-- > Identifier
+--
+-- This is simply @templates/fancy.html@: the 'Identifier' of the item we want
+-- to 'require', in other words, the name of the item we want to add to the
+-- pipeline somehow.
+--
+-- > (b -> a -> c)
+--
+-- This is a function given by the user, specifying /how/ the two items shall be
+-- merged. @b@ is the output of the previous compiler, and @a@ is the item we
+-- just required -- the template. This means @c@ will be the final output of the
+-- 'require' combinator.
+--
+-- > Compiler b c
+--
+-- Indeed, we have now constructed a compiler which takes a @b@ and produces a
+-- @c@. This means that we have a linear pipeline again, thanks to the 'require'
+-- function. So, the 'require' function actually helps to reduce to complexity
+-- of Hakyll applications!
 --
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Compiler
