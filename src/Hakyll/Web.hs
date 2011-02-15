@@ -6,7 +6,6 @@ module Hakyll.Web
     , defaultTemplateReadWith
     , defaultRelativizeUrls
     , defaultCopyFile
-    , defaultCompressCss
     , defaultApplyTemplate
     ) where
 
@@ -25,7 +24,6 @@ import Hakyll.Web.Pandoc
 import Hakyll.Web.Template
 import Hakyll.Web.RelativizeUrls
 import Hakyll.Web.Util.String
-import Hakyll.Web.CompressCss
 
 defaultPageRead :: Compiler Resource (Page String)
 defaultPageRead = cached "Hakyll.Web.defaultPageRead" $
@@ -46,9 +44,6 @@ defaultTemplateReadWith settings = cached "Hakyll.Web.defaultTemplateReadWith" $
 
 defaultCopyFile :: Compiler Resource CopyFile
 defaultCopyFile = getIdentifier >>^ CopyFile . toFilePath
-
-defaultCompressCss :: Compiler Resource String
-defaultCompressCss = getResourceString >>^ compressCss
 
 defaultApplyTemplate :: Identifier                            -- ^ Template
                      -> Compiler (Page String) (Page String)  -- ^ Compiler

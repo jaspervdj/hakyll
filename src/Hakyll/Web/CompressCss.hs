@@ -2,13 +2,23 @@
 -- state, but would typically reduce the number of bytes by about 25%.
 --
 module Hakyll.Web.CompressCss
-    ( compressCss
+    ( compressCssCompiler
+    , compressCss
     ) where
 
 import Data.Char (isSpace)
 import Data.List (isPrefixOf)
+import Control.Arrow ((>>^))
 
+import Hakyll.Core.Compiler
+import Hakyll.Core.ResourceProvider
 import Hakyll.Web.Util.String
+
+-- | Compiler form of 'compressCss' which automatically picks the right root
+-- path
+--
+compressCssCompiler :: Compiler Resource String
+compressCssCompiler = getResourceString >>^ compressCss
 
 -- | Compress CSS to speed up your site.
 --
