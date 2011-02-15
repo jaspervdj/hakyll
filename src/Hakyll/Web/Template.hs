@@ -45,8 +45,8 @@ module Hakyll.Web.Template
     ( Template
     , applyTemplate
     , applySelf
-    , templateRead
-    , templateReadWith
+    , templateCompiler
+    , templateCompilerWith
     ) where
 
 import Control.Arrow
@@ -86,14 +86,15 @@ applySelf page = applyTemplate (readTemplate $ pageBody page) page
 -- @.hml@ or @.hamlet@, it will be considered as a Hamlet template, and parsed
 -- as such.
 --
-templateRead :: Compiler Resource Template
-templateRead = templateReadWith defaultHamletSettings
+templateCompiler :: Compiler Resource Template
+templateCompiler = templateCompilerWith defaultHamletSettings
 
--- | Version of 'templateRead' that enables custom settings.
+-- | Version of 'templateCompiler' that enables custom settings.
 --
-templateReadWith :: HamletSettings -> Compiler Resource Template
-templateReadWith settings =
-    getIdentifier &&& getResourceString >>^ uncurry read'
+templateCompilerWith :: HamletSettings -> Compiler Resource Template
+templateCompilerWith settings =
+    cached "Hakyll.Web.Template.templateCompilerWith" $
+        getIdentifier &&& getResourceString >>^ uncurry read'
   where
     read' identifier string =
         if takeExtension (toFilePath identifier) `elem` [".hml", ".hamlet"]

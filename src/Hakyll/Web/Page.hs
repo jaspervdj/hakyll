@@ -52,7 +52,7 @@ module Hakyll.Web.Page
     , fromMap
     , toMap
     , readPageCompiler
-    , defaultPageCompiler
+    , pageCompiler
     , addDefaultFields
     , sortByBaseName
     ) where
@@ -97,8 +97,10 @@ toMap (Page m b) = M.insert "body" b m
 readPageCompiler :: Compiler Resource (Page String)
 readPageCompiler = getResourceString >>^ readPage
 
-defaultPageCompiler :: Compiler Resource (Page String)
-defaultPageCompiler = cached "Hakyll.Web.Page.defaultPageCompiler" $
+-- | Read a page, add default fields, substitute fields and render using pandoc
+--
+pageCompiler :: Compiler Resource (Page String)
+pageCompiler = cached "Hakyll.Web.Page.pageCompiler" $
     readPageCompiler >>> addDefaultFields >>> arr applySelf >>> pageRenderPandoc
 
 -- | Add a number of default metadata fields to a page. These fields include:
