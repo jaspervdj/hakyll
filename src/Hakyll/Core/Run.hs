@@ -32,9 +32,9 @@ import Hakyll.Core.Writable
 import Hakyll.Core.Store
 import Hakyll.Core.Configuration
 
--- | Run all rules needed
+-- | Run all rules needed, return the rule set used
 --
-run :: HakyllConfiguration -> Rules -> IO ()
+run :: HakyllConfiguration -> Rules -> IO RuleSet
 run configuration rules = do
     store <- makeStore $ storeDirectory configuration
     provider <- fileResourceProvider
@@ -46,6 +46,7 @@ run configuration rules = do
         state' = runReaderT reader $ env ruleSet provider store
 
     evalStateT state' state
+    return ruleSet
   where
     env ruleSet provider store = RuntimeEnvironment
         { hakyllConfiguration    = configuration

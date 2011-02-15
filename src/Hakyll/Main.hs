@@ -6,13 +6,15 @@ module Hakyll.Main
     ) where
 
 import Control.Concurrent (forkIO)
-import Control.Monad (when)
+import Control.Monad (when, forM_)
 import System.Environment (getProgName, getArgs)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
+import qualified Data.Set as S
 
 import Hakyll.Core.Configuration
 import Hakyll.Core.Run
 import Hakyll.Core.Rules
+import Hakyll.Core.Rules.Internal
 import Hakyll.Web.Preview.INotify
 import Hakyll.Web.Preview.Server
 
@@ -41,7 +43,9 @@ hakyllWith configuration rules = do
 -- | Build the site
 --
 build :: HakyllConfiguration -> Rules -> IO ()
-build = run
+build configuration rules = do
+    _ <- run configuration rules
+    return ()
 
 -- | Remove the output directories
 --
@@ -80,11 +84,19 @@ help = do
 --
 preview :: HakyllConfiguration -> Rules -> Int -> IO ()
 preview configuration rules port = do
+    -- Build once, keep the rule set
+    ruleSet <- run configuration rules
+
+    -- Debug: show the resources used
+    forM_ (S.toList $ rulesResources ruleSet) $ putStrLn . show
+
+    {-
     -- Fork a thread polling for changes
     _ <- forkIO $ previewPoll configuration "." $ build configuration rules
     
     -- Run the server in the main thread
     server configuration port
+    -}
 
 -- | Rebuild the site
 --
