@@ -14,8 +14,7 @@ import Hakyll.Core.Compiler
 import Hakyll.Core.ResourceProvider
 import Hakyll.Web.Util.String
 
--- | Compiler form of 'compressCss' which automatically picks the right root
--- path
+-- | Compiler form of 'compressCss'
 --
 compressCssCompiler :: Compiler Resource String
 compressCssCompiler = getResourceString >>^ compressCss

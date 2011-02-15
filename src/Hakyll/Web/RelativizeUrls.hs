@@ -15,13 +15,30 @@
 -- > <img src="../images/lolcat.png" alt="Funny zomgroflcopter" />
 --
 module Hakyll.Web.RelativizeUrls
-    ( relativizeUrls
+    ( relativizeUrlsCompiler
+    , relativizeUrls
     ) where
 
+import Prelude hiding (id)
+import Control.Category (id)
+import Control.Arrow ((&&&), (>>^))
 import Data.List (isPrefixOf)
 import qualified Data.Set as S
 
 import Text.HTML.TagSoup
+
+import Hakyll.Core.Compiler
+import Hakyll.Web.Page
+import Hakyll.Web.Util.String
+
+-- | Compiler form of 'compressCss' which automatically picks the right root
+-- path
+--
+relativizeUrlsCompiler :: Compiler (Page String) (Page String)
+relativizeUrlsCompiler = getRoute &&& id >>^ uncurry relativize
+  where
+    relativize Nothing = id
+    relativize (Just r) = fmap (relativizeUrls $ toSiteRoot r)
 
 -- | Relativize URL's in HTML
 --

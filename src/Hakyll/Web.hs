@@ -3,14 +3,11 @@
 module Hakyll.Web
     ( defaultTemplateRead
     , defaultTemplateReadWith
-    , defaultRelativizeUrls
     , defaultCopyFile
     , defaultApplyTemplate
     ) where
 
-import Prelude hiding (id)
-import Control.Category (id)
-import Control.Arrow ((>>^), (&&&))
+import Control.Arrow ((>>^))
 
 import Text.Hamlet (HamletSettings)
 
@@ -20,14 +17,6 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.ResourceProvider
 import Hakyll.Web.Page
 import Hakyll.Web.Template
-import Hakyll.Web.RelativizeUrls
-import Hakyll.Web.Util.String
-
-defaultRelativizeUrls :: Compiler (Page String) (Page String)
-defaultRelativizeUrls = getRoute &&& id >>^ uncurry relativize
-  where
-    relativize Nothing = id
-    relativize (Just r) = fmap (relativizeUrls $ toSiteRoot r)
 
 defaultTemplateRead :: Compiler Resource Template
 defaultTemplateRead = cached "Hakyll.Web.defaultTemplateRead" $ templateRead
