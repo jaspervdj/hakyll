@@ -2,6 +2,7 @@
 --
 module Hakyll
     ( module Hakyll.Core.Compiler
+    , module Hakyll.Core.CopyFile
     , module Hakyll.Core.Configuration
     , module Hakyll.Core.Identifier
     , module Hakyll.Core.Identifier.Pattern
@@ -26,6 +27,7 @@ module Hakyll
     ) where
 
 import Hakyll.Core.Compiler
+import Hakyll.Core.CopyFile
 import Hakyll.Core.Configuration
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
