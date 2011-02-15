@@ -27,6 +27,7 @@ import Control.Monad.Reader (ask)
 import Control.Arrow (second, (>>>), arr, (>>^))
 import Control.Monad.State (get, put)
 import Data.Monoid (mempty)
+import qualified Data.Set as S
 
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
@@ -44,17 +45,23 @@ import Hakyll.Core.Util.Arrow
 -- | Add a route
 --
 tellRoute :: Routes -> Rules
-tellRoute route' = RulesM $ tell $ RuleSet route' mempty
+tellRoute route' = RulesM $ tell $ RuleSet route' mempty mempty
 
 -- | Add a number of compilers
 --
 tellCompilers :: (Binary a, Typeable a, Writable a)
              => [(Identifier, Compiler () a)]
              -> Rules
-tellCompilers compilers = RulesM $ tell $ RuleSet mempty $
-    map (second boxCompiler) compilers
+tellCompilers compilers = RulesM $ tell $ RuleSet mempty compilers' mempty
   where
+    compilers' = map (second boxCompiler) compilers
     boxCompiler = (>>> arr compiledItem >>> arr CompileRule)
+
+-- | Add resources
+--
+tellResources :: [Resource]
+              -> Rules
+tellResources resources = RulesM $ tell $ RuleSet mempty mempty $ S.fromList resources
 
 -- | Add a compilation rule to the rules.
 --
@@ -66,8 +73,10 @@ compile :: (Binary a, Typeable a, Writable a)
         => Pattern -> Compiler Resource a -> Rules
 compile pattern compiler = RulesM $ do
     identifiers <- matches pattern . map unResource . resourceList <$> ask
-    unRulesM $ tellCompilers $ flip map identifiers $ \identifier ->
-        (identifier, constA (Resource identifier) >>> compiler)
+    unRulesM $ do
+        tellCompilers $ flip map identifiers $ \identifier ->
+            (identifier, constA (Resource identifier) >>> compiler)
+        tellResources $ map Resource identifiers
 
 -- | Add a compilation rule
 --
@@ -125,8 +134,9 @@ metaCompileWith :: (Binary a, Typeable a, Writable a)
                 -- ^ Compiler generating the other compilers
                 -> Rules
                 -- ^ Resulting rules
-metaCompileWith identifier compiler = RulesM $ tell $ RuleSet mempty
-    [(identifier, compiler >>> arr makeRule )]
+metaCompileWith identifier compiler = RulesM $ tell $
+    RuleSet mempty compilers mempty
   where
     makeRule = MetaCompileRule . map (second box)
+    compilers = [(identifier, compiler >>> arr makeRule )]
     box = (>>> fromDependency identifier >>^ CompileRule . compiledItem)

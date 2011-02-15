@@ -15,6 +15,7 @@ import Control.Monad.Writer (WriterT, execWriterT)
 import Control.Monad.Reader (ReaderT, runReaderT)
 import Control.Monad.State (State, evalState)
 import Data.Monoid (Monoid, mempty, mappend)
+import Data.Set (Set)
 
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Identifier
@@ -35,14 +36,18 @@ data CompileRule = CompileRule CompiledItem
 -- | A collection of rules for the compilation process
 --
 data RuleSet = RuleSet
-    { rulesRoutes    :: Routes
-    , rulesCompilers :: [(Identifier, Compiler () CompileRule)]
+    { -- | Routes used in the compilation structure
+      rulesRoutes    :: Routes
+    , -- | Compilation rules
+      rulesCompilers :: [(Identifier, Compiler () CompileRule)]
+    , -- | A list of the used resources
+      rulesResources :: Set Resource
     }
 
 instance Monoid RuleSet where
-    mempty = RuleSet mempty mempty
-    mappend (RuleSet r1 c1) (RuleSet r2 c2) =
-        RuleSet (mappend r1 r2) (mappend c1 c2)
+    mempty = RuleSet mempty mempty mempty
+    mappend (RuleSet r1 c1 s1) (RuleSet r2 c2 s2) =
+        RuleSet (mappend r1 r2) (mappend c1 c2) (mappend s1 s2)
 
 -- | Rule state
 --
