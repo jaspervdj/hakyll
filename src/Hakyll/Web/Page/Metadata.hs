@@ -2,6 +2,7 @@
 --
 module Hakyll.Web.Page.Metadata
     ( getField
+    , getFieldMaybe
     , setField
     , setFieldA
     , renderField
@@ -31,7 +32,14 @@ import Hakyll.Web.Util.String
 getField :: String  -- ^ Key
          -> Page a  -- ^ Page
          -> String  -- ^ Value
-getField key = fromMaybe "" . M.lookup key . pageMetadata
+getField key = fromMaybe "" . getFieldMaybe key
+
+-- | Get a field in a 'Maybe' wrapper
+--
+getFieldMaybe :: String        -- ^ Key
+              -> Page a        -- ^ Page
+              -> Maybe String  -- ^ Value, if found
+getFieldMaybe key = M.lookup key . pageMetadata
 
 -- | Add a metadata field. If the field already exists, it is not overwritten.
 --

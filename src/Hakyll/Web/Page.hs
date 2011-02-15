@@ -51,14 +51,15 @@ module Hakyll.Web.Page
     , fromBody
     , fromMap
     , toMap
-    , pageRead
+    , readPageCompiler
+    , defaultPageCompiler
     , addDefaultFields
     , sortByBaseName
     ) where
 
 import Prelude hiding (id)
 import Control.Category (id)
-import Control.Arrow ((>>^), (&&&), (>>>))
+import Control.Arrow (arr, (>>^), (&&&), (>>>))
 import System.FilePath (takeBaseName, takeDirectory)
 import Data.Monoid (Monoid, mempty)
 import Data.Map (Map)
@@ -72,6 +73,8 @@ import Hakyll.Core.ResourceProvider
 import Hakyll.Web.Page.Internal
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Page.Metadata
+import Hakyll.Web.Pandoc
+import Hakyll.Web.Template
 import Hakyll.Web.Util.String
 
 -- | Create a page from a body, without metadata
@@ -91,8 +94,12 @@ toMap (Page m b) = M.insert "body" b m
 
 -- | Read a page (do not render it)
 --
-pageRead :: Compiler Resource (Page String)
-pageRead = getResourceString >>^ readPage
+readPageCompiler :: Compiler Resource (Page String)
+readPageCompiler = getResourceString >>^ readPage
+
+defaultPageCompiler :: Compiler Resource (Page String)
+defaultPageCompiler = cached "Hakyll.Web.Page.defaultPageCompiler" $
+    readPageCompiler >>> addDefaultFields >>> arr applySelf >>> pageRenderPandoc
 
 -- | Add a number of default metadata fields to a page. These fields include:
 --

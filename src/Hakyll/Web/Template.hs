@@ -51,7 +51,6 @@ module Hakyll.Web.Template
 
 import Control.Arrow
 import Data.Maybe (fromMaybe)
-import qualified Data.Map as M
 import System.FilePath (takeExtension)
 
 import Text.Hamlet (HamletSettings, defaultHamletSettings)
@@ -61,7 +60,8 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.ResourceProvider
 import Hakyll.Web.Template.Internal
 import Hakyll.Web.Template.Read
-import Hakyll.Web.Page
+import Hakyll.Web.Page.Internal
+import Hakyll.Web.Page.Metadata
 
 -- | Substitutes @$identifiers@ in the given @Template@ by values from the given
 -- "Page". When a key is not found, it is left as it is. You can specify
@@ -73,7 +73,7 @@ applyTemplate template page =
   where
     substitute (Chunk chunk) = chunk
     substitute (Key key) =
-        fromMaybe ("$" ++ key ++ "$") $ M.lookup key $ toMap page
+        fromMaybe ("$" ++ key ++ "$") $ getFieldMaybe key page
     substitute (Escaped) = "$"
 
 -- | Apply a page as it's own template. This is often very useful to fill in

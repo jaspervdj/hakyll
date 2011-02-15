@@ -1,8 +1,7 @@
 -- | Module exporting commonly used web-related functions
 --
 module Hakyll.Web
-    ( defaultPageRead
-    , defaultTemplateRead
+    ( defaultTemplateRead
     , defaultTemplateReadWith
     , defaultRelativizeUrls
     , defaultCopyFile
@@ -11,7 +10,7 @@ module Hakyll.Web
 
 import Prelude hiding (id)
 import Control.Category (id)
-import Control.Arrow (arr, (>>>), (>>^), (&&&))
+import Control.Arrow ((>>^), (&&&))
 
 import Text.Hamlet (HamletSettings)
 
@@ -20,14 +19,9 @@ import Hakyll.Core.Writable
 import Hakyll.Core.Identifier
 import Hakyll.Core.ResourceProvider
 import Hakyll.Web.Page
-import Hakyll.Web.Pandoc
 import Hakyll.Web.Template
 import Hakyll.Web.RelativizeUrls
 import Hakyll.Web.Util.String
-
-defaultPageRead :: Compiler Resource (Page String)
-defaultPageRead = cached "Hakyll.Web.defaultPageRead" $
-    pageRead >>> addDefaultFields >>> arr applySelf >>> pageRenderPandoc
 
 defaultRelativizeUrls :: Compiler (Page String) (Page String)
 defaultRelativizeUrls = getRoute &&& id >>^ uncurry relativize

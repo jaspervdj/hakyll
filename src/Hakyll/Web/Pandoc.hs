@@ -27,7 +27,7 @@ import Text.Pandoc
 
 import Hakyll.Core.Compiler
 import Hakyll.Web.FileType
-import Hakyll.Web.Page
+import Hakyll.Web.Page.Internal
 
 -- | Read a string using pandoc, with the default options
 --
