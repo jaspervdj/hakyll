@@ -47,6 +47,7 @@ module Hakyll.Web.Template
     , applySelf
     , templateCompiler
     , templateCompilerWith
+    , applyTemplateCompiler
     ) where
 
 import Control.Arrow
@@ -102,3 +103,7 @@ templateCompilerWith settings =
             then readHamletTemplateWith settings string
             -- Hakyll template
             else readTemplate string
+
+applyTemplateCompiler :: Identifier                            -- ^ Template
+                      -> Compiler (Page String) (Page String)  -- ^ Compiler
+applyTemplateCompiler identifier = require identifier (flip applyTemplate)
