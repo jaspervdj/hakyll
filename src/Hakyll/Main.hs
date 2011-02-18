@@ -6,10 +6,9 @@ module Hakyll.Main
     ) where
 
 import Control.Concurrent (forkIO)
-import Control.Monad (when, forM_)
+import Control.Monad (when)
 import System.Environment (getProgName, getArgs)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
-import qualified Data.Set as S
 
 import Hakyll.Core.Configuration
 import Hakyll.Core.Run
@@ -87,16 +86,15 @@ preview configuration rules port = do
     -- Build once, keep the rule set
     ruleSet <- run configuration rules
 
-    -- Debug: show the resources used
-    forM_ (S.toList $ rulesResources ruleSet) $ putStrLn . show
+    -- Get the resource list and a callback for the preview poll
+    let resources = rulesResources ruleSet
+        callback = build configuration rules
 
-    {-
     -- Fork a thread polling for changes
-    _ <- forkIO $ previewPoll configuration "." $ build configuration rules
+    _ <- forkIO $ previewPoll configuration resources callback
     
     -- Run the server in the main thread
     server configuration port
-    -}
 
 -- | Rebuild the site
 --
