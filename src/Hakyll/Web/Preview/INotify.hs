@@ -8,6 +8,7 @@ import Control.Monad (forM_, when)
 import Data.Set (Set)
 import qualified Data.Set as S
 import System.FilePath (takeDirectory, (</>))
+import Data.List (isPrefixOf)
 
 import System.INotify
 
@@ -38,9 +39,9 @@ previewPoll _ resources callback = do
         notEmpty x  = x
 
         -- Execute the callback when path is known
-        ifResource path = when (path `S.member` paths) $ do
-            putStrLn $ "Changed: " ++ path
-            callback
+        ifResource path =
+            let path' = if "./" `isPrefixOf` path then drop 2 path else path
+            in when (path' `S.member` paths) callback
 
     -- Add a watcher for every directory
     forM_ directories $ \directory -> do

@@ -37,7 +37,7 @@ import Hakyll.Core.Configuration
 run :: HakyllConfiguration -> Rules -> IO RuleSet
 run configuration rules = do
     store <- makeStore $ storeDirectory configuration
-    provider <- fileResourceProvider
+    provider <- fileResourceProvider configuration
     let ruleSet = runRules rules provider
         compilers = rulesCompilers ruleSet
 

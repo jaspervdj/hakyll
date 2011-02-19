@@ -88,7 +88,9 @@ preview configuration rules port = do
 
     -- Get the resource list and a callback for the preview poll
     let resources = rulesResources ruleSet
-        callback = build configuration rules
+        callback = do
+            putStrLn "In TL callback"
+            build configuration rules
 
     -- Fork a thread polling for changes
     _ <- forkIO $ previewPoll configuration resources callback
