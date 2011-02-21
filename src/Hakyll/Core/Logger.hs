@@ -7,6 +7,7 @@ module Hakyll.Core.Logger
     , flushLogger
     , section
     , timed
+    , report
     ) where
 
 import Control.Monad (forever)
@@ -79,3 +80,11 @@ timed logger msg action = do
         formatted = printf "  [%4dms] %s" ms msg
     liftIO $ message logger formatted
     return result
+
+-- | Log something at the same level as 'timed', but without the timing
+--
+report :: MonadIO m
+       => Logger  -- ^ Logger
+       -> String  -- ^ Message
+       -> m ()    -- ^ No result
+report logger msg = liftIO $ message logger $ "  [      ] " ++ msg

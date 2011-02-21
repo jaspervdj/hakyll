@@ -254,9 +254,11 @@ cached :: (Binary a, Typeable a, Writable a)
        -> Compiler Resource a
        -> Compiler Resource a
 cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
+    logger <- compilerLogger <$> ask
     identifier <- compilerIdentifier <$> ask
     store <- compilerStore <$> ask
     modified <- compilerResourceModified <$> ask
+    report logger $ "Checking cache: " ++ if modified then "modified" else "OK"
     if modified
         then do v <- unCompilerM $ j $ Resource identifier
                 liftIO $ storeSet store name identifier v
