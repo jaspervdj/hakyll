@@ -9,6 +9,7 @@ module Hakyll.Core.Logger
     , timed
     ) where
 
+import Control.Monad (forever)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Applicative ((<$>), (<*>))
 import Control.Concurrent (forkIO)
@@ -33,15 +34,13 @@ makeLogger = do
     _ <- forkIO $ loggerThread logger
     return logger
   where
-    loggerThread logger = do
+    loggerThread logger = forever $ do
         msg <- readChan $ loggerChan logger
         case msg of
             -- Stop: sync
             Nothing -> putMVar (loggerSync logger) ()
             -- Print and continue
-            Just m  -> do
-                putStrLn m
-                loggerThread logger
+            Just m  -> putStrLn m
 
 -- | Flush the logger (blocks until flushed)
 --
