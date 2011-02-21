@@ -8,6 +8,7 @@ module Hakyll
     , module Hakyll.Core.Identifier.Pattern
     , module Hakyll.Core.Routes
     , module Hakyll.Core.Rules
+    , module Hakyll.Core.UnixFilter
     , module Hakyll.Core.Util.Arrow
     , module Hakyll.Core.Util.File
     , module Hakyll.Core.Writable
@@ -32,6 +33,7 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Routes
 import Hakyll.Core.Rules
+import Hakyll.Core.UnixFilter
 import Hakyll.Core.Util.Arrow
 import Hakyll.Core.Util.File
 import Hakyll.Core.Writable
