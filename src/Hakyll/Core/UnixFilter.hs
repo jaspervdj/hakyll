@@ -34,7 +34,17 @@ import Hakyll.Core.Compiler
 unixFilter :: String                  -- ^ Program name
            -> [String]                -- ^ Program args
            -> Compiler String String  -- ^ Resulting compiler
-unixFilter programName args = unsafeCompiler $ \input -> do
+unixFilter programName args =
+    timedCompiler ("Executing external program " ++ programName) $
+        unsafeCompiler $ \input -> unixFilterIO programName args input
+
+-- | Internally used function
+--
+unixFilterIO :: String
+             -> [String]
+             -> String
+             -> IO String
+unixFilterIO programName args input = do
     -- Create pipes
     (stdinRead, stdinWrite) <- createPipe
     (stdoutRead, stdoutWrite) <- createPipe

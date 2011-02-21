@@ -26,6 +26,7 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Store
 import Hakyll.Core.Routes
+import Hakyll.Core.Logger
 
 -- | A set of dependencies
 --
@@ -44,6 +45,8 @@ data CompilerEnvironment = CompilerEnvironment
       compilerStore            :: Store
     , -- | Flag indicating if the underlying resource was modified
       compilerResourceModified :: Bool
+    , -- | Logger
+      compilerLogger           :: Logger
     }
 
 -- | The compiler monad
@@ -91,8 +94,9 @@ runCompilerJob :: Compiler () a     -- ^ Compiler to run
                -> Routes            -- ^ Route
                -> Store             -- ^ Store
                -> Bool              -- ^ Was the resource modified?
+               -> Logger            -- ^ Logger
                -> IO a
-runCompilerJob compiler identifier provider route store modified =
+runCompilerJob compiler identifier provider route store modified logger =
     runReaderT (unCompilerM $ compilerJob compiler ()) env
   where
     env = CompilerEnvironment
@@ -101,6 +105,7 @@ runCompilerJob compiler identifier provider route store modified =
             , compilerRoutes           = route
             , compilerStore            = store
             , compilerResourceModified = modified
+            , compilerLogger           = logger
             }
 
 runCompilerDependencies :: Compiler () a

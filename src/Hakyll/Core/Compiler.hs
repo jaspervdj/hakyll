@@ -102,6 +102,7 @@ module Hakyll.Core.Compiler
     , cached
     , unsafeCompiler
     , mapCompiler
+    , timedCompiler
     ) where
 
 import Prelude hiding ((.), id)
@@ -124,6 +125,7 @@ import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store
 import Hakyll.Core.Rules.Internal
 import Hakyll.Core.Routes
+import Hakyll.Core.Logger
 
 -- | Run a compiler, yielding the resulting target and it's dependencies. This
 -- version of 'runCompilerJob' also stores the result
@@ -134,10 +136,12 @@ runCompiler :: Compiler () CompileRule  -- ^ Compiler to run
             -> Routes                   -- ^ Route
             -> Store                    -- ^ Store
             -> Bool                     -- ^ Was the resource modified?
+            -> Logger                   -- ^ Logger
             -> IO CompileRule           -- ^ Resulting item
-runCompiler compiler identifier provider routes store modified = do
+runCompiler compiler identifier provider routes store modified logger = do
     -- Run the compiler job
-    result <- runCompilerJob compiler identifier provider routes store modified
+    result <-
+        runCompilerJob compiler identifier provider routes store modified logger
 
     -- Inspect the result
     case result of
@@ -274,3 +278,12 @@ unsafeCompiler f = fromJob $ CompilerM . liftIO . f
 mapCompiler :: Compiler a b
             -> Compiler [a] [b]
 mapCompiler (Compiler d j) = Compiler d $ mapM j
+
+-- | Log and time a compiler
+--
+timedCompiler :: String        -- ^ Message
+              -> Compiler a b  -- ^ Compiler to time
+              -> Compiler a b  -- ^ Resulting compiler
+timedCompiler msg (Compiler d j) = Compiler d $ \x -> CompilerM $ do
+    logger <- compilerLogger <$> ask
+    timed logger msg $ unCompilerM $ j x

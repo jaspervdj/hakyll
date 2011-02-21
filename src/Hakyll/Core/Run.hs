@@ -183,8 +183,8 @@ runCompilers ((id', compiler) : compilers) = Runtime $ do
         isModified = id' `S.member` modified'
 
     -- Run the compiler
-    result <- timed logger "Compiling item" $
-        liftIO $ runCompiler compiler id' provider routes store isModified
+    result <- timed logger "Total compile time" $ liftIO $
+        runCompiler compiler id' provider routes store isModified logger
 
     case result of
         -- Compile rule for one item, easy stuff
