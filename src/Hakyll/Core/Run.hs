@@ -10,7 +10,7 @@ import Control.Monad (filterM)
 import Control.Monad.Trans (liftIO)
 import Control.Applicative (Applicative, (<$>))
 import Control.Monad.Reader (ReaderT, runReaderT, ask)
-import Control.Monad.State (StateT, evalStateT, get, modify)
+import Control.Monad.State.Strict (StateT, evalStateT, get, modify)
 import Control.Arrow ((&&&))
 import qualified Data.Map as M
 import Data.Monoid (mempty, mappend)
@@ -31,25 +31,36 @@ import Hakyll.Core.DirectedGraph.DependencySolver
 import Hakyll.Core.Writable
 import Hakyll.Core.Store
 import Hakyll.Core.Configuration
+import Hakyll.Core.Logger
 
 -- | Run all rules needed, return the rule set used
 --
 run :: HakyllConfiguration -> Rules -> IO RuleSet
 run configuration rules = do
-    store <- makeStore $ storeDirectory configuration
-    provider <- fileResourceProvider configuration
+    logger <- makeLogger
+
+    section logger "Initialising"
+    store <- timed logger "Creating store" $
+        makeStore $ storeDirectory configuration
+    provider <- timed logger "Creating provider" $
+        fileResourceProvider configuration
+
     let ruleSet = runRules rules provider
         compilers = rulesCompilers ruleSet
 
         -- Extract the reader/state
         reader = unRuntime $ addNewCompilers [] compilers
-        state' = runReaderT reader $ env ruleSet provider store
+        state' = runReaderT reader $ env logger ruleSet provider store
 
     evalStateT state' state
+
+    -- Flush and return
+    flushLogger logger
     return ruleSet
   where
-    env ruleSet provider store = RuntimeEnvironment
-        { hakyllConfiguration    = configuration
+    env logger ruleSet provider store = RuntimeEnvironment
+        { hakyllLogger           = logger
+        , hakyllConfiguration    = configuration
         , hakyllRoutes           = rulesRoutes ruleSet
         , hakyllResourceProvider = provider
         , hakyllStore            = store
@@ -61,7 +72,8 @@ run configuration rules = do
         }
 
 data RuntimeEnvironment = RuntimeEnvironment
-    { hakyllConfiguration    :: HakyllConfiguration
+    { hakyllLogger           :: Logger
+    , hakyllConfiguration    :: HakyllConfiguration
     , hakyllRoutes           :: Routes
     , hakyllResourceProvider :: ResourceProvider
     , hakyllStore            :: Store
@@ -96,6 +108,8 @@ addNewCompilers :: [(Identifier, Compiler () CompileRule)]
                 -> Runtime ()
 addNewCompilers oldCompilers newCompilers = Runtime $ do
     -- Get some information
+    logger <- hakyllLogger <$> ask
+    section logger "Adding new compilers"
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
 
@@ -115,31 +129,31 @@ addNewCompilers oldCompilers newCompilers = Runtime $ do
 
     -- Find the old graph and append the new graph to it. This forms the
     -- complete graph
-    completeGraph <- mappend currentGraph . hakyllGraph <$> get
+    completeGraph <- timed logger "Creating graph" $
+        mappend currentGraph . hakyllGraph <$> get
 
-    -- Check which items are up-to-date. This only needs to happen for the new
-    -- compilers
-    oldModified <- hakyllModified <$> get 
-    newModified <- liftIO $ modified provider store $ map fst newCompilers
+    orderedCompilers <- timed logger "Solving dependencies" $ do
+        -- Check which items are up-to-date. This only needs to happen for the new
+        -- compilers
+        oldModified <- hakyllModified <$> get 
+        newModified <- liftIO $ modified provider store $ map fst newCompilers
 
-    let modified' = oldModified `S.union` newModified
-        
-        -- Find obsolete items. Every item that is reachable from a modified
-        -- item is considered obsolete. From these obsolete items, we are only
-        -- interested in ones that are in the current subgraph.
-        obsolete = S.filter (`member` currentGraph)
-                 $ reachableNodes modified' $ reverse completeGraph
+        let modified' = oldModified `S.union` newModified
+            
+            -- Find obsolete items. Every item that is reachable from a modified
+            -- item is considered obsolete. From these obsolete items, we are only
+            -- interested in ones that are in the current subgraph.
+            obsolete = S.filter (`member` currentGraph)
+                     $ reachableNodes modified' $ reverse completeGraph
 
-        -- Solve the graph and retain only the obsolete items
-        ordered = filter (`S.member` obsolete) $ solveDependencies currentGraph
+            -- Solve the graph and retain only the obsolete items
+            ordered = filter (`S.member` obsolete) $ solveDependencies currentGraph
+
+        -- Update the state
+        modify $ updateState modified' completeGraph
 
         -- Join the order with the compilers again
-        orderedCompilers = map (id &&& (compilerMap M.!)) ordered
-
-    liftIO $ putStrLn "Adding compilers..."
-    liftIO $ putStrLn $ "Added: " ++ show (map fst orderedCompilers)
-
-    modify $ updateState modified' completeGraph
+        return $ map (id &&& (compilerMap M.!)) ordered
 
     -- Now run the ordered list of compilers
     unRuntime $ runCompilers orderedCompilers
@@ -157,32 +171,32 @@ runCompilers :: [(Identifier, Compiler () CompileRule)]
 runCompilers [] = return ()
 runCompilers ((id', compiler) : compilers) = Runtime $ do
     -- Obtain information
+    logger <- hakyllLogger <$> ask
     routes <- hakyllRoutes <$> ask
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
     modified' <- hakyllModified <$> get
 
+    section logger $ "Compiling " ++ show id'
+
     let -- Check if the resource was modified
         isModified = id' `S.member` modified'
 
     -- Run the compiler
-    result <- liftIO $ runCompiler compiler id' provider routes store isModified
-    liftIO $ putStrLn $ "Generated target: " ++ show id'
+    result <- timed logger "Compiling item" $
+        liftIO $ runCompiler compiler id' provider routes store isModified
 
     case result of
         -- Compile rule for one item, easy stuff
         CompileRule compiled -> do
             case runRoutes routes id' of
                 Nothing  -> return ()
-                Just url -> do
-                    liftIO $ putStrLn $ "Routing " ++ show id' ++ " to " ++ url
+                Just url -> timed logger ("Routing to " ++ url) $ do
                     destination <-
                         destinationDirectory . hakyllConfiguration <$> ask
                     let path = destination </> url
                     liftIO $ makeDirectories path
                     liftIO $ write path compiled
-
-            liftIO $ putStrLn ""
 
             -- Continue for the remaining compilers
             unRuntime $ runCompilers compilers 

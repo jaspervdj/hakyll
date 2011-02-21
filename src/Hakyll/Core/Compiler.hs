@@ -253,8 +253,6 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
     identifier <- compilerIdentifier <$> ask
     store <- compilerStore <$> ask
     modified <- compilerResourceModified <$> ask
-    liftIO $ putStrLn $
-        show identifier ++ ": " ++ if modified then "MODIFIED" else "OK"
     if modified
         then do v <- unCompilerM $ j $ Resource identifier
                 liftIO $ storeSet store name identifier v
