@@ -1,6 +1,6 @@
 -- | Filesystem polling with an inotify backend. Works only on linux.
 --
-module Hakyll.Web.Preview.INotify
+module Hakyll.Web.Preview.Poll
     ( previewPoll
     ) where
 

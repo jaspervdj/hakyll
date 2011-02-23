@@ -14,7 +14,7 @@ import Hakyll.Core.Configuration
 import Hakyll.Core.Run
 import Hakyll.Core.Rules
 import Hakyll.Core.Rules.Internal
-import Hakyll.Web.Preview.INotify
+import Hakyll.Web.Preview.Poll
 import Hakyll.Web.Preview.Server
 
 -- | This usualy is the function with which the user runs the hakyll compiler
