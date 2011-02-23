@@ -8,8 +8,6 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit hiding (Test)
 
-import Hakyll.Core.Identifier.Pattern
-
 fromAssertions :: String       -- ^ Name
                -> [Assertion]  -- ^ Cases
                -> [Test]       -- ^ Result tests

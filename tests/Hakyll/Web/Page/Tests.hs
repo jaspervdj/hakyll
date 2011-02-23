@@ -4,13 +4,11 @@ module Hakyll.Web.Page.Tests
     ) where
 
 import Test.Framework
-import Test.Framework.Providers.HUnit
 import Test.HUnit hiding (Test)
 
 import qualified Data.Map as M
 
 import Hakyll.Web.Page
-import Hakyll.Web.Page.Internal
 import Hakyll.Web.Page.Read
 import TestSuite.Util
 

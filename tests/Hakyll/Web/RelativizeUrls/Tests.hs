@@ -4,7 +4,6 @@ module Hakyll.Web.RelativizeUrls.Tests
     ) where
 
 import Test.Framework
-import Test.Framework.Providers.HUnit
 import Test.HUnit hiding (Test)
 
 import Hakyll.Web.RelativizeUrls
