@@ -7,12 +7,12 @@ import Hakyll
 main :: IO ()
 main = hakyll $ do
     route   "css/*" idRoute
-    compile "css/*" defaultCompressCss
+    compile "css/*" compressCssCompiler
 
-    compile "templates/*" defaultTemplateRead
+    compile "templates/*" templateCompiler
 
     forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
         route   page $ setExtension "html"
-        compile page $ defaultPageRead
-            >>> defaultApplyTemplate "templates/default.html"
-            >>> defaultRelativizeUrls
+        compile page $ readPageCompiler
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
