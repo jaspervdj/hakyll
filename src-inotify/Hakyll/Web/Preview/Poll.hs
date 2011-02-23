@@ -45,7 +45,6 @@ previewPoll _ resources callback = do
 
     -- Add a watcher for every directory
     forM_ directories $ \directory -> do
-        putStrLn $ "Adding watch for " ++ directory
         _ <- addWatch inotify [Modify] directory $ \e -> case e of
             (Modified _ (Just p)) -> ifResource $ directory </> p
             _                     -> return ()
