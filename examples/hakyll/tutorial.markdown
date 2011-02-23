@@ -66,15 +66,15 @@ import Hakyll
 main :: IO ()
 main = hakyll $ do
     route   "css/*" idRoute
-    compile "css/*" defaultCompressCss
+    compile "css/*" compressCssCompiler
 
-    compile "templates/*" defaultTemplateRead
+    compile "templates/*" templateCompiler
 
     forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
         route   page $ setExtension "html"
-        compile page $ defaultPageRead
-            >>> defaultApplyTemplate "templates/default.html"
-            >>> defaultRelativizeUrls
+        compile page $ readPageCompiler
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
 ~~~~~
 
 This is enough code to create a small brochure site! You can find all code
@@ -122,11 +122,11 @@ Apart from specifying where the items should go (using `route`), we also have to
 specify *how* the need to be compiled. This is done using the `compile`
 function. As second argument, it takes a `Compiler`. These compilers can consist
 of very complicated constructions, but Hakyll also provides a number of good
-default compilers. The `defaultCompressCss` compiler will simply compress the
+default compilers. The `compressCssCompiler` compiler will simply compress the
 CSS found in the files.
 
 ~~~~~{.haskell}
-compile "css/*" defaultCompressCss
+compile "css/*" compressCssCompiler
 ~~~~~
 
 Next, we're going to render some pages. We're going to style the results a
@@ -139,7 +139,7 @@ We don't use a route for these templates, after all, we don't want to route them
 anywhere, we just want to use them to style our pages a little.
 
 ~~~~~{.haskell}
-compile "templates/*" defaultTemplateRead
+compile "templates/*" templateCompiler
 ~~~~~
 
 We can conclude that some rules do not *directly* add an output page on our
@@ -175,7 +175,7 @@ reference page has some more information on this subject.
 [compiler]: /reference/Hakyll-Core-Compiler.html
 
 ~~~~~{.haskell}
-compile page $ defaultPageRead
-    >>> defaultApplyTemplate "templates/default.html"
-    >>> defaultRelativizeUrls
+compile page $ pageCompiler
+    >>> applyTemplateCompiler "templates/default.html"
+    >>> relativizeUrlsCompiler
 ~~~~~
