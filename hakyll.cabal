@@ -96,6 +96,7 @@ library
                     Hakyll.Core.DirectedGraph
                     Hakyll.Core.Rules
                     Hakyll.Core.Routes
+                    Hakyll.Core.Logger
   other-modules:    Paths_hakyll
                     Hakyll.Web.Template.Read.Hakyll
                     Hakyll.Web.Template.Read.Hamlet
