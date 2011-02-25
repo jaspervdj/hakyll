@@ -32,6 +32,15 @@ import Hakyll.Core.Logger
 --
 type Dependencies = Set Identifier
 
+-- | Environment in which the dependency analyzer runs
+--
+data DependencyEnvironment = DependencyEnvironment
+    { -- | Target identifier
+      dependencyIdentifier       :: Identifier
+    , -- | Resource provider
+      dependencyResourceProvider :: ResourceProvider
+    }
+
 -- | Environment in which a compiler runs
 --
 data CompilerEnvironment = CompilerEnvironment
@@ -58,7 +67,7 @@ newtype CompilerM a = CompilerM
 -- | The compiler arrow
 --
 data Compiler a b = Compiler
-    { compilerDependencies :: Reader ResourceProvider Dependencies
+    { compilerDependencies :: Reader DependencyEnvironment Dependencies
     , compilerJob          :: a -> CompilerM b
     }
 
@@ -109,19 +118,28 @@ runCompilerJob compiler identifier provider route store modified logger =
             }
 
 runCompilerDependencies :: Compiler () a
+                        -> Identifier
                         -> ResourceProvider
                         -> Dependencies
-runCompilerDependencies compiler = runReader (compilerDependencies compiler)
+runCompilerDependencies compiler identifier provider =
+    runReader (compilerDependencies compiler) env
+  where
+    env = DependencyEnvironment
+            { dependencyIdentifier       = identifier
+            , dependencyResourceProvider = provider
+            }
 
 fromJob :: (a -> CompilerM b)
         -> Compiler a b
 fromJob = Compiler (return S.empty)
 
-fromDependencies :: (ResourceProvider -> [Identifier])
+fromDependencies :: (Identifier -> ResourceProvider -> [Identifier])
                  -> Compiler b b
-fromDependencies deps = Compiler (S.fromList . deps <$> ask) return
+fromDependencies collectDeps = flip Compiler return $ do
+    DependencyEnvironment identifier provider <- ask
+    return $ S.fromList $ collectDeps identifier provider
 
 -- | Wait until another compiler has finished before running this compiler
 --
 fromDependency :: Identifier -> Compiler a a
-fromDependency = fromDependencies . const . return
+fromDependency = fromDependencies . const . const . return

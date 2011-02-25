@@ -225,7 +225,7 @@ requireA identifier = (id &&& require_ identifier >>>)
 requireAll_ :: (Binary a, Typeable a, Writable a)
             => Pattern
             -> Compiler b [a]
-requireAll_ pattern = fromDependencies getDeps >>> fromJob requireAll_'
+requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
   where
     getDeps = matches pattern . map unResource . resourceList
     requireAll_' = const $ CompilerM $ do

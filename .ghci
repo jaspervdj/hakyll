@@ -1,1 +1,1 @@
-:set -isrc -itests -idist/build/autogen
+:set -isrc -isrc-inotify -itests -idist/build/autogen

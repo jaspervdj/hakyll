@@ -118,7 +118,7 @@ addNewCompilers oldCompilers newCompilers = Runtime $ do
 
         -- Get all dependencies for the compilers
         dependencies = flip map compilers $ \(id', compiler) ->
-            let deps = runCompilerDependencies compiler provider
+            let deps = runCompilerDependencies compiler id' provider
             in (id', deps)
 
         -- Create a compiler map (Id -> Compiler)

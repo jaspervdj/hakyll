@@ -6,6 +6,7 @@ module Hakyll
     , module Hakyll.Core.Configuration
     , module Hakyll.Core.Identifier
     , module Hakyll.Core.Identifier.Pattern
+    , module Hakyll.Core.ResourceProvider
     , module Hakyll.Core.Routes
     , module Hakyll.Core.Rules
     , module Hakyll.Core.UnixFilter
@@ -31,6 +32,7 @@ import Hakyll.Core.CopyFile
 import Hakyll.Core.Configuration
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
+import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Routes
 import Hakyll.Core.Rules
 import Hakyll.Core.UnixFilter
