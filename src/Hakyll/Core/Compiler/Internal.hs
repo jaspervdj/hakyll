@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Compiler.Internal
     ( Dependencies
+    , DependencyEnvironment (..)
     , CompilerEnvironment (..)
     , CompilerM (..)
     , Compiler (..)

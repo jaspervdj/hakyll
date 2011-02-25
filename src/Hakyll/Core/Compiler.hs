@@ -103,6 +103,7 @@ module Hakyll.Core.Compiler
     , unsafeCompiler
     , mapCompiler
     , timedCompiler
+    , byExtension
     ) where
 
 import Prelude hiding ((.), id)
@@ -112,6 +113,7 @@ import Control.Monad.Reader (ask)
 import Control.Monad.Trans (liftIO)
 import Control.Category (Category, (.), id)
 import Data.Maybe (fromMaybe)
+import System.FilePath (takeExtension)
 
 import Data.Binary (Binary)
 import Data.Typeable (Typeable)
@@ -289,3 +291,34 @@ timedCompiler :: String        -- ^ Message
 timedCompiler msg (Compiler d j) = Compiler d $ \x -> CompilerM $ do
     logger <- compilerLogger <$> ask
     timed logger msg $ unCompilerM $ j x
+
+-- | Choose a compiler by extension
+--
+-- Example:
+--
+-- > route   "css/*" $ setExtension "css"
+-- > compile "css/*" $ byExtension (error "Not a (S)CSS file")
+-- >     [ (".css",  compressCssCompiler)
+-- >     , (".scss", sass)
+-- >     ]
+--
+-- This piece of code will select the @compressCssCompiler@ for @.css@ files,
+-- and the @sass@ compiler (defined elsewhere) for @.scss@ files.
+--
+byExtension :: Compiler a b              -- ^ Default compiler
+            -> [(String, Compiler a b)]  -- ^ Choices
+            -> Compiler a b              -- ^ Resulting compiler
+byExtension defaultCompiler choices = Compiler deps job
+  where
+    -- Lookup the compiler, give an error when it is not found
+    lookup' identifier =
+        let extension = takeExtension $ toFilePath identifier
+        in fromMaybe defaultCompiler $ lookup extension choices
+    -- Collect the dependencies of the choice
+    deps = do
+        identifier <- dependencyIdentifier <$> ask
+        compilerDependencies $ lookup' identifier
+    -- Collect the job of the choice
+    job x = CompilerM $ do
+        identifier <- compilerIdentifier <$> ask
+        unCompilerM $ compilerJob (lookup' identifier) x
