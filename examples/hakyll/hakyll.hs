@@ -7,34 +7,34 @@ import Text.Pandoc
 main :: IO ()
 main = hakyll $ do
     route   "css/*" idRoute
-    compile "css/*" defaultCompressCss
+    compile "css/*" compressCssCompiler
 
     -- Static directories
     forM_ ["images/*", "examples/*", "reference/*"] $ \f -> do
         route   f idRoute
-        compile f defaultCopyFile
+        compile f copyFileCompiler
 
     -- Pages
     forM_ pages $ \p -> do
         route   p $ setExtension "html"
-        compile p $ defaultPageRead
+        compile p $ pageCompiler
             >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
-            >>> defaultApplyTemplate "templates/default.html"
-            >>> defaultRelativizeUrls
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
 
     -- Tutorial
     route   "tutorial.markdown" $ setExtension "html"
-    compile "tutorial.markdown" $ pageRead
+    compile "tutorial.markdown" $ readPageCompiler
         >>> pageRenderPandocWith defaultHakyllParserState withToc
         >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
-        >>> defaultApplyTemplate "templates/default.html"
-        >>> defaultRelativizeUrls
+        >>> applyTemplateCompiler "templates/default.html"
+        >>> relativizeUrlsCompiler
 
     -- Sidebar
-    compile "sidebar.markdown" defaultPageRead
+    compile "sidebar.markdown" pageCompiler
 
     -- Templates
-    compile "templates/*" defaultTemplateRead
+    compile "templates/*" templateCompiler
   where
     withToc = defaultHakyllWriterOptions
         { writerTableOfContents = True
