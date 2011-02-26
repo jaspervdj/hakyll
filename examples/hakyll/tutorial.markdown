@@ -109,10 +109,10 @@ items it matches -- and matching is done using the `"css/*"` [pattern].
 example, `css/screen.css` will be routed to `css/screen.css` -- not very
 exciting.
 
-Note that a [pattern] matches [identifiers], it doesn't match filenames.
+Note that a [Pattern] matches an [Identifier], it doesn't match filenames.
 
-[pattern]: /reference/Hakyll-Core-Identifier-Pattern.html
-[identifiers]: /reference/Hakyll-Core-Identifier.html
+[Pattern]: /reference/Hakyll-Core-Identifier-Pattern.html
+[Identifier]: /reference/Hakyll-Core-Identifier.html
 
 ~~~~~{.haskell}
 route   "css/*" idRoute
@@ -130,10 +130,10 @@ compile "css/*" compressCssCompiler
 ~~~~~
 
 Next, we're going to render some pages. We're going to style the results a
-little, so we're going to need a [template]. We simply compile a template using
+little, so we're going to need a [Template]. We simply compile a template using
 the `defaultTemplateRead` compiler, it's good enough in most cases.
 
-[template]: /reference/Hakyll-Web-Template.html
+[Template]: /reference/Hakyll-Web-Template.html
 
 We don't use a route for these templates, after all, we don't want to route them
 anywhere, we just want to use them to style our pages a little.
@@ -164,13 +164,17 @@ The pages all have different extensions. In our website, we only want to see
 route   page $ setExtension "html"
 ~~~~~
 
+The [Rules] reference page has a complete listing of the API used.
+
+[Rules]: /reference/Hakyll-Core-Rules.html
+
 The compilation of our pages is slightly more complicated: we're using another
 DSL there.
 
 ### The Compiler DSL
 
 The gist of it is that the `Compiler a b` type has two parameters -- it is an
-Arrow, and we can chain compilers using the `>>>` operator. The [compiler]
+Arrow, and we can chain compilers using the `>>>` operator. The [Compiler]
 reference page has some more readable information on this subject.
 
 [compiler]: /reference/Hakyll-Core-Compiler.html
@@ -184,4 +188,3 @@ compile page $ pageCompiler
 Note that we can only use `applyTemplateCompiler` with
 `"templates/default.html"` because we compiled `"templates/default.html"`. If we
 didn't list a rule for that item, the compilation would fail (Hakyll would not
-know what `"templates/default.html"` is!).
