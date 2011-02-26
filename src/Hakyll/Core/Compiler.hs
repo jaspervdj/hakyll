@@ -101,6 +101,7 @@ module Hakyll.Core.Compiler
     , requireAllA
     , cached
     , unsafeCompiler
+    , traceShowCompiler
     , mapCompiler
     , timedCompiler
     , byExtension
@@ -276,6 +277,14 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
 unsafeCompiler :: (a -> IO b)   -- ^ Function to lift
                -> Compiler a b  -- ^ Resulting compiler
 unsafeCompiler f = fromJob $ CompilerM . liftIO . f
+
+-- | Compiler for debugging purposes
+--
+traceShowCompiler :: Show a => Compiler a a
+traceShowCompiler = fromJob $ \x -> CompilerM $ do
+    logger <- compilerLogger <$> ask
+    report logger $ show x
+    return x
 
 -- | Map over a compiler
 --

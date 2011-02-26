@@ -61,8 +61,6 @@ import Prelude hiding (id)
 import Control.Category (id)
 import Control.Arrow (arr, (>>^), (&&&), (>>>))
 import System.FilePath (takeBaseName, takeDirectory)
-import Data.Monoid (Monoid, mempty)
-import Data.Map (Map)
 import qualified Data.Map as M
 import Data.List (sortBy)
 import Data.Ord (comparing)
@@ -81,16 +79,6 @@ import Hakyll.Web.Util.String
 --
 fromBody :: a -> Page a
 fromBody = Page M.empty
-
--- | Create a metadata page, without a body
---
-fromMap :: Monoid a => Map String String -> Page a
-fromMap m = Page m mempty
-
--- | Convert a page to a map. The body will be placed in the @body@ key.
---
-toMap :: Page String -> Map String String
-toMap (Page m b) = M.insert "body" b m
 
 -- | Read a page (do not render it)
 --

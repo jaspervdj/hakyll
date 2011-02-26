@@ -3,6 +3,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Web.Page.Internal
     ( Page (..)
+    , fromMap
+    , toMap
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -36,3 +38,13 @@ instance Binary a => Binary (Page a) where
 
 instance Writable a => Writable (Page a) where
     write p (Page _ b) = write p b
+
+-- | Create a metadata page, without a body
+--
+fromMap :: Monoid a => Map String String -> Page a
+fromMap m = Page m mempty
+
+-- | Convert a page to a map. The body will be placed in the @body@ key.
+--
+toMap :: Page String -> Map String String
+toMap (Page m b) = M.insert "body" b m
