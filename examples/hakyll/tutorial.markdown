@@ -150,7 +150,8 @@ later[^1].
       template compile rule at the bottom -- this would make no difference.
 
 Now, it's time to actually render our pages. We use the `forM_` monad combinator
-so we can describe all files at once.
+so we can describe all files at once (instead of compiling all three files
+manually).
 
 ~~~~~{.haskell}
 forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
@@ -170,7 +171,7 @@ DSL there.
 
 The gist of it is that the `Compiler a b` type has two parameters -- it is an
 Arrow, and we can chain compilers using the `>>>` operator. The [compiler]
-reference page has some more information on this subject.
+reference page has some more readable information on this subject.
 
 [compiler]: /reference/Hakyll-Core-Compiler.html
 
@@ -179,3 +180,8 @@ compile page $ pageCompiler
     >>> applyTemplateCompiler "templates/default.html"
     >>> relativizeUrlsCompiler
 ~~~~~
+
+Note that we can only use `applyTemplateCompiler` with
+`"templates/default.html"` because we compiled `"templates/default.html"`. If we
+didn't list a rule for that item, the compilation would fail (Hakyll would not
+know what `"templates/default.html"` is!).

@@ -81,7 +81,9 @@ compile pattern compiler = RulesM $ do
 -- | Add a compilation rule
 --
 -- This sets a compiler for the given identifier. No resource is needed, since
--- we are creating the item from scratch.
+-- we are creating the item from scratch. This is useful if you want to create a
+-- page on your site that just takes content from other items -- but has no
+-- actual content itself.
 --
 create :: (Binary a, Typeable a, Writable a)
        => Identifier -> Compiler () a -> Rules
@@ -97,6 +99,23 @@ route pattern route' = tellRoute $ ifMatch pattern route'
 -- | Apart from regular compilers, one is also able to specify metacompilers.
 -- Metacompilers are a special class of compilers: they are compilers which
 -- produce other compilers.
+--
+-- This is needed when the list of compilers depends on something we cannot know
+-- before actually running other compilers. The most typical example is if we
+-- have a blogpost using tags.
+--
+-- Every post has a collection of tags. For example,
+--
+-- > post1: code, haskell
+-- > post2: code, random
+--
+-- Now, we want to create a list of posts for every tag. We cannot write this
+-- down in our 'Rules' DSL directly, since we don't know what tags the different
+-- posts will have -- we depend on information that will only be available when
+-- we are actually compiling the pages.
+--
+-- The solution is simple, using 'metaCompile', we can add a compiler that will
+-- parse the pages and produce the compilers needed for the different tag pages.
 --
 -- And indeed, we can see that the first argument to 'metaCompile' is a
 -- 'Compiler' which produces a list of ('Identifier', 'Compiler') pairs. The
