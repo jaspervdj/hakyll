@@ -12,7 +12,7 @@ import Control.Arrow ((>>^))
 
 import Hakyll.Core.Compiler
 import Hakyll.Core.ResourceProvider
-import Hakyll.Web.Util.String
+import Hakyll.Core.Util.String
 
 -- | Compiler form of 'compressCss'
 --

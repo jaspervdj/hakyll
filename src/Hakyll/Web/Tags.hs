@@ -55,10 +55,11 @@ import qualified Text.Blaze.Html5.Attributes as A
 
 import Hakyll.Web.Page
 import Hakyll.Web.Page.Metadata
-import Hakyll.Web.Util.String
+import Hakyll.Web.Util.Url
 import Hakyll.Core.Writable
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
+import Hakyll.Core.Util.String
 
 -- | Data about tags
 --

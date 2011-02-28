@@ -1,17 +1,14 @@
 -- | Miscellaneous string manipulation functions.
 --
-module Hakyll.Web.Util.String
+module Hakyll.Core.Util.String
     ( trim
     , replaceAll
     , splitAll
-    , toUrl
-    , toSiteRoot
     ) where
 
 import Data.Char (isSpace)
 import Data.Maybe (listToMaybe)
 
-import System.FilePath (splitPath, takeDirectory, joinPath)
 import Text.Regex.PCRE ((=~~))
 
 -- | Trim a string (drop spaces, tabs and newlines at both sides).
@@ -49,25 +46,3 @@ splitAll pattern = filter (not . null) . splitAll'
         Just (o, l) ->
             let (before, tmp) = splitAt o src
             in before : splitAll' (drop l tmp)
-
--- | Convert a filepath to an URL starting from the site root
---
--- Example:
---
--- > toUrl "foo/bar.html"
---
--- Result:
---
--- > "/foo/bar.html"
---
-toUrl :: FilePath -> String
-toUrl = ('/' :)
-
--- | Get the relative url to the site root, for a given (absolute) url
---
-toSiteRoot :: String -> String
-toSiteRoot = emptyException . joinPath . map parent . splitPath . takeDirectory
-  where
-    parent = const ".."
-    emptyException [] = "."
-    emptyException x  = x

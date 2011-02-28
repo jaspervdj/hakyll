@@ -29,7 +29,7 @@ import Text.HTML.TagSoup
 
 import Hakyll.Core.Compiler
 import Hakyll.Web.Page
-import Hakyll.Web.Util.String
+import Hakyll.Web.Util.Url
 
 -- | Compiler form of 'compressCss' which automatically picks the right root
 -- path

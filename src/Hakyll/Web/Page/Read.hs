@@ -12,7 +12,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 
 import Hakyll.Web.Page.Internal
-import Hakyll.Web.Util.String
+import Hakyll.Core.Util.String
 
 -- | We're using a simple state monad as parser
 --

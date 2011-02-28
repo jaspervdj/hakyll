@@ -24,7 +24,7 @@ import System.FilePath (takeFileName)
 import System.Locale (TimeLocale, defaultTimeLocale)
 
 import Hakyll.Web.Page.Internal
-import Hakyll.Web.Util.String
+import Hakyll.Core.Util.String
 
 -- | Get a metadata field. If the field does not exist, the empty string is
 -- returned.

@@ -12,6 +12,7 @@ module Hakyll
     , module Hakyll.Core.UnixFilter
     , module Hakyll.Core.Util.Arrow
     , module Hakyll.Core.Util.File
+    , module Hakyll.Core.Util.String
     , module Hakyll.Core.Writable
     , module Hakyll.Main
     , module Hakyll.Web.CompressCss
@@ -24,7 +25,7 @@ module Hakyll
     , module Hakyll.Web.RelativizeUrls
     , module Hakyll.Web.Tags
     , module Hakyll.Web.Template
-    , module Hakyll.Web.Util.String
+    , module Hakyll.Web.Util.Url
     ) where
 
 import Hakyll.Core.Compiler
@@ -38,6 +39,7 @@ import Hakyll.Core.Rules
 import Hakyll.Core.UnixFilter
 import Hakyll.Core.Util.Arrow
 import Hakyll.Core.Util.File
+import Hakyll.Core.Util.String
 import Hakyll.Core.Writable
 import Hakyll.Main
 import Hakyll.Web.CompressCss
@@ -50,4 +52,4 @@ import Hakyll.Web.Pandoc
 import Hakyll.Web.RelativizeUrls
 import Hakyll.Web.Tags
 import Hakyll.Web.Template
-import Hakyll.Web.Util.String
+import Hakyll.Web.Util.Url

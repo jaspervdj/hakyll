@@ -18,7 +18,7 @@ import Snap.Http.Server ( httpServe, setAccessLog, setErrorLog, addListen
                         , ConfigListen (..), emptyConfig
                         )
 
-import Hakyll.Web.Util.String (replaceAll)
+import Hakyll.Core.Util.String (replaceAll)
 
 -- | The first file in the list that actually exists is returned
 --
