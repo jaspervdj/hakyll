@@ -78,8 +78,8 @@ main = hakyll $ do
 ~~~~~
 
 This is enough code to create a small brochure site! You can find all code
-and files necessary to build this site [right here](TODO: add link!) -- feel
-free to play around with it!
+and files necessary to build this site [right here](/examples/brochure.zip)
+-- feel free to play around with it!
 
 To create your site, compile and run your `hakyll.hs`:
 
