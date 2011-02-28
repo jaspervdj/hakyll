@@ -1,7 +1,7 @@
 <entry>
-    <title>$title</title>
-    <link href="$root$url" />
-    <id>$root$url</id>
-    <updated>$timestamp</updated>
-    <summary type="html"><![CDATA[$description]]></summary>
+    <title>$title$</title>
+    <link href="$root$$url$" />
+    <id>$root$$url$</id>
+    <updated>$timestamp$</updated>
+    <summary type="html"><![CDATA[$description$]]></summary>
 </entry>

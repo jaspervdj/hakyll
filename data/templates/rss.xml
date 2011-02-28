@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
-        <title>$title</title>
-        <link>$root</link>
-        <description><![CDATA[$description]]></description>
-        <atom:link href="$root$url" rel="self"
+        <title>$title$</title>
+        <link>$root$</link>
+        <description><![CDATA[$description$]]></description>
+        <atom:link href="$root$$url$" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>$timestamp</lastBuildDate>
-        $body
+        <lastBuildDate>$timestamp$</lastBuildDate>
+        $body$
     </channel> 
 </rss>

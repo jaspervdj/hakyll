@@ -1,7 +1,7 @@
 <item>
-    <title>$title</title>
-    <link>$root$url</link>
-    <description><![CDATA[$description]]></description>
-    <pubDate>$timestamp</pubDate>
-    <guid>$root$url</guid>
+    <title>$title$</title>
+    <link>$root$$url$</link>
+    <description><![CDATA[$description$]]></description>
+    <pubDate>$timestamp$</pubDate>
+    <guid>$root$$url$</guid>
 </item>

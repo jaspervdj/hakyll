@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title>$title</title>
-    <link href="$root$url" rel="self" />
-    <link href="$root" />
-    <id>$root$url</id>
+    <title>$title$</title>
+    <link href="$root$$url$" rel="self" />
+    <link href="$root$" />
+    <id>$root$$url$</id>
     <author>
-        <name>$authorName</name>
+        <name>$authorName$</name>
     </author>
-    <updated>$timestamp</updated>
-    $body
+    <updated>$timestamp$</updated>
+    $body$
 </feed>
