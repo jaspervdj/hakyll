@@ -32,6 +32,7 @@ module Hakyll.Core.Routes
     , setExtension
     , ifMatch
     , customRoute
+    , gsubRoute
     ) where
 
 import Data.Monoid (Monoid, mempty, mappend)
@@ -40,6 +41,7 @@ import System.FilePath (replaceExtension)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
+import Hakyll.Core.Util.String
 
 -- | Type used for a route
 --
@@ -94,3 +96,19 @@ ifMatch pattern (Routes route) = Routes $ \id' ->
 --
 customRoute :: (Identifier -> FilePath) -> Routes
 customRoute f = Routes $ Just . f
+
+-- | Create a gsub route
+--
+-- Example:
+--
+-- > runRoutes (gsubRoute "rss/" (const "")) "tags/rss/bar.xml"
+--
+-- Result:
+--
+-- > Just "tags/bar.xml"
+--
+gsubRoute :: String              -- ^ Pattern
+          -> (String -> String)  -- ^ Replacement
+          -> Routes              -- ^ Resulting route
+gsubRoute pattern replacement = customRoute $
+    replaceAll pattern replacement . toFilePath

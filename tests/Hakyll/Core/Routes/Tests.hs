@@ -15,4 +15,7 @@ tests = fromAssertions "runRoutes"
     , Just "foo.html" @=? runRoutes (setExtension ".html") "foo"
     , Just "foo.html" @=? runRoutes (setExtension "html") "foo.markdown"
     , Just "foo.html" @=? runRoutes (setExtension ".html") "foo.markdown"
+
+    , Just "tags/bar.xml" @=?
+        runRoutes (gsubRoute "rss/" (const "")) "tags/rss/bar.xml"
     ]
