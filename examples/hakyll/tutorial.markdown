@@ -10,7 +10,7 @@ anyone still care about a static website?
 
 - Static websites are fast, because it's simply files served directly from the
   hard disk.
-- Static websites are secure. Nobody has even found an SQL injection in static
+- Static websites are secure. Nobody has ever found an SQL injection in static
   pages.
 - Static websites are easy to deploy. Just copy them to your webhost using
   (S)FTP/rsync/scp and you are done. They work on all webhosts: no CGI or extra
@@ -128,11 +128,11 @@ route   "css/*" idRoute
 ~~~~~
 
 Apart from specifying where the items should go (using `route`), we also have to
-specify *how* the need to be compiled. This is done using the `compile`
-function. As second argument, it takes a `Compiler`. These compilers can consist
-of very complicated constructions, but Hakyll also provides a number of good
-default compilers. The `compressCssCompiler` compiler will simply compress the
-CSS found in the files.
+specify *how* they need to be compiled. This is done using the `compile`
+function. It takes a `Compiler` as its second argument. These compilers can
+consist of very complicated constructions, but Hakyll also provides a number of
+good default compilers. The `compressCssCompiler` compiler will simply compress
+the CSS found in the files.
 
 ~~~~~{.haskell}
 compile "css/*" compressCssCompiler
