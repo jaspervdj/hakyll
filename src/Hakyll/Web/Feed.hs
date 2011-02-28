@@ -33,6 +33,7 @@ import Hakyll.Web.Page
 import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Template
 import Hakyll.Web.Template.Read.Hakyll (readTemplate)
+import Hakyll.Web.Util.String
 
 import Paths_hakyll
 
@@ -93,7 +94,7 @@ renderFeed feedTemplate itemTemplate configuration =
     renderFeed' = unsafeCompiler $ \(items, url) -> do
         feedTemplate' <- loadTemplate feedTemplate
         itemTemplate' <- loadTemplate itemTemplate
-        let url' = fromMaybe noUrl url
+        let url' = toUrl $ fromMaybe noUrl url
         return $ createFeed feedTemplate' itemTemplate' url' configuration items
 
     -- Auxiliary: load a template from a datafile
