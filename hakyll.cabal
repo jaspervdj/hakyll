@@ -1,5 +1,5 @@
 Name:               hakyll
-Version:            3.0.0.1
+Version:            3.0.0.2
 
 Synopsis:           A simple static site generator library.
 Description:        A simple static site generator library, mainly aimed at
@@ -17,6 +17,8 @@ Data-Files:         templates/atom.xml
                     templates/atom-item.xml
                     templates/rss.xml
                     templates/rss-item.xml
+extra-source-files: src-inotify/Hakyll/Web/Preview/Poll.hs
+                    src-interval/Hakyll/Web/Preview/Poll.hs
 
 build-type:         Simple
 
@@ -30,78 +32,78 @@ flag inotify
   default:          False
 
 library
-  ghc-options:      -Wall
-  hs-source-dirs:   src
+  ghc-options:        -Wall
+  hs-source-dirs:     src
 
   if flag(inotify)
-    hs-source-dirs: src-inotify
-    build-depends:  hinotify >= 0.3
+    hs-source-dirs:   src-inotify
+    build-depends:    hinotify >= 0.3
   else
-    hs-source-dirs: src-interval
+    hs-source-dirs:   src-interval
 
-  build-depends:    base >= 4 && < 5,
-                    filepath == 1.*,
-                    directory == 1.*,
-                    containers == 0.*,
-                    pandoc == 1.*,
-                    regex-base >= 0.93,
-                    regex-pcre >= 0.93,
-                    mtl >= 1,
-                    old-locale == 1.*,
-                    old-time == 1.*,
-                    time >= 1.1,
-                    binary >= 0.5,
-                    hamlet >= 0.7,
-                    blaze-html >= 0.4,
-                    snap-server >= 0.4,
-                    snap-core >= 0.4,
-                    bytestring >= 0.9,
-                    utf8-string >= 0.3,
-                    tagsoup >= 0.12,
-                    hopenssl >= 1.4,
-                    unix >= 2.4,
-                    strict-concurrency >= 0.2
-  exposed-modules:  Hakyll
-                    Hakyll.Main
-                    Hakyll.Web.Util.String
-                    Hakyll.Web.Preview.Server
-                    Hakyll.Web.Preview.Poll
-                    Hakyll.Web.CompressCss
-                    Hakyll.Web.Template
-                    Hakyll.Web.Feed
-                    Hakyll.Web.Tags
-                    Hakyll.Web.Pandoc
-                    Hakyll.Web.FileType
-                    Hakyll.Web.Page
-                    Hakyll.Web.Template.Read
-                    Hakyll.Web.RelativizeUrls
-                    Hakyll.Web.Page.Read
-                    Hakyll.Web.Page.Metadata
-                    Hakyll.Core.ResourceProvider.FileResourceProvider
-                    Hakyll.Core.Configuration
-                    Hakyll.Core.Identifier.Pattern
-                    Hakyll.Core.UnixFilter
-                    Hakyll.Core.Util.Arrow
-                    Hakyll.Core.Util.File
-                    Hakyll.Core.ResourceProvider
-                    Hakyll.Core.CompiledItem
-                    Hakyll.Core.Compiler
-                    Hakyll.Core.CopyFile
-                    Hakyll.Core.Run
-                    Hakyll.Core.Store
-                    Hakyll.Core.Writable
-                    Hakyll.Core.Identifier
-                    Hakyll.Core.DirectedGraph.Dot
-                    Hakyll.Core.DirectedGraph.DependencySolver
-                    Hakyll.Core.DirectedGraph
-                    Hakyll.Core.Rules
-                    Hakyll.Core.Routes
-                    Hakyll.Core.Logger
-  other-modules:    Paths_hakyll
-                    Hakyll.Web.Template.Read.Hakyll
-                    Hakyll.Web.Template.Read.Hamlet
-                    Hakyll.Web.Template.Internal
-                    Hakyll.Web.Page.Internal
-                    Hakyll.Core.Compiler.Internal
-                    Hakyll.Core.DirectedGraph.Internal
-                    Hakyll.Core.Rules.Internal
+  build-depends:      base >= 4 && < 5,
+                      filepath == 1.*,
+                      directory == 1.*,
+                      containers == 0.*,
+                      pandoc == 1.*,
+                      regex-base >= 0.93,
+                      regex-pcre >= 0.93,
+                      mtl >= 1,
+                      old-locale == 1.*,
+                      old-time == 1.*,
+                      time >= 1.1,
+                      binary >= 0.5,
+                      hamlet >= 0.7,
+                      blaze-html >= 0.4,
+                      snap-server >= 0.4,
+                      snap-core >= 0.4,
+                      bytestring >= 0.9,
+                      utf8-string >= 0.3,
+                      tagsoup >= 0.12,
+                      hopenssl >= 1.4,
+                      unix >= 2.4,
+                      strict-concurrency >= 0.2
+  exposed-modules:    Hakyll
+                      Hakyll.Main
+                      Hakyll.Web.Util.String
+                      Hakyll.Web.Preview.Server
+                      Hakyll.Web.Preview.Poll
+                      Hakyll.Web.CompressCss
+                      Hakyll.Web.Template
+                      Hakyll.Web.Feed
+                      Hakyll.Web.Tags
+                      Hakyll.Web.Pandoc
+                      Hakyll.Web.FileType
+                      Hakyll.Web.Page
+                      Hakyll.Web.Template.Read
+                      Hakyll.Web.RelativizeUrls
+                      Hakyll.Web.Page.Read
+                      Hakyll.Web.Page.Metadata
+                      Hakyll.Core.ResourceProvider.FileResourceProvider
+                      Hakyll.Core.Configuration
+                      Hakyll.Core.Identifier.Pattern
+                      Hakyll.Core.UnixFilter
+                      Hakyll.Core.Util.Arrow
+                      Hakyll.Core.Util.File
+                      Hakyll.Core.ResourceProvider
+                      Hakyll.Core.CompiledItem
+                      Hakyll.Core.Compiler
+                      Hakyll.Core.CopyFile
+                      Hakyll.Core.Run
+                      Hakyll.Core.Store
+                      Hakyll.Core.Writable
+                      Hakyll.Core.Identifier
+                      Hakyll.Core.DirectedGraph.Dot
+                      Hakyll.Core.DirectedGraph.DependencySolver
+                      Hakyll.Core.DirectedGraph
+                      Hakyll.Core.Rules
+                      Hakyll.Core.Routes
+                      Hakyll.Core.Logger
+  other-modules:      Paths_hakyll
+                      Hakyll.Web.Template.Read.Hakyll
+                      Hakyll.Web.Template.Read.Hamlet
+                      Hakyll.Web.Template.Internal
+                      Hakyll.Web.Page.Internal
+                      Hakyll.Core.Compiler.Internal
+                      Hakyll.Core.DirectedGraph.Internal
+                      Hakyll.Core.Rules.Internal
