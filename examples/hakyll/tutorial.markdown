@@ -25,7 +25,7 @@ Haskell. By using the awesome [pandoc] library, it is able to create your
 website from a large variety of input formats.
 
 [Haskell]: http://haskell.org/
-[pandoc]:
+[pandoc]: http://johnmacfarlane.net/pandoc/
 
 Features include:
 
@@ -80,6 +80,15 @@ main = hakyll $ do
 This is enough code to create a small brochure site! You can find all code
 and files necessary to build this site [right here](TODO: add link!) -- feel
 free to play around with it!
+
+To create your site, compile and run your `hakyll.hs`:
+
+    [jasper@phoenix] ghc --make hakyll.hs
+    [jasper@phoenix] ./hakyll preview
+
+Alternatively,
+
+    [jasper@phoenix] runghc hakyll.hs preview
 
 Our code begins with a number of imports. Nothing out of the ordinary here, but
 do note that we use the `OverloadedStrings` extension for conciseness.
@@ -177,7 +186,7 @@ The gist of it is that the `Compiler a b` type has two parameters -- it is an
 Arrow, and we can chain compilers using the `>>>` operator. The [Compiler]
 reference page has some more readable information on this subject.
 
-[compiler]: /reference/Hakyll-Core-Compiler.html
+[Compiler]: /reference/Hakyll-Core-Compiler.html
 
 ~~~~~{.haskell}
 compile page $ pageCompiler
@@ -188,3 +197,40 @@ compile page $ pageCompiler
 Note that we can only use `applyTemplateCompiler` with
 `"templates/default.html"` because we compiled `"templates/default.html"`. If we
 didn't list a rule for that item, the compilation would fail (Hakyll would not
+find the template).
+
+Now, let's look at the concrete compiler:
+
+- `pageCompiler` starts by reading the [Page], parsing it, and rendering it
+  using [pandoc].
+- `applyTemplateCompiler` applies a [Template] which we have already loaded.
+- `relativizeUrlsCompiler` will [relativize] the URL's so we have a site we can
+  deploy everywhere.
+
+[Page]: /reference/Hakyll-Web-Page.html
+[relativize]: /reference/Hakyll-Web-RelativizeUrls.html
+
+Various tips and tricks
+-----------------------
+
+### Syntax highlighting
+
+Syntax highlighting is enabled by default in Hakyll. However, you also need to
+enable it in pandoc. If no syntax highlighting shows up, try
+
+    [jasper@phoenix] cabal install --reinstall -fhighlighting pandoc
+
+### When to rebuild
+
+If you execute a `./hakyll build`, Hakyll will build your site incrementally.
+This means it will be very fast, but it will not pick up _all_ changes.
+
+- In case you edited `hakyll.hs`, you first want to compile it again.
+- It is generally recommended to do a `./hakyll rebuild` before you deploy your
+  site.
+
+After rebuilding your site, all files will look as "modified" to the filesystem.
+This means that when you upload your site, it will usually transfer all files --
+this can generate more traffic than necessary, since it is possible that some
+files were not actually modified. If you use `rsync`, you can counter this using
+the `--checksum` option.
