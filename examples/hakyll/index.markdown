@@ -2,6 +2,12 @@
 title: Home
 ---
 
+## Hakyll 3
+
+Hakyll 3 has been released, and it can be installed by running
+`cabal install hakyll`. For a limited time (but as long as is necessary) you can
+access the old site and documentation [here](/hakyll2)
+
 ## Overview
 
 Hakyll is a [Haskell](http://haskell.org) library for generating static sites,
