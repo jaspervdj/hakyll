@@ -72,7 +72,7 @@ main = hakyll $ do
 
     forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
         route   page $ setExtension "html"
-        compile page $ readPageCompiler
+        compile page $ pageCompiler
             >>> applyTemplateCompiler "templates/default.html"
             >>> relativizeUrlsCompiler
 ~~~~~
