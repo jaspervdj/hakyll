@@ -18,4 +18,7 @@ tests = fromAssertions "runRoutes"
 
     , Just "tags/bar.xml" @=?
         runRoutes (gsubRoute "rss/" (const "")) "tags/rss/bar.xml"
+    , Just "tags/bar.xml" @=?
+        runRoutes (gsubRoute "rss/" (const "") `composeRoutes`
+            setExtension "xml") "tags/rss/bar"
     ]

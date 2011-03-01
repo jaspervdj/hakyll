@@ -33,6 +33,7 @@ module Hakyll.Core.Routes
     , ifMatch
     , customRoute
     , gsubRoute
+    , composeRoutes
     ) where
 
 import Data.Monoid (Monoid, mempty, mappend)
@@ -112,3 +113,24 @@ gsubRoute :: String              -- ^ Pattern
           -> Routes              -- ^ Resulting route
 gsubRoute pattern replacement = customRoute $
     replaceAll pattern replacement . toFilePath
+
+-- | Compose routes so that @f `composeRoutes` g@ is more or less equivalent
+-- with @f >>> g@.
+--
+-- Example:
+--
+-- > let routes = gsubRoute "rss/" (const "") `composeRoutes` setExtension "xml"
+-- > in runRoutes routes "tags/rss/bar"
+--
+-- Result:
+--
+-- > Just "tags/bar.xml"
+--
+-- If the first route given fails, Hakyll will not apply the second route.
+--
+composeRoutes :: Routes  -- ^ First route to apply
+              -> Routes  -- ^ Second route to apply
+              -> Routes  -- ^ Resulting route
+composeRoutes (Routes f) (Routes g) = Routes $ \i -> do
+    p <- f i
+    g $ parseIdentifier p
