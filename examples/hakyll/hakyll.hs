@@ -1,39 +1,50 @@
-import Text.Hakyll
-import Text.Hakyll.Render
-import Text.Hakyll.File
-import Text.Hakyll.CreateContext
-import Control.Monad.Reader (liftIO)
-import System.Directory
-import Control.Monad (mapM_, forM_, liftM)
-import Data.List (sort)
+{-# LANGUAGE OverloadedStrings #-}
+import Hakyll
+import Control.Monad (forM_)
+import Control.Arrow ((>>>), arr)
+import Text.Pandoc
 
-main = hakyll "http://jaspervdj.be/hakyll" $ do
-    directory css "css"
-    directory static "images"
-    directory static "examples"
-    directory static "reference"
+main :: IO ()
+main = hakyll $ do
+    route   "css/*" idRoute
+    compile "css/*" compressCssCompiler
 
-    tutorials <- liftM sort $ getRecursiveContents "tutorials"
-    let tutorialPage = createListing "tutorials.html"
-                                     ["templates/tutorialitem.html"]
-                                     (map createPage tutorials)
-                                     [("title", Left "Tutorials")]
-    renderChain ["templates/tutorials.html", "templates/default.html"]
-                (withSidebar tutorialPage)
+    -- Static directories
+    forM_ ["images/*", "examples/*", "reference/*"] $ \f -> do
+        route   f idRoute
+        compile f copyFileCompiler
 
-    mapM_ (render' ["templates/default.html"]) $ 
-        [ "about.markdown"
-        , "index.markdown"
-        , "philosophy.markdown"
-        , "reference.markdown"
-        , "changelog.markdown"
-        ] 
+    -- Pages
+    forM_ pages $ \p -> do
+        route   p $ setExtension "html"
+        compile p $ pageCompiler
+            >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
 
-    forM_ tutorials $ render' [ "templates/tutorial.html"
-                              , "templates/default.html"
-                              ] 
+    -- Tutorial
+    route   "tutorial.markdown" $ setExtension "html"
+    compile "tutorial.markdown" $ readPageCompiler
+        >>> pageRenderPandocWith defaultHakyllParserState withToc
+        >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
+        >>> applyTemplateCompiler "templates/default.html"
+        >>> relativizeUrlsCompiler
 
+    -- Sidebar
+    compile "sidebar.markdown" pageCompiler
+
+    -- Templates
+    compile "templates/*" templateCompiler
   where
-    render' templates = renderChain templates . withSidebar . createPage
-    withSidebar a = a `combine` createPage "sidebar.markdown"
-          
+    withToc = defaultHakyllWriterOptions
+        { writerTableOfContents = True
+        , writerTemplate = "<h2>Table of contents</h2>\n$toc$\n$body$"
+        , writerStandalone = True
+        }
+
+    pages = [ "about.markdown"
+            , "changelog.markdown"
+            , "index.markdown"
+            , "philosophy.markdown"
+            , "reference.markdown"
+            ]

@@ -2,6 +2,10 @@
 title: Changelog
 ---
 
+## Hakyll 3
+
+- Complete rewrite
+
 ## Hakyll 2.4.1
 
 - Add a number of utility functions
