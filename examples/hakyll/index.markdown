@@ -40,10 +40,10 @@ Some sites written in Hakyll:
 
 ## Getting Started
 
-You can get the latest version from hackage using `cabal install hakyll`. I
-have written a [tutorial](tutorial.html), and reading it is highly
-recommended if you want to get started with hakyll. Also, there are a few
-examples available in
-[the github repo](http://github.com/jaspervdj/Hakyll/tree/master/examples/),
-including this site. For any questions you might have, there is also a
-[google discussion group](http://groups.google.com/group/hakyll).
+You can get the latest version from hackage using `cabal install hakyll`. Then,
+you can:
+
+- read the [tutorial](/tutorial.html);
+- mail the [google discussion group](http://groups.google.com/group/hakyll);
+- ask questions on the IRC channel: `#hakyll` on
+  [freenode](http://freenode.net/).
