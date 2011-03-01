@@ -60,17 +60,17 @@ createFeed :: Template           -- ^ Feed template
            -> String             -- ^ Resulting feed
 createFeed feedTemplate itemTemplate url configuration items =
     pageBody $ applyTemplate feedTemplate
-             $ setField "timestamp"   timestamp
-             $ setField "title"       (feedTitle configuration)
-             $ setField "description" (feedDescription configuration)
-             $ setField "authorName"  (feedDescription configuration)
-             $ setField "root"        (feedRoot configuration)
-             $ setField "url"         url
+             $ trySetField "timestamp"   timestamp
+             $ trySetField "title"       (feedTitle configuration)
+             $ trySetField "description" (feedDescription configuration)
+             $ trySetField "authorName"  (feedDescription configuration)
+             $ trySetField "root"        (feedRoot configuration)
+             $ trySetField "url"         url
              $ fromBody body
   where
     -- Preprocess items
     items' = flip map items $ applyTemplate itemTemplate
-                            . setField "root" (feedRoot configuration)
+                            . trySetField "root" (feedRoot configuration)
 
     -- Body: concatenated items
     body = concat $ map pageBody items'

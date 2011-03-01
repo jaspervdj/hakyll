@@ -107,12 +107,12 @@ addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
   where
     -- Add root and url, based on route
     addRoute Nothing  = id
-    addRoute (Just r) = setField "url" (toUrl r)
+    addRoute (Just r) = trySetField "url" (toUrl r)
 
     -- Add title and category, based on identifier
-    addIdentifier i = setField "title" (takeBaseName p)
-                    . setField "category" (takeBaseName $ takeDirectory p)
-                    . setField "path" p
+    addIdentifier i = trySetField "title" (takeBaseName p)
+                    . trySetField "category" (takeBaseName $ takeDirectory p)
+                    . trySetField "path" p
       where
         p = toFilePath i
 

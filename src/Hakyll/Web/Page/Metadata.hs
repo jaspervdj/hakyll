@@ -4,6 +4,7 @@ module Hakyll.Web.Page.Metadata
     ( getField
     , getFieldMaybe
     , setField
+    , trySetField
     , setFieldA
     , renderField
     , changeField
@@ -41,13 +42,21 @@ getFieldMaybe :: String        -- ^ Key
               -> Maybe String  -- ^ Value, if found
 getFieldMaybe key = M.lookup key . pageMetadata
 
--- | Add a metadata field. If the field already exists, it is not overwritten.
+-- | Version of 'trySetField' which overrides any previous value
 --
 setField :: String  -- ^ Key
          -> String  -- ^ Value
          -> Page a  -- ^ Page to add it to
          -> Page a  -- ^ Resulting page
-setField k v (Page m b) = Page (M.insertWith (flip const) k v m) b
+setField k v (Page m b) = Page (M.insert k v m) b
+
+-- | Add a metadata field. If the field already exists, it is not overwritten.
+--
+trySetField :: String  -- ^ Key
+            -> String  -- ^ Value
+            -> Page a  -- ^ Page to add it to
+            -> Page a  -- ^ Resulting page
+trySetField k v (Page m b) = Page (M.insertWith (flip const) k v m) b
 
 -- | Arrow-based variant of 'setField'. Because of it's type, this function is
 -- very usable together with the different 'require' functions.
