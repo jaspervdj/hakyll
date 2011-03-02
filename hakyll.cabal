@@ -1,5 +1,5 @@
 Name:               hakyll
-Version:            3.0.0.4
+Version:            3.0.1.0
 
 Synopsis:           A simple static site generator library.
 Description:        A simple static site generator library, mainly aimed at
@@ -89,10 +89,11 @@ library
                       Hakyll.Core.ResourceProvider
                       Hakyll.Core.CompiledItem
                       Hakyll.Core.Compiler
-                      Hakyll.Core.CopyFile
                       Hakyll.Core.Run
                       Hakyll.Core.Store
                       Hakyll.Core.Writable
+                      Hakyll.Core.Writable.CopyFile
+                      Hakyll.Core.Writable.WritableTuple
                       Hakyll.Core.Identifier
                       Hakyll.Core.DirectedGraph.Dot
                       Hakyll.Core.DirectedGraph.DependencySolver
