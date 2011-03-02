@@ -2,7 +2,6 @@
 --
 module Hakyll
     ( module Hakyll.Core.Compiler
-    , module Hakyll.Core.CopyFile
     , module Hakyll.Core.Configuration
     , module Hakyll.Core.Identifier
     , module Hakyll.Core.Identifier.Pattern
@@ -14,6 +13,8 @@ module Hakyll
     , module Hakyll.Core.Util.File
     , module Hakyll.Core.Util.String
     , module Hakyll.Core.Writable
+    , module Hakyll.Core.Writable.CopyFile
+    , module Hakyll.Core.Writable.WritableTuple
     , module Hakyll.Main
     , module Hakyll.Web.CompressCss
     , module Hakyll.Web.Feed
@@ -29,7 +30,6 @@ module Hakyll
     ) where
 
 import Hakyll.Core.Compiler
-import Hakyll.Core.CopyFile
 import Hakyll.Core.Configuration
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
@@ -41,6 +41,8 @@ import Hakyll.Core.Util.Arrow
 import Hakyll.Core.Util.File
 import Hakyll.Core.Util.String
 import Hakyll.Core.Writable
+import Hakyll.Core.Writable.CopyFile
+import Hakyll.Core.Writable.WritableTuple
 import Hakyll.Main
 import Hakyll.Web.CompressCss
 import Hakyll.Web.Feed

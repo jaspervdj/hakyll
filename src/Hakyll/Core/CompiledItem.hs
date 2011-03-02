@@ -15,7 +15,7 @@ module Hakyll.Core.CompiledItem
     ) where
 
 import Data.Binary (Binary)
-import Data.Typeable (Typeable, cast)
+import Data.Typeable (Typeable, cast, typeOf)
 import Data.Maybe (fromMaybe)
 
 import Hakyll.Core.Writable
@@ -42,4 +42,5 @@ unCompiledItem :: (Binary a, Typeable a, Writable a)
                -> a
 unCompiledItem (CompiledItem x) = fromMaybe error' $ cast x
   where
-    error' = error "Hakyll.Core.CompiledItem.unCompiledItem: Unsupported type"
+    error' = error $  "Hakyll.Core.CompiledItem.unCompiledItem: "
+                   ++ "unsupported type (got " ++ show (typeOf x) ++ ")"

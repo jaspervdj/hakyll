@@ -1,7 +1,7 @@
 -- | Exports simple compilers to just copy files
 --
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
-module Hakyll.Core.CopyFile
+module Hakyll.Core.Writable.CopyFile
     ( CopyFile (..)
     , copyFileCompiler
     ) where
