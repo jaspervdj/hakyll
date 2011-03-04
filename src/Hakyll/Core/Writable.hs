@@ -1,6 +1,6 @@
 -- | Describes writable items; items that can be saved to the disk
 --
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
 module Hakyll.Core.Writable
     ( Writable (..)
     ) where
@@ -8,6 +8,8 @@ module Hakyll.Core.Writable
 import Data.Word (Word8)
 
 import qualified Data.ByteString as SB
+import Text.Blaze (Html)
+import Text.Blaze.Renderer.String (renderHtml)
 
 -- | Describes an item that can be saved to the disk
 --
@@ -18,5 +20,11 @@ class Writable a where
 instance Writable [Char] where
     write = writeFile
 
+instance Writable SB.ByteString where
+    write p = SB.writeFile p
+
 instance Writable [Word8] where
-    write p = SB.writeFile p . SB.pack
+    write p = write p . SB.pack
+
+instance Writable Html where
+    write p html = write p $ renderHtml html
