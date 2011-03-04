@@ -91,7 +91,7 @@ preview configuration rules port = do
         callback = build configuration rules
 
     -- Fork a thread polling for changes
-    _ <- forkIO $ previewPoll configuration resources callback
+    _ <- forkIO $ previewPoll configuration resources (build configuration rules) (const $ rebuild configuration rules)
     
     -- Run the server in the main thread
     server configuration port

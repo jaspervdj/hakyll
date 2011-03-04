@@ -4,25 +4,25 @@ module Hakyll.Web.Preview.Poll
     ( previewPoll
     ) where
 
-import Control.Monad (forM_, when)
-import System.FilePath (takeDirectory, (</>))
-import Data.List (isPrefixOf, nub)
+import Control.Monad (forM_)
+import System.FilePath (takeDirectory)
+import Data.List (nub)
 import Data.Set (Set,toList)
 
-import System.INotify
+import System.INotify (initINotify,addWatch,EventVariety (AllEvents), Event (..))
 
 import Hakyll.Core.Configuration
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Identifier
-import Debug.Trace
 
 -- | Calls the given callback when the directory tree changes
 --
 previewPoll :: HakyllConfiguration  -- ^ Configuration
             -> Set Resource         -- ^ Resources to watch
-            -> IO ()                -- ^ Action called when something changes
+            -> IO ()                -- ^ Action called when something changes or added
+            -> (FilePath -> IO ())                -- ^ Action called when something is deleted
             -> IO ()                -- ^ Can block forever
-previewPoll _ resources callback = do
+previewPoll _ resources build rebuild = do
     -- Initialize inotify
     inotify <- initINotify
 
@@ -36,4 +36,10 @@ previewPoll _ resources callback = do
         directories = nub . map (notEmpty . takeDirectory . toFilePath . unResource) $ toList resources
 
     -- Add a watcher for every directory
-    forM_ directories $ \directory -> addWatch inotify [MoveIn,MoveOut,Delete,Create] directory $ const callback
+    forM_ directories $ \directory -> addWatch inotify [AllEvents] directory $ \e -> case e of
+	Created False _ -> build
+	Modified False _ -> build
+	MovedIn False _ _ -> build
+	MovedOut False f _ -> rebuild f
+	Deleted False f -> rebuild f
+	x -> return ()	
