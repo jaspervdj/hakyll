@@ -8,6 +8,7 @@ module Hakyll.Core.Logger
     , section
     , timed
     , report
+    , thrown
     ) where
 
 import Control.Monad (forever)
@@ -88,3 +89,11 @@ report :: MonadIO m
        -> String  -- ^ Message
        -> m ()    -- ^ No result
 report logger msg = liftIO $ message logger $ "  [      ] " ++ msg
+
+-- | Log an error that was thrown in the compilation phase
+--
+thrown :: MonadIO m
+       => Logger  -- ^ Logger
+       -> String  -- ^ Message
+       -> m ()    -- ^ No result
+thrown logger msg = liftIO $ message logger $ "  [ ERROR] " ++ msg

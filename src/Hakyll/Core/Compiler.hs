@@ -112,6 +112,7 @@ import Control.Arrow ((>>>), (&&&), arr)
 import Control.Applicative ((<$>))
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans (liftIO)
+import Control.Monad.Error (throwError)
 import Control.Category (Category, (.), id)
 import Data.Maybe (fromMaybe)
 import System.FilePath (takeExtension)
@@ -133,14 +134,14 @@ import Hakyll.Core.Logger
 -- | Run a compiler, yielding the resulting target and it's dependencies. This
 -- version of 'runCompilerJob' also stores the result
 --
-runCompiler :: Compiler () CompileRule  -- ^ Compiler to run
-            -> Identifier               -- ^ Target identifier
-            -> ResourceProvider         -- ^ Resource provider
-            -> Routes                   -- ^ Route
-            -> Store                    -- ^ Store
-            -> Bool                     -- ^ Was the resource modified?
-            -> Logger                   -- ^ Logger
-            -> IO CompileRule           -- ^ Resulting item
+runCompiler :: Compiler () CompileRule    -- ^ Compiler to run
+            -> Identifier                 -- ^ Target identifier
+            -> ResourceProvider           -- ^ Resource provider
+            -> Routes                     -- ^ Route
+            -> Store                      -- ^ Store
+            -> Bool                       -- ^ Was the resource modified?
+            -> Logger                     -- ^ Logger
+            -> IO (Throwing CompileRule)  -- ^ Resulting item
 runCompiler compiler identifier provider routes store modified logger = do
     -- Run the compiler job
     result <-
@@ -151,7 +152,7 @@ runCompiler compiler identifier provider routes store modified logger = do
         -- In case we compiled an item, we will store a copy in the cache first,
         -- before we return control. This makes sure the compiled item can later
         -- be accessed by e.g. require.
-        CompileRule (CompiledItem x) ->
+        Right (CompileRule (CompiledItem x)) ->
             storeSet store "Hakyll.Core.Compiler.runCompiler" identifier x
 
         -- Otherwise, we do nothing here
@@ -187,16 +188,16 @@ getResourceString = fromJob $ \resource -> CompilerM $ do
 --
 getDependency :: (Binary a, Writable a, Typeable a)
               => Identifier -> CompilerM a
-getDependency identifier = CompilerM $ do
+getDependency id' = CompilerM $ do
     store <- compilerStore <$> ask
-    fmap (fromMaybe error') $ liftIO $
-        storeGet store "Hakyll.Core.Compiler.runCompiler" identifier
+    result <- liftIO $ storeGet store "Hakyll.Core.Compiler.runCompiler" id'
+    case result of
+        Nothing -> throwError error'
+        Just x  -> return x
   where
-    error' = error $  "Hakyll.Core.Compiler.getDependency: "
-                   ++ show identifier
-                   ++ " not found in the cache, the cache might be corrupted or"
-                   ++ " the item you are referring to might not exist"
-
+    error' =  "Hakyll.Core.Compiler.getDependency: " ++ show id'
+           ++ " not found in the cache, the cache might be corrupted or"
+           ++ " the item you are referring to might not exist"
 
 -- | Variant of 'require' which drops the current value
 --

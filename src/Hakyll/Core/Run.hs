@@ -188,7 +188,7 @@ runCompilers ((id', compiler) : compilers) = Runtime $ do
 
     case result of
         -- Compile rule for one item, easy stuff
-        CompileRule compiled -> do
+        Right (CompileRule compiled) -> do
             case runRoutes routes id' of
                 Nothing  -> return ()
                 Just url -> timed logger ("Routing to " ++ url) $ do
@@ -202,6 +202,11 @@ runCompilers ((id', compiler) : compilers) = Runtime $ do
             unRuntime $ runCompilers compilers 
 
         -- Metacompiler, slightly more complicated
-        MetaCompileRule newCompilers ->
+        Right (MetaCompileRule newCompilers) ->
             -- Actually I was just kidding, it's not hard at all
             unRuntime $ addNewCompilers compilers newCompilers
+
+        -- Some error happened, log and continue
+        Left err -> do
+            thrown logger err 
+            unRuntime $ runCompilers compilers

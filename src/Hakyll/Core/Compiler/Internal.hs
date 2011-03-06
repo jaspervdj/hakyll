@@ -5,6 +5,7 @@ module Hakyll.Core.Compiler.Internal
     ( Dependencies
     , DependencyEnvironment (..)
     , CompilerEnvironment (..)
+    , Throwing
     , CompilerM (..)
     , Compiler (..)
     , runCompilerJob
@@ -17,6 +18,7 @@ module Hakyll.Core.Compiler.Internal
 import Prelude hiding ((.), id)
 import Control.Applicative (Applicative, pure, (<*>), (<$>))
 import Control.Monad.Reader (ReaderT, Reader, ask, runReaderT, runReader)
+import Control.Monad.Error (ErrorT, runErrorT)
 import Control.Monad ((<=<), liftM2)
 import Data.Set (Set)
 import qualified Data.Set as S
@@ -59,10 +61,14 @@ data CompilerEnvironment = CompilerEnvironment
       compilerLogger           :: Logger
     }
 
+-- | A calculation possibly throwing an error
+--
+type Throwing a = Either String a
+
 -- | The compiler monad
 --
 newtype CompilerM a = CompilerM
-    { unCompilerM :: ReaderT CompilerEnvironment IO a
+    { unCompilerM :: ErrorT String (ReaderT CompilerEnvironment IO) a
     } deriving (Monad, Functor, Applicative)
 
 -- | The compiler arrow
@@ -96,7 +102,7 @@ instance ArrowChoice Compiler where
         Left l  -> Left  <$> j l
         Right r -> Right <$> return r
 
--- | Run a compiler, yielding the resulting target and it's dependencies
+-- | Run a compiler, yielding the resulting target
 --
 runCompilerJob :: Compiler () a     -- ^ Compiler to run
                -> Identifier        -- ^ Target identifier
@@ -105,9 +111,9 @@ runCompilerJob :: Compiler () a     -- ^ Compiler to run
                -> Store             -- ^ Store
                -> Bool              -- ^ Was the resource modified?
                -> Logger            -- ^ Logger
-               -> IO a
+               -> IO (Throwing a)   -- ^ Result
 runCompilerJob compiler identifier provider route store modified logger =
-    runReaderT (unCompilerM $ compilerJob compiler ()) env
+    runReaderT (runErrorT $ unCompilerM $ compilerJob compiler ()) env
   where
     env = CompilerEnvironment
             { compilerIdentifier       = identifier
