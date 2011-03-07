@@ -275,9 +275,9 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
                 return v
         else do v <- liftIO $ storeGet store name identifier
                 case v of Just v' -> return v'
-                          Nothing -> error'
+                          Nothing -> throwError error'
   where
-    error' = error "Hakyll.Core.Compiler.cached: Cache corrupt!"
+    error' = "Hakyll.Core.Compiler.cached: Cache corrupt!"
 
 -- | Create an unsafe compiler from a function in IO
 --
