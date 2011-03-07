@@ -31,3 +31,4 @@ who still maintains the package. Contributors:
 - [seschwar](http://github.com/seschwar)
 - [JD Marble](http://github.com/jdmarble)
 - [sargon](http://github.com/sargon)
+- [Paolo Veronelli](http://github.com/paolino)
