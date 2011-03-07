@@ -234,3 +234,19 @@ This means that when you upload your site, it will usually transfer all files --
 this can generate more traffic than necessary, since it is possible that some
 files were not actually modified. If you use `rsync`, you can counter this using
 the `--checksum` option.
+
+Problems
+--------
+
+### regex-pcre dependency on Mac OS X
+
+Hakyll requires [regex-pcre], which might fail to build on Mac OS X. To solve
+this problem:
+
+- make sure the [pcre] C library is installed (via homebrew or macports);
+- install [regex-pcre] using
+  `cabal install --extra-include-dirs=/usr/local/include regex-pcre`;
+- proceed to install Hakyll the regular way.
+
+[regex-pcre]: http://hackage.haskell.org/package/regex-pcre
+[pcre]: http://www.pcre.org/
