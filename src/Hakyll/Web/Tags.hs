@@ -138,7 +138,7 @@ renderTagCloud makeUrl minSize maxSize = proc (Tags tags) -> do
         -- Create a link for one item
         makeLink ((tag, url), count) =
             H.a ! A.style (toValue $ "font-size: " ++ size count)
-                ! A.href (toValue $ fromMaybe "/" url)
+                ! A.href (toValue $ toUrl $ fromMaybe "/" url)
                 $ toHtml tag
 
     -- Render and return the HTML

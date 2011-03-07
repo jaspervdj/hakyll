@@ -18,7 +18,8 @@ import System.FilePath (splitPath, takeDirectory, joinPath)
 -- > "/foo/bar.html"
 --
 toUrl :: FilePath -> String
-toUrl = ('/' :)
+toUrl ('/' : xs) = '/' : xs
+toUrl url        = '/' : url
 
 -- | Get the relative url to the site root, for a given (absolute) url
 --
