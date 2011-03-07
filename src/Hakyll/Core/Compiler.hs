@@ -181,8 +181,14 @@ getRouteFor = fromJob $ \identifier -> CompilerM $ do
 --
 getResourceString :: Compiler Resource String
 getResourceString = fromJob $ \resource -> CompilerM $ do
+    let identifier = unResource resource
     provider <- compilerResourceProvider <$> ask
-    liftIO $ resourceString provider resource
+    if resourceExists provider identifier
+        then liftIO $ resourceString provider resource
+        else throwError $ error' identifier
+  where
+    error' id' =  "Hakyll.Core.Compiler.getResourceString: resource "
+               ++ show id' ++ " not found"
 
 -- | Auxiliary: get a dependency
 --
