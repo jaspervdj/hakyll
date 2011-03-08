@@ -31,7 +31,7 @@ import Hakyll.Core.Compiler
 import Hakyll.Web.Page
 import Hakyll.Web.Util.Url
 
--- | Compiler form of 'compressCss' which automatically picks the right root
+-- | Compiler form of 'relativizeUrls' which automatically picks the right root
 -- path
 --
 relativizeUrlsCompiler :: Compiler (Page String) (Page String)

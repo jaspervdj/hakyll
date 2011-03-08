@@ -8,6 +8,7 @@ import qualified Hakyll.Core.Routes.Tests
 import qualified Hakyll.Web.Page.Tests
 import qualified Hakyll.Web.RelativizeUrls.Tests
 import qualified Hakyll.Web.Template.Tests
+import qualified Hakyll.Web.Util.Url.Tests
 
 main :: IO ()
 main = defaultMain
@@ -23,4 +24,6 @@ main = defaultMain
         Hakyll.Web.RelativizeUrls.Tests.tests
     , testGroup "Hakyll.Web.Template.Tests"
         Hakyll.Web.Template.Tests.tests
+    , testGroup "Hakyll.Web.Util.Url.Tests"
+        Hakyll.Web.Util.Url.Tests.tests
     ]
