@@ -256,6 +256,10 @@ macports). Then install [regex-pcre] using:
 
     cabal install --extra-include-dirs=/usr/local/include regex-pcre
 
+or
+
+    cabal install --extra-include-dirs=/opt/local/include regex-pcre
+
 ...and proceed to install Hakyll the regular way.
 
 [regex-pcre]: http://hackage.haskell.org/package/regex-pcre
