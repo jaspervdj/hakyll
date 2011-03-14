@@ -89,12 +89,15 @@ toUrl path = do enableIndexUrl' <- askHakyll enableIndexUrl
 
 -- | Get the relative url to the site root, for a given (absolute) url
 toRoot :: FilePath -> FilePath
-toRoot = emptyException . joinPath . map parent . splitPath
-       . takeDirectory . removeLeadingSeparator
+toRoot = emptyException . joinPath . map parent
+       . filter relevant . splitPath . takeDirectory
   where
     parent = const ".."
     emptyException [] = "."
     emptyException x  = x
+    relevant "." = False
+    relevant "/" = False
+    relevant _   = True
 
 -- | Check if a file is in a given directory.
 --
