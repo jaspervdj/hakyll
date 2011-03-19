@@ -25,9 +25,11 @@ toUrl url        = '/' : url
 --
 toSiteRoot :: String -> String
 toSiteRoot = emptyException . joinPath . map parent
-           . splitPath . takeDirectory . dropLeadingSlash
+           . filter relevant . splitPath . takeDirectory
   where
     parent = const ".."
     emptyException [] = "."
     emptyException x  = x
-    dropLeadingSlash = dropWhile (== '/')
+    relevant "." = False
+    relevant "/" = False
+    relevant _   = True
