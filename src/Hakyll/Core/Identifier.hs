@@ -20,7 +20,7 @@
 -- @posts/foo.html@. In this case, the identifier is the name of the source
 -- file of the page.
 --
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 module Hakyll.Core.Identifier
     ( Identifier (..)
     , parseIdentifier
@@ -29,14 +29,16 @@ module Hakyll.Core.Identifier
 
 import Control.Arrow (second)
 import Data.Monoid (Monoid)
-
-import GHC.Exts (IsString, fromString)
 import System.FilePath (joinPath)
+
+import Data.Binary (Binary)
+import GHC.Exts (IsString, fromString)
+import Data.Typeable (Typeable)
 
 -- | An identifier used to uniquely identify a value
 --
 newtype Identifier = Identifier {unIdentifier :: [String]}
-                   deriving (Eq, Ord, Monoid)
+                   deriving (Eq, Ord, Monoid, Binary, Typeable)
 
 instance Show Identifier where
     show = toFilePath

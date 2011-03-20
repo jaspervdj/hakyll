@@ -1,6 +1,6 @@
 -- | This is the module which binds it all together
 --
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
 module Hakyll.Core.Run
     ( run
     ) where
@@ -10,7 +10,7 @@ import Control.Monad (filterM)
 import Control.Monad.Trans (liftIO)
 import Control.Applicative (Applicative, (<$>))
 import Control.Monad.Reader (ReaderT, runReaderT, ask)
-import Control.Monad.State.Strict (StateT, evalStateT, get, modify)
+import Control.Monad.State.Strict (StateT, runStateT, get, modify)
 import Control.Arrow ((&&&))
 import qualified Data.Map as M
 import Data.Monoid (mempty, mappend)
@@ -50,9 +50,13 @@ run configuration rules = do
 
         -- Extract the reader/state
         reader = unRuntime $ addNewCompilers [] compilers
-        state' = runReaderT reader $ env logger ruleSet provider store
+        stateT = runReaderT reader $ env logger ruleSet provider store
 
-    evalStateT state' state
+    -- Run the program and fetch the resulting state
+    ((), state') <- runStateT stateT state
+
+    -- We want to save the final dependency graph for the next run
+    storeSet store "Hakyll.Core.Run.run" "dependencies" $ hakyllGraph state'
 
     -- Flush and return
     flushLogger logger

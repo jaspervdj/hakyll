@@ -1,7 +1,7 @@
 -- | Internal structure of the DirectedGraph type. Not exported outside of the
 -- library.
 --
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 module Hakyll.Core.DirectedGraph.Internal
     ( Node (..)
     , DirectedGraph (..)
@@ -16,13 +16,14 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 import Data.Binary (Binary, put, get)
+import Data.Typeable (Typeable)
 
 -- | A node in the directed graph
 --
 data Node a = Node
     { nodeTag        :: a      -- ^ Tag identifying the node
     , nodeNeighbours :: Set a  -- ^ Edges starting at this node
-    } deriving (Show)
+    } deriving (Show, Typeable)
 
 instance (Binary a, Ord a) => Binary (Node a) where
     put (Node t n) = put t >> put n
@@ -41,7 +42,7 @@ appendNodes (Node t1 n1) (Node t2 n2)
 -- | Type used to represent a directed graph
 --
 newtype DirectedGraph a = DirectedGraph {unDirectedGraph :: Map a (Node a)}
-                        deriving (Show, Binary)
+                        deriving (Show, Binary, Typeable)
 
 -- | Allow users to concatenate different graphs
 --
