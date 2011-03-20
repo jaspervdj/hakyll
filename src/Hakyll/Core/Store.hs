@@ -53,7 +53,7 @@ addToMap store path value =
 --
 makePath :: Store -> String -> Identifier -> FilePath
 makePath store name identifier =
-    storeDirectory store </> name </> toFilePath identifier </> ".hakyllstore"
+    storeDirectory store </> name </> toFilePath identifier </> "hakyllstore"
 
 -- | Store an item
 --
