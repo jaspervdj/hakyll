@@ -7,7 +7,7 @@
 --
 -- * we need a 'Writable' instance so the results can be saved.
 --
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification, DeriveDataTypeable #-}
 module Hakyll.Core.CompiledItem
     ( CompiledItem (..)
     , compiledItem
@@ -24,6 +24,7 @@ import Hakyll.Core.Writable
 --
 data CompiledItem =  forall a.  (Binary a, Typeable a, Writable a)
                   => CompiledItem a
+                  deriving (Typeable)
 
 instance Writable CompiledItem where
     write p (CompiledItem x) = write p x
