@@ -1,49 +1,72 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Arrow ((>>>))
-import Text.Hakyll (hakyll)
-import Text.Hakyll.Render
-import Text.Hakyll.Context
-import Text.Hakyll.File (getRecursiveContents, directory)
-import Text.Hakyll.CreateContext (createPage, createCustomPage, createListing)
-import Text.Hakyll.ContextManipulations (copyValue)
-import Text.Hakyll.Feed (FeedConfiguration (..), renderRss)
-import Data.List (sort)
-import Control.Monad (forM_, liftM)
-import Control.Monad.Reader (liftIO)
-import Data.Either (Either(..))
+import Prelude hiding (id)
+import Control.Category (id)
+import Control.Arrow ((>>>), (***), arr)
+import Data.Monoid (mempty, mconcat)
 
-main = hakyll "http://example.com" $ do
-    -- Static directory.
-    directory css "css"
+import Hakyll
 
-    -- Find all post paths.
-    postPaths <- liftM (reverse . sort) $ getRecursiveContents "posts"
-    let postPages = map createPage postPaths
+main :: IO ()
+main = hakyll $ do
+    -- Compress CSS
+    route   "css/*" idRoute
+    compile "css/*" compressCssCompiler
 
-    -- Render index, including recent posts.
-    let index = createListing "index.html" ["templates/postitem.html"]
-                              (take 3 postPages) [("title", Left "Home")]
-    renderChain ["index.html", "templates/default.html"] index
+    -- Render posts
+    route   "posts/*" $ setExtension ".html"
+    compile "posts/*" $
+        pageCompiler
+            >>> applyTemplateCompiler "templates/post.html"
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
 
-    -- Render all posts list.
-    let posts = createListing "posts.html" ["templates/postitem.html"]
-                              postPages [("title", Left "All posts")]
-    renderChain ["posts.html", "templates/default.html"] posts
+    -- Render posts list
+    route  "posts.html" $ idRoute
+    create "posts.html" $
+        constA mempty
+            >>> arr (setField "title" "All posts")
+            >>> requireAllA "posts/*" addPostList
+            >>> applyTemplateCompiler "templates/posts.html"
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
 
-    -- Render all posts.
-    liftIO $ putStrLn "Generating posts..."
-    forM_ postPages $ renderChain [ "templates/post.html"
-                                  , "templates/default.html"
-                                  ]
+    -- Index
+    route  "index.html" $ idRoute
+    create "index.html" $
+        constA mempty
+            >>> arr (setField "title" "Home")
+            >>> requireAllA "posts/*" (id *** arr (take 3 . reverse . sortByBaseName) >>> addPostList)
+            >>> applyTemplateCompiler "templates/index.html"
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
 
-    -- Render RSS feed.
-    renderRss myFeedConfiguration $
-        map (>>> copyValue "body" "description") (take 3 postPages)
+    -- Render RSS feed
+    route  "rss.xml" $ idRoute
+    create "rss.xml" $
+        requireAll_ "posts/*" >>> renderRss feedConfiguration
 
-myFeedConfiguration = FeedConfiguration
-    { feedUrl         = "rss.xml"
-    , feedTitle       = "SimpleBlog RSS feed."
+    -- Read templates
+    compile "templates/*" templateCompiler
+
+    -- End
+    return ()
+
+-- | Auxiliary compiler: generate a post list from a list of given posts, and
+-- add it to the current page under @$posts@
+--
+addPostList :: Compiler (Page String, [Page String]) (Page String)
+addPostList = setFieldA "posts" $
+    arr (reverse . sortByBaseName)
+        >>> require "templates/postitem.html" (\p t -> map (applyTemplate t) p)
+        >>> arr mconcat
+        >>> arr pageBody
+
+feedConfiguration :: FeedConfiguration
+feedConfiguration = FeedConfiguration
+    { feedTitle       = "SimpleBlog RSS feed."
     , feedDescription = "A simple demo of an RSS feed created with Hakyll."
     , feedAuthorName  = "Jasper Van der Jeugt"
+    , feedRoot        = "http://example.com"
     }
