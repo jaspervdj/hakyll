@@ -24,4 +24,5 @@ div.column {
 
 div#footer {
     clear: both;
+    border-top: 4px solid black;
 }

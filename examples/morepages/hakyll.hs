@@ -1,13 +1,28 @@
-import Text.Hakyll (hakyll)
-import Text.Hakyll.File (directory)
-import Text.Hakyll.Render (css, static, renderChain)
-import Text.Hakyll.CreateContext (createPage, combine)
+{-# LANGUAGE OverloadedStrings, Arrows #-}
+module Main where
 
-main = hakyll "http://example.com" $ do
-    directory css "css"
-    render "about.markdown"
-    render "index.markdown"
-    render "products.markdown"
-  where
-    render = renderChain ["templates/default.html"] . withFooter . createPage
-    withFooter = flip combine $ createPage "footer.markdown"
+import Control.Monad (forM_)
+import Control.Arrow (arr, (>>>))
+
+import Hakyll
+
+main :: IO ()
+main = hakyll $ do
+    -- Compress CSS
+    route   "css/*" idRoute
+    compile "css/*" compressCssCompiler
+
+    -- Render static pages
+    forM_ ["about.markdown", "index.markdown", "products.markdown"] $ \p -> do
+            route   p $ setExtension ".html"
+            compile p $
+                pageCompiler
+                    >>> requireA "footer.markdown" (setFieldA "footer" $ arr pageBody)
+                    >>> applyTemplateCompiler "templates/default.html"
+                    >>> relativizeUrlsCompiler
+
+    -- Compile footer
+    compile "footer.markdown" pageCompiler
+
+    -- Read templates
+    compile "templates/*" templateCompiler

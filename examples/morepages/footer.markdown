@@ -1,4 +1,7 @@
---- footer
+---
+title: Footer
+---
+
 ## Sapien
 
 In hac habitasse platea dictumst. Cras placerat felis nec risus varius in 
