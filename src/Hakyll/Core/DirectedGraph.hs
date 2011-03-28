@@ -4,6 +4,7 @@
 module Hakyll.Core.DirectedGraph
     ( DirectedGraph
     , fromList
+    , toList
     , member
     , nodes
     , neighbours
@@ -13,6 +14,7 @@ module Hakyll.Core.DirectedGraph
     ) where
 
 import Prelude hiding (reverse)
+import Control.Arrow (second)
 import Data.Monoid (mconcat)
 import Data.Set (Set)
 import Data.Maybe (fromMaybe)
@@ -27,6 +29,12 @@ fromList :: Ord a
          => [(a, Set a)]     -- ^ List of (node, reachable neighbours)
          -> DirectedGraph a  -- ^ Resulting directed graph
 fromList = DirectedGraph . M.fromList . map (\(t, d) -> (t, Node t d))
+
+-- | Deconstruction of directed graphs
+--
+toList :: DirectedGraph a
+       -> [(a, Set a)]
+toList = map (second nodeNeighbours) . M.toList . unDirectedGraph
 
 -- | Check if a node lies in the given graph
 --
