@@ -2,8 +2,8 @@
 title: Another post
 author: Marcus Tullius Cicero
 tags: cicero, random crap
-description: Vestibulum in ultrices urna.
 ---
+
 Vestibulum in ultrices urna. Etiam tempor enim dui, nec malesuada elit. Donec
 tempor ligula et quam volutpat quis fermentum eros congue. Sed ut pulvinar sem.
 Sed aliquam ipsum id purus sollicitudin vulputate. Cras et mauris dui, vel

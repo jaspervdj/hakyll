@@ -2,8 +2,8 @@
 title: A third post
 author: Publius Ovidius Naso
 tags: epic fail, ovidius
-description: Pellentesque tempor blandit elit, vel ultricies arcu congue egestas.
 ---
+
 Pellentesque tempor blandit elit, vel ultricies arcu congue egestas. Fusce
 vitae rutrum nisl. Fusce id mauris libero, a venenatis tellus. Fusce iaculis,
 lorem et ornare molestie, mauris risus mollis nisi, non fermentum lacus lacus

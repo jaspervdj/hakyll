@@ -4,7 +4,6 @@ module Main where
 import Prelude hiding (id)
 import Control.Arrow ((>>>), (***), arr)
 import Control.Category (id)
-import Control.Monad (forM_)
 import qualified Data.Map as M
 import Data.Monoid (mempty, mconcat)
 
@@ -61,6 +60,7 @@ main = hakyll $ do
     route  "rss.xml" $ idRoute
     create "rss.xml" $
         requireAll_ "posts/*"
+            >>> mapCompiler (arr $ copyBodyToField "description")
             >>> renderRss feedConfiguration
 
     -- Read templates

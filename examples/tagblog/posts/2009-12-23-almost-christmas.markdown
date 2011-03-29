@@ -2,8 +2,8 @@
 title: Almost Christmas!
 author: Publius Vergilius Maro
 tags: christmas, random crap
-description: Morbi tincidunt eleifend ante, eu gravida ante rutrum vel.
 ---
+
 Morbi tincidunt eleifend ante, eu gravida ante rutrum vel. Nunc bibendum nulla
 tellus, eget egestas sapien. Nam rhoncus interdum libero, eget congue orci
 imperdiet eu. Quisque pellentesque fringilla urna, ac venenatis ante ultricies

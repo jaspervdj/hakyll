@@ -2,8 +2,8 @@
 title: This blog ain't dead
 author: Marcus Antonius
 tags: epic fail, antonius
-description: Etiam non felis aliquet tellus dictum vestibulum.
 ---
+
 Etiam non felis aliquet tellus dictum vestibulum. Aliquam accumsan mauris non
 lacus ultricies nec lacinia enim rhoncus. Curabitur vel tortor massa, elementum
 tincidunt elit. Maecenas venenatis luctus arcu ut ullamcorper. Donec interdum
