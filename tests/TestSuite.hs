@@ -7,6 +7,7 @@ import qualified Hakyll.Core.DependencyAnalyzer.Tests
 import qualified Hakyll.Core.Identifier.Tests
 import qualified Hakyll.Core.Routes.Tests
 import qualified Hakyll.Web.Page.Tests
+import qualified Hakyll.Web.Page.Metadata.Tests
 import qualified Hakyll.Web.RelativizeUrls.Tests
 import qualified Hakyll.Web.Template.Tests
 import qualified Hakyll.Web.Util.Url.Tests
@@ -23,6 +24,8 @@ main = defaultMain
         Hakyll.Core.Routes.Tests.tests
     , testGroup "Hakyll.Web.Page.Tests"
         Hakyll.Web.Page.Tests.tests
+    , testGroup "Hakyll.Web.Page.Metadata.Tests"
+        Hakyll.Web.Page.Metadata.Tests.tests
     , testGroup "Hakyll.Web.RelativizeUrls.Tests"
         Hakyll.Web.RelativizeUrls.Tests.tests
     , testGroup "Hakyll.Web.Template.Tests"

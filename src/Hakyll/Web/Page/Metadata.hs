@@ -11,6 +11,8 @@ module Hakyll.Web.Page.Metadata
     , copyField
     , renderDateField
     , renderDateFieldWith
+    , copyBodyToField
+    , copyBodyFromField
     ) where
 
 import Prelude hiding (id)
@@ -138,3 +140,17 @@ renderDateFieldWith locale key format defaultValue =
                           "%Y-%m-%d"
                           dateString :: Maybe UTCTime
         return $ formatTime locale format time
+
+-- | Copy the body of a page to a metadata field
+--
+copyBodyToField :: String       -- ^ Destination key
+                -> Page String  -- ^ Target page
+                -> Page String  -- ^ Resulting page
+copyBodyToField key page = setField key (pageBody page) page
+
+-- | Copy a metadata field to the page body
+--
+copyBodyFromField :: String       -- ^ Source key
+                  -> Page String  -- ^ Target page
+                  -> Page String  -- ^ Resulting page
+copyBodyFromField key page = fmap (const $ getField key page) page
