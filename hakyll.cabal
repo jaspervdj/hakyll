@@ -59,6 +59,7 @@ library
                       snap-core >= 0.4,
                       bytestring >= 0.9,
                       utf8-string >= 0.3,
+                      HTTP >= 4000,
                       tagsoup >= 0.12,
                       hopenssl >= 1.4,
                       unix >= 2.4,

@@ -8,6 +8,7 @@ module Hakyll.Web.Preview.Server
 import Control.Monad.Trans (liftIO)
 import Control.Applicative ((<$>))
 import Codec.Binary.UTF8.String
+import Network.HTTP.Base (urlDecode)
 import System.FilePath ((</>))
 import System.Directory (doesFileExist)
 
@@ -39,7 +40,7 @@ static directory preServe = do
     let filePath = replaceAll "\\?$"    (const "")  -- Remove trailing ?
                  $ replaceAll "#[^#]*$" (const "")  -- Remove #section
                  $ replaceAll "^/"      (const "")  -- Remove leading /
-                 $ decode $ SB.unpack uri
+                 $ urlDecode $ decode $ SB.unpack uri
 
     -- Try to find the requested file
     r <- liftIO $ findFile $ map (directory </>) $
