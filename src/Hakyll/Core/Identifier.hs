@@ -29,7 +29,7 @@ module Hakyll.Core.Identifier
 
 import Control.Arrow (second)
 import Data.Monoid (Monoid)
-import System.FilePath (joinPath)
+import Data.List (intercalate)
 
 import Data.Binary (Binary)
 import GHC.Exts (IsString, fromString)
@@ -37,7 +37,7 @@ import Data.Typeable (Typeable)
 
 -- | An identifier used to uniquely identify a value
 --
-newtype Identifier = Identifier {unIdentifier :: [String]}
+newtype Identifier = Identifier {unIdentifier :: String}
                    deriving (Eq, Ord, Monoid, Binary, Typeable)
 
 instance Show Identifier where
@@ -49,7 +49,7 @@ instance IsString Identifier where
 -- | Parse an identifier from a string
 --
 parseIdentifier :: String -> Identifier
-parseIdentifier = Identifier . filter (not . null) . split'
+parseIdentifier = Identifier . intercalate "/" . filter (not . null) . split'
   where
     split' [] = [[]]
     split' str = let (pre, post) = second (drop 1) $ break (== '/') str
@@ -58,4 +58,4 @@ parseIdentifier = Identifier . filter (not . null) . split'
 -- | Convert an identifier to a relative 'FilePath'
 --
 toFilePath :: Identifier -> FilePath
-toFilePath = joinPath . unIdentifier
+toFilePath = unIdentifier
