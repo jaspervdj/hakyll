@@ -26,7 +26,7 @@ import Control.Category (id)
 import Text.Pandoc
 
 import Hakyll.Core.Compiler
-import Hakyll.Web.FileType
+import Hakyll.Web.Pandoc.FileType
 import Hakyll.Web.Page.Internal
 
 -- | Read a string using pandoc, with the default options

@@ -19,11 +19,11 @@ module Hakyll
     , module Hakyll.Web.Blaze
     , module Hakyll.Web.CompressCss
     , module Hakyll.Web.Feed
-    , module Hakyll.Web.FileType
     , module Hakyll.Web.Page
     , module Hakyll.Web.Page.Metadata
     , module Hakyll.Web.Page.Read
     , module Hakyll.Web.Pandoc
+    , module Hakyll.Web.Pandoc.FileType
     , module Hakyll.Web.RelativizeUrls
     , module Hakyll.Web.Tags
     , module Hakyll.Web.Template
@@ -48,11 +48,11 @@ import Hakyll.Main
 import Hakyll.Web.Blaze
 import Hakyll.Web.CompressCss
 import Hakyll.Web.Feed
-import Hakyll.Web.FileType
 import Hakyll.Web.Page
 import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Pandoc
+import Hakyll.Web.Pandoc.FileType
 import Hakyll.Web.RelativizeUrls
 import Hakyll.Web.Tags
 import Hakyll.Web.Template

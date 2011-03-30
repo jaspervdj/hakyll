@@ -1,6 +1,6 @@
--- | A module dealing with common file extensions and associated file types.
+-- | A module dealing with pandoc file extensions and associated file types
 --
-module Hakyll.Web.FileType
+module Hakyll.Web.Pandoc.FileType
     ( FileType (..)
     , fileType
     , getFileType

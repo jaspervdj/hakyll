@@ -75,7 +75,7 @@ library
                       Hakyll.Web.Feed
                       Hakyll.Web.Tags
                       Hakyll.Web.Pandoc
-                      Hakyll.Web.FileType
+                      Hakyll.Web.Pandoc.FileType
                       Hakyll.Web.Page
                       Hakyll.Web.Template.Read
                       Hakyll.Web.RelativizeUrls
