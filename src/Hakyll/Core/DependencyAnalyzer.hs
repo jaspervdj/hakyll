@@ -1,5 +1,5 @@
 module Hakyll.Core.DependencyAnalyzer
-    ( DependencyAnalyzer
+    ( DependencyAnalyzer (..)
     , Signal (..)
     , makeDependencyAnalyzer
     , step

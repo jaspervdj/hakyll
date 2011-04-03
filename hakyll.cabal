@@ -83,6 +83,7 @@ library
                       Hakyll.Web.Page.Metadata
                       Hakyll.Core.ResourceProvider.FileResourceProvider
                       Hakyll.Core.Configuration
+                      Hakyll.Core.DependencyAnalyzer
                       Hakyll.Core.Identifier.Pattern
                       Hakyll.Core.UnixFilter
                       Hakyll.Core.Util.Arrow
