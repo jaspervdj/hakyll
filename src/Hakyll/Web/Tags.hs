@@ -40,7 +40,6 @@ module Hakyll.Web.Tags
 import Prelude hiding (id)
 import Control.Category (id)
 import Control.Applicative ((<$>))
-import Data.Map (Map)
 import qualified Data.Map as M
 import Data.List (intersperse, intercalate)
 import Control.Arrow (arr, (&&&), (>>>), (***), (<<^), returnA)
@@ -65,7 +64,7 @@ import Hakyll.Core.Util.String
 -- | Data about tags
 --
 data Tags a = Tags
-    { tagsMap :: Map String [Page a]
+    { tagsMap :: [(String, [Page a])]
     } deriving (Show, Typeable)
 
 instance Binary a => Binary (Tags a) where
@@ -91,7 +90,8 @@ readTagsWith :: (Page a -> [String])  -- ^ Function extracting tags from a page
              -> [Page a]              -- ^ Pages
              -> Tags a                -- ^ Resulting tags
 readTagsWith f pages = Tags
-    { tagsMap = foldl (M.unionWith (++)) M.empty (map readTagsWith' pages)
+    { tagsMap = M.toList $
+        foldl (M.unionWith (++)) M.empty (map readTagsWith' pages)
     }
   where
     -- Create a tag map for one page
@@ -122,7 +122,7 @@ renderTags :: (String -> Identifier)
 renderTags makeUrl makeItem concatItems = proc (Tags tags) -> do
     -- In tags' we create a list: [((tag, route), count)]
     tags' <- mapCompiler ((id &&& (getRouteFor <<^ makeUrl)) *** arr length)
-                -< M.toList tags
+                -< tags
 
     let -- Absolute frequencies of the pages
         freqs = map snd tags'
