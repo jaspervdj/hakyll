@@ -30,7 +30,7 @@ module Hakyll.Core.Routes
     , runRoutes
     , idRoute
     , setExtension
-    , ifMatch
+    , matchRoute
     , customRoute
     , gsubRoute
     , composeRoutes
@@ -41,7 +41,6 @@ import Control.Monad (mplus)
 import System.FilePath (replaceExtension)
 
 import Hakyll.Core.Identifier
-import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Util.String
 
 -- | Type used for a route
@@ -85,15 +84,15 @@ setExtension :: String -> Routes
 setExtension extension = Routes $ fmap (`replaceExtension` extension)
                                 . unRoutes idRoute
 
--- | Modify a route: apply the route if the identifier matches the given
--- pattern, fail otherwise.
+-- | Apply the route if the identifier matches the given predicate, fail
+-- otherwise
 --
-ifMatch :: Pattern -> Routes -> Routes
-ifMatch pattern (Routes route) = Routes $ \id' ->
-    if doesMatch pattern id' then route id'
-                             else Nothing
+matchRoute :: (Identifier -> Bool) -> Routes -> Routes
+matchRoute predicate (Routes route) = Routes $ \id' ->
+    if predicate id' then route id' else Nothing
 
--- | Create a custom route. This should almost always be used with 'ifMatch'.
+-- | Create a custom route. This should almost always be used with
+-- 'matchRoute'
 --
 customRoute :: (Identifier -> FilePath) -> Routes
 customRoute f = Routes $ Just . f

@@ -14,6 +14,8 @@
 module Hakyll.Core.Rules
     ( RulesM
     , Rules
+    , matchPattern
+    , matchPredicate
     , compile
     , create
     , route
@@ -23,7 +25,7 @@ module Hakyll.Core.Rules
 
 import Control.Applicative ((<$>))
 import Control.Monad.Writer (tell)
-import Control.Monad.Reader (ask)
+import Control.Monad.Reader (ask, local)
 import Control.Arrow (second, (>>>), arr, (>>^))
 import Control.Monad.State (get, put)
 import Data.Monoid (mempty)
@@ -63,21 +65,37 @@ tellResources :: [Resource]
               -> Rules
 tellResources resources = RulesM $ tell $ RuleSet mempty mempty $ S.fromList resources
 
+-- | Only compile/route items matching the given pattern
+--
+matchPattern :: Pattern -> Rules -> Rules
+matchPattern pattern = matchPredicate (doesMatch pattern)
+
+-- | Only compile/route items satisfying the given predicate
+--
+matchPredicate :: (Identifier -> Bool) -> Rules -> Rules
+matchPredicate predicate = RulesM . local addPredicate . unRulesM
+  where
+    addPredicate env = env
+        { rulesMatcher = \id' -> rulesMatcher env id' && predicate id'
+        }
+
 -- | Add a compilation rule to the rules.
 --
--- This instructs all resources matching the given pattern to be compiled using
--- the given compiler. When no resources match the given pattern, nothing will
--- happen. In this case, you might want to have a look at 'create'.
+-- This instructs all resources to be compiled using the given compiler. When
+-- no resources match the current selection, nothing will happen. In this case,
+-- you might want to have a look at 'create'.
 --
 compile :: (Binary a, Typeable a, Writable a)
-        => Pattern -> Compiler Resource a -> Rules
-compile pattern compiler = RulesM $ do
-    identifiers <- matches pattern . map unResource . resourceList <$> ask
+        => Compiler Resource a -> Rules
+compile compiler = RulesM $ do
+    matcher <- rulesMatcher <$> ask
+    provider <- rulesResourceProvider <$> ask
+    let identifiers = filter matcher $ map unResource $ resourceList provider
     unRulesM $ do
         tellCompilers $ flip map identifiers $ \identifier ->
             (identifier, constA (Resource identifier) >>> compiler)
         tellResources $ map Resource identifiers
-
+                   
 -- | Add a compilation rule
 --
 -- This sets a compiler for the given identifier. No resource is needed, since
@@ -91,10 +109,12 @@ create identifier compiler = tellCompilers [(identifier, compiler)]
 
 -- | Add a route.
 --
--- This adds a route for all items matching the given pattern.
+-- This adds a route for all items matching the current pattern.
 --
-route :: Pattern -> Routes -> Rules
-route pattern route' = tellRoute $ ifMatch pattern route'
+route :: Routes -> Rules
+route route' = RulesM $ do
+    matcher <- rulesMatcher <$> ask
+    unRulesM $ tellRoute $ matchRoute matcher route'
 
 -- | Apart from regular compilers, one is also able to specify metacompilers.
 -- Metacompilers are a special class of compilers: they are compilers which
