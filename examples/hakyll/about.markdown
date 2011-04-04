@@ -33,3 +33,4 @@ who still maintains the package. Contributors:
 - [sargon](http://github.com/sargon)
 - [Paolo Veronelli](http://github.com/paolino)
 - [Benedict Eastaugh](http://extralogical.net/)
+- [Nikolas Wu](http://zenzike.com/)
