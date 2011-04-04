@@ -47,7 +47,7 @@ getRecursiveContents includeDirs topdir = do
             return $ if includeDirs then topdir : concat paths
                                     else concat paths
   where
-    isProper = not . (== ".") . take 1
+    isProper = (`notElem` [".", ".."])
 
 -- | Check if a timestamp is obsolete compared to the timestamps of a number of
 -- files. When they are no files, it is never obsolete.
