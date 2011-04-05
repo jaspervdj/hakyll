@@ -11,7 +11,7 @@ import Data.List (isPrefixOf)
 import Control.Arrow ((>>^))
 
 import Hakyll.Core.Compiler
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
 import Hakyll.Core.Util.String
 
 -- | Compiler form of 'compressCss'

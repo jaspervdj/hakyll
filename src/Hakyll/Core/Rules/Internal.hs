@@ -18,7 +18,8 @@ import Control.Monad.State (State, evalState)
 import Data.Monoid (Monoid, mempty, mappend)
 import Data.Set (Set)
 
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
+import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Compiler.Internal

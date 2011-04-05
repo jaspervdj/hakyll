@@ -23,8 +23,9 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.Util.File
 import Hakyll.Core.Compiler
 import Hakyll.Core.Compiler.Internal
-import Hakyll.Core.ResourceProvider
-import Hakyll.Core.ResourceProvider.FileResourceProvider
+import Hakyll.Core.Resource
+import Hakyll.Core.Resource.Provider
+import Hakyll.Core.Resource.Provider.File
 import Hakyll.Core.Rules.Internal
 import Hakyll.Core.DirectedGraph
 import Hakyll.Core.DirectedGraph.DependencySolver

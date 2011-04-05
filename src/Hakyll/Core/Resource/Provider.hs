@@ -10,9 +10,8 @@
 -- Therefore, it is not recommended to read files directly -- you should use the
 -- provided 'Resource' methods.
 --
-module Hakyll.Core.ResourceProvider
-    ( Resource (..)
-    , ResourceProvider (..)
+module Hakyll.Core.Resource.Provider
+    ( ResourceProvider (..)
     , resourceExists
     , resourceDigest
     , resourceModified
@@ -27,13 +26,7 @@ import OpenSSL.Digest (MessageDigest (MD5))
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Store
-
--- | A resource
---
--- Invariant: the resource specified by the given identifier must exist
---
-newtype Resource = Resource {unResource :: Identifier}
-                 deriving (Eq, Show, Ord)
+import Hakyll.Core.Resource
 
 -- | A value responsible for retrieving and listing resources
 --

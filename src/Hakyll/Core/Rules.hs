@@ -37,7 +37,8 @@ import qualified Data.Set as S
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
 
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
+import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Compiler.Internal

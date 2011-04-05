@@ -89,7 +89,6 @@ module Hakyll.Core.Compiler
     ( Compiler
     , runCompiler
     , getIdentifier
-    , getIdentifiers
     , getRoute
     , getRouteFor
     , getResourceString
@@ -125,7 +124,8 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
+import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store
 import Hakyll.Core.Rules.Internal
@@ -165,13 +165,6 @@ runCompiler compiler identifier provider routes store modified logger = do
 --
 getIdentifier :: Compiler a Identifier
 getIdentifier = fromJob $ const $ CompilerM $ compilerIdentifier <$> ask
-
--- | Get all identifiers matching the given pattern
---
-getIdentifiers :: Pattern -> Compiler a [Identifier]
-getIdentifiers pattern = fromJob $ const $ CompilerM $
-    matches pattern . map unResource . resourceList
-                    . compilerResourceProvider <$> ask
 
 -- | Get the route we are using for this item
 --

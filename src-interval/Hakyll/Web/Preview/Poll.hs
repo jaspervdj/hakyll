@@ -15,7 +15,7 @@ import System.Directory (getModificationTime)
 
 import Hakyll.Core.Configuration
 import Hakyll.Core.Identifier
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
 
 -- | A preview thread that periodically recompiles the site.
 --

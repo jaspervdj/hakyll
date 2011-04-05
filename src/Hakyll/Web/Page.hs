@@ -67,7 +67,7 @@ import Data.Ord (comparing)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
 import Hakyll.Web.Page.Internal
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Page.Metadata

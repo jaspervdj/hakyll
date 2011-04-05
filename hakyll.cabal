@@ -81,14 +81,15 @@ library
                       Hakyll.Web.RelativizeUrls
                       Hakyll.Web.Page.Read
                       Hakyll.Web.Page.Metadata
-                      Hakyll.Core.ResourceProvider.FileResourceProvider
                       Hakyll.Core.Configuration
                       Hakyll.Core.Identifier.Pattern
                       Hakyll.Core.UnixFilter
                       Hakyll.Core.Util.Arrow
                       Hakyll.Core.Util.File
                       Hakyll.Core.Util.String
-                      Hakyll.Core.ResourceProvider
+                      Hakyll.Core.Resource
+                      Hakyll.Core.Resource.Provider
+                      Hakyll.Core.Resource.Provider.File
                       Hakyll.Core.CompiledItem
                       Hakyll.Core.Compiler
                       Hakyll.Core.Run
