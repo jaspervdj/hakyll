@@ -7,13 +7,18 @@
 -- A typical usage example would be:
 --
 -- > main = hakyll $ do
--- >     route   "posts/*" (setExtension "html")
--- >     compile "posts/*" someCompiler
+-- >     match "posts/*" $ do
+-- >         route   (setExtension "html")
+-- >         compile someCompiler
+-- >     match "css/*" $ do
+-- >         route   idRoute
+-- >         compile compressCssCompiler
 --
 {-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
 module Hakyll.Core.Rules
     ( RulesM
     , Rules
+    , match
     , compile
     , create
     , route
@@ -23,10 +28,10 @@ module Hakyll.Core.Rules
 
 import Control.Applicative ((<$>))
 import Control.Monad.Writer (tell)
-import Control.Monad.Reader (ask)
+import Control.Monad.Reader (ask, local)
 import Control.Arrow (second, (>>>), arr, (>>^))
 import Control.Monad.State (get, put)
-import Data.Monoid (mempty)
+import Data.Monoid (mempty, mappend)
 import qualified Data.Set as S
 
 import Data.Typeable (Typeable)
@@ -63,21 +68,32 @@ tellResources :: [Resource]
               -> Rules
 tellResources resources = RulesM $ tell $ RuleSet mempty mempty $ S.fromList resources
 
+-- | Only compile/route items satisfying the given predicate
+--
+match :: Pattern -> Rules -> Rules
+match pattern = RulesM . local addPredicate . unRulesM
+  where
+    addPredicate env = env
+        { rulesPattern = rulesPattern env `mappend` pattern
+        }
+
 -- | Add a compilation rule to the rules.
 --
--- This instructs all resources matching the given pattern to be compiled using
--- the given compiler. When no resources match the given pattern, nothing will
--- happen. In this case, you might want to have a look at 'create'.
+-- This instructs all resources to be compiled using the given compiler. When
+-- no resources match the current selection, nothing will happen. In this case,
+-- you might want to have a look at 'create'.
 --
 compile :: (Binary a, Typeable a, Writable a)
-        => Pattern -> Compiler Resource a -> Rules
-compile pattern compiler = RulesM $ do
-    identifiers <- matches pattern . map unResource . resourceList <$> ask
+        => Compiler Resource a -> Rules
+compile compiler = RulesM $ do
+    pattern <- rulesPattern <$> ask
+    provider <- rulesResourceProvider <$> ask
+    let ids = filterMatches pattern $ map unResource $ resourceList provider
     unRulesM $ do
-        tellCompilers $ flip map identifiers $ \identifier ->
+        tellCompilers $ flip map ids $ \identifier ->
             (identifier, constA (Resource identifier) >>> compiler)
-        tellResources $ map Resource identifiers
-
+        tellResources $ map Resource ids
+                   
 -- | Add a compilation rule
 --
 -- This sets a compiler for the given identifier. No resource is needed, since
@@ -91,10 +107,12 @@ create identifier compiler = tellCompilers [(identifier, compiler)]
 
 -- | Add a route.
 --
--- This adds a route for all items matching the given pattern.
+-- This adds a route for all items matching the current pattern.
 --
-route :: Pattern -> Routes -> Rules
-route pattern route' = tellRoute $ ifMatch pattern route'
+route :: Routes -> Rules
+route route' = RulesM $ do
+    pattern <- rulesPattern <$> ask
+    unRulesM $ tellRoute $ matchRoute pattern route'
 
 -- | Apart from regular compilers, one is also able to specify metacompilers.
 -- Metacompilers are a special class of compilers: they are compilers which

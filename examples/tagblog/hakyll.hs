@@ -12,13 +12,14 @@ import Hakyll
 main :: IO ()
 main = hakyll $ do
     -- Compress CSS
-    route   "css/*" idRoute
-    compile "css/*" compressCssCompiler
+    match "css/*" $ do
+        route   idRoute
+        compile compressCssCompiler
 
     -- Render posts
-    route   "posts/*" $ setExtension ".html"
-    compile "posts/*" $
-        pageCompiler
+    match "posts/*" $ do
+        route   $ setExtension ".html"
+        compile $ pageCompiler
             >>> arr (renderDateField "date" "%B %e, %Y" "Date unknown")
             >>> renderTagsField "prettytags" (fromCaptureString "tags/*")
             >>> applyTemplateCompiler "templates/post.html"
@@ -26,48 +27,43 @@ main = hakyll $ do
             >>> relativizeUrlsCompiler
 
     -- Render posts list
-    route  "posts.html" $ idRoute
-    create "posts.html" $
-        constA mempty
-            >>> arr (setField "title" "All posts")
-            >>> requireAllA "posts/*" addPostList
-            >>> applyTemplateCompiler "templates/posts.html"
-            >>> applyTemplateCompiler "templates/default.html"
-            >>> relativizeUrlsCompiler
+    match "posts.html" $ route idRoute
+    create "posts.html" $ constA mempty
+        >>> arr (setField "title" "All posts")
+        >>> requireAllA "posts/*" addPostList
+        >>> applyTemplateCompiler "templates/posts.html"
+        >>> applyTemplateCompiler "templates/default.html"
+        >>> relativizeUrlsCompiler
 
     -- Index
-    route  "index.html" $ idRoute
-    create "index.html" $
-        constA mempty
-            >>> arr (setField "title" "Home")
-            >>> requireA "tags" (setFieldA "tagcloud" (renderTagCloud'))
-            >>> requireAllA "posts/*" (id *** arr (take 3 . reverse . sortByBaseName) >>> addPostList)
-            >>> applyTemplateCompiler "templates/index.html"
-            >>> applyTemplateCompiler "templates/default.html"
-            >>> relativizeUrlsCompiler
+    match "index.html" $ route idRoute
+    create "index.html" $ constA mempty
+        >>> arr (setField "title" "Home")
+        >>> requireA "tags" (setFieldA "tagcloud" (renderTagCloud'))
+        >>> requireAllA "posts/*" (id *** arr (take 3 . reverse . sortByBaseName) >>> addPostList)
+        >>> applyTemplateCompiler "templates/index.html"
+        >>> applyTemplateCompiler "templates/default.html"
+        >>> relativizeUrlsCompiler
 
     -- Tags
     create "tags" $
         requireAll "posts/*" (\_ ps -> readTags ps :: Tags String)
 
     -- Add a tag list compiler for every tag
-    route "tags/*" $ setExtension ".html"
+    match "tags/*" $ route $ setExtension ".html"
     metaCompile $ require_ "tags"
         >>> arr (M.toList . tagsMap)
         >>> arr (map (\(t, p) -> (tagIdentifier t, makeTagList t p)))
 
     -- Render RSS feed
-    route  "rss.xml" $ idRoute
+    match "rss.xml" $ route idRoute
     create "rss.xml" $
         requireAll_ "posts/*"
             >>> mapCompiler (arr $ copyBodyToField "description")
             >>> renderRss feedConfiguration
 
     -- Read templates
-    compile "templates/*" templateCompiler
-
-    -- End
-    return ()
+    match "templates/*" $ compile templateCompiler
   where
     renderTagCloud' :: Compiler (Tags String) String
     renderTagCloud' = renderTagCloud tagIdentifier 100 120

@@ -6,35 +6,37 @@ import Text.Pandoc
 
 main :: IO ()
 main = hakyll $ do
-    route   "css/*" idRoute
-    compile "css/*" compressCssCompiler
+    match "css/*" $ do
+        route   idRoute
+        compile compressCssCompiler
 
     -- Static directories
-    forM_ ["images/*", "examples/*", "reference/*"] $ \f -> do
-        route   f idRoute
-        compile f copyFileCompiler
+    forM_ ["images/*", "examples/*", "reference/*"] $ \f -> match f $ do
+        route   idRoute
+        compile copyFileCompiler
 
     -- Pages
-    forM_ pages $ \p -> do
-        route   p $ setExtension "html"
-        compile p $ pageCompiler
+    forM_ pages $ \p -> match p $ do
+        route   $ setExtension "html"
+        compile $ pageCompiler
             >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
             >>> applyTemplateCompiler "templates/default.html"
             >>> relativizeUrlsCompiler
 
     -- Tutorial
-    route   "tutorial.markdown" $ setExtension "html"
-    compile "tutorial.markdown" $ readPageCompiler
-        >>> pageRenderPandocWith defaultHakyllParserState withToc
-        >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
-        >>> applyTemplateCompiler "templates/default.html"
-        >>> relativizeUrlsCompiler
+    match "tutorial.markdown" $ do
+        route   $ setExtension "html"
+        compile $ readPageCompiler
+            >>> pageRenderPandocWith defaultHakyllParserState withToc
+            >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
 
     -- Sidebar
-    compile "sidebar.markdown" pageCompiler
+    match "sidebar.markdown" $ compile pageCompiler
 
     -- Templates
-    compile "templates/*" templateCompiler
+    match "templates/*" $ compile templateCompiler
   where
     withToc = defaultHakyllWriterOptions
         { writerTableOfContents = True

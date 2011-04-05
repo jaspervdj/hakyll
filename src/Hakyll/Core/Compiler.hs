@@ -245,7 +245,7 @@ requireAll_ :: (Binary a, Typeable a, Writable a)
             -> Compiler b [a]
 requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
   where
-    getDeps = matches pattern . map unResource . resourceList
+    getDeps = filterMatches pattern . map unResource . resourceList
     requireAll_' = const $ CompilerM $ do
         deps <- getDeps . compilerResourceProvider <$> ask
         mapM (unCompilerM . getDependency) deps
