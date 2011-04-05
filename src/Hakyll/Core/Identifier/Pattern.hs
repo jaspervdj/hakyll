@@ -47,7 +47,7 @@ import Data.List (isPrefixOf, inits, tails)
 import Control.Arrow ((&&&), (>>>))
 import Control.Monad (msum)
 import Data.Maybe (isJust)
-import Data.Monoid (mempty, mappend)
+import Data.Monoid (Monoid, mempty, mappend)
 
 import GHC.Exts (IsString, fromString)
 
@@ -67,6 +67,12 @@ data Pattern = Glob [GlobComponent]
 
 instance IsString Pattern where
     fromString = parseGlob
+
+instance Monoid Pattern where
+    mempty = Predicate (const True)
+    g@(Glob _)  `mappend` x           = Predicate (matches g) `mappend` x
+    x           `mappend` g@(Glob _)  = x `mappend` Predicate (matches g)
+    Predicate f `mappend` Predicate g = Predicate $ \i -> f i && g i
 
 -- | Parse a pattern from a string
 --
