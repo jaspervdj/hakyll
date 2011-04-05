@@ -9,20 +9,21 @@ import Hakyll
 main :: IO ()
 main = hakyll $ do
     -- Compress CSS
-    route   "css/*" idRoute
-    compile "css/*" compressCssCompiler
+    match "css/*" $ do
+        route   idRoute
+        compile compressCssCompiler
 
     -- Render static pages
-    forM_ ["about.markdown", "index.markdown", "products.markdown"] $ \p -> do
-            route   p $ setExtension ".html"
-            compile p $
-                pageCompiler
-                    >>> requireA "footer.markdown" (setFieldA "footer" $ arr pageBody)
-                    >>> applyTemplateCompiler "templates/default.html"
-                    >>> relativizeUrlsCompiler
+    forM_ ["about.markdown", "index.markdown", "products.markdown"] $ \p ->
+        match p $ do
+            route   $ setExtension ".html"
+            compile $ pageCompiler
+                >>> requireA "footer.markdown" (setFieldA "footer" $ arr pageBody)
+                >>> applyTemplateCompiler "templates/default.html"
+                >>> relativizeUrlsCompiler
 
     -- Compile footer
-    compile "footer.markdown" pageCompiler
+    match "footer.markdown" $ compile pageCompiler
 
     -- Read templates
-    compile "templates/*" templateCompiler
+    match "templates/*" $ compile templateCompiler

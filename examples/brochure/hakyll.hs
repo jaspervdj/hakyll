@@ -6,13 +6,15 @@ import Hakyll
 
 main :: IO ()
 main = hakyll $ do
-    route   "css/*" idRoute
-    compile "css/*" compressCssCompiler
+    match "css/*" $ do
+        route   idRoute
+        compile compressCssCompiler
 
-    compile "templates/*" templateCompiler
+    match "templates/*" $ compile templateCompiler
 
-    forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
-        route   page $ setExtension "html"
-        compile page $ pageCompiler
-            >>> applyTemplateCompiler "templates/default.html"
-            >>> relativizeUrlsCompiler
+    forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page ->
+        match page $ do
+            route   $ setExtension "html"
+            compile $ pageCompiler
+                >>> applyTemplateCompiler "templates/default.html"
+                >>> relativizeUrlsCompiler
