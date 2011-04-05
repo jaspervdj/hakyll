@@ -20,6 +20,7 @@ import Data.Set (Set)
 
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Identifier
+import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Routes
 import Hakyll.Core.CompiledItem
@@ -60,7 +61,7 @@ data RuleState = RuleState
 --
 data RuleEnvironment = RuleEnvironment
     { rulesResourceProvider :: ResourceProvider
-    , rulesMatcher          :: Identifier -> Bool
+    , rulesPattern          :: Pattern
     }
 
 -- | The monad used to compose rules
@@ -82,5 +83,5 @@ runRules rules provider =
   where
     state = RuleState {rulesMetaCompilerIndex = 0}
     env = RuleEnvironment { rulesResourceProvider = provider
-                          , rulesMatcher          = const True
+                          , rulesPattern          = mempty
                           }

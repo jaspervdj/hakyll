@@ -41,6 +41,7 @@ import Control.Monad (mplus)
 import System.FilePath (replaceExtension)
 
 import Hakyll.Core.Identifier
+import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Util.String
 
 -- | Type used for a route
@@ -84,12 +85,12 @@ setExtension :: String -> Routes
 setExtension extension = Routes $ fmap (`replaceExtension` extension)
                                 . unRoutes idRoute
 
--- | Apply the route if the identifier matches the given predicate, fail
+-- | Apply the route if the identifier matches the given pattern, fail
 -- otherwise
 --
-matchRoute :: (Identifier -> Bool) -> Routes -> Routes
-matchRoute predicate (Routes route) = Routes $ \id' ->
-    if predicate id' then route id' else Nothing
+matchRoute :: Pattern -> Routes -> Routes
+matchRoute pattern (Routes route) = Routes $ \id' ->
+    if matches pattern id' then route id' else Nothing
 
 -- | Create a custom route. This should almost always be used with
 -- 'matchRoute'

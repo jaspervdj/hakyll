@@ -7,15 +7,18 @@
 -- A typical usage example would be:
 --
 -- > main = hakyll $ do
--- >     route   "posts/*" (setExtension "html")
--- >     compile "posts/*" someCompiler
+-- >     match "posts/*" $ do
+-- >         route   (setExtension "html")
+-- >         compile someCompiler
+-- >     match "css/*" $ do
+-- >         route   idRoute
+-- >         compile compressCssCompiler
 --
 {-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
 module Hakyll.Core.Rules
     ( RulesM
     , Rules
-    , matchPattern
-    , matchPredicate
+    , match
     , compile
     , create
     , route
@@ -28,7 +31,7 @@ import Control.Monad.Writer (tell)
 import Control.Monad.Reader (ask, local)
 import Control.Arrow (second, (>>>), arr, (>>^))
 import Control.Monad.State (get, put)
-import Data.Monoid (mempty)
+import Data.Monoid (mempty, mappend)
 import qualified Data.Set as S
 
 import Data.Typeable (Typeable)
@@ -65,18 +68,13 @@ tellResources :: [Resource]
               -> Rules
 tellResources resources = RulesM $ tell $ RuleSet mempty mempty $ S.fromList resources
 
--- | Only compile/route items matching the given pattern
---
-matchPattern :: Pattern -> Rules -> Rules
-matchPattern pattern = matchPredicate (doesMatch pattern)
-
 -- | Only compile/route items satisfying the given predicate
 --
-matchPredicate :: (Identifier -> Bool) -> Rules -> Rules
-matchPredicate predicate = RulesM . local addPredicate . unRulesM
+match :: Pattern -> Rules -> Rules
+match pattern = RulesM . local addPredicate . unRulesM
   where
     addPredicate env = env
-        { rulesMatcher = \id' -> rulesMatcher env id' && predicate id'
+        { rulesPattern = rulesPattern env `mappend` pattern
         }
 
 -- | Add a compilation rule to the rules.
@@ -88,13 +86,13 @@ matchPredicate predicate = RulesM . local addPredicate . unRulesM
 compile :: (Binary a, Typeable a, Writable a)
         => Compiler Resource a -> Rules
 compile compiler = RulesM $ do
-    matcher <- rulesMatcher <$> ask
+    pattern <- rulesPattern <$> ask
     provider <- rulesResourceProvider <$> ask
-    let identifiers = filter matcher $ map unResource $ resourceList provider
+    let ids = filterMatches pattern $ map unResource $ resourceList provider
     unRulesM $ do
-        tellCompilers $ flip map identifiers $ \identifier ->
+        tellCompilers $ flip map ids $ \identifier ->
             (identifier, constA (Resource identifier) >>> compiler)
-        tellResources $ map Resource identifiers
+        tellResources $ map Resource ids
                    
 -- | Add a compilation rule
 --
@@ -113,8 +111,8 @@ create identifier compiler = tellCompilers [(identifier, compiler)]
 --
 route :: Routes -> Rules
 route route' = RulesM $ do
-    matcher <- rulesMatcher <$> ask
-    unRulesM $ tellRoute $ matchRoute matcher route'
+    pattern <- rulesPattern <$> ask
+    unRulesM $ tellRoute $ matchRoute pattern route'
 
 -- | Apart from regular compilers, one is also able to specify metacompilers.
 -- Metacompilers are a special class of compilers: they are compilers which
