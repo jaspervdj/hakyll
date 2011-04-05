@@ -34,6 +34,7 @@
 module Hakyll.Core.Identifier.Pattern
     ( Pattern
     , parseGlob
+    , predicate
     , matches
     , filterMatches
     , capture
@@ -79,6 +80,15 @@ parseGlob = Glob . parse'
             ('*'  : '*' : xs) -> Literal chunk : CaptureMany : parse' xs
             ('*'  : xs)       -> Literal chunk : Capture : parse' xs
             xs                -> Literal chunk : Literal xs : []
+
+-- | Create a 'Pattern' from an arbitrary predicate
+--
+-- Example:
+--
+-- > predicate (\i -> matches "foo/*" i && not (matches "foo/bar" i))
+--
+predicate :: (Identifier -> Bool) -> Pattern
+predicate = Predicate
 
 -- | Check if an identifier matches a pattern
 --
