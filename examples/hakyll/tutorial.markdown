@@ -65,16 +65,18 @@ import Hakyll
 
 main :: IO ()
 main = hakyll $ do
-    route   "css/*" idRoute
-    compile "css/*" compressCssCompiler
+    match "css/*" $ do
+        route   idRoute
+        compile compressCssCompiler
 
-    compile "templates/*" templateCompiler
+    match "templates/*" $ compile templateCompiler
 
-    forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
-        route   page $ setExtension "html"
-        compile page $ pageCompiler
-            >>> applyTemplateCompiler "templates/default.html"
-            >>> relativizeUrlsCompiler
+    forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page ->
+        match page $ do
+            route   $ setExtension "html"
+            compile $ pageCompiler
+                >>> applyTemplateCompiler "templates/default.html"
+                >>> relativizeUrlsCompiler
 ~~~~~
 
 This is enough code to create a small brochure site! You can find all code
@@ -111,12 +113,11 @@ main :: IO ()
 main = hakyll $ do
 ~~~~~
 
-The `RulesM` monad is composed of a few functions. A first important one is
-`route`: this creates a new rule for routing items. This rule is applied to all
-items it matches -- and matching is done using the `"css/*"` [pattern].
-`idRoute` simply means that an item will be routed to it's own filename. For
-example, `css/screen.css` will be routed to `css/screen.css` -- not very
-exciting.
+The `RulesM` monad is composed of a few functions. Seldomly, you want to apply a
+compiler to *all* resources. You want to apply a compiler to certain files
+instead. That's why the `match` function exists. First, let's handle the CSS of
+our file. We use a `"css/*"` [Pattern] to match all files in the `css/`
+directory.
 
 Note that a [Pattern] matches an [Identifier], it doesn't match filenames.
 
@@ -124,7 +125,16 @@ Note that a [Pattern] matches an [Identifier], it doesn't match filenames.
 [Identifier]: /reference/Hakyll-Core-Identifier.html
 
 ~~~~~{.haskell}
-route   "css/*" idRoute
+match "css/*" $ do
+~~~~~
+
+`route` creates a new rule for routing items. This rule is applied to all items
+that are currently matched -- in this case, `"css/*"`. `idRoute` simply means
+that an item will be routed to it's own filename. For example, `css/screen.css`
+will be routed to `css/screen.css` -- not very exciting.
+
+~~~~~{.haskell}
+route idRoute
 ~~~~~
 
 Apart from specifying where the items should go (using `route`), we also have to
@@ -135,12 +145,12 @@ good default compilers. The `compressCssCompiler` compiler will simply compress
 the CSS found in the files.
 
 ~~~~~{.haskell}
-compile "css/*" compressCssCompiler
+compile compressCssCompiler
 ~~~~~
 
 Next, we're going to render some pages. We're going to style the results a
 little, so we're going to need a [Template]. We simply compile a template using
-the `defaultTemplateRead` compiler, it's good enough in most cases.
+the `templateCompiler` compiler, it's good enough in most cases.
 
 [Template]: /reference/Hakyll-Web-Template.html
 
@@ -148,7 +158,7 @@ We don't use a route for these templates, after all, we don't want to route them
 anywhere, we just want to use them to style our pages a little.
 
 ~~~~~{.haskell}
-compile "templates/*" templateCompiler
+match "templates/*" $ compile templateCompiler
 ~~~~~
 
 We can conclude that some rules do not *directly* add an output page on our
@@ -164,13 +174,14 @@ manually).
 
 ~~~~~{.haskell}
 forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
+    match page $ do
 ~~~~~
 
 The pages all have different extensions. In our website, we only want to see
 `.html` files. Hakyll provides a route to do just that:
 
 ~~~~~{.haskell}
-route   page $ setExtension "html"
+route setExtension "html"
 ~~~~~
 
 The [Rules] reference page has a complete listing of the API used.
@@ -189,7 +200,7 @@ reference page has some more readable information on this subject.
 [Compiler]: /reference/Hakyll-Core-Compiler.html
 
 ~~~~~{.haskell}
-compile page $ pageCompiler
+compile pageCompiler
     >>> applyTemplateCompiler "templates/default.html"
     >>> relativizeUrlsCompiler
 ~~~~~
