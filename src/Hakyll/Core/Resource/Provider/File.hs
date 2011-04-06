@@ -5,6 +5,8 @@ module Hakyll.Core.Resource.Provider.File
     ) where
 
 import Control.Applicative ((<$>))
+import Control.Concurrent (newMVar)
+import qualified Data.Map as M
 
 import qualified Data.ByteString.Lazy as LB
 
@@ -22,9 +24,13 @@ fileResourceProvider configuration = do
     list <- map parseIdentifier . filter (not . ignoreFile configuration) <$>
         getRecursiveContents False "."
 
+    -- MVar for the cache
+    mvar <- newMVar M.empty
+
     -- Construct a resource provider
     return ResourceProvider
         { resourceList           = map Resource list
         , resourceString         = readFile . toFilePath . unResource
         , resourceLazyByteString = LB.readFile . toFilePath . unResource
+        , resourceModifiedCache  = mvar
         }
