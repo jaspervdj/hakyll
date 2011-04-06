@@ -2,6 +2,11 @@
 title: Changelog
 ---
 
+## Hakyll 3.1
+
+- New `match` function in rules DSL
+- More expressive `Pattern`s
+
 ## Hakyll 3
 
 - Complete rewrite
