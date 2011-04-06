@@ -52,7 +52,7 @@ main = hakyll $ do
     -- Add a tag list compiler for every tag
     match "tags/*" $ route $ setExtension ".html"
     metaCompile $ require_ "tags"
-        >>> arr (M.toList . tagsMap)
+        >>> arr tagsMap
         >>> arr (map (\(t, p) -> (tagIdentifier t, makeTagList t p)))
 
     -- Render RSS feed
