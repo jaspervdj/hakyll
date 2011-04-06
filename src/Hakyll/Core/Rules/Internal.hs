@@ -5,6 +5,7 @@ module Hakyll.Core.Rules.Internal
     ( CompileRule (..)
     , RuleSet (..)
     , RuleState (..)
+    , RuleEnvironment (..)
     , RulesM (..)
     , Rules
     , runRules
@@ -17,8 +18,10 @@ import Control.Monad.State (State, evalState)
 import Data.Monoid (Monoid, mempty, mappend)
 import Data.Set (Set)
 
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
+import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Identifier
+import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Routes
 import Hakyll.Core.CompiledItem
@@ -55,10 +58,17 @@ data RuleState = RuleState
     { rulesMetaCompilerIndex :: Int
     } deriving (Show)
 
+-- | Rule environment
+--
+data RuleEnvironment = RuleEnvironment
+    { rulesResourceProvider :: ResourceProvider
+    , rulesPattern          :: Pattern
+    }
+
 -- | The monad used to compose rules
 --
 newtype RulesM a = RulesM
-    { unRulesM :: ReaderT ResourceProvider (WriterT RuleSet (State RuleState)) a
+    { unRulesM :: ReaderT RuleEnvironment (WriterT RuleSet (State RuleState)) a
     } deriving (Monad, Functor, Applicative)
 
 -- | Simplification of the RulesM type; usually, it will not return any
@@ -70,6 +80,9 @@ type Rules = RulesM ()
 --
 runRules :: Rules -> ResourceProvider -> RuleSet
 runRules rules provider =
-    evalState (execWriterT $ runReaderT (unRulesM rules) provider) state
+    evalState (execWriterT $ runReaderT (unRulesM rules) env) state
   where
     state = RuleState {rulesMetaCompilerIndex = 0}
+    env = RuleEnvironment { rulesResourceProvider = provider
+                          , rulesPattern          = mempty
+                          }

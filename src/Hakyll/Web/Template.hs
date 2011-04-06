@@ -59,7 +59,7 @@ import Text.Hamlet (HamletSettings, defaultHamletSettings)
 
 import Hakyll.Core.Compiler
 import Hakyll.Core.Identifier
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
 import Hakyll.Web.Template.Internal
 import Hakyll.Web.Template.Read
 import Hakyll.Web.Page.Internal

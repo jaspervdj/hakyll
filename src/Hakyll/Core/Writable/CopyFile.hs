@@ -12,7 +12,7 @@ import System.Directory (copyFile)
 import Data.Typeable (Typeable)
 import Data.Binary (Binary)
 
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
 import Hakyll.Core.Writable
 import Hakyll.Core.Compiler
 import Hakyll.Core.Identifier

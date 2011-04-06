@@ -32,6 +32,7 @@ module Hakyll.Web.Tags
     , readTags
     , readCategory
     , renderTagCloud
+    , renderTagList
     , renderTagsField
     , renderCategoryField
     ) where
@@ -39,9 +40,8 @@ module Hakyll.Web.Tags
 import Prelude hiding (id)
 import Control.Category (id)
 import Control.Applicative ((<$>))
-import Data.Map (Map)
 import qualified Data.Map as M
-import Data.List (intersperse)
+import Data.List (intersperse, intercalate)
 import Control.Arrow (arr, (&&&), (>>>), (***), (<<^), returnA)
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Monoid (mconcat)
@@ -64,7 +64,7 @@ import Hakyll.Core.Util.String
 -- | Data about tags
 --
 data Tags a = Tags
-    { tagsMap :: Map String [Page a]
+    { tagsMap :: [(String, [Page a])]
     } deriving (Show, Typeable)
 
 instance Binary a => Binary (Tags a) where
@@ -90,7 +90,8 @@ readTagsWith :: (Page a -> [String])  -- ^ Function extracting tags from a page
              -> [Page a]              -- ^ Pages
              -> Tags a                -- ^ Resulting tags
 readTagsWith f pages = Tags
-    { tagsMap = foldl (M.unionWith (++)) M.empty (map readTagsWith' pages)
+    { tagsMap = M.toList $
+        foldl (M.unionWith (++)) M.empty (map readTagsWith' pages)
     }
   where
     -- Create a tag map for one page
@@ -108,41 +109,64 @@ readTags = readTagsWith getTags
 readCategory :: [Page a] -> Tags a
 readCategory = readTagsWith getCategory
 
+-- | Render tags in HTML
+--
+renderTags :: (String -> Identifier)
+           -- ^ Produce a link
+           -> (String -> String -> Int -> Int -> Int -> String)
+           -- ^ Produce a tag item: tag, url, count, min count, max count
+           -> ([String] -> String)
+           -- ^ Join items
+           -> Compiler (Tags a) String
+           -- ^ Tag cloud renderer
+renderTags makeUrl makeItem concatItems = proc (Tags tags) -> do
+    -- In tags' we create a list: [((tag, route), count)]
+    tags' <- mapCompiler ((id &&& (getRouteFor <<^ makeUrl)) *** arr length)
+                -< tags
+
+    let -- Absolute frequencies of the pages
+        freqs = map snd tags'
+
+        -- The minimum and maximum count found
+        (min', max')
+            | null freqs = (0, 1)
+            | otherwise = (minimum &&& maximum) freqs
+
+        -- Create a link for one item
+        makeItem' ((tag, url), count) =
+            makeItem tag (toUrl $ fromMaybe "/" url) count min' max'
+
+    -- Render and return the HTML
+    returnA -< concatItems $ map makeItem' tags'
+
 -- | Render a tag cloud in HTML
 --
 renderTagCloud :: (String -> Identifier)    -- ^ Produce a link for a tag
                -> Double                    -- ^ Smallest font size, in percent
                -> Double                    -- ^ Biggest font size, in percent
                -> Compiler (Tags a) String  -- ^ Tag cloud renderer
-renderTagCloud makeUrl minSize maxSize = proc (Tags tags) -> do
-    -- In tags' we create a list: [((tag, route), count)]
-    tags' <- mapCompiler ((id &&& (getRouteFor <<^ makeUrl)) *** arr length)
-                -< M.toList tags
+renderTagCloud makeUrl minSize maxSize =
+    renderTags makeUrl makeLink (intercalate " ")
+  where
+    makeLink tag url count min' max' = renderHtml $
+        H.a ! A.style (toValue $ "font-size: " ++ size count min' max')
+            ! A.href (toValue url)
+            $ toHtml tag
 
-    let -- Absolute frequencies of the pages
-        freqs = map snd tags'
+    -- Show the relative size of one 'count' in percent
+    size count min' max' =
+        let diff = 1 + fromIntegral max' - fromIntegral min'
+            relative = (fromIntegral count - fromIntegral min') / diff
+            size' = floor $ minSize + relative * (maxSize - minSize)
+        in show (size' :: Int) ++ "%"
 
-        -- Find out the relative count of a tag: on a scale from 0 to 1
-        relative count = (fromIntegral count - min') / (1 + max' - min')
-
-        -- Show the relative size of one 'count' in percent
-        size count =
-            let size' = floor $ minSize + relative count * (maxSize - minSize)
-            in show (size' :: Int) ++ "%"
-
-        -- The minimum and maximum count found, as doubles
-        (min', max')
-            | null freqs = (0, 1)
-            | otherwise = (minimum &&& maximum) $ map fromIntegral freqs
-
-        -- Create a link for one item
-        makeLink ((tag, url), count) =
-            H.a ! A.style (toValue $ "font-size: " ++ size count)
-                ! A.href (toValue $ toUrl $ fromMaybe "/" url)
-                $ toHtml tag
-
-    -- Render and return the HTML
-    returnA -< renderHtml $ mconcat $ intersperse " " $ map makeLink tags'
+-- | Render a simple tag list in HTML, with the tag count next to the item
+--
+renderTagList :: (String -> Identifier) -> Compiler (Tags a) (String)
+renderTagList makeUrl = renderTags makeUrl makeLink (intercalate ", ")
+  where
+    makeLink tag url count _ _ = renderHtml $
+        H.a ! A.href (toValue url) $ toHtml (tag ++ "(" ++ show count ++ ")")
 
 -- | Render tags with links
 --
@@ -151,14 +175,14 @@ renderTagsFieldWith :: (Page a -> [String])        -- ^ Function to get the tags
                     -> (String -> Identifier)      -- ^ Create a link for a tag
                     -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
 renderTagsFieldWith tags destination makeUrl =
-    id &&& arr tags >>> setFieldA destination renderTags
+    id &&& arr tags >>> setFieldA destination renderTags'
   where
     -- Compiler creating a comma-separated HTML string for a list of tags
-    renderTags :: Compiler [String] String
-    renderTags =   arr (map $ id &&& makeUrl)
-               >>> mapCompiler (id *** getRouteFor)
-               >>> arr (map $ uncurry renderLink)
-               >>> arr (renderHtml . mconcat . intersperse ", " . catMaybes)
+    renderTags' :: Compiler [String] String
+    renderTags' =   arr (map $ id &&& makeUrl)
+                >>> mapCompiler (id *** getRouteFor)
+                >>> arr (map $ uncurry renderLink)
+                >>> arr (renderHtml . mconcat . intersperse ", " . catMaybes)
 
     -- Render one tag link
     renderLink _   Nothing         = Nothing

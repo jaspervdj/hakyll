@@ -124,7 +124,8 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
+import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store
 import Hakyll.Core.Rules.Internal
@@ -237,7 +238,7 @@ requireAll_ :: (Binary a, Typeable a, Writable a)
             -> Compiler b [a]
 requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
   where
-    getDeps = matches pattern . map unResource . resourceList
+    getDeps = filterMatches pattern . map unResource . resourceList
     requireAll_' = const $ CompilerM $ do
         deps <- getDeps . compilerResourceProvider <$> ask
         mapM (unCompilerM . getDependency) deps

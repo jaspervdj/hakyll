@@ -10,16 +10,18 @@
 -- Therefore, it is not recommended to read files directly -- you should use the
 -- provided 'Resource' methods.
 --
-module Hakyll.Core.ResourceProvider
-    ( Resource (..)
-    , ResourceProvider (..)
+module Hakyll.Core.Resource.Provider
+    ( ResourceProvider (..)
     , resourceExists
     , resourceDigest
     , resourceModified
     ) where
 
+import Control.Concurrent (MVar, readMVar, modifyMVar_)
 import Control.Monad ((<=<))
 import Data.Word (Word8)
+import Data.Map (Map)
+import qualified Data.Map as M
 
 import qualified Data.ByteString.Lazy as LB
 import OpenSSL.Digest.ByteString.Lazy (digest)
@@ -27,13 +29,7 @@ import OpenSSL.Digest (MessageDigest (MD5))
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Store
-
--- | A resource
---
--- Invariant: the resource specified by the given identifier must exist
---
-newtype Resource = Resource {unResource :: Identifier}
-                 deriving (Eq, Show, Ord)
+import Hakyll.Core.Resource
 
 -- | A value responsible for retrieving and listing resources
 --
@@ -44,6 +40,8 @@ data ResourceProvider = ResourceProvider
       resourceString         :: Resource -> IO String
     , -- | Retrieve a certain resource as lazy bytestring
       resourceLazyByteString :: Resource -> IO LB.ByteString
+    , -- | Cache keeping track of modified items
+      resourceModifiedCache  :: MVar (Map Resource Bool)
     }
 
 -- | Check if a given identifier has a resource
@@ -60,6 +58,24 @@ resourceDigest provider = digest MD5 <=< resourceLazyByteString provider
 --
 resourceModified :: ResourceProvider -> Resource -> Store -> IO Bool
 resourceModified provider resource store = do
+    cache <- readMVar mvar
+    case M.lookup resource cache of
+        -- Already in the cache
+        Just m  -> return m
+        -- Not yet in the cache, check digests (if it exists)
+        Nothing -> do
+            m <- if resourceExists provider (unResource resource)
+                        then digestModified provider resource store
+                        else return False
+            modifyMVar_ mvar (return . M.insert resource m)
+            return m
+  where
+    mvar = resourceModifiedCache provider
+
+-- | Check if a resource digest was modified
+--
+digestModified :: ResourceProvider -> Resource -> Store -> IO Bool
+digestModified provider resource store = do
     -- Get the latest seen digest from the store
     lastDigest <- storeGet store itemName $ unResource resource
     -- Calculate the digest for the resource
@@ -72,4 +88,4 @@ resourceModified provider resource store = do
         else do storeSet store itemName (unResource resource) newDigest
                 return True
   where
-    itemName = "Hakyll.Core.ResourceProvider.resourceModified"
+    itemName = "Hakyll.Core.ResourceProvider.digestModified"

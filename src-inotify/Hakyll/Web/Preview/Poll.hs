@@ -13,7 +13,7 @@ import Data.List (isPrefixOf)
 import System.INotify
 
 import Hakyll.Core.Configuration
-import Hakyll.Core.ResourceProvider
+import Hakyll.Core.Resource
 import Hakyll.Core.Identifier
 
 -- | Calls the given callback when the directory tree changes
