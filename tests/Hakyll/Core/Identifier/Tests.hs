@@ -10,7 +10,13 @@ import Hakyll.Core.Identifier.Pattern
 import TestSuite.Util
 
 tests :: [Test]
-tests = fromAssertions "capture"
+tests = concat
+    [ captureTests
+    , regexTests
+    ]
+
+captureTests :: [Test]
+captureTests = fromAssertions "capture"
     [ Just ["bar"]              @=? capture "foo/**" "foo/bar"
     , Just ["foo/bar"]          @=? capture "**" "foo/bar"
     , Nothing                   @=? capture "*" "foo/bar"
@@ -24,4 +30,10 @@ tests = fromAssertions "capture"
     , Just ["foo/bar"]          @=? capture "**.html" "foo/bar.html"
     , Just ["foo/bar", "wut"]   @=? capture "**/qux/*" "foo/bar/qux/wut"
     , Just ["lol", "fun/large"] @=? capture "*cat/**.jpg" "lolcat/fun/large.jpg"
+    ]
+
+regexTests :: [Test]
+regexTests = fromAssertions "regex"
+    [ True  @=? matches (regex "^foo/[^x]*$") "foo/bar"
+    , False @=? matches (regex "^foo/[^x]*$") "foo/barx"
     ]

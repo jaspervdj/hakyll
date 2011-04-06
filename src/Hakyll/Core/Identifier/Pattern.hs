@@ -35,6 +35,7 @@ module Hakyll.Core.Identifier.Pattern
     ( Pattern
     , parseGlob
     , predicate
+    , regex
     , matches
     , filterMatches
     , capture
@@ -46,10 +47,11 @@ module Hakyll.Core.Identifier.Pattern
 import Data.List (isPrefixOf, inits, tails)
 import Control.Arrow ((&&&), (>>>))
 import Control.Monad (msum)
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromMaybe)
 import Data.Monoid (Monoid, mempty, mappend)
 
 import GHC.Exts (IsString, fromString)
+import Text.Regex.PCRE ((=~~))
 
 import Hakyll.Core.Identifier
 
@@ -95,6 +97,15 @@ parseGlob = Glob . parse'
 --
 predicate :: (Identifier -> Bool) -> Pattern
 predicate = Predicate
+
+-- | Create a 'Pattern' from a regex
+--
+-- Example:
+--
+-- > regex "^foo/[^x]*$
+--
+regex :: String -> Pattern
+regex str = predicate $ fromMaybe False . (=~~ str) . toFilePath
 
 -- | Check if an identifier matches a pattern
 --
