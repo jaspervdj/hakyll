@@ -100,7 +100,6 @@ library
                       Hakyll.Core.Writable.WritableTuple
                       Hakyll.Core.Identifier
                       Hakyll.Core.DirectedGraph.Dot
-                      Hakyll.Core.DirectedGraph.DependencySolver
                       Hakyll.Core.DirectedGraph
                       Hakyll.Core.Rules
                       Hakyll.Core.Routes
