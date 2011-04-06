@@ -82,6 +82,7 @@ library
                       Hakyll.Web.Page.Read
                       Hakyll.Web.Page.Metadata
                       Hakyll.Core.Configuration
+                      Hakyll.Core.DependencyAnalyzer
                       Hakyll.Core.Identifier.Pattern
                       Hakyll.Core.UnixFilter
                       Hakyll.Core.Util.Arrow
@@ -99,7 +100,6 @@ library
                       Hakyll.Core.Writable.WritableTuple
                       Hakyll.Core.Identifier
                       Hakyll.Core.DirectedGraph.Dot
-                      Hakyll.Core.DirectedGraph.DependencySolver
                       Hakyll.Core.DirectedGraph
                       Hakyll.Core.Rules
                       Hakyll.Core.Routes

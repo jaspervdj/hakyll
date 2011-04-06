@@ -56,8 +56,8 @@ resourceDigest provider = digest MD5 <=< resourceLazyByteString provider
 
 -- | Check if a resource was modified
 --
-resourceModified :: ResourceProvider -> Resource -> Store -> IO Bool
-resourceModified provider resource store = do
+resourceModified :: ResourceProvider -> Store -> Resource -> IO Bool
+resourceModified provider store resource = do
     cache <- readMVar mvar
     case M.lookup resource cache of
         -- Already in the cache
@@ -65,7 +65,7 @@ resourceModified provider resource store = do
         -- Not yet in the cache, check digests (if it exists)
         Nothing -> do
             m <- if resourceExists provider (unResource resource)
-                        then digestModified provider resource store
+                        then digestModified provider store resource
                         else return False
             modifyMVar_ mvar (return . M.insert resource m)
             return m
@@ -74,8 +74,8 @@ resourceModified provider resource store = do
 
 -- | Check if a resource digest was modified
 --
-digestModified :: ResourceProvider -> Resource -> Store -> IO Bool
-digestModified provider resource store = do
+digestModified :: ResourceProvider -> Store -> Resource -> IO Bool
+digestModified provider store resource = do
     -- Get the latest seen digest from the store
     lastDigest <- storeGet store itemName $ unResource resource
     -- Calculate the digest for the resource

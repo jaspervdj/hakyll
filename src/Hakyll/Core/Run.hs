@@ -10,12 +10,12 @@ import Control.Monad (filterM)
 import Control.Monad.Trans (liftIO)
 import Control.Applicative (Applicative, (<$>))
 import Control.Monad.Reader (ReaderT, runReaderT, ask)
-import Control.Monad.State.Strict (StateT, runStateT, get, modify)
-import Control.Arrow ((&&&))
+import Control.Monad.State.Strict (StateT, runStateT, get, put)
+import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Monoid (mempty, mappend)
+import Data.Maybe (fromMaybe)
 import System.FilePath ((</>))
-import Data.Set (Set)
 import qualified Data.Set as S
 
 import Hakyll.Core.Routes
@@ -28,7 +28,8 @@ import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Resource.Provider.File
 import Hakyll.Core.Rules.Internal
 import Hakyll.Core.DirectedGraph
-import Hakyll.Core.DirectedGraph.DependencySolver
+import Hakyll.Core.DirectedGraph.Dot
+import Hakyll.Core.DependencyAnalyzer
 import Hakyll.Core.Writable
 import Hakyll.Core.Store
 import Hakyll.Core.Configuration
@@ -46,35 +47,36 @@ run configuration rules = do
     provider <- timed logger "Creating provider" $
         fileResourceProvider configuration
 
+    -- Fetch the old graph from the store
+    oldGraph <- fromMaybe mempty <$>
+        storeGet store "Hakyll.Core.Run.run" "dependencies"
+
     let ruleSet = runRules rules provider
         compilers = rulesCompilers ruleSet
 
         -- Extract the reader/state
-        reader = unRuntime $ addNewCompilers [] compilers
-        stateT = runReaderT reader $ env logger ruleSet provider store
+        reader = unRuntime $ addNewCompilers compilers
+        stateT = runReaderT reader $ RuntimeEnvironment
+                    { hakyllLogger           = logger
+                    , hakyllConfiguration    = configuration
+                    , hakyllRoutes           = rulesRoutes ruleSet
+                    , hakyllResourceProvider = provider
+                    , hakyllStore            = store
+                    }
 
     -- Run the program and fetch the resulting state
-    ((), state') <- runStateT stateT state
+    ((), state') <- runStateT stateT $ RuntimeState
+        { hakyllAnalyzer  = makeDependencyAnalyzer mempty (const False) oldGraph
+        , hakyllCompilers = M.empty
+        }
 
     -- We want to save the final dependency graph for the next run
-    storeSet store "Hakyll.Core.Run.run" "dependencies" $ hakyllGraph state'
+    storeSet store "Hakyll.Core.Run.run" "dependencies" $
+        analyzerGraph $ hakyllAnalyzer state'
 
     -- Flush and return
     flushLogger logger
     return ruleSet
-  where
-    env logger ruleSet provider store = RuntimeEnvironment
-        { hakyllLogger           = logger
-        , hakyllConfiguration    = configuration
-        , hakyllRoutes           = rulesRoutes ruleSet
-        , hakyllResourceProvider = provider
-        , hakyllStore            = store
-        }
-
-    state = RuntimeState
-        { hakyllModified = S.empty
-        , hakyllGraph    = mempty
-        }
 
 data RuntimeEnvironment = RuntimeEnvironment
     { hakyllLogger           :: Logger
@@ -85,8 +87,8 @@ data RuntimeEnvironment = RuntimeEnvironment
     }
 
 data RuntimeState = RuntimeState
-    { hakyllModified :: Set Identifier
-    , hakyllGraph    :: DirectedGraph Identifier
+    { hakyllAnalyzer  :: DependencyAnalyzer Identifier
+    , hakyllCompilers :: Map Identifier (Compiler () CompileRule)
     }
 
 newtype Runtime a = Runtime
@@ -95,95 +97,95 @@ newtype Runtime a = Runtime
 
 -- | Return a set of modified identifiers
 --
+{-
 modified :: ResourceProvider     -- ^ Resource provider
          -> Store                -- ^ Store
          -> [Identifier]         -- ^ Identifiers to check
          -> IO (Set Identifier)  -- ^ Modified resources
 modified provider store ids = fmap S.fromList $ flip filterM ids $ \id' ->
     resourceModified provider (Resource id') store
+-}
 
 -- | Add a number of compilers and continue using these compilers
 --
 addNewCompilers :: [(Identifier, Compiler () CompileRule)]
-                -- ^ Remaining compilers yet to be run
-                -> [(Identifier, Compiler () CompileRule)]
                 -- ^ Compilers to add
                 -> Runtime ()
-addNewCompilers oldCompilers newCompilers = Runtime $ do
+addNewCompilers newCompilers = Runtime $ do
     -- Get some information
     logger <- hakyllLogger <$> ask
     section logger "Adding new compilers"
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
 
-    let -- All compilers
-        compilers = oldCompilers ++ newCompilers
+    -- Old state information
+    oldCompilers <- hakyllCompilers <$> get
+    oldAnalyzer <- hakyllAnalyzer <$> get
 
-        -- Get all dependencies for the compilers
-        dependencies = flip map compilers $ \(id', compiler) ->
+    let -- Create a new partial dependency graph
+        dependencies = flip map newCompilers $ \(id', compiler) ->
             let deps = runCompilerDependencies compiler id' provider
             in (id', deps)
 
-        -- Create a compiler map (Id -> Compiler)
-        compilerMap = M.fromList compilers
-
         -- Create the dependency graph
-        currentGraph = fromList dependencies
+        newGraph = fromList dependencies
 
-    -- Find the old graph and append the new graph to it. This forms the
-    -- complete graph
-    completeGraph <- timed logger "Creating graph" $
-        mappend currentGraph . hakyllGraph <$> get
+    -- Check which items have been modified
+    modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $
+        liftIO . resourceModified provider store . Resource
+    -- newModified <- liftIO $ modified provider store $ map fst newCompilers
 
-    orderedCompilers <- timed logger "Solving dependencies" $ do
-        -- Check which items are up-to-date. This only needs to happen for the new
-        -- compilers
-        oldModified <- hakyllModified <$> get 
-        newModified <- liftIO $ modified provider store $ map fst newCompilers
+    -- Create a new analyzer and append it to the currect one
+    let newAnalyzer = makeDependencyAnalyzer newGraph (`S.member` modified) $
+            analyzerPreviousGraph oldAnalyzer
+        analyzer = mappend oldAnalyzer newAnalyzer
 
-        let modified' = oldModified `S.union` newModified
-            
-            -- Find obsolete items. Every item that is reachable from a modified
-            -- item is considered obsolete. From these obsolete items, we are only
-            -- interested in ones that are in the current subgraph.
-            obsolete = S.filter (`member` currentGraph)
-                     $ reachableNodes modified' $ reverse completeGraph
+    -- Debugging
+    liftIO $ putStrLn $ "Remains: " ++ show (analyzerRemains newAnalyzer)
+    liftIO $ putStrLn $ "Done: " ++ show (analyzerDone newAnalyzer)
+    liftIO $ writeFile "old-prev.dot" $ toDot show (analyzerPreviousGraph oldAnalyzer)
+    liftIO $ writeFile "old.dot" $ toDot show (analyzerGraph oldAnalyzer)
+    liftIO $ writeFile "old-prev.dot" $ toDot show (analyzerPreviousGraph oldAnalyzer)
+    liftIO $ writeFile "new.dot" $ toDot show (analyzerGraph newAnalyzer)
+    liftIO $ writeFile "new-prev.dot" $ toDot show (analyzerPreviousGraph newAnalyzer)
+    liftIO $ writeFile "result.dot" $ toDot show (analyzerGraph analyzer)
+    liftIO $ writeFile "result-prev.dot" $ toDot show (analyzerPreviousGraph analyzer)
 
-            -- Solve the graph and retain only the obsolete items
-            ordered = filter (`S.member` obsolete) $ solveDependencies currentGraph
-
-        -- Update the state
-        modify $ updateState modified' completeGraph
-
-        -- Join the order with the compilers again
-        return $ map (id &&& (compilerMap M.!)) ordered
-
-    -- Now run the ordered list of compilers
-    unRuntime $ runCompilers orderedCompilers
-  where
-    -- Add the modified information for the new compilers
-    updateState modified' graph state = state
-        { hakyllModified = modified'
-        , hakyllGraph    = graph
+    -- Update the state
+    put $ RuntimeState
+        { hakyllAnalyzer  = analyzer
+        , hakyllCompilers = M.union oldCompilers (M.fromList newCompilers)
         }
 
-runCompilers :: [(Identifier, Compiler () CompileRule)]
-             -- ^ Ordered list of compilers
-             -> Runtime ()
-             -- ^ No result
-runCompilers [] = return ()
-runCompilers ((id', compiler) : compilers) = Runtime $ do
-    -- Obtain information
+    -- Continue
+    unRuntime stepAnalyzer
+
+stepAnalyzer :: Runtime ()
+stepAnalyzer = Runtime $ do
+    -- Step the analyzer
+    state <- get
+    let (signal, analyzer') = step $ hakyllAnalyzer state
+    put $ state { hakyllAnalyzer = analyzer' }
+
+    case signal of Done      -> return ()
+                   Cycle _   -> return ()
+                   Build id' -> unRuntime $ build id'
+
+build :: Identifier -> Runtime ()
+build id' = Runtime $ do
     logger <- hakyllLogger <$> ask
     routes <- hakyllRoutes <$> ask
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
-    modified' <- hakyllModified <$> get
+    compilers <- hakyllCompilers <$> get
 
     section logger $ "Compiling " ++ show id'
 
-    let -- Check if the resource was modified
-        isModified = id' `S.member` modified'
+    -- Fetch the right compiler from the map
+    let compiler = compilers M.! id'
+
+    -- Check if the resource was modified
+    isModified <- liftIO $ resourceModified provider store (Resource id')
 
     -- Run the compiler
     result <- timed logger "Total compile time" $ liftIO $
@@ -202,14 +204,14 @@ runCompilers ((id', compiler) : compilers) = Runtime $ do
                     liftIO $ write path compiled
 
             -- Continue for the remaining compilers
-            unRuntime $ runCompilers compilers 
+            unRuntime stepAnalyzer
 
         -- Metacompiler, slightly more complicated
         Right (MetaCompileRule newCompilers) ->
             -- Actually I was just kidding, it's not hard at all
-            unRuntime $ addNewCompilers compilers newCompilers
+            unRuntime $ addNewCompilers newCompilers
 
         -- Some error happened, log and continue
         Left err -> do
             thrown logger err 
-            unRuntime $ runCompilers compilers
+            unRuntime stepAnalyzer
