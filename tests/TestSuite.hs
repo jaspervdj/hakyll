@@ -1,8 +1,7 @@
-module TestSuite where
+module Main where
 
 import Test.Framework (defaultMain, testGroup)
 
-import qualified Hakyll.Core.DirectedGraph.Tests
 import qualified Hakyll.Core.DependencyAnalyzer.Tests
 import qualified Hakyll.Core.Identifier.Tests
 import qualified Hakyll.Core.Routes.Tests
@@ -14,9 +13,7 @@ import qualified Hakyll.Web.Util.Url.Tests
 
 main :: IO ()
 main = defaultMain
-    [ testGroup "Hakyll.Core.DirectedGraph.Tests"
-        Hakyll.Core.DirectedGraph.Tests.tests
-    , testGroup "Hakyll.Core.DependencyAnalyzer.Tests"
+    [ testGroup "Hakyll.Core.DependencyAnalyzer.Tests"
         Hakyll.Core.DependencyAnalyzer.Tests.tests
     , testGroup "Hakyll.Core.Identifier.Tests"
         Hakyll.Core.Identifier.Tests.tests

@@ -10,7 +10,6 @@ module Hakyll.Core.DirectedGraph
     , neighbours
     , reverse
     , reachableNodes
-    , sanitize
     ) where
 
 import Prelude hiding (reverse)
@@ -77,17 +76,9 @@ reachableNodes set graph = reachable (setNeighbours set) set
   where
     reachable next visited
         | S.null next = visited
-        | otherwise = reachable (sanitize' neighbours') (next `S.union` visited)
+        | otherwise = reachable (sanitize neighbours') (next `S.union` visited)
       where
-        sanitize' = S.filter (`S.notMember` visited)
-        neighbours' = setNeighbours (sanitize' next)
+        sanitize = S.filter (`S.notMember` visited)
+        neighbours' = setNeighbours (sanitize next)
 
     setNeighbours = S.unions . map (`neighbours` graph) . S.toList
-    
--- | Remove all dangling pointers, i.e. references to notes that do 
--- not actually exist in the graph.
---
-sanitize :: Ord a => DirectedGraph a -> DirectedGraph a
-sanitize (DirectedGraph graph) = DirectedGraph $ M.map sanitize' graph
-  where
-    sanitize' (Node t n) = Node t $ S.filter (`M.member` graph) n
