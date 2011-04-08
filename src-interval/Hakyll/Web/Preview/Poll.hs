@@ -7,11 +7,11 @@ module Hakyll.Web.Preview.Poll
 
 import Control.Applicative ((<$>))
 import Control.Concurrent (threadDelay)
-import Control.Monad (when)
+import Control.Monad (when, filterM)
 import System.Time (getClockTime)
 import Data.Set (Set)
 import qualified Data.Set as S
-import System.Directory (getModificationTime)
+import System.Directory (getModificationTime, doesFileExist)
 
 import Hakyll.Core.Configuration
 import Hakyll.Core.Identifier
@@ -31,6 +31,7 @@ previewPoll _ resources callback = do
     delay = 1000000
     loop files time = do
         threadDelay delay
-        modified <- any (time <) <$> mapM getModificationTime files
-        when modified callback
-        loop files =<< getClockTime
+        files' <- filterM doesFileExist files
+        modified <- any (time <) <$> mapM getModificationTime files'
+        when (modified || files' /= files) callback
+        loop files' =<< getClockTime
