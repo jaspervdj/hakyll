@@ -37,6 +37,8 @@ Some sites written in Hakyll:
 - [The Haskell Alphabet](http://www.cis.upenn.edu/~byorgey/haskell-alphabet/)
   by Brent Yorgey
 - Personal home page and blog of [Nicolas Wu](http://zenzike.com/)
+- Home page of [Ethan Schoonover](http://ethanschoonover.com/)
+- [Extralogical](http://extralogical.net/) by Benedict Eastaugh
 
 ## Getting Started
 
