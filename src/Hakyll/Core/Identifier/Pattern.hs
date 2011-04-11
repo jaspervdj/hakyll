@@ -36,6 +36,7 @@ module Hakyll.Core.Identifier.Pattern
     , parseGlob
     , predicate
     , regex
+    , inGroup
     , matches
     , filterMatches
     , capture
@@ -105,6 +106,12 @@ predicate = Predicate
 --
 regex :: String -> Pattern
 regex str = predicate $ fromMaybe False . (=~~ str) . toFilePath
+
+-- | Create a 'Pattern' which matches if the identifier is in a certain group
+-- (or in no group)
+--
+inGroup :: Maybe String -> Pattern
+inGroup group = predicate $ (== group) . identifierGroup
 
 -- | Check if an identifier matches a pattern
 --

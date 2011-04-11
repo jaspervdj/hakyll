@@ -26,7 +26,6 @@ module Hakyll.Core.Identifier
     , parseIdentifier
     , toFilePath
     , setGroup
-    , hasGroup
     ) where
 
 import Control.Arrow (second)
@@ -78,10 +77,5 @@ toFilePath = identifierPath
 
 -- | Set the identifier group for some identifier
 --
-setGroup :: String -> Identifier -> Identifier
-setGroup g (Identifier _ p) = Identifier (Just g) p
-
--- | Check if an identifier belongs to a certain group
---
-hasGroup :: String -> Identifier -> Bool
-hasGroup g (Identifier g' _) = Just g == g'
+setGroup :: Maybe String -> Identifier -> Identifier
+setGroup g (Identifier _ p) = Identifier g p

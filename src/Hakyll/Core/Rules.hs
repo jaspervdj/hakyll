@@ -19,6 +19,7 @@ module Hakyll.Core.Rules
     ( RulesM
     , Rules
     , match
+    , group
     , compile
     , create
     , route
@@ -29,7 +30,7 @@ module Hakyll.Core.Rules
 import Control.Applicative ((<$>))
 import Control.Monad.Writer (tell)
 import Control.Monad.Reader (ask, local)
-import Control.Arrow (second, (>>>), arr, (>>^))
+import Control.Arrow (second, (>>>), arr, (>>^), (***))
 import Control.Monad.State (get, put)
 import Data.Monoid (mempty, mappend)
 import qualified Data.Set as S
@@ -58,16 +59,21 @@ tellRoute route' = RulesM $ tell $ RuleSet route' mempty mempty
 tellCompilers :: (Binary a, Typeable a, Writable a)
              => [(Identifier, Compiler () a)]
              -> Rules
-tellCompilers compilers = RulesM $ tell $ RuleSet mempty compilers' mempty
+tellCompilers compilers = RulesM $ do
+    -- We box the compilers so they have a more simple type, and we apply the
+    -- current group to the corresponding identifiers
+    group' <- rulesGroup <$> ask
+    let compilers' = map (setGroup group' *** boxCompiler) compilers
+    tell $ RuleSet mempty compilers' mempty
   where
-    compilers' = map (second boxCompiler) compilers
     boxCompiler = (>>> arr compiledItem >>> arr CompileRule)
 
 -- | Add resources
 --
 tellResources :: [Resource]
               -> Rules
-tellResources resources = RulesM $ tell $ RuleSet mempty mempty $ S.fromList resources
+tellResources resources = RulesM $ tell $
+    RuleSet mempty mempty $ S.fromList resources
 
 -- | Only compile/route items satisfying the given predicate
 --
@@ -77,6 +83,13 @@ match pattern = RulesM . local addPredicate . unRulesM
     addPredicate env = env
         { rulesPattern = rulesPattern env `mappend` pattern
         }
+
+-- | Greate a group of compilers
+--
+group :: String -> Rules -> Rules
+group g = RulesM . local setGroup' . unRulesM
+  where
+    setGroup' env = env { rulesGroup = Just g }
 
 -- | Add a compilation rule to the rules.
 --
@@ -112,8 +125,11 @@ create identifier compiler = tellCompilers [(identifier, compiler)]
 --
 route :: Routes -> Rules
 route route' = RulesM $ do
+    -- We want the route only to be applied if we match the current pattern and
+    -- group
     pattern <- rulesPattern <$> ask
-    unRulesM $ tellRoute $ matchRoute pattern route'
+    group' <- rulesGroup <$> ask
+    unRulesM $ tellRoute $ matchRoute (pattern `mappend` inGroup group') route'
 
 -- | Apart from regular compilers, one is also able to specify metacompilers.
 -- Metacompilers are a special class of compilers: they are compilers which
@@ -154,7 +170,7 @@ metaCompile compiler = RulesM $ do
     -- Create an identifier from the state
     state <- get
     let index = rulesMetaCompilerIndex state
-        id' = fromCaptureString "Hakyll.Core.Rules.metaCompile/*" (show index)
+        id' = fromCapture "Hakyll.Core.Rules.metaCompile/*" (show index)
 
     -- Update the state with a new identifier
     put $ state {rulesMetaCompilerIndex = index + 1}
@@ -172,9 +188,16 @@ metaCompileWith :: (Binary a, Typeable a, Writable a)
                 -- ^ Compiler generating the other compilers
                 -> Rules
                 -- ^ Resulting rules
-metaCompileWith identifier compiler = RulesM $ tell $
-    RuleSet mempty compilers mempty
-  where
-    makeRule = MetaCompileRule . map (second box)
-    compilers = [(identifier, compiler >>> arr makeRule )]
-    box = (>>> fromDependency identifier >>^ CompileRule . compiledItem)
+metaCompileWith identifier compiler = RulesM $ do
+    group' <- rulesGroup <$> ask
+
+    let -- Set the correct group on the identifier
+        id' = setGroup group' identifier
+        -- Function to box an item into a rule
+        makeRule = MetaCompileRule . map (second box)
+        -- Entire boxing function
+        box = (>>> fromDependency id' >>^ CompileRule . compiledItem)
+        -- Resulting compiler list
+        compilers = [(id', compiler >>> arr makeRule )]
+
+    tell $ RuleSet mempty compilers mempty

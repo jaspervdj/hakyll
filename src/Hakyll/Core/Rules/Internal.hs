@@ -63,6 +63,7 @@ data RuleState = RuleState
 data RuleEnvironment = RuleEnvironment
     { rulesResourceProvider :: ResourceProvider
     , rulesPattern          :: Pattern
+    , rulesGroup            :: Maybe String
     }
 
 -- | The monad used to compose rules
@@ -85,4 +86,5 @@ runRules rules provider =
     state = RuleState {rulesMetaCompilerIndex = 0}
     env = RuleEnvironment { rulesResourceProvider = provider
                           , rulesPattern          = mempty
+                          , rulesGroup            = Nothing
                           }
