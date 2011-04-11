@@ -69,6 +69,10 @@ main = hakyll $ do
         route   idRoute
         compile compressCssCompiler
 
+    match "images/*" $ do
+        route   idRoute
+        compile copyFileCompiler
+
     match "templates/*" $ compile templateCompiler
 
     forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page ->
@@ -146,6 +150,18 @@ the CSS found in the files.
 
 ~~~~~{.haskell}
 compile compressCssCompiler
+~~~~~
+
+We can compile our images in a similar way. We use `idRoute` again, but we don't
+want to change anything -- so we use `copyFileCompiler`. The difference between
+most other compilers and `copyFileCompiler` is that the lattern will *not*
+attempt to read the file: it will copy the file directly, so it supports large
+binary files as well.
+
+~~~~~{.haskell}
+match "images/*" $ do
+    route   idRoute
+    compile copyFileCompiler
 ~~~~~
 
 Next, we're going to render some pages. We're going to style the results a
