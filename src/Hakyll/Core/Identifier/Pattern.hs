@@ -40,7 +40,6 @@ module Hakyll.Core.Identifier.Pattern
     , filterMatches
     , capture
     , fromCapture
-    , fromCaptureString
     , fromCaptures
     ) where
 
@@ -126,9 +125,9 @@ splits = inits &&& tails >>> uncurry zip >>> reverse
 
 -- | Match a glob against a pattern, generating a list of captures
 --
-capture :: Pattern -> Identifier -> Maybe [Identifier]
-capture (Glob p) (Identifier i) = fmap (map Identifier) $ capture' p i
-capture (Predicate _) _         = Nothing
+capture :: Pattern -> Identifier -> Maybe [String]
+capture (Glob p) (Identifier _ i) = capture' p i
+capture (Predicate _) _           = Nothing
 
 -- | Internal verion of 'capture'
 --
@@ -152,44 +151,32 @@ capture' (CaptureMany : ms) str =
 --
 -- Example:
 --
--- > fromCapture (parseGlob "tags/*") (parseIdentifier "foo")
+-- > fromCapture (parseGlob "tags/*") "foo"
 --
 -- Result:
 --
 -- > "tags/foo"
 --
-fromCapture :: Pattern -> Identifier -> Identifier
+fromCapture :: Pattern -> String -> Identifier
 fromCapture pattern = fromCaptures pattern . repeat
-
--- | Simplified version of 'fromCapture' which takes a 'String' instead of an
--- 'Identifier'
---
--- > fromCaptureString (parseGlob "tags/*") "foo"
---
--- Result:
---
--- > "tags/foo"
---
-fromCaptureString :: Pattern -> String -> Identifier
-fromCaptureString pattern = fromCapture pattern . parseIdentifier
 
 -- | Create an identifier from a pattern by filling in the captures with the
 -- given list of strings
 --
-fromCaptures :: Pattern -> [Identifier] -> Identifier
-fromCaptures (Glob p)      = fromCaptures' p
+fromCaptures :: Pattern -> [String] -> Identifier
+fromCaptures (Glob p)      = Identifier Nothing . fromCaptures' p
 fromCaptures (Predicate _) = error $
     "Hakyll.Core.Identifier.Pattern.fromCaptures: fromCaptures called on a " ++
     "predicate instead of a glob"
 
 -- | Internally used version of 'fromCaptures'
 --
-fromCaptures' :: [GlobComponent] -> [Identifier] -> Identifier
+fromCaptures' :: [GlobComponent] -> [String] -> String
 fromCaptures' []        _ = mempty
 fromCaptures' (m : ms) [] = case m of
-    Literal l -> Identifier l `mappend` fromCaptures' ms []
+    Literal l -> l `mappend` fromCaptures' ms []
     _         -> error $  "Hakyll.Core.Identifier.Pattern.fromCaptures': "
                        ++ "identifier list exhausted"
 fromCaptures' (m : ms) ids@(i : is) = case m of
-    Literal l -> Identifier l `mappend` fromCaptures' ms ids
+    Literal l -> l `mappend` fromCaptures' ms ids
     _         -> i `mappend` fromCaptures' ms is

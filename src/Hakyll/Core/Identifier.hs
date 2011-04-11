@@ -28,17 +28,30 @@ module Hakyll.Core.Identifier
     ) where
 
 import Control.Arrow (second)
-import Data.Monoid (Monoid)
+import Control.Applicative ((<$>), (<*>))
+import Control.Monad (mplus)
+import Data.Monoid (Monoid, mempty, mappend)
 import Data.List (intercalate)
 
-import Data.Binary (Binary)
+import Data.Binary (Binary, get, put)
 import GHC.Exts (IsString, fromString)
 import Data.Typeable (Typeable)
 
 -- | An identifier used to uniquely identify a value
 --
-newtype Identifier = Identifier {unIdentifier :: String}
-                   deriving (Eq, Ord, Monoid, Binary, Typeable)
+data Identifier = Identifier
+    { identifierGroup :: Maybe String
+    , identifierPath  :: String
+    } deriving (Eq, Ord, Typeable)
+
+instance Monoid Identifier where
+    mempty = Identifier Nothing ""
+    Identifier g1 p1 `mappend` Identifier g2 p2 =
+        Identifier (g1 `mplus` g2) (p1 `mappend` p2)
+
+instance Binary Identifier where
+    put (Identifier g p) = put g >> put p
+    get = Identifier <$> get <*> get
 
 instance Show Identifier where
     show = toFilePath
@@ -49,7 +62,8 @@ instance IsString Identifier where
 -- | Parse an identifier from a string
 --
 parseIdentifier :: String -> Identifier
-parseIdentifier = Identifier . intercalate "/" . filter (not . null) . split'
+parseIdentifier = Identifier Nothing
+                . intercalate "/" . filter (not . null) . split'
   where
     split' [] = [[]]
     split' str = let (pre, post) = second (drop 1) $ break (== '/') str
@@ -58,4 +72,4 @@ parseIdentifier = Identifier . intercalate "/" . filter (not . null) . split'
 -- | Convert an identifier to a relative 'FilePath'
 --
 toFilePath :: Identifier -> FilePath
-toFilePath = unIdentifier
+toFilePath = identifierPath
