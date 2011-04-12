@@ -11,6 +11,7 @@ module Hakyll.Core.Store
 import Control.Concurrent.MVar (MVar, newMVar, readMVar, modifyMVar_)
 import System.FilePath ((</>))
 import System.Directory (doesFileExist)
+import Data.Maybe (fromMaybe)
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -52,8 +53,10 @@ addToMap store path value =
 -- | Create a path
 --
 makePath :: Store -> String -> Identifier -> FilePath
-makePath store name identifier =
-    storeDirectory store </> name </> toFilePath identifier </> "hakyllstore"
+makePath store name identifier = storeDirectory store </> name
+    </> group </> toFilePath identifier </> "hakyllstore"
+  where
+    group = fromMaybe "" $ identifierGroup identifier
 
 -- | Store an item
 --

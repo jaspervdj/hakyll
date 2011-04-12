@@ -27,7 +27,6 @@ import qualified Data.ByteString.Lazy as LB
 import OpenSSL.Digest.ByteString.Lazy (digest)
 import OpenSSL.Digest (MessageDigest (MD5))
 
-import Hakyll.Core.Identifier
 import Hakyll.Core.Store
 import Hakyll.Core.Resource
 
@@ -46,8 +45,8 @@ data ResourceProvider = ResourceProvider
 
 -- | Check if a given identifier has a resource
 --
-resourceExists :: ResourceProvider -> Identifier -> Bool
-resourceExists provider = flip elem $ map unResource $ resourceList provider
+resourceExists :: ResourceProvider -> Resource -> Bool
+resourceExists provider = flip elem $ resourceList provider
 
 -- | Retrieve a digest for a given resource
 --
@@ -64,7 +63,7 @@ resourceModified provider store resource = do
         Just m  -> return m
         -- Not yet in the cache, check digests (if it exists)
         Nothing -> do
-            m <- if resourceExists provider (unResource resource)
+            m <- if resourceExists provider resource
                         then digestModified provider store resource
                         else return False
             modifyMVar_ mvar (return . M.insert resource m)
@@ -77,7 +76,7 @@ resourceModified provider store resource = do
 digestModified :: ResourceProvider -> Store -> Resource -> IO Bool
 digestModified provider store resource = do
     -- Get the latest seen digest from the store
-    lastDigest <- storeGet store itemName $ unResource resource
+    lastDigest <- storeGet store itemName identifier
     -- Calculate the digest for the resource
     newDigest <- resourceDigest provider resource
     -- Check digests
@@ -85,7 +84,8 @@ digestModified provider store resource = do
         -- All is fine, not modified
         then return False
         -- Resource modified; store new digest
-        else do storeSet store itemName (unResource resource) newDigest
+        else do storeSet store itemName identifier newDigest
                 return True
   where
+    identifier = toIdentifier resource
     itemName = "Hakyll.Core.ResourceProvider.digestModified"

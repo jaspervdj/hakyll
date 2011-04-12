@@ -14,7 +14,6 @@ import System.INotify
 
 import Hakyll.Core.Configuration
 import Hakyll.Core.Resource
-import Hakyll.Core.Identifier
 
 -- | Calls the given callback when the directory tree changes
 --
@@ -27,7 +26,7 @@ previewPoll _ resources callback = do
     inotify <- initINotify
 
     let -- A set of file paths
-        paths = S.map (toFilePath . unResource) resources
+        paths = S.map unResource resources
 
         -- A list of directories. Run it through a set so we have every
         -- directory only once.

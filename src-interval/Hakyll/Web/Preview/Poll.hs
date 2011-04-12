@@ -14,7 +14,6 @@ import qualified Data.Set as S
 import System.Directory (getModificationTime, doesFileExist)
 
 import Hakyll.Core.Configuration
-import Hakyll.Core.Identifier
 import Hakyll.Core.Resource
 
 -- | A preview thread that periodically recompiles the site.
@@ -24,7 +23,7 @@ previewPoll :: HakyllConfiguration  -- ^ Configuration
             -> IO ()                -- ^ Action called when something changes
             -> IO ()                -- ^ Can block forever
 previewPoll _ resources callback = do
-    let files = map (toFilePath . unResource) $ S.toList resources
+    let files = map unResource $ S.toList resources
     time <- getClockTime
     loop files time
   where

@@ -64,6 +64,9 @@ run configuration rules = do
                     , hakyllStore            = store
                     }
 
+    -- DEBUG
+    report logger $ "Compilers: " ++ show (map fst compilers)
+
     -- Run the program and fetch the resulting state
     ((), state') <- runStateT stateT $ RuntimeState
         { hakyllAnalyzer  = makeDependencyAnalyzer mempty (const False) oldGraph
@@ -118,38 +121,42 @@ addNewCompilers newCompilers = Runtime $ do
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
 
+    -- DEBUG
+    report logger $ "Adding: " ++ show (map fst newCompilers)
+
     -- Old state information
     oldCompilers <- hakyllCompilers <$> get
     oldAnalyzer <- hakyllAnalyzer <$> get
 
-    let -- Create a new partial dependency graph
+    let -- All known compilers
+        universe = M.keys oldCompilers ++ map fst newCompilers
+
+        -- Create a new partial dependency graph
         dependencies = flip map newCompilers $ \(id', compiler) ->
-            let deps = runCompilerDependencies compiler id' provider
+            let deps = runCompilerDependencies compiler id' universe
             in (id', deps)
 
         -- Create the dependency graph
         newGraph = fromList dependencies
 
+    -- DEBUG
+    report logger $ "Dependencies: " ++ show dependencies
+    liftIO $ writeFile "newGraph.dot" $ toDot show newGraph
+
+
     -- Check which items have been modified
-    modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $
-        liftIO . resourceModified provider store . Resource
-    -- newModified <- liftIO $ modified provider store $ map fst newCompilers
+    modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $ \id' -> do
+        m <- liftIO $ resourceModified provider store $ fromIdentifier id'
+        liftIO $ putStrLn $ show id' ++ " " ++ show m
+        return m
+
+    -- DEBUG
+    report logger $ "Modified: " ++ show modified
 
     -- Create a new analyzer and append it to the currect one
     let newAnalyzer = makeDependencyAnalyzer newGraph (`S.member` modified) $
             analyzerPreviousGraph oldAnalyzer
         analyzer = mappend oldAnalyzer newAnalyzer
-
-    -- Debugging
-    liftIO $ putStrLn $ "Remains: " ++ show (analyzerRemains newAnalyzer)
-    liftIO $ putStrLn $ "Done: " ++ show (analyzerDone newAnalyzer)
-    liftIO $ writeFile "old-prev.dot" $ toDot show (analyzerPreviousGraph oldAnalyzer)
-    liftIO $ writeFile "old.dot" $ toDot show (analyzerGraph oldAnalyzer)
-    liftIO $ writeFile "old-prev.dot" $ toDot show (analyzerPreviousGraph oldAnalyzer)
-    liftIO $ writeFile "new.dot" $ toDot show (analyzerGraph newAnalyzer)
-    liftIO $ writeFile "new-prev.dot" $ toDot show (analyzerPreviousGraph newAnalyzer)
-    liftIO $ writeFile "result.dot" $ toDot show (analyzerGraph analyzer)
-    liftIO $ writeFile "result-prev.dot" $ toDot show (analyzerPreviousGraph analyzer)
 
     -- Update the state
     put $ RuntimeState
@@ -185,11 +192,12 @@ build id' = Runtime $ do
     let compiler = compilers M.! id'
 
     -- Check if the resource was modified
-    isModified <- liftIO $ resourceModified provider store (Resource id')
+    isModified <- liftIO $ resourceModified provider store $ fromIdentifier id'
 
     -- Run the compiler
     result <- timed logger "Total compile time" $ liftIO $
-        runCompiler compiler id' provider routes store isModified logger
+        runCompiler compiler id' provider (M.keys compilers) routes
+                    store isModified logger
 
     case result of
         -- Compile rule for one item, easy stuff

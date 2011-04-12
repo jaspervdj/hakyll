@@ -102,11 +102,11 @@ compile :: (Binary a, Typeable a, Writable a)
 compile compiler = RulesM $ do
     pattern <- rulesPattern <$> ask
     provider <- rulesResourceProvider <$> ask
-    let ids = filterMatches pattern $ map unResource $ resourceList provider
+    let ids = filterMatches pattern $ map toIdentifier $ resourceList provider
     unRulesM $ do
         tellCompilers $ flip map ids $ \identifier ->
-            (identifier, constA (Resource identifier) >>> compiler)
-        tellResources $ map Resource ids
+            (identifier, constA (fromIdentifier identifier) >>> compiler)
+        tellResources $ map fromIdentifier ids
                    
 -- | Add a compilation rule
 --

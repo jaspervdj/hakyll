@@ -138,15 +138,16 @@ import Hakyll.Core.Logger
 runCompiler :: Compiler () CompileRule    -- ^ Compiler to run
             -> Identifier                 -- ^ Target identifier
             -> ResourceProvider           -- ^ Resource provider
+            -> [Identifier]               -- ^ Universe
             -> Routes                     -- ^ Route
             -> Store                      -- ^ Store
             -> Bool                       -- ^ Was the resource modified?
             -> Logger                     -- ^ Logger
             -> IO (Throwing CompileRule)  -- ^ Resulting item
-runCompiler compiler identifier provider routes store modified logger = do
+runCompiler compiler id' provider universe routes store modified logger = do
     -- Run the compiler job
-    result <-
-        runCompilerJob compiler identifier provider routes store modified logger
+    result <- runCompilerJob compiler id' provider universe
+                             routes store modified logger
 
     -- Inspect the result
     case result of
@@ -154,7 +155,7 @@ runCompiler compiler identifier provider routes store modified logger = do
         -- before we return control. This makes sure the compiled item can later
         -- be accessed by e.g. require.
         Right (CompileRule (CompiledItem x)) ->
-            storeSet store "Hakyll.Core.Compiler.runCompiler" identifier x
+            storeSet store "Hakyll.Core.Compiler.runCompiler" id' x
 
         -- Otherwise, we do nothing here
         _ -> return ()
@@ -184,7 +185,7 @@ getResourceString :: Compiler Resource String
 getResourceString = fromJob $ \resource -> CompilerM $ do
     let identifier = unResource resource
     provider <- compilerResourceProvider <$> ask
-    if resourceExists provider identifier
+    if resourceExists provider resource
         then liftIO $ resourceString provider resource
         else throwError $ error' identifier
   where
@@ -238,9 +239,9 @@ requireAll_ :: (Binary a, Typeable a, Writable a)
             -> Compiler b [a]
 requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
   where
-    getDeps = filterMatches pattern . map unResource . resourceList
+    getDeps = filterMatches pattern
     requireAll_' = const $ CompilerM $ do
-        deps <- getDeps . compilerResourceProvider <$> ask
+        deps <- getDeps . compilerUniverse <$> ask
         mapM (unCompilerM . getDependency) deps
 
 -- | Require a number of targets. Using this function ensures automatic handling
@@ -271,7 +272,7 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
     modified <- compilerResourceModified <$> ask
     report logger $ "Checking cache: " ++ if modified then "modified" else "OK"
     if modified
-        then do v <- unCompilerM $ j $ Resource identifier
+        then do v <- unCompilerM $ j $ fromIdentifier identifier
                 liftIO $ storeSet store name identifier v
                 return v
         else do v <- liftIO $ storeGet store name identifier

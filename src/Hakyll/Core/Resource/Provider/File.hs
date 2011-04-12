@@ -12,7 +12,6 @@ import qualified Data.ByteString.Lazy as LB
 
 import Hakyll.Core.Resource
 import Hakyll.Core.Resource.Provider
-import Hakyll.Core.Identifier
 import Hakyll.Core.Util.File
 import Hakyll.Core.Configuration
 
@@ -20,8 +19,8 @@ import Hakyll.Core.Configuration
 --
 fileResourceProvider :: HakyllConfiguration -> IO ResourceProvider
 fileResourceProvider configuration = do
-    -- Retrieve a list of identifiers
-    list <- map parseIdentifier . filter (not . ignoreFile configuration) <$>
+    -- Retrieve a list of paths
+    list <- filter (not . ignoreFile configuration) <$>
         getRecursiveContents False "."
 
     -- MVar for the cache
@@ -30,7 +29,7 @@ fileResourceProvider configuration = do
     -- Construct a resource provider
     return ResourceProvider
         { resourceList           = map Resource list
-        , resourceString         = readFile . toFilePath . unResource
-        , resourceLazyByteString = LB.readFile . toFilePath . unResource
+        , resourceString         = readFile . unResource
+        , resourceLazyByteString = LB.readFile . unResource
         , resourceModifiedCache  = mvar
         }

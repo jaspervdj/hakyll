@@ -2,13 +2,23 @@
 --
 module Hakyll.Core.Resource
     ( Resource (..)
+    , fromIdentifier
+    , toIdentifier
     ) where
 
 import Hakyll.Core.Identifier
 
 -- | A resource
 --
--- Invariant: the resource specified by the given identifier must exist
---
-newtype Resource = Resource {unResource :: Identifier}
+newtype Resource = Resource {unResource :: String}
                  deriving (Eq, Show, Ord)
+
+-- | Create a resource from an identifier
+--
+fromIdentifier :: Identifier -> Resource
+fromIdentifier = Resource . toFilePath
+
+-- | Map the resource to an identifier. Note that the group will not be set!
+--
+toIdentifier :: Resource -> Identifier
+toIdentifier = parseIdentifier . unResource

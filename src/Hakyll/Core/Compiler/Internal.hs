@@ -39,9 +39,9 @@ type Dependencies = Set Identifier
 --
 data DependencyEnvironment = DependencyEnvironment
     { -- | Target identifier
-      dependencyIdentifier       :: Identifier
-    , -- | Resource provider
-      dependencyResourceProvider :: ResourceProvider
+      dependencyIdentifier :: Identifier
+    , -- | List of available identifiers we can depend upon
+      dependencyUniverse   :: [Identifier]
     }
 
 -- | Environment in which a compiler runs
@@ -51,6 +51,8 @@ data CompilerEnvironment = CompilerEnvironment
       compilerIdentifier       :: Identifier
     , -- | Resource provider
       compilerResourceProvider :: ResourceProvider
+    , -- | List of all known identifiers
+      compilerUniverse         :: [Identifier]
     , -- | Site routes
       compilerRoutes           :: Routes
     , -- | Compiler store
@@ -107,17 +109,19 @@ instance ArrowChoice Compiler where
 runCompilerJob :: Compiler () a     -- ^ Compiler to run
                -> Identifier        -- ^ Target identifier
                -> ResourceProvider  -- ^ Resource provider
+               -> [Identifier]      -- ^ Universe
                -> Routes            -- ^ Route
                -> Store             -- ^ Store
                -> Bool              -- ^ Was the resource modified?
                -> Logger            -- ^ Logger
                -> IO (Throwing a)   -- ^ Result
-runCompilerJob compiler identifier provider route store modified logger =
+runCompilerJob compiler id' provider universe route store modified logger =
     runReaderT (runErrorT $ unCompilerM $ compilerJob compiler ()) env
   where
     env = CompilerEnvironment
-            { compilerIdentifier       = identifier
+            { compilerIdentifier       = id'
             , compilerResourceProvider = provider
+            , compilerUniverse         = universe
             , compilerRoutes           = route
             , compilerStore            = store
             , compilerResourceModified = modified
@@ -126,25 +130,25 @@ runCompilerJob compiler identifier provider route store modified logger =
 
 runCompilerDependencies :: Compiler () a
                         -> Identifier
-                        -> ResourceProvider
+                        -> [Identifier]
                         -> Dependencies
-runCompilerDependencies compiler identifier provider =
+runCompilerDependencies compiler identifier universe =
     runReader (compilerDependencies compiler) env
   where
     env = DependencyEnvironment
-            { dependencyIdentifier       = identifier
-            , dependencyResourceProvider = provider
+            { dependencyIdentifier = identifier
+            , dependencyUniverse   = universe
             }
 
 fromJob :: (a -> CompilerM b)
         -> Compiler a b
 fromJob = Compiler (return S.empty)
 
-fromDependencies :: (Identifier -> ResourceProvider -> [Identifier])
+fromDependencies :: (Identifier -> [Identifier] -> [Identifier])
                  -> Compiler b b
 fromDependencies collectDeps = flip Compiler return $ do
-    DependencyEnvironment identifier provider <- ask
-    return $ S.fromList $ collectDeps identifier provider
+    DependencyEnvironment identifier universe <- ask
+    return $ S.fromList $ collectDeps identifier universe
 
 -- | Wait until another compiler has finished before running this compiler
 --

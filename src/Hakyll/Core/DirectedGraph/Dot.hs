@@ -16,11 +16,13 @@ toDot :: Ord a
       -> String           -- ^ Resulting string
 toDot showTag graph = unlines $ concat
     [ return "digraph dependencies {"
-    , concatMap showNode (S.toList $ nodes graph)
+    , map showNode (S.toList $ nodes graph)
+    , concatMap showEdges (S.toList $ nodes graph)
     , return "}"
     ]
   where
-    showNode node = map (showEdge node) $ S.toList $ neighbours node graph
+    showNode node = "    \"" ++ showTag node ++ "\";"
+    showEdges node = map (showEdge node) $ S.toList $ neighbours node graph
     showEdge x y = "    \"" ++ showTag x ++ "\" -> \"" ++ showTag y ++ "\";"
 
 -- | Write out the @.dot@ file to a given file path. See 'toDot' for more
