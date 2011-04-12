@@ -55,7 +55,8 @@ instance Binary Identifier where
     get = Identifier <$> get <*> get
 
 instance Show Identifier where
-    show = toFilePath
+    show i@(Identifier Nothing _)  = toFilePath i
+    show i@(Identifier (Just g) _) = toFilePath i ++ " (" ++ g ++ ")"
 
 instance IsString Identifier where
     fromString = parseIdentifier
