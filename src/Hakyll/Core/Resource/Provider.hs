@@ -12,12 +12,14 @@
 --
 module Hakyll.Core.Resource.Provider
     ( ResourceProvider (..)
+    , makeResourceProvider
     , resourceExists
     , resourceDigest
     , resourceModified
     ) where
 
-import Control.Concurrent (MVar, readMVar, modifyMVar_)
+import Control.Applicative ((<$>))
+import Control.Concurrent (MVar, readMVar, modifyMVar_, newMVar)
 import Control.Monad ((<=<))
 import Data.Word (Word8)
 import Data.Map (Map)
@@ -42,6 +44,14 @@ data ResourceProvider = ResourceProvider
     , -- | Cache keeping track of modified items
       resourceModifiedCache  :: MVar (Map Resource Bool)
     }
+
+-- | Create a resource provider
+--
+makeResourceProvider :: [Resource]                      -- ^ Resource list
+                     -> (Resource -> IO String)         -- ^ String reader
+                     -> (Resource -> IO LB.ByteString)  -- ^ ByteString reader
+                     -> IO ResourceProvider             -- ^ Resulting provider
+makeResourceProvider l s b = ResourceProvider l s b <$> newMVar M.empty
 
 -- | Check if a given identifier has a resource
 --
