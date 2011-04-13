@@ -2,6 +2,10 @@
 title: Changelog
 ---
 
+## Hakyll 3.1.1
+
+- Allow `group` in rules DSL
+
 ## Hakyll 3.1
 
 - New `match` function in rules DSL
