@@ -86,6 +86,35 @@ match pattern = RulesM . local addPredicate . unRulesM
 
 -- | Greate a group of compilers
 --
+-- Imagine you have a page that you want to render, but you also want the raw
+-- content available on your site.
+--
+-- > match "test.markdown" $ do
+-- >     route $ setExtension "html"
+-- >     compile pageCompiler
+-- >
+-- > match "test.markdown" $ do
+-- >     route idRoute
+-- >     compile copyPageCompiler
+--
+-- Will of course conflict! In this case, Hakyll will pick the first matching
+-- compiler (@pageCompiler@ in this case).
+--
+-- In case you want to have them both, you can use the 'group' function to
+-- create a new group. For example,
+--
+-- > match "test.markdown" $ do
+-- >     route $ setExtension "html"
+-- >     compile pageCompiler
+-- >
+-- > group "raw" $ do
+-- >     match "test.markdown" $ do
+-- >         route idRoute
+-- >         compile copyPageCompiler
+--
+-- This will put the compiler for the raw content in a separate group
+-- (@\"raw\"@), which causes it to be compiled as well.
+--
 group :: String -> Rules -> Rules
 group g = RulesM . local setGroup' . unRulesM
   where
