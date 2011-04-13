@@ -28,7 +28,6 @@ import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Resource.Provider.File
 import Hakyll.Core.Rules.Internal
 import Hakyll.Core.DirectedGraph
-import Hakyll.Core.DirectedGraph.Dot
 import Hakyll.Core.DependencyAnalyzer
 import Hakyll.Core.Writable
 import Hakyll.Core.Store
@@ -64,9 +63,6 @@ run configuration rules = do
                     , hakyllStore            = store
                     }
 
-    -- DEBUG
-    report logger $ "Compilers: " ++ show (map fst compilers)
-
     -- Run the program and fetch the resulting state
     ((), state') <- runStateT stateT $ RuntimeState
         { hakyllAnalyzer  = makeDependencyAnalyzer mempty (const False) oldGraph
@@ -98,17 +94,6 @@ newtype Runtime a = Runtime
     { unRuntime :: ReaderT RuntimeEnvironment (StateT RuntimeState IO) a
     } deriving (Functor, Applicative, Monad)
 
--- | Return a set of modified identifiers
---
-{-
-modified :: ResourceProvider     -- ^ Resource provider
-         -> Store                -- ^ Store
-         -> [Identifier]         -- ^ Identifiers to check
-         -> IO (Set Identifier)  -- ^ Modified resources
-modified provider store ids = fmap S.fromList $ flip filterM ids $ \id' ->
-    resourceModified provider (Resource id') store
--}
-
 -- | Add a number of compilers and continue using these compilers
 --
 addNewCompilers :: [(Identifier, Compiler () CompileRule)]
@@ -120,9 +105,6 @@ addNewCompilers newCompilers = Runtime $ do
     section logger "Adding new compilers"
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
-
-    -- DEBUG
-    report logger $ "Adding: " ++ show (map fst newCompilers)
 
     -- Old state information
     oldCompilers <- hakyllCompilers <$> get
@@ -139,19 +121,9 @@ addNewCompilers newCompilers = Runtime $ do
         -- Create the dependency graph
         newGraph = fromList dependencies
 
-    -- DEBUG
-    report logger $ "Dependencies: " ++ show dependencies
-    liftIO $ writeFile "newGraph.dot" $ toDot show newGraph
-
-
     -- Check which items have been modified
-    modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $ \id' -> do
-        m <- liftIO $ resourceModified provider store $ fromIdentifier id'
-        liftIO $ putStrLn $ show id' ++ " " ++ show m
-        return m
-
-    -- DEBUG
-    report logger $ "Modified: " ++ show modified
+    modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $
+        liftIO . resourceModified provider store . fromIdentifier
 
     -- Create a new analyzer and append it to the currect one
     let newAnalyzer = makeDependencyAnalyzer newGraph (`S.member` modified) $
