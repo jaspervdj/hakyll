@@ -4,7 +4,6 @@ module Main where
 import Prelude hiding (id)
 import Control.Arrow ((>>>), (***), arr)
 import Control.Category (id)
-import qualified Data.Map as M
 import Data.Monoid (mempty, mconcat)
 
 import Hakyll
@@ -21,7 +20,7 @@ main = hakyll $ do
         route   $ setExtension ".html"
         compile $ pageCompiler
             >>> arr (renderDateField "date" "%B %e, %Y" "Date unknown")
-            >>> renderTagsField "prettytags" (fromCaptureString "tags/*")
+            >>> renderTagsField "prettytags" (fromCapture "tags/*")
             >>> applyTemplateCompiler "templates/post.html"
             >>> applyTemplateCompiler "templates/default.html"
             >>> relativizeUrlsCompiler
@@ -69,7 +68,7 @@ main = hakyll $ do
     renderTagCloud' = renderTagCloud tagIdentifier 100 120
 
     tagIdentifier :: String -> Identifier
-    tagIdentifier = fromCaptureString "tags/*"
+    tagIdentifier = fromCapture "tags/*"
 
 -- | Auxiliary compiler: generate a post list from a list of given posts, and
 -- add it to the current page under @$posts@
