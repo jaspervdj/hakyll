@@ -17,6 +17,7 @@ import Control.Monad.Reader (ReaderT, runReaderT)
 import Control.Monad.State (State, evalState)
 import Data.Monoid (Monoid, mempty, mappend)
 import Data.Set (Set)
+import qualified Data.Map as M
 
 import Hakyll.Core.Resource
 import Hakyll.Core.Resource.Provider
@@ -80,7 +81,7 @@ type Rules = RulesM ()
 -- | Run a Rules monad, resulting in a 'RuleSet'
 --
 runRules :: Rules -> ResourceProvider -> RuleSet
-runRules rules provider =
+runRules rules provider = nubCompilers $
     evalState (execWriterT $ runReaderT (unRulesM rules) env) state
   where
     state = RuleState {rulesMetaCompilerIndex = 0}
@@ -88,3 +89,11 @@ runRules rules provider =
                           , rulesPattern          = mempty
                           , rulesGroup            = Nothing
                           }
+
+-- | Remove duplicate compilers from the 'RuleSet'. When two compilers match an
+-- item, we prefer the first one
+--
+nubCompilers :: RuleSet -> RuleSet
+nubCompilers set = set { rulesCompilers = nubCompilers' (rulesCompilers set) }
+  where
+    nubCompilers' = M.toList . M.fromListWith (flip const)
