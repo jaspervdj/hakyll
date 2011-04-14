@@ -23,6 +23,7 @@ module Hakyll.Core.Rules
     , compile
     , create
     , route
+    , resources
     , metaCompile
     , metaCompileWith
     ) where
@@ -72,8 +73,8 @@ tellCompilers compilers = RulesM $ do
 --
 tellResources :: [Resource]
               -> Rules
-tellResources resources = RulesM $ tell $
-    RuleSet mempty mempty $ S.fromList resources
+tellResources resources' = RulesM $ tell $
+    RuleSet mempty mempty $ S.fromList resources'
 
 -- | Only compile/route items satisfying the given predicate
 --
@@ -128,14 +129,11 @@ group g = RulesM . local setGroup' . unRulesM
 --
 compile :: (Binary a, Typeable a, Writable a)
         => Compiler Resource a -> Rules
-compile compiler = RulesM $ do
-    pattern <- rulesPattern <$> ask
-    provider <- rulesResourceProvider <$> ask
-    let ids = filterMatches pattern $ map toIdentifier $ resourceList provider
-    unRulesM $ do
-        tellCompilers $ flip map ids $ \identifier ->
-            (identifier, constA (fromIdentifier identifier) >>> compiler)
-        tellResources $ map fromIdentifier ids
+compile compiler = do
+    ids <- resources
+    tellCompilers $ flip map ids $ \identifier ->
+        (identifier, constA (fromIdentifier identifier) >>> compiler)
+    tellResources $ map fromIdentifier ids
                    
 -- | Add a compilation rule
 --
@@ -159,6 +157,14 @@ route route' = RulesM $ do
     pattern <- rulesPattern <$> ask
     group' <- rulesGroup <$> ask
     unRulesM $ tellRoute $ matchRoute (pattern `mappend` inGroup group') route'
+
+-- | Get a list of resources matching the current pattern
+--
+resources :: RulesM [Identifier]
+resources = RulesM $ do
+    pattern <- rulesPattern <$> ask
+    provider <- rulesResourceProvider <$> ask
+    return $ filterMatches pattern $ map toIdentifier $ resourceList provider
 
 -- | Apart from regular compilers, one is also able to specify metacompilers.
 -- Metacompilers are a special class of compilers: they are compilers which
