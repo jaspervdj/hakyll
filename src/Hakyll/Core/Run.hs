@@ -6,7 +6,7 @@ module Hakyll.Core.Run
     ) where
 
 import Prelude hiding (reverse)
-import Control.Monad (filterM)
+import Control.Monad (filterM, forM_)
 import Control.Monad.Trans (liftIO)
 import Control.Applicative (Applicative, (<$>))
 import Control.Monad.Reader (ReaderT, runReaderT, ask)
@@ -147,8 +147,17 @@ stepAnalyzer = Runtime $ do
     put $ state { hakyllAnalyzer = analyzer' }
 
     case signal of Done      -> return ()
-                   Cycle _   -> return ()
+                   Cycle c   -> unRuntime $ dumpCycle c
                    Build id' -> unRuntime $ build id'
+
+-- | Dump cyclic error and quit
+--
+dumpCycle :: [Identifier] -> Runtime ()
+dumpCycle cycle' = Runtime $ do
+    logger <- hakyllLogger <$> ask
+    section logger "Dependency cycle detected! Conflict:"
+    forM_ (zip cycle' $ drop 1 cycle') $ \(x, y) ->
+        report logger $ show x ++ " -> " ++ show y
 
 build :: Identifier -> Runtime ()
 build id' = Runtime $ do

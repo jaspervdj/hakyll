@@ -48,6 +48,7 @@ data DependencyAnalyzer a = DependencyAnalyzer
 data Signal a = Build a
               | Cycle [a]
               | Done
+              deriving (Show)
 
 instance (Ord a, Show a) => Monoid (DependencyAnalyzer a) where
     mempty = DependencyAnalyzer mempty mempty mempty mempty
