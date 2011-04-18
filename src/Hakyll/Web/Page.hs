@@ -53,6 +53,7 @@ module Hakyll.Web.Page
     , toMap
     , readPageCompiler
     , pageCompiler
+    , pageCompilerWith
     , addDefaultFields
     , sortByBaseName
     ) where
@@ -64,6 +65,8 @@ import System.FilePath (takeBaseName, takeDirectory)
 import qualified Data.Map as M
 import Data.List (sortBy)
 import Data.Ord (comparing)
+
+import Text.Pandoc (ParserState, WriterOptions)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
@@ -90,6 +93,14 @@ readPageCompiler = getResourceString >>^ readPage
 pageCompiler :: Compiler Resource (Page String)
 pageCompiler = cached "Hakyll.Web.Page.pageCompiler" $
     readPageCompiler >>> addDefaultFields >>> arr applySelf >>> pageRenderPandoc
+
+-- | A version of 'pageCompiler' which allows you to specify your own pandoc
+-- options
+--
+pageCompilerWith :: ParserState -> WriterOptions -> Compiler Resource (Page String)
+pageCompilerWith state options = cached "pageCompilerWith" $
+    readPageCompiler >>> addDefaultFields >>> arr applySelf
+                     >>> pageRenderPandocWith state options
 
 -- | Add a number of default metadata fields to a page. These fields include:
 --
