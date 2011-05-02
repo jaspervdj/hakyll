@@ -11,6 +11,8 @@ import qualified Data.ByteString as SB
 import Text.Blaze (Html)
 import Text.Blaze.Renderer.String (renderHtml)
 
+import Hakyll.Core.Identifier
+
 -- | Describes an item that can be saved to the disk
 --
 class Writable a where
@@ -28,3 +30,6 @@ instance Writable [Word8] where
 
 instance Writable Html where
     write p html = write p $ renderHtml html
+
+instance Writable Identifier where
+    write p i = write p $ show i
