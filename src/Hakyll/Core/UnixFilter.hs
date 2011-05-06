@@ -2,14 +2,20 @@
 --
 module Hakyll.Core.UnixFilter
     ( unixFilter
+    , unixFilterLBS
     ) where
 
 import Control.Concurrent (forkIO)
-import System.IO (hPutStr, hClose, hGetContents)
 import System.Posix.Process (executeFile, forkProcess)
 import System.Posix.IO ( dupTo, createPipe, stdInput
                        , stdOutput, closeFd, fdToHandle
                        )
+import System.IO ( Handle, hPutStr, hClose, hGetContents
+                 , hSetEncoding, localeEncoding
+                 )
+
+import Data.ByteString.Lazy (ByteString)
+import qualified Data.ByteString.Lazy as LB
 
 import Hakyll.Core.Compiler
 
@@ -26,25 +32,54 @@ import Hakyll.Core.Compiler
 --
 -- The code is fairly straightforward, given that we use @.scss@ for sass:
 --
--- > route   "style.scss" $ setExtension "css"
--- > compile "style.scss" $
--- >     getResourceString >>> unixFilter "sass" ["-s", "--scss"]
--- >                       >>> arr compressCss
+-- > match "style.scss" $ do
+-- >     route   $ setExtension "css"
+-- >     compile $ getResourceString >>> unixFilter "sass" ["-s", "--scss"]
+-- >                                 >>> arr compressCss
 --
 unixFilter :: String                  -- ^ Program name
            -> [String]                -- ^ Program args
            -> Compiler String String  -- ^ Resulting compiler
-unixFilter programName args =
+unixFilter = unixFilterWith writer reader
+  where
+    writer handle input = do
+        hSetEncoding handle localeEncoding
+        hPutStr handle input
+    reader handle = do
+        hSetEncoding handle localeEncoding
+        hGetContents handle
+
+-- | Variant of 'unixFilter' that should be used for binary files
+--
+-- > match "music.wav" $ do
+-- >     route   $ setExtension "ogg"
+-- >     compile $ getResourceLBS >>> unixFilter "oggenc" ["-"]
+--
+unixFilterLBS :: String                          -- ^ Program name
+              -> [String]                        -- ^ Program args
+              -> Compiler ByteString ByteString  -- ^ Resulting compiler
+unixFilterLBS = unixFilterWith LB.hPutStr LB.hGetContents
+
+-- | Overloaded compiler
+--
+unixFilterWith :: (Handle -> i -> IO ())  -- ^ Writer
+               -> (Handle -> IO o)        -- ^ Reader
+               -> String                  -- ^ Program name
+               -> [String]                -- ^ Program args
+               -> Compiler i o            -- ^ Resulting compiler
+unixFilterWith writer reader programName args =
     timedCompiler ("Executing external program " ++ programName) $
-        unsafeCompiler $ \input -> unixFilterIO programName args input
+        unsafeCompiler $ unixFilterIO writer reader programName args
 
 -- | Internally used function
 --
-unixFilterIO :: String
-             -> [String]
+unixFilterIO :: (Handle -> i -> IO ())
+             -> (Handle -> IO o)
              -> String
-             -> IO String
-unixFilterIO programName args input = do
+             -> [String]
+             -> i
+             -> IO o
+unixFilterIO writer reader programName args input = do
     -- Create pipes
     (stdinRead, stdinWrite) <- createPipe
     (stdoutRead, stdoutWrite) <- createPipe
@@ -68,9 +103,9 @@ unixFilterIO programName args input = do
     -- Write the input to the child pipe
     _ <- forkIO $ do
         stdinWriteHandle <- fdToHandle stdinWrite
-        hPutStr stdinWriteHandle input
+        writer stdinWriteHandle input
         hClose stdinWriteHandle
 
     -- Receive the output from the child
     stdoutReadHandle <- fdToHandle stdoutRead
-    hGetContents stdoutReadHandle
+    reader stdoutReadHandle

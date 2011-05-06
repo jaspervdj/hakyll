@@ -8,6 +8,7 @@ module Hakyll.Core.Writable
 import Data.Word (Word8)
 
 import qualified Data.ByteString as SB
+import qualified Data.ByteString.Lazy as LB
 import Text.Blaze (Html)
 import Text.Blaze.Renderer.String (renderHtml)
 
@@ -24,6 +25,9 @@ instance Writable [Char] where
 
 instance Writable SB.ByteString where
     write p = SB.writeFile p
+
+instance Writable LB.ByteString where
+    write p = LB.writeFile p
 
 instance Writable [Word8] where
     write p = write p . SB.pack

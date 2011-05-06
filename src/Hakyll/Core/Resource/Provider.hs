@@ -36,13 +36,13 @@ import Hakyll.Core.Resource
 --
 data ResourceProvider = ResourceProvider
     { -- | A list of all resources this provider is able to provide
-      resourceList           :: [Resource]
+      resourceList          :: [Resource]
     , -- | Retrieve a certain resource as string
-      resourceString         :: Resource -> IO String
+      resourceString        :: Resource -> IO String
     , -- | Retrieve a certain resource as lazy bytestring
-      resourceLazyByteString :: Resource -> IO LB.ByteString
+      resourceLBS           :: Resource -> IO LB.ByteString
     , -- | Cache keeping track of modified items
-      resourceModifiedCache  :: MVar (Map Resource Bool)
+      resourceModifiedCache :: MVar (Map Resource Bool)
     }
 
 -- | Create a resource provider
@@ -61,7 +61,7 @@ resourceExists provider = flip elem $ resourceList provider
 -- | Retrieve a digest for a given resource
 --
 resourceDigest :: ResourceProvider -> Resource -> IO [Word8]
-resourceDigest provider = digest MD5 <=< resourceLazyByteString provider
+resourceDigest provider = digest MD5 <=< resourceLBS provider
 
 -- | Check if a resource was modified
 --

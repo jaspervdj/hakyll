@@ -92,6 +92,7 @@ module Hakyll.Core.Compiler
     , getRoute
     , getRouteFor
     , getResourceString
+    , getResourceLBS
     , fromDependency
     , require_
     , require
@@ -119,6 +120,7 @@ import System.FilePath (takeExtension)
 
 import Data.Binary (Binary)
 import Data.Typeable (Typeable)
+import Data.ByteString.Lazy (ByteString)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
@@ -182,14 +184,25 @@ getRouteFor = fromJob $ \identifier -> CompilerM $ do
 -- | Get the resource we are compiling as a string
 --
 getResourceString :: Compiler Resource String
-getResourceString = fromJob $ \resource -> CompilerM $ do
+getResourceString = getResourceWith resourceString
+
+-- | Get the resource we are compiling as a lazy bytestring
+--
+getResourceLBS :: Compiler Resource ByteString
+getResourceLBS = getResourceWith resourceLBS
+
+-- | Overloadable function for 'getResourceString' and 'getResourceLBS'
+--
+getResourceWith :: (ResourceProvider -> Resource -> IO a)
+                -> Compiler Resource a
+getResourceWith reader = fromJob $ \resource -> CompilerM $ do
     let identifier = unResource resource
     provider <- compilerResourceProvider <$> ask
     if resourceExists provider resource
-        then liftIO $ resourceString provider resource
+        then liftIO $ reader provider resource
         else throwError $ error' identifier
   where
-    error' id' =  "Hakyll.Core.Compiler.getResourceString: resource "
+    error' id' =  "Hakyll.Core.Compiler.getResourceWith: resource "
                ++ show id' ++ " not found"
 
 -- | Auxiliary: get a dependency
