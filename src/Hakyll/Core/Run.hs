@@ -46,8 +46,9 @@ run configuration rules = do
     provider <- timed logger "Creating provider" $
         fileResourceProvider configuration
 
-    -- Fetch the old graph from the store
-    oldGraph <- fromMaybe mempty <$>
+    -- Fetch the old graph from the store. If we don't find it, we consider this
+    -- to be the first run
+    (firstRun, oldGraph) <- fromMaybe (True, mempty) . fmap ((,) False) <$>
         storeGet store "Hakyll.Core.Run.run" "dependencies"
 
     let ruleSet = runRules rules provider
@@ -61,6 +62,7 @@ run configuration rules = do
                     , hakyllRoutes           = rulesRoutes ruleSet
                     , hakyllResourceProvider = provider
                     , hakyllStore            = store
+                    , hakyllFirstRun         = firstRun
                     }
 
     -- Run the program and fetch the resulting state
@@ -83,6 +85,7 @@ data RuntimeEnvironment = RuntimeEnvironment
     , hakyllRoutes           :: Routes
     , hakyllResourceProvider :: ResourceProvider
     , hakyllStore            :: Store
+    , hakyllFirstRun         :: Bool
     }
 
 data RuntimeState = RuntimeState
@@ -105,6 +108,7 @@ addNewCompilers newCompilers = Runtime $ do
     section logger "Adding new compilers"
     provider <- hakyllResourceProvider <$> ask
     store <- hakyllStore <$> ask
+    firstRun <- hakyllFirstRun <$> ask
 
     -- Old state information
     oldCompilers <- hakyllCompilers <$> get
@@ -124,9 +128,10 @@ addNewCompilers newCompilers = Runtime $ do
     -- Check which items have been modified
     modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $
         liftIO . resourceModified provider store . fromIdentifier
+    let checkModified = if firstRun then const True else (`S.member` modified)
 
     -- Create a new analyzer and append it to the currect one
-    let newAnalyzer = makeDependencyAnalyzer newGraph (`S.member` modified) $
+    let newAnalyzer = makeDependencyAnalyzer newGraph checkModified $
             analyzerPreviousGraph oldAnalyzer
         analyzer = mappend oldAnalyzer newAnalyzer
 
