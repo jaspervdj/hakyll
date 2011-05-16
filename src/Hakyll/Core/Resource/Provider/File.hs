@@ -18,7 +18,7 @@ import Hakyll.Core.Configuration
 fileResourceProvider :: HakyllConfiguration -> IO ResourceProvider
 fileResourceProvider configuration = do
     -- Retrieve a list of paths
-    list <- map Resource . filter (not . ignoreFile configuration) <$>
+    list <- map Resource . filter (not . shouldIgnoreFile configuration) <$>
         getRecursiveContents False "."
     makeResourceProvider list (readFile . unResource)
                               (LB.readFile . unResource)

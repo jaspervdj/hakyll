@@ -2,6 +2,7 @@
 --
 module Hakyll.Core.Configuration
     ( HakyllConfiguration (..)
+    , shouldIgnoreFile
     , defaultHakyllConfiguration
     ) where
 
@@ -23,6 +24,10 @@ data HakyllConfiguration = HakyllConfiguration
       --
       -- * files ending with @.swp@
       --
+      -- Note that the files in @destinationDirectory@ and @storeDirectory@ will
+      -- also be ignored. Note that this is the configuration parameter, if you
+      -- want to use the test, you should use @shouldIgnoreFile@.
+      --
       ignoreFile           :: FilePath -> Bool
     }
 
@@ -42,3 +47,11 @@ defaultHakyllConfiguration = HakyllConfiguration
         | otherwise = False
       where
         fileName = takeFileName path
+
+-- | Check if a file should be ignored
+--
+shouldIgnoreFile :: HakyllConfiguration -> FilePath -> Bool
+shouldIgnoreFile conf path =
+    destinationDirectory conf `isPrefixOf` path ||
+    storeDirectory conf `isPrefixOf` path ||
+    ignoreFile conf path
