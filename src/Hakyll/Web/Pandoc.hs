@@ -22,34 +22,40 @@ import Prelude hiding (id)
 import Control.Applicative ((<$>))
 import Control.Arrow ((>>^), (&&&))
 import Control.Category (id)
+import Data.Maybe (fromMaybe)
 
 import Text.Pandoc
 
 import Hakyll.Core.Compiler
+import Hakyll.Core.Identifier
 import Hakyll.Web.Pandoc.FileType
 import Hakyll.Web.Page.Internal
 
 -- | Read a string using pandoc, with the default options
 --
 readPandoc :: FileType  -- ^ File type, determines how parsing happens
+           -> Maybe Identifier  -- ^ Optional, for better error messages
            -> String    -- ^ String to read
            -> Pandoc    -- ^ Resulting document
 readPandoc = readPandocWith defaultHakyllParserState
 
 -- | Read a string using pandoc, with the supplied options
 --
-readPandocWith :: ParserState  -- ^ Parser options
-               -> FileType     -- ^ File type, determines how parsing happens
-               -> String       -- ^ String to read
-               -> Pandoc       -- ^ Resulting document
-readPandocWith state fileType' = case fileType' of
+readPandocWith :: ParserState       -- ^ Parser options
+               -> FileType          -- ^ File type, determines parsing method
+               -> Maybe Identifier  -- ^ Optional, for better error messages
+               -> String            -- ^ String to read
+               -> Pandoc            -- ^ Resulting document
+readPandocWith state fileType' id' = case fileType' of
     Html              -> readHtml state
     LaTeX             -> readLaTeX state
-    LiterateHaskell t -> readPandocWith state {stateLiterateHaskell = True} t
+    LiterateHaskell t ->
+        readPandocWith state {stateLiterateHaskell = True} t id'
     Markdown          -> readMarkdown state
     Rst               -> readRST state
     t                 -> error $
-        "Hakyll.Web.readPandocWith: I don't know how to read " ++ show t
+        "Hakyll.Web.readPandocWith: I don't know how to read a file of the " ++
+        "type " ++ show t ++ fromMaybe "" (fmap ((" for: " ++) . show) id')
 
 -- | Write a document (as HTML) using pandoc, with the default options
 --
@@ -73,9 +79,9 @@ pageReadPandoc = pageReadPandocWith defaultHakyllParserState
 --
 pageReadPandocWith :: ParserState -> Compiler (Page String) (Page Pandoc)
 pageReadPandocWith state =
-    id &&& getFileType >>^ pageReadPandocWith'
+    id &&& getIdentifier &&& getFileType >>^ pageReadPandocWith'
   where
-    pageReadPandocWith' (p, t) = readPandocWith state t <$> p
+    pageReadPandocWith' (p, (i, t)) = readPandocWith state t (Just i) <$> p
 
 -- | Render the resource using pandoc
 --
