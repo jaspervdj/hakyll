@@ -84,6 +84,10 @@
 -- function. So, the 'require' function actually helps to reduce to complexity
 -- of Hakyll applications!
 --
+-- Note that require will fetch a previously compiled item: in our example of
+-- the type @a@. It is /very/ important that the compiler which produced this
+-- value, produced the right type as well!
+--
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Compiler
     ( Compiler
