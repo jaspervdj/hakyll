@@ -24,7 +24,7 @@ build-type:         Simple
 
 source-repository head
   type:             git
-  location:         git://github.com/jaspervdj/Hakyll.git
+  location:         git://github.com/jaspervdj/hakyll.git
 
 flag inotify
   description:      Use the inotify bindings for the preview server. Better, but
