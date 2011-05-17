@@ -90,7 +90,7 @@ digestModified provider store resource = do
     -- Calculate the digest for the resource
     newDigest <- resourceDigest provider resource
     -- Check digests
-    if Just newDigest == lastDigest
+    if Found newDigest == lastDigest
         -- All is fine, not modified
         then return False
         -- Resource modified; store new digest

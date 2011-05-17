@@ -3,6 +3,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module Hakyll.Core.Store
     ( Store
+    , StoreGet (..)
     , makeStore
     , storeSet
     , storeGet
@@ -24,6 +25,13 @@ import Hakyll.Core.Util.File
 -- | Items we can store
 --
 data Storable = forall a. (Binary a, Typeable a) => Storable a
+
+-- | Result when an item from the store
+--
+data StoreGet a = Found a
+                | NotFound
+                | WrongType
+                deriving (Show, Eq, Ord)
 
 -- | Data structure used for the store
 --
@@ -72,22 +80,24 @@ storeSet store name identifier value = do
 -- | Load an item
 --
 storeGet :: (Binary a, Typeable a)
-         => Store -> String -> Identifier -> IO (Maybe a)
+         => Store -> String -> Identifier -> IO (StoreGet a)
 storeGet store name identifier = do
     -- First check the in-memory map
     map' <- readMVar $ storeMap store
     case M.lookup path map' of
         -- Found in the in-memory map
-        Just (Storable s) -> return $ cast s
+        Just (Storable s) -> return $ case cast s of
+            Nothing -> WrongType
+            Just s' -> Found s'
         -- Not found in the map, try the filesystem
         Nothing -> do
             exists <- doesFileExist path
             if not exists
                 -- Not found in the filesystem either
-                then return Nothing
+                then return NotFound
                 -- Found in the filesystem
                 else do v <- decodeFile path
                         addToMap store path v
-                        return $ Just v
+                        return $ Found v
   where
     path = makePath store name identifier

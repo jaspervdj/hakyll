@@ -14,7 +14,6 @@ import Control.Monad.State.Strict (StateT, runStateT, get, put)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Monoid (mempty, mappend)
-import Data.Maybe (fromMaybe)
 import System.FilePath ((</>))
 import qualified Data.Set as S
 
@@ -48,8 +47,9 @@ run configuration rules = do
 
     -- Fetch the old graph from the store. If we don't find it, we consider this
     -- to be the first run
-    (firstRun, oldGraph) <- fromMaybe (True, mempty) . fmap ((,) False) <$>
-        storeGet store "Hakyll.Core.Run.run" "dependencies"
+    graph <- storeGet store "Hakyll.Core.Run.run" "dependencies"
+    let (firstRun, oldGraph) = case graph of Found g -> (False, g)
+                                             _       -> (True, mempty)
 
     let ruleSet = runRules rules provider
         compilers = rulesCompilers ruleSet

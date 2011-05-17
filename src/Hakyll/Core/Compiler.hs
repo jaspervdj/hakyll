@@ -213,12 +213,16 @@ getDependency id' = CompilerM $ do
     store <- compilerStore <$> ask
     result <- liftIO $ storeGet store "Hakyll.Core.Compiler.runCompiler" id'
     case result of
-        Nothing -> throwError error'
-        Just x  -> return x
+        NotFound  -> throwError notFound
+        WrongType -> throwError wrongType
+        Found x   -> return x
   where
-    error' =  "Hakyll.Core.Compiler.getDependency: " ++ show id'
-           ++ " not found in the cache, the cache might be corrupted or"
-           ++ " the item you are referring to might not exist"
+    notFound =  "Hakyll.Core.Compiler.getDependency: " ++ show id'
+             ++ " not found in the cache, the cache might be corrupted or"
+             ++ " the item you are referring to might not exist"
+    wrongType =  "Hakyll.Core.Compiler.getDependency: " ++ show id'
+              ++ " was found in the cache, but does not have the expected "
+              ++ " type"
 
 -- | Variant of 'require' which drops the current value
 --
@@ -289,8 +293,8 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
                 liftIO $ storeSet store name identifier v
                 return v
         else do v <- liftIO $ storeGet store name identifier
-                case v of Just v' -> return v'
-                          Nothing -> throwError error'
+                case v of Found v' -> return v'
+                          _        -> throwError error'
   where
     error' = "Hakyll.Core.Compiler.cached: Cache corrupt!"
 
