@@ -275,9 +275,9 @@ supported on linux systems. You can enable the bindings using:
 Problems
 --------
 
-### regex-pcre dependency on Mac OS X
+### regex-pcre dependency on Mac OS
 
-Hakyll requires [regex-pcre], which might fail to build on Mac OS X. To solve
+Hakyll requires [regex-pcre], which might fail to build on Mac OS. To solve
 this problem, make sure the [pcre] C library is installed (via homebrew or
 macports). Then install [regex-pcre] using:
 
@@ -291,3 +291,14 @@ or
 
 [regex-pcre]: http://hackage.haskell.org/package/regex-pcre
 [pcre]: http://www.pcre.org/
+
+### "File name does not match module name" on Mac OS
+
+    Hakyll.hs:1:1:
+        File name does not match module name:
+        Saw: `Main'
+        Expected: `Hakyll'
+
+Is an error encountered on Mac OS when `hakyll.hs` is located on a
+case-insensitive filesystem. A workaround is to rename it to something that
+isn't the name of the module, for example, `site.hs`.
