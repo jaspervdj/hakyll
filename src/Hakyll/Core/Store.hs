@@ -1,6 +1,6 @@
 -- | A store for stroing and retreiving items
 --
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification, ScopedTypeVariables #-}
 module Hakyll.Core.Store
     ( Store
     , StoreGet (..)
@@ -17,7 +17,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 
 import Data.Binary (Binary, encodeFile, decodeFile)
-import Data.Typeable (Typeable, cast)
+import Data.Typeable (Typeable, TypeRep, cast, typeOf)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Util.File
@@ -30,8 +30,8 @@ data Storable = forall a. (Binary a, Typeable a) => Storable a
 --
 data StoreGet a = Found a
                 | NotFound
-                | WrongType
-                deriving (Show, Eq, Ord)
+                | WrongType TypeRep TypeRep
+                deriving (Show, Eq)
 
 -- | Data structure used for the store
 --
@@ -79,7 +79,7 @@ storeSet store name identifier value = do
 
 -- | Load an item
 --
-storeGet :: (Binary a, Typeable a)
+storeGet :: forall a. (Binary a, Typeable a)
          => Store -> String -> Identifier -> IO (StoreGet a)
 storeGet store name identifier = do
     -- First check the in-memory map
@@ -87,7 +87,7 @@ storeGet store name identifier = do
     case M.lookup path map' of
         -- Found in the in-memory map
         Just (Storable s) -> return $ case cast s of
-            Nothing -> WrongType
+            Nothing -> WrongType (typeOf s) $ typeOf (undefined :: a)
             Just s' -> Found s'
         -- Not found in the map, try the filesystem
         Nothing -> do

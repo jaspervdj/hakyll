@@ -217,16 +217,18 @@ getDependency id' = CompilerM $ do
     store <- compilerStore <$> ask
     result <- liftIO $ storeGet store "Hakyll.Core.Compiler.runCompiler" id'
     case result of
-        NotFound  -> throwError notFound
-        WrongType -> throwError wrongType
-        Found x   -> return x
+        NotFound      -> throwError notFound
+        WrongType e r -> throwError $ wrongType e r
+        Found x       -> return x
   where
-    notFound =  "Hakyll.Core.Compiler.getDependency: " ++ show id'
-             ++ " not found in the cache, the cache might be corrupted or"
-             ++ " the item you are referring to might not exist"
-    wrongType =  "Hakyll.Core.Compiler.getDependency: " ++ show id'
-              ++ " was found in the cache, but does not have the expected "
-              ++ " type"
+    notFound =
+        "Hakyll.Core.Compiler.getDependency: " ++ show id' ++ " not  found " ++
+        "not found in the cache, the cache might be corrupted or " ++
+        "the item you are referring to might not exist"
+    wrongType e r =
+        "Hakyll.Core.Compiler.getDependency: " ++ show id' ++ " was found " ++
+        "in the cache, but does not have the right type: expected " ++ show e ++
+        " but got " ++ show r
 
 -- | Variant of 'require' which drops the current value
 --
