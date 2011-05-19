@@ -37,7 +37,7 @@ static :: FilePath             -- ^ Directory to serve
 static directory preServe = do
     -- Obtain the path
     uri <- rqURI <$> getRequest
-    let filePath = replaceAll "\\?$"    (const "")  -- Remove trailing ?
+    let filePath = replaceAll "\\?.*$"  (const "")  -- Remove trailing ?
                  $ replaceAll "#[^#]*$" (const "")  -- Remove #section
                  $ replaceAll "^/"      (const "")  -- Remove leading /
                  $ urlDecode $ decode $ SB.unpack uri
