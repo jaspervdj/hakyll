@@ -20,6 +20,9 @@ class Writable a where
     -- | Save an item to the given filepath
     write :: FilePath -> a -> IO ()
 
+instance Writable () where
+    write _ _ = return ()
+
 instance Writable [Char] where
     write = writeFile
 
