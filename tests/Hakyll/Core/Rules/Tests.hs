@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Hakyll.Core.Rules.Tests
-    where
+    ( tests
+    ) where
 
 import qualified Data.Map as M
 import qualified Data.Set as S
