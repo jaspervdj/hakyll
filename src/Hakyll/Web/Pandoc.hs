@@ -33,19 +33,19 @@ import Hakyll.Web.Page.Internal
 
 -- | Read a string using pandoc, with the default options
 --
-readPandoc :: FileType  -- ^ File type, determines how parsing happens
-           -> Maybe Identifier  -- ^ Optional, for better error messages
-           -> String    -- ^ String to read
-           -> Pandoc    -- ^ Resulting document
+readPandoc :: FileType              -- ^ Determines how parsing happens
+           -> Maybe (Identifier a)  -- ^ Optional, for better error messages
+           -> String                -- ^ String to read
+           -> Pandoc                -- ^ Resulting document
 readPandoc = readPandocWith defaultHakyllParserState
 
 -- | Read a string using pandoc, with the supplied options
 --
-readPandocWith :: ParserState       -- ^ Parser options
-               -> FileType          -- ^ File type, determines parsing method
-               -> Maybe Identifier  -- ^ Optional, for better error messages
-               -> String            -- ^ String to read
-               -> Pandoc            -- ^ Resulting document
+readPandocWith :: ParserState           -- ^ Parser options
+               -> FileType              -- ^ Determines parsing method
+               -> Maybe (Identifier a)  -- ^ Optional, for better error messages
+               -> String                -- ^ String to read
+               -> Pandoc                -- ^ Resulting document
 readPandocWith state fileType' id' = case fileType' of
     Html              -> readHtml state
     LaTeX             -> readLaTeX state

@@ -60,7 +60,7 @@ addToMap store path value =
 
 -- | Create a path
 --
-makePath :: Store -> String -> Identifier -> FilePath
+makePath :: Store -> String -> Identifier a -> FilePath
 makePath store name identifier = storeDirectory store </> name
     </> group </> toFilePath identifier </> "hakyllstore"
   where
@@ -69,7 +69,7 @@ makePath store name identifier = storeDirectory store </> name
 -- | Store an item
 --
 storeSet :: (Binary a, Typeable a)
-         => Store -> String -> Identifier -> a -> IO ()
+         => Store -> String -> Identifier a -> a -> IO ()
 storeSet store name identifier value = do
     makeDirectories path
     encodeFile path value
@@ -80,7 +80,7 @@ storeSet store name identifier value = do
 -- | Load an item
 --
 storeGet :: forall a. (Binary a, Typeable a)
-         => Store -> String -> Identifier -> IO (StoreGet a)
+         => Store -> String -> Identifier a -> IO (StoreGet a)
 storeGet store name identifier = do
     -- First check the in-memory map
     map' <- readMVar $ storeMap store

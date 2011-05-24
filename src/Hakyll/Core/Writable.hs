@@ -38,5 +38,5 @@ instance Writable [Word8] where
 instance Writable Html where
     write p html = write p $ renderHtml html
 
-instance Writable Identifier where
-    write p i = write p $ show i
+instance Writable (Identifier a) where
+    write p = write p . show

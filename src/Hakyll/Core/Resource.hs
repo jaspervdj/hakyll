@@ -15,10 +15,10 @@ newtype Resource = Resource {unResource :: String}
 
 -- | Create a resource from an identifier
 --
-fromIdentifier :: Identifier -> Resource
+fromIdentifier :: Identifier a -> Resource
 fromIdentifier = Resource . toFilePath
 
 -- | Map the resource to an identifier. Note that the group will not be set!
 --
-toIdentifier :: Resource -> Identifier
+toIdentifier :: Resource -> Identifier a
 toIdentifier = parseIdentifier . unResource

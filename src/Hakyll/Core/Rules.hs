@@ -31,7 +31,7 @@ module Hakyll.Core.Rules
 import Control.Applicative ((<$>))
 import Control.Monad.Writer (tell)
 import Control.Monad.Reader (ask, local)
-import Control.Arrow (second, (>>>), arr, (>>^), (***))
+import Control.Arrow ((>>>), arr, (>>^), (***))
 import Control.Monad.State (get, put)
 import Data.Monoid (mempty, mappend)
 import qualified Data.Set as S
@@ -58,13 +58,13 @@ tellRoute route' = RulesM $ tell $ RuleSet route' mempty mempty
 -- | Add a number of compilers
 --
 tellCompilers :: (Binary a, Typeable a, Writable a)
-             => [(Identifier, Compiler () a)]
+             => [(Identifier a, Compiler () a)]
              -> Rules
 tellCompilers compilers = RulesM $ do
     -- We box the compilers so they have a more simple type, and we apply the
     -- current group to the corresponding identifiers
-    group' <- rulesGroup <$> ask
-    let compilers' = map (setGroup group' *** boxCompiler) compilers
+    g <- rulesGroup <$> ask
+    let compilers' = map (setGroup g . castIdentifier *** boxCompiler) compilers
     tell $ RuleSet mempty compilers' mempty
   where
     boxCompiler = (>>> arr compiledItem >>> arr CompileRule)
@@ -143,7 +143,7 @@ compile compiler = do
 -- actual content itself.
 --
 create :: (Binary a, Typeable a, Writable a)
-       => Identifier -> Compiler () a -> Rules
+       => Identifier a -> Compiler () a -> Rules
 create identifier compiler = tellCompilers [(identifier, compiler)]
 
 -- | Add a route.
@@ -160,7 +160,7 @@ route route' = RulesM $ do
 
 -- | Get a list of resources matching the current pattern
 --
-resources :: RulesM [Identifier]
+resources :: RulesM [Identifier a]
 resources = RulesM $ do
     pattern <- rulesPattern <$> ask
     provider <- rulesResourceProvider <$> ask
@@ -197,7 +197,7 @@ resources = RulesM $ do
 -- which items must be rendered.
 --
 metaCompile :: (Binary a, Typeable a, Writable a)
-            => Compiler () [(Identifier, Compiler () a)]   
+            => Compiler () [(Identifier a, Compiler () a)]   
             -- ^ Compiler generating the other compilers
             -> Rules
             -- ^ Resulting rules
@@ -217,9 +217,9 @@ metaCompile compiler = RulesM $ do
 -- the metacompiler.
 --
 metaCompileWith :: (Binary a, Typeable a, Writable a)
-                => Identifier
+                => Identifier ()
                 -- ^ Identifier for this compiler
-                -> Compiler () [(Identifier, Compiler () a)]   
+                -> Compiler () [(Identifier a, Compiler () a)]   
                 -- ^ Compiler generating the other compilers
                 -> Rules
                 -- ^ Resulting rules
@@ -229,7 +229,7 @@ metaCompileWith identifier compiler = RulesM $ do
     let -- Set the correct group on the identifier
         id' = setGroup group' identifier
         -- Function to box an item into a rule
-        makeRule = MetaCompileRule . map (second box)
+        makeRule = MetaCompileRule . map (castIdentifier *** box)
         -- Entire boxing function
         box = (>>> fromDependency id' >>^ CompileRule . compiledItem)
         -- Resulting compiler list

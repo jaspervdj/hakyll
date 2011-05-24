@@ -104,6 +104,6 @@ templateCompilerWith settings =
             -- Hakyll template
             else readTemplate string
 
-applyTemplateCompiler :: Identifier                            -- ^ Template
+applyTemplateCompiler :: Identifier Template                   -- ^ Template
                       -> Compiler (Page String) (Page String)  -- ^ Compiler
 applyTemplateCompiler identifier = require identifier (flip applyTemplate)

@@ -25,6 +25,7 @@
 --
 -- * If an item matches multiple routes, the first rule will be chosen.
 --
+{-# LANGUAGE Rank2Types #-}
 module Hakyll.Core.Routes
     ( Routes
     , runRoutes
@@ -46,7 +47,7 @@ import Hakyll.Core.Util.String
 
 -- | Type used for a route
 --
-newtype Routes = Routes {unRoutes :: Identifier -> Maybe FilePath}
+newtype Routes = Routes {unRoutes :: forall a. Identifier a -> Maybe FilePath}
 
 instance Monoid Routes where
     mempty = Routes $ const Nothing
@@ -54,7 +55,7 @@ instance Monoid Routes where
 
 -- | Apply a route to an identifier
 --
-runRoutes :: Routes -> Identifier -> Maybe FilePath
+runRoutes :: Routes -> Identifier a -> Maybe FilePath
 runRoutes = unRoutes
 
 -- | A route that uses the identifier as filepath. For example, the target with
@@ -90,13 +91,13 @@ setExtension extension = Routes $ fmap (`replaceExtension` extension)
 --
 matchRoute :: Pattern a -> Routes -> Routes
 matchRoute pattern (Routes route) = Routes $ \id' ->
-    if matches pattern id' then route id' else Nothing
+    if matches pattern (castIdentifier id') then route id' else Nothing
 
 -- | Create a custom route. This should almost always be used with
 -- 'matchRoute'
 --
-customRoute :: (Identifier -> FilePath) -> Routes
-customRoute f = Routes $ Just . f
+customRoute :: (Identifier a -> FilePath) -> Routes
+customRoute f = Routes $ Just . f . castIdentifier
 
 -- | Create a gsub route
 --

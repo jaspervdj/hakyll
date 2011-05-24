@@ -89,8 +89,8 @@ data RuntimeEnvironment = RuntimeEnvironment
     }
 
 data RuntimeState = RuntimeState
-    { hakyllAnalyzer  :: DependencyAnalyzer Identifier
-    , hakyllCompilers :: Map Identifier (Compiler () CompileRule)
+    { hakyllAnalyzer  :: DependencyAnalyzer (Identifier ())
+    , hakyllCompilers :: Map (Identifier ()) (Compiler () CompileRule)
     }
 
 newtype Runtime a = Runtime
@@ -99,7 +99,7 @@ newtype Runtime a = Runtime
 
 -- | Add a number of compilers and continue using these compilers
 --
-addNewCompilers :: [(Identifier, Compiler () CompileRule)]
+addNewCompilers :: [(Identifier (), Compiler () CompileRule)]
                 -- ^ Compilers to add
                 -> Runtime ()
 addNewCompilers newCompilers = Runtime $ do
@@ -157,14 +157,14 @@ stepAnalyzer = Runtime $ do
 
 -- | Dump cyclic error and quit
 --
-dumpCycle :: [Identifier] -> Runtime ()
+dumpCycle :: [Identifier ()] -> Runtime ()
 dumpCycle cycle' = Runtime $ do
     logger <- hakyllLogger <$> ask
     section logger "Dependency cycle detected! Conflict:"
     forM_ (zip cycle' $ drop 1 cycle') $ \(x, y) ->
         report logger $ show x ++ " -> " ++ show y
 
-build :: Identifier -> Runtime ()
+build :: Identifier () -> Runtime ()
 build id' = Runtime $ do
     logger <- hakyllLogger <$> ask
     routes <- hakyllRoutes <$> ask

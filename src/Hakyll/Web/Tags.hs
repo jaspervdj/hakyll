@@ -111,7 +111,7 @@ readCategory = readTagsWith getCategory
 
 -- | Render tags in HTML
 --
-renderTags :: (String -> Identifier)
+renderTags :: (String -> Identifier a)
            -- ^ Produce a link
            -> (String -> String -> Int -> Int -> Int -> String)
            -- ^ Produce a tag item: tag, url, count, min count, max count
@@ -141,7 +141,7 @@ renderTags makeUrl makeItem concatItems = proc (Tags tags) -> do
 
 -- | Render a tag cloud in HTML
 --
-renderTagCloud :: (String -> Identifier)    -- ^ Produce a link for a tag
+renderTagCloud :: (String -> Identifier a)  -- ^ Produce a link for a tag
                -> Double                    -- ^ Smallest font size, in percent
                -> Double                    -- ^ Biggest font size, in percent
                -> Compiler (Tags a) String  -- ^ Tag cloud renderer
@@ -162,7 +162,7 @@ renderTagCloud makeUrl minSize maxSize =
 
 -- | Render a simple tag list in HTML, with the tag count next to the item
 --
-renderTagList :: (String -> Identifier) -> Compiler (Tags a) (String)
+renderTagList :: (String -> Identifier a) -> Compiler (Tags a) (String)
 renderTagList makeUrl = renderTags makeUrl makeLink (intercalate ", ")
   where
     makeLink tag url count _ _ = renderHtml $
@@ -172,7 +172,7 @@ renderTagList makeUrl = renderTags makeUrl makeLink (intercalate ", ")
 --
 renderTagsFieldWith :: (Page a -> [String])        -- ^ Function to get the tags
                     -> String                      -- ^ Destination key
-                    -> (String -> Identifier)      -- ^ Create a link for a tag
+                    -> (String -> Identifier a)    -- ^ Create a link for a tag
                     -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
 renderTagsFieldWith tags destination makeUrl =
     id &&& arr tags >>> setFieldA destination renderTags'
@@ -192,13 +192,13 @@ renderTagsFieldWith tags destination makeUrl =
 -- | Render tags with links
 --
 renderTagsField :: String                      -- ^ Destination key
-                -> (String -> Identifier)      -- ^ Create a link for a tag
+                -> (String -> Identifier a)    -- ^ Create a link for a tag
                 -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
 renderTagsField = renderTagsFieldWith getTags
 
 -- | Render the category in a link
 --
 renderCategoryField :: String                      -- ^ Destination key
-                    -> (String -> Identifier)      -- ^ Create a category link
+                    -> (String -> Identifier a)    -- ^ Create a category link
                     -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
 renderCategoryField = renderTagsFieldWith getCategory

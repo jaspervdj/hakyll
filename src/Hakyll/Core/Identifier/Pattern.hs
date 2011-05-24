@@ -66,8 +66,8 @@ data GlobComponent = Capture
 -- | Type that allows matching on identifiers
 --
 data Pattern a = Glob [GlobComponent]
-               | Predicate (Identifier -> Bool)
-               | List [Identifier]
+               | Predicate (Identifier a -> Bool)
+               | List [Identifier a]
 
 instance IsString (Pattern a) where
     fromString = parseGlob
@@ -80,8 +80,9 @@ instance Monoid (Pattern a) where
 --
 castPattern :: Pattern a -> Pattern b
 castPattern (Glob g)      = Glob g
-castPattern (Predicate p) = Predicate p
-castPattern (List l)      = List l
+castPattern (Predicate p) = Predicate $ p . castIdentifier
+castPattern (List l)      = List $ map castIdentifier l
+{-# INLINE castPattern #-}
 
 -- | Parse a pattern from a string
 --
@@ -102,7 +103,7 @@ parseGlob = Glob . parse'
 --
 -- > predicate (\i -> matches "foo/*" i && not (matches "foo/bar" i))
 --
-predicate :: (Identifier -> Bool) -> Pattern a
+predicate :: (Identifier a -> Bool) -> Pattern a
 predicate = Predicate
 
 -- | Create a 'Pattern' from a regex
@@ -122,14 +123,14 @@ inGroup group = predicate $ (== group) . identifierGroup
 
 -- | Check if an identifier matches a pattern
 --
-matches :: Pattern a -> Identifier -> Bool
+matches :: Pattern a -> Identifier a -> Bool
 matches (Glob p)      = isJust . capture (Glob p)
 matches (Predicate p) = (p $)
 matches (List l)      = (`elem` l)
 
 -- | Given a list of identifiers, retain only those who match the given pattern
 --
-filterMatches :: Pattern a -> [Identifier] -> [Identifier]
+filterMatches :: Pattern a -> [Identifier a] -> [Identifier a]
 filterMatches = filter . matches
 
 -- | Split a list at every possible point, generate a list of (init, tail)
@@ -140,7 +141,7 @@ splits = inits &&& tails >>> uncurry zip >>> reverse
 
 -- | Match a glob against a pattern, generating a list of captures
 --
-capture :: Pattern a -> Identifier -> Maybe [String]
+capture :: Pattern a -> Identifier a -> Maybe [String]
 capture (Glob p) (Identifier _ i) = capture' p i
 capture _        _                = Nothing
 
@@ -172,13 +173,13 @@ capture' (CaptureMany : ms) str =
 --
 -- > "tags/foo"
 --
-fromCapture :: Pattern a -> String -> Identifier
+fromCapture :: Pattern a -> String -> Identifier a
 fromCapture pattern = fromCaptures pattern . repeat
 
 -- | Create an identifier from a pattern by filling in the captures with the
 -- given list of strings
 --
-fromCaptures :: Pattern a -> [String] -> Identifier
+fromCaptures :: Pattern a -> [String] -> Identifier a
 fromCaptures (Glob p) = Identifier Nothing . fromCaptures' p
 fromCaptures _        = error $
     "Hakyll.Core.Identifier.Pattern.fromCaptures: fromCaptures only works " ++

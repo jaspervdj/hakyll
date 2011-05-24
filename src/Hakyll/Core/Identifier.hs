@@ -23,6 +23,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 module Hakyll.Core.Identifier
     ( Identifier (..)
+    , castIdentifier
     , parseIdentifier
     , toFilePath
     , setGroup
@@ -40,30 +41,42 @@ import Data.Typeable (Typeable)
 
 -- | An identifier used to uniquely identify a value
 --
-data Identifier = Identifier
+-- The @a@ is used to denote the type that the identifier points to. It is a
+-- phantom type parameter, meaning you can safely change this if you know what
+-- you are doing.
+--
+-- If the @a@ type is not known, Hakyll traditionally uses @Identifier ()@.
+--
+data Identifier a = Identifier
     { identifierGroup :: Maybe String
     , identifierPath  :: String
     } deriving (Eq, Ord, Typeable)
 
-instance Monoid Identifier where
+instance Monoid (Identifier a) where
     mempty = Identifier Nothing ""
     Identifier g1 p1 `mappend` Identifier g2 p2 =
         Identifier (g1 `mplus` g2) (p1 `mappend` p2)
 
-instance Binary Identifier where
+instance Binary (Identifier a) where
     put (Identifier g p) = put g >> put p
     get = Identifier <$> get <*> get
 
-instance Show Identifier where
+instance Show (Identifier a) where
     show i@(Identifier Nothing _)  = toFilePath i
     show i@(Identifier (Just g) _) = toFilePath i ++ " (" ++ g ++ ")"
 
-instance IsString Identifier where
+instance IsString (Identifier a) where
     fromString = parseIdentifier
+
+-- | Discard the phantom type parameter of an identifier
+--
+castIdentifier :: Identifier a -> Identifier b
+castIdentifier (Identifier g p) = Identifier g p
+{-# INLINE castIdentifier #-}
 
 -- | Parse an identifier from a string
 --
-parseIdentifier :: String -> Identifier
+parseIdentifier :: String -> Identifier a
 parseIdentifier = Identifier Nothing
                 . intercalate "/" . filter (not . null) . split'
   where
@@ -73,10 +86,10 @@ parseIdentifier = Identifier Nothing
 
 -- | Convert an identifier to a relative 'FilePath'
 --
-toFilePath :: Identifier -> FilePath
+toFilePath :: Identifier a -> FilePath
 toFilePath = identifierPath
 
 -- | Set the identifier group for some identifier
 --
-setGroup :: Maybe String -> Identifier -> Identifier
+setGroup :: Maybe String -> Identifier a -> Identifier a
 setGroup g (Identifier _ p) = Identifier g p

@@ -142,9 +142,9 @@ import Hakyll.Core.Logger
 -- version of 'runCompilerJob' also stores the result
 --
 runCompiler :: Compiler () CompileRule    -- ^ Compiler to run
-            -> Identifier                 -- ^ Target identifier
+            -> Identifier ()              -- ^ Target identifier
             -> ResourceProvider           -- ^ Resource provider
-            -> [Identifier]               -- ^ Universe
+            -> [Identifier ()]            -- ^ Universe
             -> Routes                     -- ^ Route
             -> Store                      -- ^ Store
             -> Bool                       -- ^ Was the resource modified?
@@ -161,7 +161,8 @@ runCompiler compiler id' provider universe routes store modified logger = do
         -- before we return control. This makes sure the compiled item can later
         -- be accessed by e.g. require.
         Right (CompileRule (CompiledItem x)) ->
-            storeSet store "Hakyll.Core.Compiler.runCompiler" id' x
+            storeSet store "Hakyll.Core.Compiler.runCompiler"
+                     (castIdentifier id') x
 
         -- Otherwise, we do nothing here
         _ -> return ()
@@ -170,8 +171,9 @@ runCompiler compiler id' provider universe routes store modified logger = do
 
 -- | Get the identifier of the item that is currently being compiled
 --
-getIdentifier :: Compiler a Identifier
-getIdentifier = fromJob $ const $ CompilerM $ compilerIdentifier <$> ask
+getIdentifier :: Compiler a (Identifier b)
+getIdentifier = fromJob $ const $ CompilerM $
+    castIdentifier . compilerIdentifier <$> ask
 
 -- | Get the route we are using for this item
 --
@@ -180,7 +182,7 @@ getRoute = getIdentifier >>> getRouteFor
 
 -- | Get the route for a specified item
 --
-getRouteFor :: Compiler Identifier (Maybe FilePath)
+getRouteFor :: Compiler (Identifier a) (Maybe FilePath)
 getRouteFor = fromJob $ \identifier -> CompilerM $ do
     routes <- compilerRoutes <$> ask
     return $ runRoutes routes identifier
@@ -212,7 +214,7 @@ getResourceWith reader = fromJob $ \resource -> CompilerM $ do
 -- | Auxiliary: get a dependency
 --
 getDependency :: (Binary a, Writable a, Typeable a)
-              => Identifier -> CompilerM a
+              => Identifier a -> CompilerM a
 getDependency id' = CompilerM $ do
     store <- compilerStore <$> ask
     result <- liftIO $ storeGet store "Hakyll.Core.Compiler.runCompiler" id'
@@ -233,7 +235,7 @@ getDependency id' = CompilerM $ do
 -- | Variant of 'require' which drops the current value
 --
 require_ :: (Binary a, Typeable a, Writable a)
-         => Identifier
+         => Identifier a
          -> Compiler b a
 require_ identifier =
     fromDependency identifier >>> fromJob (const $ getDependency identifier)
@@ -242,7 +244,7 @@ require_ identifier =
 -- dependencies
 --
 require :: (Binary a, Typeable a, Writable a)
-        => Identifier
+        => Identifier a
         -> (b -> a -> c)
         -> Compiler b c
 require identifier = requireA identifier . arr . uncurry
@@ -250,7 +252,7 @@ require identifier = requireA identifier . arr . uncurry
 -- | Arrow-based variant of 'require'
 --
 requireA :: (Binary a, Typeable a, Writable a)
-         => Identifier
+         => Identifier a
          -> Compiler (b, a) c
          -> Compiler b c
 requireA identifier = (id &&& require_ identifier >>>)
@@ -262,7 +264,7 @@ requireAll_ :: (Binary a, Typeable a, Writable a)
             -> Compiler b [a]
 requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
   where
-    getDeps = filterMatches pattern
+    getDeps = map castIdentifier . filterMatches pattern . map castIdentifier
     requireAll_' = const $ CompilerM $ do
         deps <- getDeps . compilerUniverse <$> ask
         mapM (unCompilerM . getDependency) deps
@@ -290,7 +292,7 @@ cached :: (Binary a, Typeable a, Writable a)
        -> Compiler Resource a
 cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
     logger <- compilerLogger <$> ask
-    identifier <- compilerIdentifier <$> ask
+    identifier <- castIdentifier . compilerIdentifier <$> ask
     store <- compilerStore <$> ask
     modified <- compilerResourceModified <$> ask
     report logger $ "Checking cache: " ++ if modified then "modified" else "OK"

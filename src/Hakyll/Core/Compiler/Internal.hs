@@ -33,26 +33,26 @@ import Hakyll.Core.Logger
 
 -- | A set of dependencies
 --
-type Dependencies = Set Identifier
+type Dependencies = Set (Identifier ())
 
 -- | Environment in which the dependency analyzer runs
 --
 data DependencyEnvironment = DependencyEnvironment
     { -- | Target identifier
-      dependencyIdentifier :: Identifier
+      dependencyIdentifier :: Identifier ()
     , -- | List of available identifiers we can depend upon
-      dependencyUniverse   :: [Identifier]
+      dependencyUniverse   :: [Identifier ()]
     }
 
 -- | Environment in which a compiler runs
 --
 data CompilerEnvironment = CompilerEnvironment
     { -- | Target identifier
-      compilerIdentifier       :: Identifier
+      compilerIdentifier       :: Identifier ()
     , -- | Resource provider
       compilerResourceProvider :: ResourceProvider
     , -- | List of all known identifiers
-      compilerUniverse         :: [Identifier]
+      compilerUniverse         :: [Identifier ()]
     , -- | Site routes
       compilerRoutes           :: Routes
     , -- | Compiler store
@@ -107,9 +107,9 @@ instance ArrowChoice Compiler where
 -- | Run a compiler, yielding the resulting target
 --
 runCompilerJob :: Compiler () a     -- ^ Compiler to run
-               -> Identifier        -- ^ Target identifier
+               -> Identifier ()     -- ^ Target identifier
                -> ResourceProvider  -- ^ Resource provider
-               -> [Identifier]      -- ^ Universe
+               -> [Identifier ()]   -- ^ Universe
                -> Routes            -- ^ Route
                -> Store             -- ^ Store
                -> Bool              -- ^ Was the resource modified?
@@ -129,8 +129,8 @@ runCompilerJob compiler id' provider universe route store modified logger =
             }
 
 runCompilerDependencies :: Compiler () a
-                        -> Identifier
-                        -> [Identifier]
+                        -> Identifier ()
+                        -> [Identifier ()]
                         -> Dependencies
 runCompilerDependencies compiler identifier universe =
     runReader (compilerDependencies compiler) env
@@ -144,7 +144,7 @@ fromJob :: (a -> CompilerM b)
         -> Compiler a b
 fromJob = Compiler (return S.empty)
 
-fromDependencies :: (Identifier -> [Identifier] -> [Identifier])
+fromDependencies :: (Identifier () -> [Identifier ()] -> [Identifier ()])
                  -> Compiler b b
 fromDependencies collectDeps = flip Compiler return $ do
     DependencyEnvironment identifier universe <- ask
@@ -152,5 +152,5 @@ fromDependencies collectDeps = flip Compiler return $ do
 
 -- | Wait until another compiler has finished before running this compiler
 --
-fromDependency :: Identifier -> Compiler a a
-fromDependency = fromDependencies . const . const . return
+fromDependency :: Identifier a -> Compiler b b
+fromDependency = fromDependencies . const . const . return . castIdentifier
