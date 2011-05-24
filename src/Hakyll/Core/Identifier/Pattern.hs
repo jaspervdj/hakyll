@@ -36,6 +36,7 @@ module Hakyll.Core.Identifier.Pattern
     , castPattern
     , parseGlob
     , predicate
+    , list
     , regex
     , inGroup
     , matches
@@ -105,6 +106,11 @@ parseGlob = Glob . parse'
 --
 predicate :: (Identifier a -> Bool) -> Pattern a
 predicate = Predicate
+
+-- | Create a 'Pattern' from a list of 'Identifier's it should match
+--
+list :: [Identifier a] -> Pattern a
+list = List
 
 -- | Create a 'Pattern' from a regex
 --

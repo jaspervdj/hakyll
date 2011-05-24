@@ -61,10 +61,8 @@ tellCompilers :: (Binary a, Typeable a, Writable a)
              => [(Identifier a, Compiler () a)]
              -> Rules
 tellCompilers compilers = RulesM $ do
-    -- We box the compilers so they have a more simple type, and we apply the
-    -- current group to the corresponding identifiers
-    g <- rulesGroup <$> ask
-    let compilers' = map (setGroup g . castIdentifier *** boxCompiler) compilers
+    -- We box the compilers so they have a more simple type
+    let compilers' = map (castIdentifier *** boxCompiler) compilers
     tell $ RuleSet mempty compilers' mempty
   where
     boxCompiler = (>>> arr compiledItem >>> arr CompileRule)
@@ -116,7 +114,7 @@ match pattern = RulesM . local addPredicate . unRulesM
 -- This will put the compiler for the raw content in a separate group
 -- (@\"raw\"@), which causes it to be compiled as well.
 --
-group :: String -> Rules -> Rules
+group :: String -> RulesM a -> RulesM a
 group g = RulesM . local setGroup' . unRulesM
   where
     setGroup' env = env { rulesGroup = Just g }
@@ -128,12 +126,13 @@ group g = RulesM . local setGroup' . unRulesM
 -- you might want to have a look at 'create'.
 --
 compile :: (Binary a, Typeable a, Writable a)
-        => Compiler Resource a -> Rules
+        => Compiler Resource a -> RulesM (Pattern a)
 compile compiler = do
     ids <- resources
     tellCompilers $ flip map ids $ \identifier ->
         (identifier, constA (fromIdentifier identifier) >>> compiler)
     tellResources $ map fromIdentifier ids
+    return $ list ids
                    
 -- | Add a compilation rule
 --
@@ -143,8 +142,12 @@ compile compiler = do
 -- actual content itself.
 --
 create :: (Binary a, Typeable a, Writable a)
-       => Identifier a -> Compiler () a -> Rules
-create identifier compiler = tellCompilers [(identifier, compiler)]
+       => Identifier a -> Compiler () a -> RulesM (Identifier a)
+create id' compiler = RulesM $ do
+    group' <- rulesGroup <$> ask
+    let id'' = setGroup group' id'
+    unRulesM $ tellCompilers [(id'', compiler)]
+    return id''
 
 -- | Add a route.
 --
@@ -158,13 +161,17 @@ route route' = RulesM $ do
     group' <- rulesGroup <$> ask
     unRulesM $ tellRoute $ matchRoute (pattern `mappend` inGroup group') route'
 
--- | Get a list of resources matching the current pattern
+-- | Get a list of resources matching the current pattern. This will also set
+-- the correct group to the identifiers.
 --
 resources :: RulesM [Identifier a]
 resources = RulesM $ do
     pattern <- rulesPattern <$> ask
     provider <- rulesResourceProvider <$> ask
-    return $ filterMatches pattern $ map toIdentifier $ resourceList provider
+    group' <- rulesGroup <$> ask
+    return $ filterMatches pattern $ map (toId group') $ resourceList provider
+  where
+    toId g = setGroup g . toIdentifier
 
 -- | Apart from regular compilers, one is also able to specify metacompilers.
 -- Metacompilers are a special class of compilers: they are compilers which
