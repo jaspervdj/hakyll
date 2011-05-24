@@ -5,6 +5,7 @@ import Test.Framework (defaultMain, testGroup)
 import qualified Hakyll.Core.DependencyAnalyzer.Tests
 import qualified Hakyll.Core.Identifier.Tests
 import qualified Hakyll.Core.Routes.Tests
+import qualified Hakyll.Core.Rules.Tests
 import qualified Hakyll.Web.Page.Tests
 import qualified Hakyll.Web.Page.Metadata.Tests
 import qualified Hakyll.Web.RelativizeUrls.Tests
@@ -19,6 +20,8 @@ main = defaultMain
         Hakyll.Core.Identifier.Tests.tests
     , testGroup "Hakyll.Core.Routes.Tests"
         Hakyll.Core.Routes.Tests.tests
+    , testGroup "Hakyll.Core.Rules.Tests"
+        Hakyll.Core.Rules.Tests.tests
     , testGroup "Hakyll.Web.Page.Tests"
         Hakyll.Web.Page.Tests.tests
     , testGroup "Hakyll.Web.Page.Metadata.Tests"
