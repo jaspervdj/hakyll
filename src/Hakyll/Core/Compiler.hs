@@ -258,7 +258,7 @@ requireA identifier = (id &&& require_ identifier >>>)
 -- | Variant of 'requireAll' which drops the current value
 --
 requireAll_ :: (Binary a, Typeable a, Writable a)
-            => Pattern
+            => Pattern a
             -> Compiler b [a]
 requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
   where
@@ -271,7 +271,7 @@ requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
 -- of dependencies
 --
 requireAll :: (Binary a, Typeable a, Writable a)
-           => Pattern
+           => Pattern a
            -> (b -> [a] -> c)
            -> Compiler b c
 requireAll pattern = requireAllA pattern . arr . uncurry
@@ -279,7 +279,7 @@ requireAll pattern = requireAllA pattern . arr . uncurry
 -- | Arrow-based variant of 'requireAll'
 --
 requireAllA :: (Binary a, Typeable a, Writable a)
-            => Pattern
+            => Pattern a
             -> Compiler (b, [a]) c
             -> Compiler b c
 requireAllA pattern = (id &&& requireAll_ pattern >>>)

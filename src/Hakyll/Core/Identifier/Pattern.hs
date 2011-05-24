@@ -33,6 +33,7 @@
 --
 module Hakyll.Core.Identifier.Pattern
     ( Pattern
+    , castPattern
     , parseGlob
     , predicate
     , regex
@@ -64,21 +65,27 @@ data GlobComponent = Capture
 
 -- | Type that allows matching on identifiers
 --
-data Pattern = Glob [GlobComponent]
-             | Predicate (Identifier -> Bool)
+data Pattern a = Glob [GlobComponent]
+               | Predicate (Identifier -> Bool)
+               | List [Identifier]
 
-instance IsString Pattern where
+instance IsString (Pattern a) where
     fromString = parseGlob
 
-instance Monoid Pattern where
+instance Monoid (Pattern a) where
     mempty = Predicate (const True)
-    g@(Glob _)  `mappend` x           = Predicate (matches g) `mappend` x
-    x           `mappend` g@(Glob _)  = x `mappend` Predicate (matches g)
-    Predicate f `mappend` Predicate g = Predicate $ \i -> f i && g i
+    p1 `mappend` p2 = Predicate $ \i -> matches p1 i && matches p2 i
+
+-- | Discard the phantom type parameter
+--
+castPattern :: Pattern a -> Pattern b
+castPattern (Glob g)      = Glob g
+castPattern (Predicate p) = Predicate p
+castPattern (List l)      = List l
 
 -- | Parse a pattern from a string
 --
-parseGlob :: String -> Pattern
+parseGlob :: String -> Pattern a
 parseGlob = Glob . parse'
   where
     parse' str =
@@ -95,7 +102,7 @@ parseGlob = Glob . parse'
 --
 -- > predicate (\i -> matches "foo/*" i && not (matches "foo/bar" i))
 --
-predicate :: (Identifier -> Bool) -> Pattern
+predicate :: (Identifier -> Bool) -> Pattern a
 predicate = Predicate
 
 -- | Create a 'Pattern' from a regex
@@ -104,24 +111,25 @@ predicate = Predicate
 --
 -- > regex "^foo/[^x]*$
 --
-regex :: String -> Pattern
+regex :: String -> Pattern a
 regex str = predicate $ fromMaybe False . (=~~ str) . toFilePath
 
 -- | Create a 'Pattern' which matches if the identifier is in a certain group
 -- (or in no group)
 --
-inGroup :: Maybe String -> Pattern
+inGroup :: Maybe String -> Pattern a
 inGroup group = predicate $ (== group) . identifierGroup
 
 -- | Check if an identifier matches a pattern
 --
-matches :: Pattern -> Identifier -> Bool
+matches :: Pattern a -> Identifier -> Bool
 matches (Glob p)      = isJust . capture (Glob p)
 matches (Predicate p) = (p $)
+matches (List l)      = (`elem` l)
 
 -- | Given a list of identifiers, retain only those who match the given pattern
 --
-filterMatches :: Pattern -> [Identifier] -> [Identifier]
+filterMatches :: Pattern a -> [Identifier] -> [Identifier]
 filterMatches = filter . matches
 
 -- | Split a list at every possible point, generate a list of (init, tail)
@@ -132,9 +140,9 @@ splits = inits &&& tails >>> uncurry zip >>> reverse
 
 -- | Match a glob against a pattern, generating a list of captures
 --
-capture :: Pattern -> Identifier -> Maybe [String]
+capture :: Pattern a -> Identifier -> Maybe [String]
 capture (Glob p) (Identifier _ i) = capture' p i
-capture (Predicate _) _           = Nothing
+capture _        _                = Nothing
 
 -- | Internal verion of 'capture'
 --
@@ -164,17 +172,17 @@ capture' (CaptureMany : ms) str =
 --
 -- > "tags/foo"
 --
-fromCapture :: Pattern -> String -> Identifier
+fromCapture :: Pattern a -> String -> Identifier
 fromCapture pattern = fromCaptures pattern . repeat
 
 -- | Create an identifier from a pattern by filling in the captures with the
 -- given list of strings
 --
-fromCaptures :: Pattern -> [String] -> Identifier
-fromCaptures (Glob p)      = Identifier Nothing . fromCaptures' p
-fromCaptures (Predicate _) = error $
-    "Hakyll.Core.Identifier.Pattern.fromCaptures: fromCaptures called on a " ++
-    "predicate instead of a glob"
+fromCaptures :: Pattern a -> [String] -> Identifier
+fromCaptures (Glob p) = Identifier Nothing . fromCaptures' p
+fromCaptures _        = error $
+    "Hakyll.Core.Identifier.Pattern.fromCaptures: fromCaptures only works " ++
+    "on simple globs!"
 
 -- | Internally used version of 'fromCaptures'
 --

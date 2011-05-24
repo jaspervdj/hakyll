@@ -88,7 +88,7 @@ setExtension extension = Routes $ fmap (`replaceExtension` extension)
 -- | Apply the route if the identifier matches the given pattern, fail
 -- otherwise
 --
-matchRoute :: Pattern -> Routes -> Routes
+matchRoute :: Pattern a -> Routes -> Routes
 matchRoute pattern (Routes route) = Routes $ \id' ->
     if matches pattern id' then route id' else Nothing
 

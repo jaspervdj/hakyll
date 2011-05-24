@@ -78,11 +78,11 @@ tellResources resources' = RulesM $ tell $
 
 -- | Only compile/route items satisfying the given predicate
 --
-match :: Pattern -> Rules -> Rules
+match :: Pattern a -> RulesM b -> RulesM b
 match pattern = RulesM . local addPredicate . unRulesM
   where
     addPredicate env = env
-        { rulesPattern = rulesPattern env `mappend` pattern
+        { rulesPattern = rulesPattern env `mappend` castPattern pattern
         }
 
 -- | Greate a group of compilers

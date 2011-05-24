@@ -1,6 +1,6 @@
 -- | Internal rules module for types which are not exposed to the user
 --
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, Rank2Types #-}
 module Hakyll.Core.Rules.Internal
     ( CompileRule (..)
     , RuleSet (..)
@@ -63,7 +63,7 @@ data RuleState = RuleState
 --
 data RuleEnvironment = RuleEnvironment
     { rulesResourceProvider :: ResourceProvider
-    , rulesPattern          :: Pattern
+    , rulesPattern          :: forall a. Pattern a
     , rulesGroup            :: Maybe String
     }
 
