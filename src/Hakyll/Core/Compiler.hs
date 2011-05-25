@@ -93,6 +93,7 @@ module Hakyll.Core.Compiler
     ( Compiler
     , runCompiler
     , getIdentifier
+    , getResource
     , getRoute
     , getRouteFor
     , getResourceString
@@ -172,6 +173,11 @@ runCompiler compiler id' provider universe routes store modified logger = do
 --
 getIdentifier :: Compiler a Identifier
 getIdentifier = fromJob $ const $ CompilerM $ compilerIdentifier <$> ask
+
+-- | Get the resource that is currently being compiled
+--
+getResource :: Compiler a Resource
+getResource = getIdentifier >>> arr fromIdentifier
 
 -- | Get the route we are using for this item
 --

@@ -13,7 +13,7 @@ module Hakyll.Core.Logger
 
 import Control.Monad (forever)
 import Control.Monad.Trans (MonadIO, liftIO)
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative (pure, (<$>), (<*>))
 import Control.Concurrent (forkIO)
 import Control.Concurrent.Chan.Strict (Chan, newChan, readChan, writeChan)
 import Control.Concurrent.MVar.Strict (MVar, newEmptyMVar, takeMVar, putMVar)
@@ -24,15 +24,16 @@ import Data.Time (getCurrentTime, diffUTCTime)
 -- | Logger structure. Very complicated.
 --
 data Logger = Logger
-    { loggerChan :: Chan (Maybe String)  -- Nothing marks the end
-    , loggerSync :: MVar ()              -- Used for sync on quit
+    { loggerChan :: Chan (Maybe String)  -- ^ Nothing marks the end
+    , loggerSync :: MVar ()              -- ^ Used for sync on quit
+    , loggerSink :: String -> IO ()      -- ^ Out sink
     }
 
 -- | Create a new logger
 --
-makeLogger :: IO Logger
-makeLogger = do
-    logger <- Logger <$> newChan <*> newEmptyMVar
+makeLogger :: (String -> IO ()) -> IO Logger
+makeLogger sink = do
+    logger <- Logger <$> newChan <*> newEmptyMVar <*> pure sink
     _ <- forkIO $ loggerThread logger
     return logger
   where
@@ -42,7 +43,7 @@ makeLogger = do
             -- Stop: sync
             Nothing -> putMVar (loggerSync logger) ()
             -- Print and continue
-            Just m  -> putStrLn m
+            Just m  -> loggerSink logger m
 
 -- | Flush the logger (blocks until flushed)
 --

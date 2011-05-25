@@ -37,7 +37,7 @@ import Hakyll.Core.Logger
 --
 run :: HakyllConfiguration -> Rules -> IO RuleSet
 run configuration rules = do
-    logger <- makeLogger
+    logger <- makeLogger putStrLn
 
     section logger "Initialising"
     store <- timed logger "Creating store" $
