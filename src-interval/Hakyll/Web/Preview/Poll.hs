@@ -7,30 +7,29 @@ module Hakyll.Web.Preview.Poll
 
 import Control.Applicative ((<$>))
 import Control.Concurrent (threadDelay)
-import Control.Monad (when, filterM)
+import Control.Monad (filterM)
 import System.Time (getClockTime)
-import Data.Set (Set)
-import qualified Data.Set as S
 import System.Directory (getModificationTime, doesFileExist)
 
 import Hakyll.Core.Configuration
-import Hakyll.Core.Resource
 
 -- | A preview thread that periodically recompiles the site.
 --
 previewPoll :: HakyllConfiguration  -- ^ Configuration
-            -> Set Resource         -- ^ Resources to watch
-            -> IO ()                -- ^ Action called when something changes
+            -> IO [FilePath]        -- ^ Updating action
             -> IO ()                -- ^ Can block forever
-previewPoll _ resources callback = do
-    let files = map unResource $ S.toList resources
+previewPoll _ update = do
     time <- getClockTime
-    loop files time
+    loop time =<< update
   where
     delay = 1000000
-    loop files time = do
+    loop time files = do
         threadDelay delay
         files' <- filterM doesFileExist files
-        modified <- any (time <) <$> mapM getModificationTime files'
-        when (modified || files' /= files) callback
-        loop files' =<< getClockTime
+        filesTime <- case files' of
+            []  -> return time
+            _   -> maximum <$> mapM getModificationTime files'
+
+        if filesTime > time || files' /= files
+            then loop filesTime =<< update
+            else loop time files'

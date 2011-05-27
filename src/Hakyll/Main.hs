@@ -5,12 +5,15 @@ module Hakyll.Main
     , hakyllWith
     ) where
 
+import Control.Applicative ((<$>))
 import Control.Concurrent (forkIO)
 import Control.Monad (when)
 import System.Environment (getProgName, getArgs)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
+import qualified Data.Set as S
 
 import Hakyll.Core.Configuration
+import Hakyll.Core.Resource
 import Hakyll.Core.Run
 import Hakyll.Core.Rules
 import Hakyll.Core.Rules.Internal
@@ -26,32 +29,32 @@ hakyll = hakyllWith defaultHakyllConfiguration
 -- configuration
 --
 hakyllWith :: HakyllConfiguration -> Rules -> IO ()
-hakyllWith configuration rules = do
+hakyllWith conf rules = do
     args <- getArgs
     case args of
-        ["build"]      -> build configuration rules
-        ["clean"]      -> clean configuration
+        ["build"]      -> build conf rules
+        ["clean"]      -> clean conf
         ["help"]       -> help
-        ["preview"]    -> preview configuration rules 8000
-        ["preview", p] -> preview configuration rules (read p)
-        ["rebuild"]    -> rebuild configuration rules
-        ["server"]     -> server configuration 8000
-        ["server", p]  -> server configuration (read p)
+        ["preview"]    -> preview conf rules 8000
+        ["preview", p] -> preview conf rules (read p)
+        ["rebuild"]    -> rebuild conf rules
+        ["server"]     -> server conf 8000
+        ["server", p]  -> server conf (read p)
         _              -> help
 
 -- | Build the site
 --
 build :: HakyllConfiguration -> Rules -> IO ()
-build configuration rules = do
-    _ <- run configuration rules
+build conf rules = do
+    _ <- run conf rules
     return ()
 
 -- | Remove the output directories
 --
 clean :: HakyllConfiguration -> IO ()
-clean configuration = do
-    remove $ destinationDirectory configuration
-    remove $ storeDirectory configuration
+clean conf = do
+    remove $ destinationDirectory conf
+    remove $ storeDirectory conf
   where
     remove dir = do
         putStrLn $ "Removing " ++ dir ++ "..."
@@ -82,32 +85,27 @@ help = do
 -- | Preview the site
 --
 preview :: HakyllConfiguration -> Rules -> Int -> IO ()
-preview configuration rules port = do
-    -- Build once, keep the rule set
-    ruleSet <- run configuration rules
-
-    -- Get the resource list and a callback for the preview poll
-    let resources' = rulesResources ruleSet
-        callback = build configuration rules
-
+preview conf rules port = do
     -- Fork a thread polling for changes
-    _ <- forkIO $ previewPoll configuration resources' callback
+    _ <- forkIO $ previewPoll conf update
     
     -- Run the server in the main thread
-    server configuration port
+    server conf port
+  where
+    update = map unResource . S.toList . rulesResources <$> run conf rules
 
 -- | Rebuild the site
 --
 rebuild :: HakyllConfiguration -> Rules -> IO ()
-rebuild configuration rules = do
-    clean configuration
-    build configuration rules
+rebuild conf rules = do
+    clean conf
+    build conf rules
 
 -- | Start a server
 --
 server :: HakyllConfiguration -> Int -> IO ()
-server configuration port = do
-    let destination = destinationDirectory configuration
+server conf port = do
+    let destination = destinationDirectory conf
     staticServer destination preServeHook port
   where
     preServeHook _ = return ()
