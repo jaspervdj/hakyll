@@ -1,5 +1,5 @@
 Name:               hakyll
-Version:            3.1.2.5
+Version:            3.1.2.6
 
 Synopsis:           A simple static site generator library.
 Description:        A simple static site generator library, mainly aimed at
@@ -26,10 +26,13 @@ source-repository head
   type:             git
   location:         git://github.com/jaspervdj/hakyll.git
 
-flag inotify
-  description:      Use the inotify bindings for the preview server. Better, but
-                    only works on Linux.
-  default:          False
+-- Disabled while inotify is broken with GHC 7. If you're interested in fixing,
+-- contact me!
+--
+-- flag inotify
+--   description:      Use the inotify bindings for the preview server. Better,
+--                     but only works on Linux.
+--   default:          False
 
 library
   ghc-options:        -Wall
