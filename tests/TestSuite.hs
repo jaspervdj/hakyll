@@ -7,6 +7,7 @@ import qualified Hakyll.Core.Identifier.Tests
 import qualified Hakyll.Core.Routes.Tests
 import qualified Hakyll.Core.Rules.Tests
 import qualified Hakyll.Core.Store.Tests
+import qualified Hakyll.Core.UnixFilter.Tests
 import qualified Hakyll.Web.Page.Tests
 import qualified Hakyll.Web.Page.Metadata.Tests
 import qualified Hakyll.Web.RelativizeUrls.Tests
@@ -25,6 +26,8 @@ main = defaultMain
         Hakyll.Core.Rules.Tests.tests
     , testGroup "Hakyll.Core.Store.Tests"
         Hakyll.Core.Store.Tests.tests
+    , testGroup "Hakyll.Core.UnixFilter.Tests"
+        Hakyll.Core.UnixFilter.Tests.tests
     , testGroup "Hakyll.Web.Page.Tests"
         Hakyll.Web.Page.Tests.tests
     , testGroup "Hakyll.Web.Page.Metadata.Tests"

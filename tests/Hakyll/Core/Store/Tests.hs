@@ -15,6 +15,7 @@ import qualified Test.HUnit as H
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Store
+import TestSuite.Util
 
 tests :: [Test]
 tests =
@@ -28,7 +29,7 @@ simpleSetGet = monadicIO $ do
     identifier <- parseIdentifier . unFileName <$> pick arbitrary
     FileName name <- pick arbitrary
     value <- pick arbitrary
-    store <- run $ makeStore "_store"
+    store <- run $ makeStoreTest
     run $ storeSet store name identifier (value :: String)
     value' <- run $ storeGet store name identifier
     assert $ Found value == value'
@@ -38,16 +39,16 @@ persistentSetGet = monadicIO $ do
     identifier <- parseIdentifier . unFileName <$> pick arbitrary
     FileName name <- pick arbitrary
     value <- pick arbitrary
-    store1 <- run $ makeStore "_store"
+    store1 <- run $ makeStoreTest
     run $ storeSet store1 name identifier (value :: String)
     -- Now Create another store from the same dir to test persistence
-    store2 <- run $ makeStore "_store"
+    store2 <- run $ makeStoreTest
     value' <- run $ storeGet store2 name identifier
     assert $ Found value == value'
 
 wrongType :: H.Assertion
 wrongType = do
-    store <- makeStore "_store"
+    store <- makeStoreTest
     -- Store a string and try to fetch an int
     storeSet store "foo" "bar" ("qux" :: String)
     value <- storeGet store "foo" "bar" :: IO (StoreGet Int)
