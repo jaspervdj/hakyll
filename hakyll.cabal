@@ -26,23 +26,9 @@ source-repository head
   type:             git
   location:         git://github.com/jaspervdj/hakyll.git
 
--- Disabled while inotify is broken with GHC 7. If you're interested in fixing,
--- contact me!
---
--- flag inotify
---   description:      Use the inotify bindings for the preview server. Better,
---                     but only works on Linux.
---   default:          False
-
 library
   ghc-options:        -Wall
   hs-source-dirs:     src
-
---  if flag(inotify)
---    hs-source-dirs:   src-inotify
---    build-depends:    hinotify >= 0.3
---  else
---    hs-source-dirs:   src-interval
 
   build-depends:      base >= 4 && < 5,
                       filepath == 1.*,

@@ -1,5 +1,4 @@
--- | Interval-based implementation of preview polling, for the platforms which
--- are not supported by inotify.
+-- | Interval-based implementation of preview polling
 --
 module Hakyll.Web.Preview.Poll
     ( previewPoll
