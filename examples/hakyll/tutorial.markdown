@@ -262,16 +262,6 @@ this can generate more traffic than necessary, since it is possible that some
 files were not actually modified. If you use `rsync`, you can counter this using
 the `--checksum` option.
 
-### Using inotify for the preview server
-
-Hakyll is able to use [inotify] to power the preview server. This is generally
-faster and uses less resources than the default. However, [inotify] is only
-supported on linux systems. You can enable the bindings using:
-
-    [jasper@phoenix] cabal install -finotify hakyll
-
-[inotify]: http://inotify.aiken.cz/
-
 Problems
 --------
 
