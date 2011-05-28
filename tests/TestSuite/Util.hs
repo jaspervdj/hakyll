@@ -33,9 +33,9 @@ makeStoreTest = makeStore "_store"
 -- | Testing for 'runCompilerJob'
 --
 runCompilerJobTest :: Compiler () a
-                   -> Identifier
+                   -> Identifier ()
                    -> ResourceProvider
-                   -> [Identifier]
+                   -> [Identifier ()]
                    -> IO a
 runCompilerJobTest compiler id' provider uni = do
     store <- makeStoreTest
