@@ -31,6 +31,10 @@
 -- The 'capture' function allows the user to get access to the elements captured
 -- by the capture elements in the pattern.
 --
+-- Like an 'Identifier', a 'Pattern' also has a type parameter. This is simply
+-- an extra layer of safety, and can be discarded using the 'castPattern'
+-- function.
+--
 module Hakyll.Core.Identifier.Pattern
     ( Pattern
     , castPattern

@@ -20,6 +20,15 @@
 -- @posts/foo.html@. In this case, the identifier is the name of the source
 -- file of the page.
 --
+-- An `Identifier` carries the type of the value it identifies. This basically
+-- means that an @Identifier (Page String)@ refers to a page.
+--
+-- It is a phantom type parameter, meaning you can safely change this if you
+-- know what you are doing. You can change the type using the 'castIdentifier'
+-- function.
+--
+-- If the @a@ type is not known, Hakyll traditionally uses @Identifier ()@.
+--
 {-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 module Hakyll.Core.Identifier
     ( Identifier (..)
@@ -40,12 +49,6 @@ import GHC.Exts (IsString, fromString)
 import Data.Typeable (Typeable)
 
 -- | An identifier used to uniquely identify a value
---
--- The @a@ is used to denote the type that the identifier points to. It is a
--- phantom type parameter, meaning you can safely change this if you know what
--- you are doing.
---
--- If the @a@ type is not known, Hakyll traditionally uses @Identifier ()@.
 --
 data Identifier a = Identifier
     { identifierGroup :: Maybe String

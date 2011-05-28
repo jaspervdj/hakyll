@@ -53,7 +53,7 @@
 -- This illustration can help us understand the type signature of 'require'.
 --
 -- > require :: (Binary a, Typeable a, Writable a)
--- >         => Identifier
+-- >         => Identifier a
 -- >         -> (b -> a -> c)
 -- >         -> Compiler b c
 --
@@ -64,7 +64,7 @@
 -- These are constraints for the @a@ type. @a@ (the template) needs to have
 -- certain properties for it to be required.
 --
--- > Identifier
+-- > Identifier a
 --
 -- This is simply @templates/fancy.html@: the 'Identifier' of the item we want
 -- to 'require', in other words, the name of the item we want to add to the
