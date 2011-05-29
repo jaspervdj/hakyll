@@ -38,6 +38,29 @@ Features include:
 A simple brochure site
 ----------------------
 
+We're going to discuss a small brochure site to start with. You can find all
+code and files necessary to build this site [right here](/examples/brochure.zip)
+-- feel free to look to them as we go trough the tutorial. There's a number of
+files we will use:
+
+    about.rst        A simple page written in RST format
+    code.lhs         Another page with some code (which can be highlighted)
+    css              Directory for CSS files
+    |- default.css   The main CSS file
+    \- syntax.css    CSS file for code syntax highlighting
+    hakyll.hs        Our code to generate the site
+    index.markdown   A simple page in markdown format
+    templates        Directory for templates
+    \- default.html  The main template for the site
+
+By default, hakyll will compile everything to the `_site` directory. We can try
+this like this:
+
+    [jasper@phoenix] ghc --make hakyll.hs
+    [jasper@phoenix] ./hakyll build
+
+![Brochure files](/images/brochure-files.png)
+
 ### The two layers
 
 Hakyll consists of two important layers:
