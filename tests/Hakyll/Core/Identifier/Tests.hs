@@ -6,13 +6,14 @@ module Hakyll.Core.Identifier.Tests
 import Test.Framework
 import Test.HUnit hiding (Test)
 
+import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
 import TestSuite.Util
 
 tests :: [Test]
 tests = concat
     [ captureTests
-    , regexTests
+    , matchesTests
     ]
 
 captureTests :: [Test]
@@ -34,8 +35,10 @@ captureTests = fromAssertions "capture"
     , Nothing                   @=? capture "\\*.jpg" "foo.jpg"
     ]
 
-regexTests :: [Test]
-regexTests = fromAssertions "regex"
+matchesTests :: [Test]
+matchesTests = fromAssertions "matches"
     [ True  @=? matches (regex "^foo/[^x]*$") "foo/bar"
     , False @=? matches (regex "^foo/[^x]*$") "foo/barx"
+    , True  @=? matches (list ["foo.markdown"]) "foo.markdown"
+    , False @=? matches (list ["foo"]) (Identifier (Just "foo") "foo")
     ]
