@@ -17,8 +17,6 @@ Data-Files:         templates/atom.xml
                     templates/atom-item.xml
                     templates/rss.xml
                     templates/rss-item.xml
-extra-source-files: src-inotify/Hakyll/Web/Preview/Poll.hs
-                    src-interval/Hakyll/Web/Preview/Poll.hs
 
 build-type:         Simple
 
