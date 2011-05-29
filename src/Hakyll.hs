@@ -21,6 +21,7 @@ module Hakyll
     , module Hakyll.Web.CompressCss
     , module Hakyll.Web.Feed
     , module Hakyll.Web.Page
+    , module Hakyll.Web.Page.List
     , module Hakyll.Web.Page.Metadata
     , module Hakyll.Web.Page.Read
     , module Hakyll.Web.Pandoc
@@ -51,6 +52,7 @@ import Hakyll.Web.Blaze
 import Hakyll.Web.CompressCss
 import Hakyll.Web.Feed
 import Hakyll.Web.Page
+import Hakyll.Web.Page.List
 import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Pandoc

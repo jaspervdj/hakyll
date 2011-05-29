@@ -111,7 +111,7 @@ readCategory = readTagsWith getCategory
 
 -- | Render tags in HTML
 --
-renderTags :: (String -> Identifier a)
+renderTags :: (String -> Identifier (Page a))
            -- ^ Produce a link
            -> (String -> String -> Int -> Int -> Int -> String)
            -- ^ Produce a tag item: tag, url, count, min count, max count
@@ -141,10 +141,14 @@ renderTags makeUrl makeItem concatItems = proc (Tags tags) -> do
 
 -- | Render a tag cloud in HTML
 --
-renderTagCloud :: (String -> Identifier a)  -- ^ Produce a link for a tag
-               -> Double                    -- ^ Smallest font size, in percent
-               -> Double                    -- ^ Biggest font size, in percent
-               -> Compiler (Tags a) String  -- ^ Tag cloud renderer
+renderTagCloud :: (String -> Identifier (Page a))
+               -- ^ Produce a link for a tag
+               -> Double
+               -- ^ Smallest font size, in percent
+               -> Double
+               -- ^ Biggest font size, in percent
+               -> Compiler (Tags a) String
+               -- ^ Tag cloud renderer
 renderTagCloud makeUrl minSize maxSize =
     renderTags makeUrl makeLink (intercalate " ")
   where
@@ -162,7 +166,7 @@ renderTagCloud makeUrl minSize maxSize =
 
 -- | Render a simple tag list in HTML, with the tag count next to the item
 --
-renderTagList :: (String -> Identifier a) -> Compiler (Tags a) (String)
+renderTagList :: (String -> Identifier (Page a)) -> Compiler (Tags a) (String)
 renderTagList makeUrl = renderTags makeUrl makeLink (intercalate ", ")
   where
     makeLink tag url count _ _ = renderHtml $

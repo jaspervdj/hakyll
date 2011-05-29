@@ -81,52 +81,53 @@ Library
 
   Exposed-Modules:
     Hakyll
-    Hakyll.Main
-    Hakyll.Web.Blaze
-    Hakyll.Web.Util.Url
-    Hakyll.Web.Preview.Server
-    Hakyll.Web.Preview.Poll
-    Hakyll.Web.CompressCss
-    Hakyll.Web.Template
-    Hakyll.Web.Feed
-    Hakyll.Web.Tags
-    Hakyll.Web.Pandoc
-    Hakyll.Web.Pandoc.FileType
-    Hakyll.Web.Page
-    Hakyll.Web.Template.Read
-    Hakyll.Web.RelativizeUrls
-    Hakyll.Web.Page.Read
-    Hakyll.Web.Page.Metadata
+    Hakyll.Core.CompiledItem
+    Hakyll.Core.Compiler
     Hakyll.Core.Configuration
     Hakyll.Core.DependencyAnalyzer
+    Hakyll.Core.DirectedGraph
+    Hakyll.Core.DirectedGraph.Dot
+    Hakyll.Core.Identifier
     Hakyll.Core.Identifier.Pattern
+    Hakyll.Core.Logger
+    Hakyll.Core.Resource
+    Hakyll.Core.Resource.Provider
+    Hakyll.Core.Resource.Provider.File
+    Hakyll.Core.Routes
+    Hakyll.Core.Rules
+    Hakyll.Core.Run
+    Hakyll.Core.Store
     Hakyll.Core.UnixFilter
     Hakyll.Core.Util.Arrow
     Hakyll.Core.Util.File
     Hakyll.Core.Util.String
-    Hakyll.Core.Resource
-    Hakyll.Core.Resource.Provider
-    Hakyll.Core.Resource.Provider.File
-    Hakyll.Core.CompiledItem
-    Hakyll.Core.Compiler
-    Hakyll.Core.Run
-    Hakyll.Core.Store
     Hakyll.Core.Writable
     Hakyll.Core.Writable.CopyFile
     Hakyll.Core.Writable.WritableTuple
-    Hakyll.Core.Identifier
-    Hakyll.Core.DirectedGraph.Dot
-    Hakyll.Core.DirectedGraph
-    Hakyll.Core.Rules
-    Hakyll.Core.Routes
-    Hakyll.Core.Logger
+    Hakyll.Main
+    Hakyll.Web.Blaze
+    Hakyll.Web.CompressCss
+    Hakyll.Web.Feed
+    Hakyll.Web.Page
+    Hakyll.Web.Page.List
+    Hakyll.Web.Page.Metadata
+    Hakyll.Web.Page.Read
+    Hakyll.Web.Pandoc
+    Hakyll.Web.Pandoc.FileType
+    Hakyll.Web.Preview.Poll
+    Hakyll.Web.Preview.Server
+    Hakyll.Web.RelativizeUrls
+    Hakyll.Web.Tags
+    Hakyll.Web.Template
+    Hakyll.Web.Template.Read
+    Hakyll.Web.Util.Url
 
   Other-Modules:
-    Paths_hakyll
-    Hakyll.Web.Template.Read.Hakyll
-    Hakyll.Web.Template.Read.Hamlet
-    Hakyll.Web.Template.Internal
-    Hakyll.Web.Page.Internal
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.DirectedGraph.Internal
     Hakyll.Core.Rules.Internal
+    Hakyll.Web.Page.Internal
+    Hakyll.Web.Template.Internal
+    Hakyll.Web.Template.Read.Hakyll
+    Hakyll.Web.Template.Read.Hamlet
+    Paths_hakyll

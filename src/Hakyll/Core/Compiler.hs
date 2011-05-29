@@ -230,7 +230,7 @@ getDependency id' = CompilerM $ do
         Found x       -> return x
   where
     notFound =
-        "Hakyll.Core.Compiler.getDependency: " ++ show id' ++ " not  found " ++
+        "Hakyll.Core.Compiler.getDependency: " ++ show id' ++ " was "
         "not found in the cache, the cache might be corrupted or " ++
         "the item you are referring to might not exist"
     wrongType e r =

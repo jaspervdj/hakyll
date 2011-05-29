@@ -56,7 +56,6 @@ module Hakyll.Web.Page
     , pageCompilerWith
     , pageCompilerWithPandoc
     , addDefaultFields
-    , sortByBaseName
     ) where
 
 import Prelude hiding (id)
@@ -64,8 +63,6 @@ import Control.Category (id)
 import Control.Arrow (arr, (>>^), (&&&), (>>>))
 import System.FilePath (takeBaseName, takeDirectory)
 import qualified Data.Map as M
-import Data.List (sortBy)
-import Data.Ord (comparing)
 
 import Text.Pandoc (Pandoc, ParserState, WriterOptions)
 
@@ -137,10 +134,3 @@ addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
                     . trySetField "path" p
       where
         p = toFilePath i
-
--- | Sort posts based on the basename of the post. This is equivalent to a
--- chronologival sort, because of the @year-month-day-title.extension@ naming
--- convention in Hakyll.
---
-sortByBaseName :: [Page a] -> [Page a]
-sortByBaseName = sortBy $ comparing $ takeBaseName . getField "path"
