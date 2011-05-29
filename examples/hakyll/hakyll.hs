@@ -46,6 +46,7 @@ main = hakyll $ do
 
     pages = [ "about.markdown"
             , "changelog.markdown"
+            , "examples.markdown"
             , "index.markdown"
             , "philosophy.markdown"
             , "reference.markdown"
