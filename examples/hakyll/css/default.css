@@ -31,7 +31,7 @@ div#header h1 {
 
 div#main {
     margin: 0px auto 0px auto;
-    width: 760px;
+    width: 860px;
 }
 
 div#sidebar {
@@ -50,7 +50,7 @@ div#sidebar a {
 }
 
 div#content {
-    width: 570px;
+    width: 670px;
     float: right;
 }
 

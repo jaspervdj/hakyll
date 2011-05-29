@@ -2,12 +2,6 @@
 title: Home
 ---
 
-## Hakyll 3
-
-Hakyll 3 has been released, and it can be installed by running
-`cabal install hakyll`. For a limited time (but as long as is necessary) you can
-access the old site and documentation [here](/hakyll2)
-
 ## Overview
 
 Hakyll is a [Haskell](http://haskell.org) library for generating static sites,
@@ -15,30 +9,28 @@ mostly aimed at small-to-medium sites and personal blogs. It is written in a
 very configurable way and uses an [xmonad](http://xmonad.org)-like DSL for
 configuration.
 
-## Why static site generators?
+Integration with [pandoc](http://johnmacfarlane.net/pandoc/) gives us markdown
+and TeX support, including syntax highlighting and other goodies.
 
-- Static sites are extremely fast.
-- You don't have to worry about security issues.
+## The Hakyll System
 
-## Features of Hakyll
+### Write your content in whatever format you prefer
 
-- Integration with [pandoc](http://johnmacfarlane.net/pandoc/) gives us markdown
-  and TeX support, including syntax highlighting and other goodies.
-- An easy templating system.
-- Hakyll also features a simple http server for previewing your site.
+![Write your content](/images/hakyll-system-1.png)
 
-## See some examples
+### Create compilation rules in a Haskell EDSL
 
-Some sites written in Hakyll:
+![Write your rules](/images/hakyll-system-2.png)
 
-- Blog of [Demotera](http://blog.demotera.com/), a French engineering company
-- Personal home page and blog of [Chris Done](http://chrisdone.com/)
-- Personal home page and blog of [Jasper Van der Jeugt](http://jaspervdj.be/)
-- [The Haskell Alphabet](http://www.cis.upenn.edu/~byorgey/haskell-alphabet/)
-  by Brent Yorgey
-- Personal home page and blog of [Nicolas Wu](http://zenzike.com/)
-- Home page of [Ethan Schoonover](http://ethanschoonover.com/)
-- [Extralogical](http://extralogical.net/) by Benedict Eastaugh
+### Compile it to HTML and upload it!
+
+![Compile it](/images/hakyll-system-3.png)
+
+## Hakyll 3
+
+Hakyll 3 has been released, and it can be installed by running
+`cabal install hakyll`. For a limited time (but as long as is necessary) you can
+access the old site and documentation [here](/hakyll2).
 
 ## Getting Started
 
