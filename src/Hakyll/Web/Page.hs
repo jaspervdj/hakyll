@@ -54,6 +54,7 @@ module Hakyll.Web.Page
     , readPageCompiler
     , pageCompiler
     , pageCompilerWith
+    , pageCompilerWithPandoc
     , addDefaultFields
     , sortByBaseName
     ) where
@@ -66,7 +67,7 @@ import qualified Data.Map as M
 import Data.List (sortBy)
 import Data.Ord (comparing)
 
-import Text.Pandoc (ParserState, WriterOptions)
+import Text.Pandoc (Pandoc, ParserState, WriterOptions)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
@@ -91,16 +92,26 @@ readPageCompiler = getResourceString >>^ readPage
 -- | Read a page, add default fields, substitute fields and render using pandoc
 --
 pageCompiler :: Compiler Resource (Page String)
-pageCompiler = cached "Hakyll.Web.Page.pageCompiler" $
-    readPageCompiler >>> addDefaultFields >>> arr applySelf >>> pageRenderPandoc
+pageCompiler =
+    pageCompilerWith defaultHakyllParserState defaultHakyllWriterOptions
 
 -- | A version of 'pageCompiler' which allows you to specify your own pandoc
 -- options
 --
-pageCompilerWith :: ParserState -> WriterOptions -> Compiler Resource (Page String)
-pageCompilerWith state options = cached "pageCompilerWith" $
+pageCompilerWith :: ParserState -> WriterOptions
+                 -> Compiler Resource (Page String)
+pageCompilerWith state options = pageCompilerWithPandoc state options id
+
+-- | An extension of 'pageCompilerWith' which allows you to specify a custom
+-- pandoc transformer for the content
+--
+pageCompilerWithPandoc :: ParserState -> WriterOptions
+                       -> (Pandoc -> Pandoc)
+                       -> Compiler Resource (Page String)
+pageCompilerWithPandoc state options f = cached "pageCompilerWithPandoc" $
     readPageCompiler >>> addDefaultFields >>> arr applySelf
-                     >>> pageRenderPandocWith state options
+                     >>> pageReadPandocWith state
+                     >>> arr (fmap (writePandocWith options . f))
 
 -- | Add a number of default metadata fields to a page. These fields include:
 --
