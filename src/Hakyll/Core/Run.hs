@@ -35,7 +35,7 @@ import Hakyll.Core.Logger
 
 -- | Run all rules needed, return the rule set used
 --
-run :: HakyllConfiguration -> Rules -> IO RuleSet
+run :: HakyllConfiguration -> RulesM a -> IO RuleSet
 run configuration rules = do
     logger <- makeLogger putStrLn
 

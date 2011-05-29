@@ -22,13 +22,13 @@ import Hakyll.Web.Preview.Server
 
 -- | This usualy is the function with which the user runs the hakyll compiler
 --
-hakyll :: Rules -> IO ()
+hakyll :: RulesM a -> IO ()
 hakyll = hakyllWith defaultHakyllConfiguration
 
 -- | A variant of 'hakyll' which allows the user to specify a custom
 -- configuration
 --
-hakyllWith :: HakyllConfiguration -> Rules -> IO ()
+hakyllWith :: HakyllConfiguration -> RulesM a -> IO ()
 hakyllWith conf rules = do
     args <- getArgs
     case args of
@@ -44,7 +44,7 @@ hakyllWith conf rules = do
 
 -- | Build the site
 --
-build :: HakyllConfiguration -> Rules -> IO ()
+build :: HakyllConfiguration -> RulesM a -> IO ()
 build conf rules = do
     _ <- run conf rules
     return ()
@@ -84,7 +84,7 @@ help = do
 
 -- | Preview the site
 --
-preview :: HakyllConfiguration -> Rules -> Int -> IO ()
+preview :: HakyllConfiguration -> RulesM a -> Int -> IO ()
 preview conf rules port = do
     -- Fork a thread polling for changes
     _ <- forkIO $ previewPoll conf update
@@ -96,7 +96,7 @@ preview conf rules port = do
 
 -- | Rebuild the site
 --
-rebuild :: HakyllConfiguration -> Rules -> IO ()
+rebuild :: HakyllConfiguration -> RulesM a -> IO ()
 rebuild conf rules = do
     clean conf
     build conf rules

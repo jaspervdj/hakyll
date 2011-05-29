@@ -80,7 +80,7 @@ type Rules = RulesM ()
 
 -- | Run a Rules monad, resulting in a 'RuleSet'
 --
-runRules :: Rules -> ResourceProvider -> RuleSet
+runRules :: RulesM a -> ResourceProvider -> RuleSet
 runRules rules provider = nubCompilers $
     evalState (execWriterT $ runReaderT (unRulesM rules) env) state
   where
