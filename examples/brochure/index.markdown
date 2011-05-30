@@ -5,6 +5,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce tempor, urna et
 auctor tincidunt, eros mauris facilisis purus, eget sollicitudin leo massa sit
 amet ipsum. Vivamus eu massa in urna vehicula rutrum eget sit amet purus.
 
+![Haskell logo](/images/haskell-logo.png)
+
 - Mauris sit amet justo mi.
 - Curabitur vel quam felis.
 - In hac habitasse platea dictumst.

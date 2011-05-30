@@ -15,3 +15,13 @@ div#navigation a {
     padding: 3px 10px 3px 10px;
     margin: 0px 10px 0px 10px;
 }
+
+div.figure {
+    float: right;
+    margin: 20px 0px 20px 20px;
+}
+
+div.figure p.caption {
+    text-align: center;
+    font-style: italic;
+}

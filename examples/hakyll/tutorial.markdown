@@ -35,23 +35,25 @@ Features include:
 - modules for common items such as tags and feeds;
 - easily extensible.
 
-A simple brochure site
-----------------------
+Let's get started!
+------------------
 
 We're going to discuss a small brochure site to start with. You can find all
 code and files necessary to build this site [right here](/examples/brochure.zip)
 -- feel free to look to them as we go trough the tutorial. There's a number of
 files we will use:
 
-    about.rst        A simple page written in RST format
-    code.lhs         Another page with some code (which can be highlighted)
-    css              Directory for CSS files
-    |- default.css   The main CSS file
-    \- syntax.css    CSS file for code syntax highlighting
-    hakyll.hs        Our code to generate the site
-    index.markdown   A simple page in markdown format
-    templates        Directory for templates
-    \- default.html  The main template for the site
+    about.rst            A simple page written in RST format
+    code.lhs             Another page with some code (which can be highlighted)
+    css                  Directory for CSS files
+    |- default.css       The main CSS file
+    \- syntax.css        CSS file for code syntax highlighting
+    hakyll.hs            Our code to generate the site
+    images               Directory for images
+    \- haskell-logo.png  The logo of my favorite programming language
+    index.markdown       A simple page in markdown format
+    templates            Directory for templates
+    \- default.html      The main template for the site
 
 By default, hakyll will compile everything to the `_site` directory. We can try
 this like this:
@@ -59,9 +61,85 @@ this like this:
     [jasper@phoenix] ghc --make hakyll.hs
     [jasper@phoenix] ./hakyll build
 
+Instead of using `build`, we can also use `preview`, which will fire up a
+webserver serving the `_site` directory, so have a look!
+
+All files have been compiled, and their output has been placed in the `_site`
+directory as illustrated in this diagram:
+
 ![Brochure files](/images/brochure-files.png)
 
-### The two layers
+No magic is involved at all -- we will precisely study how and why our items are
+compiled like that. All of this is specified in the `hakyll.hs` file.
+
+### Images
+
+Let's start of with the `images/haskell-logo.png` file, because the processing
+of this file is very simple: it is simply copied to the output directory. Let's
+look at the relevant lines in the `hakyll.hs` file:
+
+~~~~~{.haskell}
+match "images/*" $ do
+    route   idRoute
+    compile copyFileCompiler
+~~~~~
+
+The first line specifies we will describe the process for compiling everything
+in the `images/` folder: hakyll uses globs for this [^pattern].
+
+[^pattern]: A little caveat is that these globs are not `String`s but
+    `Pattern`s, so you need the `OverloadedStrings` extension.
+
+We can see two simple rules next: `route` and `compile`.
+
+- `route` determines how the input file(s) get mapped to the output files.
+  `route` only deals with file names -- not with the actual content!
+- `compile`, on the other hand, determines how the file content is processed.
+
+In this case, we select the `idRoute`: which means the file name will be kept
+the same (`_site` will always be prepended automatically). This explains the
+name of `idRoute`: much like the `id` function in Haskell, it also maps values
+to themselves.
+
+For our compiler, we use `copyFileCompiler`, meaning that we don't process the
+content at all, we just copy the file.
+
+### CSS
+
+If we look at how the two CSS files are processed, we see something which looks
+very familiar:
+
+~~~~~{.haskell}
+match "css/*" $ do
+    route   idRoute
+    compile compressCssCompiler
+~~~~~
+
+Indeed, the only difference with the images is that have now chosen for
+`compressCssCompiler` -- a compiler which *does* process the content. Let's have
+a quick look at the type of `compressCssCompiler`:
+
+~~~~~{.haskell}
+compressCssCompiler :: Compiler Resource String
+~~~~~
+
+Intuitively, we can see this as a process which takes a `Resource` and produces
+a `String`.
+
+- A `Resource` is simply the Hakyll representation of an item -- usually just a
+  file on the disk.
+- The produced string is the processed CSS.
+
+We can wonder what Hakyll does with the resulting `String`. Well, it simply
+writes this to the file specified in the `route`! As you can see, routes and
+compilers work together to produce your site.
+
+### Pages
+
+TODO
+
+Old tutorial
+------------
 
 Hakyll consists of two important layers:
 
