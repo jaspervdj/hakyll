@@ -3,12 +3,15 @@
 -- A page is an important concept in Hakyll. It is a key-value mapping, and has
 -- one field with an arbitrary type. A 'Page' thus consists of
 --
--- * a key-value mapping (of the type @Map String String@);
+-- * metadata (of the type @Map String String@);
 --
--- * a value (of the type @a@).
+-- * the actual value (of the type @a@).
 --
 -- Usually, the value will be a 'String' as well, and the value will be the body
 -- of the page.
+--
+-- However, this is certainly no restriction. For example, @Page ByteString@
+-- could be used to represent a binary item (e.g. an image) and some metadata.
 --
 -- Pages can be constructed using Haskell, but they are usually parsed from a
 -- file. The file format for pages is pretty straightforward.
@@ -18,7 +21,7 @@
 --
 -- This is a valid page with two lines. If we load this in Hakyll, there would
 -- be no metadata, and the body would be the given text. Let's look at a page
--- with some metadata.
+-- with some metadata:
 --
 -- > ---
 -- > title: Alice's Adventures in Wonderland
