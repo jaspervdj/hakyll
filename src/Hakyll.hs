@@ -28,6 +28,7 @@ module Hakyll
     , module Hakyll.Web.RelativizeUrls
     , module Hakyll.Web.Tags
     , module Hakyll.Web.Template
+    , module Hakyll.Web.Util.Html
     , module Hakyll.Web.Util.Url
     ) where
 
@@ -58,4 +59,5 @@ import Hakyll.Web.Pandoc.FileType
 import Hakyll.Web.RelativizeUrls
 import Hakyll.Web.Tags
 import Hakyll.Web.Template
+import Hakyll.Web.Util.Html
 import Hakyll.Web.Util.Url

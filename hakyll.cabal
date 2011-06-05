@@ -84,6 +84,7 @@ Library
     Hakyll.Main
     Hakyll.Web.Blaze
     Hakyll.Web.Util.Url
+    Hakyll.Web.Util.Html
     Hakyll.Web.Preview.Server
     Hakyll.Web.Preview.Poll
     Hakyll.Web.CompressCss
