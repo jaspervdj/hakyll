@@ -12,6 +12,7 @@ import qualified Hakyll.Web.Page.Tests
 import qualified Hakyll.Web.Page.Metadata.Tests
 import qualified Hakyll.Web.RelativizeUrls.Tests
 import qualified Hakyll.Web.Template.Tests
+import qualified Hakyll.Web.Util.Html.Tests
 import qualified Hakyll.Web.Util.Url.Tests
 
 main :: IO ()
@@ -36,6 +37,8 @@ main = defaultMain
         Hakyll.Web.RelativizeUrls.Tests.tests
     , testGroup "Hakyll.Web.Template.Tests"
         Hakyll.Web.Template.Tests.tests
+    , testGroup "Hakyll.Web.Util.Html.Tests"
+        Hakyll.Web.Util.Html.Tests.tests
     , testGroup "Hakyll.Web.Util.Url.Tests"
         Hakyll.Web.Util.Url.Tests.tests
     ]

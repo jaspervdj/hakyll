@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 3.1.2.7
+Version: 3.1.2.8
 
 Synopsis: A static website compiler library
 Description:
@@ -120,6 +120,7 @@ Library
     Hakyll.Web.Tags
     Hakyll.Web.Template
     Hakyll.Web.Template.Read
+    Hakyll.Web.Util.Html
     Hakyll.Web.Util.Url
 
   Other-Modules:
