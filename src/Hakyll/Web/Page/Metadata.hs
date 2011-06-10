@@ -6,6 +6,7 @@ module Hakyll.Web.Page.Metadata
     , setField
     , trySetField
     , setFieldA
+    , setFieldPage
     , renderField
     , changeField
     , copyField
@@ -17,7 +18,7 @@ module Hakyll.Web.Page.Metadata
 
 import Prelude hiding (id)
 import Control.Category (id)
-import Control.Arrow (Arrow, (>>>), (***), arr)
+import Control.Arrow (Arrow, arr, (>>>), (***), (&&&))
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe)
 import Data.Time.Clock (UTCTime)
@@ -28,6 +29,8 @@ import System.Locale (TimeLocale, defaultTimeLocale)
 
 import Hakyll.Web.Page.Internal
 import Hakyll.Core.Util.String
+import Hakyll.Core.Identifier
+import Hakyll.Core.Compiler
 
 -- | Get a metadata field. If the field does not exist, the empty string is
 -- returned.
@@ -68,6 +71,13 @@ setFieldA :: Arrow a
           -> a x String              -- ^ Value arrow
           -> a (Page b, x) (Page b)  -- ^ Resulting arrow
 setFieldA k v = id *** v >>> arr (uncurry $ flip $ setField k)
+
+-- | Set a field of a page to the contents of another page
+--
+setFieldPage :: String                      -- ^ Key to add the page under
+             -> Identifier (Page String)    -- ^ Page to add
+             -> Compiler (Page a) (Page a)  -- ^ Page compiler
+setFieldPage key page = id &&& require_ page >>> setFieldA key (arr pageBody)
 
 -- | Do something with a metadata value, but keep the old value as well. If the
 -- key given is not present in the metadata, nothing will happen. If the source
