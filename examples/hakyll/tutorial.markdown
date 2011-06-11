@@ -245,8 +245,18 @@ compile $ pageCompiler
     >>> relativizeUrlsCompiler
 ~~~~~~
 
-How should we process these pages? A simple compiler such as [pageCompiler],
-which renders the page, is not enough, we also want to apply our template.
+How should we process these pages? [pageCompiler] is the default compiler for
+pages. [pageCompiler] does a few things:
+
+- It parses the page into body and metadata
+- It adds some extra metadata fields such as `$url$` and `$path$` (you shouldn't
+  worry about these for now)
+- It fill in possible `$key$`'s in it's own body
+- It renders the page using pandoc
+
+Which basically means that we end up with a `Page` that has the HTML content we
+want as body. But we don't just want the plain content on our website -- we want
+to decorate it with a template, for starters.
 
 [pageCompiler]: /reference/Hakyll-Web-Page.html#v:pageCompiler
 
