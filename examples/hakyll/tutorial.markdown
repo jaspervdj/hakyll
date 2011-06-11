@@ -40,8 +40,9 @@ Let's get started!
 
 We're going to discuss a small brochure site to start with. You can find all
 code and files necessary to build this site [right here](/examples/brochure.zip)
--- feel free to look to them as we go trough the tutorial. There's a number of
-files we will use:
+-- feel free to look at them as we go trough the tutorial, in fact, it might be
+very learnful to have a closer look at the files as we discuss them. There's a
+number of files we will use:
 
     about.rst            A simple page written in RST format
     code.lhs             Another page with some code (which can be highlighted)
@@ -90,19 +91,26 @@ in the `images/` folder: hakyll uses globs for this [^pattern].
 [^pattern]: A little caveat is that these globs are not `String`s but
     `Pattern`s, so you need the `OverloadedStrings` extension.
 
-We can see two simple rules next: `route` and `compile`.
+We can see two simple rules next: [route] and [compile].
 
-- `route` determines how the input file(s) get mapped to the output files.
-  `route` only deals with file names -- not with the actual content!
-- `compile`, on the other hand, determines how the file content is processed.
+- [route] determines how the input file(s) get mapped to the output files.
+  [route] only deals with file names -- not with the actual content!
+- [compile], on the other hand, determines how the file content is processed.
 
-In this case, we select the `idRoute`: which means the file name will be kept
+[route]: /reference/Hakyll-Core-Rules.html#v:route
+[compile]: /reference/Hakyll-Core-Rules.html#v:compile
+
+In this case, we select the [idRoute]: which means the file name will be kept
 the same (`_site` will always be prepended automatically). This explains the
-name of `idRoute`: much like the `id` function in Haskell, it also maps values
+name of [idRoute]: much like the `id` function in Haskell, it also maps values
 to themselves.
 
-For our compiler, we use `copyFileCompiler`, meaning that we don't process the
+[idRoute]: /reference/Hakyll-Core-Routes.html#v:idRoute
+
+For our compiler, we use [copyFileCompiler], meaning that we don't process the
 content at all, we just copy the file.
+
+[copyFileCompiler]: /reference/Hakyll-Core-Writable-CopyFile.html#v:copyFileCompiler
 
 ### CSS
 
@@ -116,8 +124,10 @@ match "css/*" $ do
 ~~~~~
 
 Indeed, the only difference with the images is that have now chosen for
-`compressCssCompiler` -- a compiler which *does* process the content. Let's have
-a quick look at the type of `compressCssCompiler`:
+[compressCssCompiler] -- a compiler which *does* process the content. Let's have
+a quick look at the type of [compressCssCompiler]:
+
+[compressCssCompiler]: /reference/Hakyll-Web-CompressCss.html#v:compressCssCompiler
 
 ~~~~~{.haskell}
 compressCssCompiler :: Compiler Resource String
@@ -134,209 +144,145 @@ We can wonder what Hakyll does with the resulting `String`. Well, it simply
 writes this to the file specified in the `route`! As you can see, routes and
 compilers work together to produce your site.
 
-### Pages
+### Templates
 
-TODO
-
-Old tutorial
-------------
-
-Hakyll consists of two important layers:
-
-- A top-level declarative eDSL, used to describe the relations between the
-  different items,
-- A lower-level filter-like eDSL built on Arrows.
-
-Both layer are used in the configuration file of your website. This
-configuration file is conventionally called `hakyll.hs` and placed at the root
-of your website directory.
-
-### The Rules DSL
-
-The Rules DSL is probably the simpler one. Let's look at a very simple example
-of a `hakyll.hs`.  This piece of code might look a little confusing, but don't
-worry, we'll walk through it in detail.
-
-~~~~~{.haskell}
-{-# LANGUAGE OverloadedStrings #-}
-import Control.Arrow ((>>>))
-import Control.Monad (forM_)
-
-import Hakyll
-
-main :: IO ()
-main = hakyll $ do
-    match "css/*" $ do
-        route   idRoute
-        compile compressCssCompiler
-
-    match "images/*" $ do
-        route   idRoute
-        compile copyFileCompiler
-
-    match "templates/*" $ compile templateCompiler
-
-    forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page ->
-        match page $ do
-            route   $ setExtension "html"
-            compile $ pageCompiler
-                >>> applyTemplateCompiler "templates/default.html"
-                >>> relativizeUrlsCompiler
-~~~~~
-
-This is enough code to create a small brochure site! You can find all code
-and files necessary to build this site [right here](/examples/brochure.zip)
--- feel free to play around with it!
-
-To create your site, compile and run your `hakyll.hs`:
-
-    [jasper@phoenix] ghc --make hakyll.hs
-    [jasper@phoenix] ./hakyll preview
-
-Alternatively,
-
-    [jasper@phoenix] runghc hakyll.hs preview
-
-Our code begins with a number of imports. Nothing out of the ordinary here, but
-do note that we use the `OverloadedStrings` extension for conciseness.
-
-~~~~~{.haskell}
-{-# LANGUAGE OverloadedStrings #-}
-import Control.Arrow ((>>>))
-import Control.Monad (forM_)
-
-import Hakyll
-~~~~~
-
-Our entry point is simply a `main` function with the type `IO ()` -- as in every
-other Haskell application. However, we directly wrap it in a `hakyll` function,
-which marks our declarative eDSL. Inside this function, we no longer operate in
-the `IO` monad, we operate in the pure `RulesM` monad.
-
-~~~~~{.haskell}
-main :: IO ()
-main = hakyll $ do
-~~~~~
-
-The `RulesM` monad is composed of a few functions. Seldomly, you want to apply a
-compiler to *all* resources. You want to apply a compiler to certain files
-instead. That's why the `match` function exists. First, let's handle the CSS of
-our file. We use a `"css/*"` [Pattern] to match all files in the `css/`
-directory.
-
-Note that a [Pattern] matches an [Identifier], it doesn't match filenames.
-
-[Pattern]: /reference/Hakyll-Core-Identifier-Pattern.html
-[Identifier]: /reference/Hakyll-Core-Identifier.html
-
-~~~~~{.haskell}
-match "css/*" $ do
-~~~~~
-
-`route` creates a new rule for routing items. This rule is applied to all items
-that are currently matched -- in this case, `"css/*"`. `idRoute` simply means
-that an item will be routed to it's own filename. For example, `css/screen.css`
-will be routed to `css/screen.css` -- not very exciting.
-
-~~~~~{.haskell}
-route idRoute
-~~~~~
-
-Apart from specifying where the items should go (using `route`), we also have to
-specify *how* they need to be compiled. This is done using the `compile`
-function. It takes a `Compiler` as its second argument. These compilers can
-consist of very complicated constructions, but Hakyll also provides a number of
-good default compilers. The `compressCssCompiler` compiler will simply compress
-the CSS found in the files.
-
-~~~~~{.haskell}
-compile compressCssCompiler
-~~~~~
-
-We can compile our images in a similar way. We use `idRoute` again, but we don't
-want to change anything -- so we use `copyFileCompiler`. The difference between
-most other compilers and `copyFileCompiler` is that the lattern will *not*
-attempt to read the file: it will copy the file directly, so it supports large
-binary files as well.
-
-~~~~~{.haskell}
-match "images/*" $ do
-    route   idRoute
-    compile copyFileCompiler
-~~~~~
-
-Next, we're going to render some pages. We're going to style the results a
-little, so we're going to need a [Template]. We simply compile a template using
-the `templateCompiler` compiler, it's good enough in most cases.
-
-[Template]: /reference/Hakyll-Web-Template.html
-
-We don't use a route for these templates, after all, we don't want to route them
-anywhere, we just want to use them to style our pages a little.
+Next, we can see that the templates are compiled:
 
 ~~~~~{.haskell}
 match "templates/*" $ compile templateCompiler
 ~~~~~
 
-We can conclude that some rules do not *directly* add an output page on our
-site. In this case, we compile the template so it is available to the compiler
-later[^1].
+Let's start with the basics: what is a template? An example template gives us a
+good impression:
 
-[^1]: Actually, since the rules DSL is declarative, we could also add the
-      template compile rule at the bottom -- this would make no difference.
+~~~~~
+<html>
+    <head>
+        <title>Hakyll Example - $title$</title>
+    </head>
+    <body>
+        <h1>$title$</h1>
 
-Now, it's time to actually render our pages. We use the `forM_` monad combinator
-so we can describe all files at once (instead of compiling all three files
-manually).
-
-~~~~~{.haskell}
-forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page -> do
-    match page $ do
+        $body$
+    </body>
+</html>
 ~~~~~
 
-The pages all have different extensions. In our website, we only want to see
-`.html` files. Hakyll provides a route to do just that:
+A template is a text file to lay our some content. The content it lays out is
+called a page -- we'll see that in the next section. The syntax for templates is
+intentionally very simplistic. You can bind some content by referencing the name
+of the content *field* by using `$field$`, and that's it.
 
-~~~~~{.haskell}
-route setExtension "html"
-~~~~~
+You might have noticed how we specify a compiler (`compile`), but we don't set
+any `route`. Why is this?
 
-The [Rules] reference page has a complete listing of the API used.
+Precisely because we don't want to our template to end up anywhere in our site
+directory! We want to use it to lay out other items -- so we need to load
+(compile) it, but we don't want to give it a real destination.
 
-[Rules]: /reference/Hakyll-Core-Rules.html
+By using the `templates/*` pattern, we compile all templates in one go.
 
-The compilation of our pages is slightly more complicated: we're using another
-DSL there.
+### Pages
 
-### The Compiler DSL
+The code for pages looks suspiciously more complicated:
 
-The gist of it is that the `Compiler a b` type has two parameters -- it is an
-Arrow, and we can chain compilers using the `>>>` operator. The [Compiler]
-reference page has some more readable information on this subject.
+~~~~~~{.haskell}
+match (list ["about.rst", "index.markdown", "code.lhs"]) $ do
+    route   $ setExtension "html"
+    compile $ pageCompiler
+        >>> applyTemplateCompiler "templates/default.html"
+        >>> relativizeUrlsCompiler
+~~~~~~
 
-[Compiler]: /reference/Hakyll-Core-Compiler.html
+But we'll see shortly that this actually fairly straightforward. Let's begin by
+exploring what a *page* is.
 
-~~~~~{.haskell}
-compile pageCompiler
+~~~~~~
+---
+title: Home
+author: Jasper
+---
+
+So, I decided to create a site using Hakyll and...
+~~~~~~
+
+A page consists of two parts: a body, and metadata. As you can see above, the
+syntax is not hard. The metadata part is completely optional, this is the same
+page without metadata:
+
+~~~~~~
+So, I decided to create a site using Hakyll and...
+~~~~~~
+
+Hakyll supports a number of formats for the page body. Markdown, HTML and RST
+are probably the most common. Hakyll will automatically guess the right format
+if you use the right extension for your page.
+
+~~~~~~{.haskell}
+match (list ["about.rst", "index.markdown", "code.lhs"]) $ do
+~~~~~~
+
+We see a more complicated pattern here. Some sets of files cannot be described
+easily by just one pattern, and here the [list] function can help us out. In
+this case, we have three specific pages we want to compile.
+
+[list]: /reference/Hakyll-Core-Identifier-Pattern.html#v:list
+
+~~~~~~{.haskell}
+route $ setExtension "html"
+~~~~~~
+
+For our pages, we do not want to use `idRoute` -- after all, we want to generate
+`.html` files, not `.markdown` files or something similar! The [setExtension]
+route allows you to simply replace the extension of an item, which is what we
+want here.
+
+[setExtension]: /reference/Hakyll-Core-Routes.html#v:setExtension
+
+~~~~~~{.haskell}
+compile $ pageCompiler
     >>> applyTemplateCompiler "templates/default.html"
     >>> relativizeUrlsCompiler
+~~~~~~
+
+How should we process these pages? A simple compiler such as [pageCompiler],
+which renders the page, is not enough, we also want to apply our template.
+
+[pageCompiler]: /reference/Hakyll-Web-Page.html#v:pageCompiler
+
+Different compilers can be chained in a pipeline-like way using Arrows. Arrows
+form a complicated subject, but fortunately, most Hakyll users need not be
+concerned with the details. If you are interested, you can find some information
+on the [Understanding arrows] page -- but the only thing you really *need* to
+know is that you can chain compilers using the `>>>` operator.
+
+[Understanding arrows]: http://en.wikibooks.org/wiki/Haskell/Understanding_arrows
+
+The `>>>` operator is a lot like a flipped function composition (`flip (.)`) in
+Haskell, with the important difference that `>>>` is more general and works on
+all Arrows -- including Hakyll compilers.
+
+Here, we apply three compilers sequentially:
+
+1. We load and render the page using `pageCompiler`
+2. We apply the template we previously loaded using [applyTemplateCompiler]
+3. We relativize the URL's on the page using [relativizeUrlsCompiler]
+
+[applyTemplateCompiler]: /reference/Hakyll-Web-Template.html#v:applyTemplateCompiler
+[relativizeUrlsCompiler]: /reference/Hakyll-Web-RelativizeUrls.html#v:relativizeUrlsCompiler
+
+Relativizing URL's is a very handy feature. It means that we can just use
+absolute URL's everywhere in our templates and code, e.g.:
+
+~~~~~{.haskell}
+<link rel="stylesheet" type="text/css" href="/css/default.css" />
 ~~~~~
 
-Note that we can only use `applyTemplateCompiler` with
-`"templates/default.html"` because we compiled `"templates/default.html"`. If we
-didn't list a rule for that item, the compilation would fail (Hakyll would not
-find the template).
+And Hakyll will translate this to a relative URL for each page. This means we
+can host our site at `example.com` and `example.com/subdir` without changing a
+single line of code.
 
-Now, let's look at the concrete compiler:
-
-- `pageCompiler` starts by reading the [Page], parsing it, and rendering it
-  using [pandoc].
-- `applyTemplateCompiler` applies a [Template] which we have already loaded.
-- `relativizeUrlsCompiler` will [relativize] the URL's so we have a site we can
-  deploy everywhere.
-
-[Page]: /reference/Hakyll-Web-Page.html
-[relativize]: /reference/Hakyll-Web-RelativizeUrls.html
+More tutorials are in the works...
 
 Various tips and tricks
 -----------------------
