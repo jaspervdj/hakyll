@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 import Control.Arrow ((>>>))
-import Control.Monad (forM_)
 
 import Hakyll
 
@@ -16,9 +15,8 @@ main = hakyll $ do
 
     match "templates/*" $ compile templateCompiler
 
-    forM_ ["about.rst", "index.markdown", "code.lhs"] $ \page ->
-        match page $ do
-            route   $ setExtension "html"
-            compile $ pageCompiler
-                >>> applyTemplateCompiler "templates/default.html"
-                >>> relativizeUrlsCompiler
+    match (list ["about.rst", "index.markdown", "code.lhs"]) $ do
+        route   $ setExtension "html"
+        compile $ pageCompiler
+            >>> applyTemplateCompiler "templates/default.html"
+            >>> relativizeUrlsCompiler
