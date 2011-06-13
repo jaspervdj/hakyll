@@ -39,10 +39,16 @@ Let's get started!
 ------------------
 
 We're going to discuss a small brochure site to start with. You can find all
-code and files necessary to build this site [right here](/examples/brochure.zip)
--- feel free to look at them as we go trough the tutorial, in fact, it might be
-very learnful to have a closer look at the files as we discuss them. There's a
-number of files we will use:
+code and files necessary to build this site
+[right here](http://github.com/jaspervdj/hakyll-examples/tree/master/brochure)
+-- feel free to look at them as we go trough the tutorial. To fetch all examples
+in order to play with them locally, use:
+
+    git clone git://github.com/jaspervdj/hakyll-examples.git
+
+or nagivate to the download menu on GitHub.
+
+Now, for this first tutorial, there's a number of files we will use:
 
     about.rst            A simple page written in RST format
     code.lhs             Another page with some code (which can be highlighted)
