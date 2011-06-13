@@ -77,7 +77,11 @@ directory as illustrated in this diagram:
 ![Brochure files](/images/brochure-files.png)
 
 No magic is involved at all -- we will precisely study how and why our items are
-compiled like that. All of this is specified in the `hakyll.hs` file.
+compiled like that. All of this is specified in the `hakyll.hs` file. You can
+view the full `hakyll.hs` file online [here][brochure-hakyll.hs], or you can
+look in the directory you cloned or downloaded.
+
+[brochure-hakyll.hs]: http://github.com/jaspervdj/hakyll-examples/blob/master/brochure/hakyll.hs
 
 ### Images
 
@@ -182,6 +186,14 @@ of the content *field* by using `$field$`, and that's it.
 You might have noticed how we specify a compiler (`compile`), but we don't set
 any `route`. Why is this?
 
+We need to compile the template because we will need it later. If we compile a
+page later using `templates/default.html`, Hakyll needs to know what
+`templates/default.html` is. Note that we could move template compilation to the
+bottom of our code. The order doesn't matter -- Hakyll will determine that for
+you. But if you don't compile `templates/default.html` as a template, Hakyll
+will not be able to take it into account when deciding the compilation order.
+
+So, the `compile` needs to be there -- but why don't we set a `route` here?
 Precisely because we don't want to our template to end up anywhere in our site
 directory! We want to use it to lay out other items -- so we need to load
 (compile) it, but we don't want to give it a real destination.
@@ -294,9 +306,22 @@ absolute URL's everywhere in our templates and code, e.g.:
 <link rel="stylesheet" type="text/css" href="/css/default.css" />
 ~~~~~
 
-And Hakyll will translate this to a relative URL for each page. This means we
-can host our site at `example.com` and `example.com/subdir` without changing a
-single line of code.
+Using the [relativizeUrlsCompiler], Hakyll will change this to:
+
+~~~~~{.haskell}
+<link rel="stylesheet" type="text/css" href="css/default.css" />
+~~~~~
+
+when we are compiling `index.html`, or
+
+~~~~~{.haskell}
+<link rel="stylesheet" type="text/css" href="../css/default.css" />
+~~~~~
+
+when we are compiling (some imaginary) `posts/foo.html`.  So Hakyll will
+translate this to a relative URL for each page. This means we can host our site
+at `example.com` and `example.com/subdir` without changing a single line of
+code.
 
 More tutorials are in the works...
 
