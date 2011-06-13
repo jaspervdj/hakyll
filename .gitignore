@@ -1,7 +1,3 @@
-##
-## gitignore(5) -- specify ignored files
-##
-
 # Ignore swap files and cabal output.
 *.hi
 *.o
@@ -15,10 +11,11 @@ tags
 
 # Ignore test builds.
 tests/Main
+_cache
+_store
 
 # Rest of the file: ignore examples
-examples/*/_cache
-examples/*/_site
-examples/*/hakyll
-examples/hakyll/reference
-
+web/_cache
+web/_site
+web/hakyll
+web/reference
