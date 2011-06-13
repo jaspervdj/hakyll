@@ -1,42 +1,8 @@
 ---
-title: Tutorial
+title: The basics
 ---
 
-Why static websites?
---------------------
-
-Modern web frameworks make it easy to create huge dynamic websites. Why would
-anyone still care about a static website?
-
-- Static websites are fast, because it's simply files served directly from the
-  hard disk.
-- Static websites are secure. Nobody has ever found an SQL injection in static
-  pages.
-- Static websites are easy to deploy. Just copy them to your webhost using
-  (S)FTP/rsync/scp and you are done. They work on all webhosts: no CGI or extra
-  modules needed for the web server.
-
-Why Hakyll?
------------
-
-Hakyll is a [Haskell] library meant for creating small-to-medium sized static
-websites. It is a powerful publishing tool, precisely because of the power of
-Haskell. By using the awesome [pandoc] library, it is able to create your
-website from a large variety of input formats.
-
-[Haskell]: http://haskell.org/
-[pandoc]: http://johnmacfarlane.net/pandoc/
-
-Features include:
-
-- easy templating system;
-- a simple HTTP server for previewing and compiling your website on the go;
-- powerful syntax highlighting;
-- modules for common items such as tags and feeds;
-- easily extensible.
-
-Let's get started!
-------------------
+## Let's get started!
 
 We're going to discuss a small brochure site to start with. You can find all
 code and files necessary to build this site
@@ -83,7 +49,7 @@ look in the directory you cloned or downloaded.
 
 [brochure-hakyll.hs]: http://github.com/jaspervdj/hakyll-examples/blob/master/brochure/hakyll.hs
 
-### Images
+## Images
 
 Let's start of with the `images/haskell-logo.png` file, because the processing
 of this file is very simple: it is simply copied to the output directory. Let's
@@ -122,7 +88,7 @@ content at all, we just copy the file.
 
 [copyFileCompiler]: /reference/Hakyll-Core-Writable-CopyFile.html#v:copyFileCompiler
 
-### CSS
+## CSS
 
 If we look at how the two CSS files are processed, we see something which looks
 very familiar:
@@ -154,7 +120,7 @@ We can wonder what Hakyll does with the resulting `String`. Well, it simply
 writes this to the file specified in the `route`! As you can see, routes and
 compilers work together to produce your site.
 
-### Templates
+## Templates
 
 Next, we can see that the templates are compiled:
 
@@ -168,12 +134,12 @@ good impression:
 ~~~~~
 <html>
     <head>
-        <title>Hakyll Example - $title$</title>
+        <title>Hakyll Example - $$title$$</title>
     </head>
     <body>
-        <h1>$title$</h1>
+        <h1>$$title$$</h1>
 
-        $body$
+        $$body$$
     </body>
 </html>
 ~~~~~
@@ -181,7 +147,7 @@ good impression:
 A template is a text file to lay our some content. The content it lays out is
 called a page -- we'll see that in the next section. The syntax for templates is
 intentionally very simplistic. You can bind some content by referencing the name
-of the content *field* by using `$field$`, and that's it.
+of the content *field* by using `$$field$$`, and that's it.
 
 You might have noticed how we specify a compiler (`compile`), but we don't set
 any `route`. Why is this?
@@ -200,7 +166,7 @@ directory! We want to use it to lay out other items -- so we need to load
 
 By using the `templates/*` pattern, we compile all templates in one go.
 
-### Pages
+## Pages
 
 The code for pages looks suspiciously more complicated:
 
@@ -267,9 +233,9 @@ How should we process these pages? [pageCompiler] is the default compiler for
 pages. [pageCompiler] does a few things:
 
 - It parses the page into body and metadata
-- It adds some extra metadata fields such as `$url$` and `$path$` (you shouldn't
-  worry about these for now)
-- It fill in possible `$key$`'s in it's own body
+- It adds some extra metadata fields such as `$$url$$` and `$$path$$` (you
+  shouldn't worry about these for now)
+- It fill in possible `$$key$$`'s in it's own body
 - It renders the page using pandoc
 
 Which basically means that we end up with a `Page` that has the HTML content we
@@ -324,59 +290,3 @@ at `example.com` and `example.com/subdir` without changing a single line of
 code.
 
 More tutorials are in the works...
-
-Various tips and tricks
------------------------
-
-### Syntax highlighting
-
-Syntax highlighting is enabled by default in Hakyll. However, you also need to
-enable it in pandoc. If no syntax highlighting shows up, try
-
-    [jasper@phoenix] cabal install --reinstall -fhighlighting pandoc
-
-### When to rebuild
-
-If you execute a `./hakyll build`, Hakyll will build your site incrementally.
-This means it will be very fast, but it will not pick up _all_ changes.
-
-- In case you edited `hakyll.hs`, you first want to compile it again.
-- It is generally recommended to do a `./hakyll rebuild` before you deploy your
-  site.
-
-After rebuilding your site, all files will look as "modified" to the filesystem.
-This means that when you upload your site, it will usually transfer all files --
-this can generate more traffic than necessary, since it is possible that some
-files were not actually modified. If you use `rsync`, you can counter this using
-the `--checksum` option.
-
-Problems
---------
-
-### regex-pcre dependency on Mac OS
-
-Hakyll requires [regex-pcre], which might fail to build on Mac OS. To solve
-this problem, make sure the [pcre] C library is installed (via homebrew or
-macports). Then install [regex-pcre] using:
-
-    cabal install --extra-include-dirs=/usr/local/include regex-pcre
-
-or
-
-    cabal install --extra-include-dirs=/opt/local/include regex-pcre
-
-...and proceed to install Hakyll the regular way.
-
-[regex-pcre]: http://hackage.haskell.org/package/regex-pcre
-[pcre]: http://www.pcre.org/
-
-### "File name does not match module name" on Mac OS
-
-    Hakyll.hs:1:1:
-        File name does not match module name:
-        Saw: `Main'
-        Expected: `Hakyll'
-
-Is an error encountered on Mac OS when `hakyll.hs` is located on a
-case-insensitive filesystem. A workaround is to rename it to something that
-isn't the name of the module, for example, `site.hs`.

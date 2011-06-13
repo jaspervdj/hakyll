@@ -2,7 +2,7 @@
 title: Examples
 ---
 
-## Simple examples
+# Simple examples
 
 A number of simple examples are available in the GitHub repository. They can be
 found [here](https://github.com/jaspervdj/hakyll-examples). The README located
@@ -11,7 +11,7 @@ directory using
 
     git clone git://github.com/jaspervdj/hakyll-examples.git
 
-## People using Hakyll
+# People using Hakyll
 
 A lot of sites running Hakyll also publish the source code. This is a very
 interesting resource to learn from as well. If you're using Hakyll for your

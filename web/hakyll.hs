@@ -2,6 +2,7 @@
 import Hakyll
 import Control.Monad (forM_)
 import Control.Arrow ((>>>), arr)
+import Data.Monoid (mempty)
 import Text.Pandoc
 
 main :: IO ()
@@ -23,14 +24,25 @@ main = hakyll $ do
             >>> applyTemplateCompiler "templates/default.html"
             >>> relativizeUrlsCompiler
 
-    -- Tutorial
-    match "tutorial.markdown" $ do
+    -- Tutorials
+    match "tutorials/*" $ do
         route   $ setExtension "html"
-        compile $ readPageCompiler
-            >>> pageRenderPandocWith defaultHakyllParserState withToc
+        compile $ pageCompilerWith defaultHakyllParserState withToc
             >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
+            >>> applyTemplateCompiler "templates/tutorial.html"
             >>> applyTemplateCompiler "templates/default.html"
             >>> relativizeUrlsCompiler
+
+    -- Tutorial list
+    match "tutorials.html" $ route idRoute
+    create "tutorials.html" $ constA mempty
+        >>> arr (setField "title" "Tutorials")
+        >>> setFieldPageList chronological
+                "templates/tutorial-item.html" "tutorials" "tutorials/*"
+        >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
+        >>> applyTemplateCompiler "templates/tutorials.html"
+        >>> applyTemplateCompiler "templates/default.html"
+        >>> relativizeUrlsCompiler
 
     -- Sidebar
     match "sidebar.markdown" $ compile pageCompiler
@@ -40,7 +52,7 @@ main = hakyll $ do
   where
     withToc = defaultHakyllWriterOptions
         { writerTableOfContents = True
-        , writerTemplate = "<h2>Table of contents</h2>\n$toc$\n$body$"
+        , writerTemplate = "$toc$\n$body$"
         , writerStandalone = True
         }
 
