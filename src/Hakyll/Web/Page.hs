@@ -58,6 +58,7 @@ module Hakyll.Web.Page
     , pageCompiler
     , pageCompilerWith
     , pageCompilerWithPandoc
+    , pageCompilerWithFields
     , addDefaultFields
     ) where
 
@@ -108,10 +109,24 @@ pageCompilerWith state options = pageCompilerWithPandoc state options id
 pageCompilerWithPandoc :: ParserState -> WriterOptions
                        -> (Pandoc -> Pandoc)
                        -> Compiler Resource (Page String)
-pageCompilerWithPandoc state options f = cached "pageCompilerWithPandoc" $
-    readPageCompiler >>> addDefaultFields >>> arr applySelf
+pageCompilerWithPandoc state options f =
+    pageCompilerWithFields state options f id
+
+-- | This is another, even more advanced version of 'pageCompilerWithPandoc'.
+-- This function allows you to provide an arrow which is applied before the
+-- fields in a page are rendered. This means you can use this extra customizable
+-- stage to add custom fields which are inserted in the page.
+--
+pageCompilerWithFields :: ParserState -> WriterOptions
+                       -> (Pandoc -> Pandoc)
+                       -> Compiler (Page String) (Page String)
+                       -> Compiler Resource (Page String)
+pageCompilerWithFields state options f g = cached cacheName $
+    readPageCompiler >>> addDefaultFields >>> g >>> arr applySelf
                      >>> pageReadPandocWith state
                      >>> arr (fmap (writePandocWith options . f))
+  where
+    cacheName = "Hakyll.Web.Page.pageCompilerWithFields"
 
 -- | Add a number of default metadata fields to a page. These fields include:
 --
