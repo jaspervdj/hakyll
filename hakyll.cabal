@@ -105,6 +105,7 @@ Library
     Hakyll.Core.Writable
     Hakyll.Core.Writable.CopyFile
     Hakyll.Core.Writable.WritableTuple
+    Hakyll.Configs.SmallBlog
     Hakyll.Main
     Hakyll.Web.Blaze
     Hakyll.Web.CompressCss
