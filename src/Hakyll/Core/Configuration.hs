@@ -13,7 +13,7 @@ data HakyllConfiguration = HakyllConfiguration
     { -- | Directory in which the output written
       destinationDirectory :: FilePath
     , -- | Directory where hakyll's internal store is kept
-      storeDirectory       :: FilePath
+      storeDirectory :: FilePath
     , -- | Function to determine ignored files
       --
       -- In 'defaultHakyllConfiguration', the following files are ignored:
@@ -28,7 +28,18 @@ data HakyllConfiguration = HakyllConfiguration
       -- also be ignored. Note that this is the configuration parameter, if you
       -- want to use the test, you should use @shouldIgnoreFile@.
       --
-      ignoreFile           :: FilePath -> Bool
+      ignoreFile :: FilePath -> Bool
+    , -- | Here, you can plug in a system command to upload/deploy your site.
+      --
+      -- Example:
+      --
+      -- > rsync -ave 'ssh -p 2217' _site jaspervdj@jaspervdj.be:hakyll
+      --
+      -- You can execute this by using
+      --
+      -- > ./hakyll deploy
+      --
+      deployCommand :: String
     }
 
 -- | Default configuration for a hakyll application
@@ -38,6 +49,7 @@ defaultHakyllConfiguration = HakyllConfiguration
     { destinationDirectory = "_site"
     , storeDirectory       = "_cache"
     , ignoreFile           = ignoreFile'
+    , deployCommand        = "echo 'No deploy command specified'"
     }
   where
     ignoreFile' path

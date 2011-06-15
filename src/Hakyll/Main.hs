@@ -8,8 +8,9 @@ module Hakyll.Main
 import Control.Applicative ((<$>))
 import Control.Concurrent (forkIO)
 import Control.Monad (when)
-import System.Environment (getProgName, getArgs)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
+import System.Environment (getProgName, getArgs)
+import System.Process (system)
 import qualified Data.Set as S
 
 import Hakyll.Core.Configuration
@@ -40,6 +41,7 @@ hakyllWith conf rules = do
         ["rebuild"]    -> rebuild conf rules
         ["server"]     -> server conf 8000
         ["server", p]  -> server conf (read p)
+        ["deploy"]     -> deploy conf
         _              -> help
 
 -- | Build the site
@@ -80,6 +82,7 @@ help = do
         , name ++ " preview [port]  Run a server and autocompile"
         , name ++ " rebuild         Clean up and build again"
         , name ++ " server [port]   Run a local test server"
+        , name ++ " deploy          Upload/deploy your site"
         ]
 
 -- | Preview the site
@@ -109,3 +112,10 @@ server conf port = do
     staticServer destination preServeHook port
   where
     preServeHook _ = return ()
+
+-- Upload the site
+--
+deploy :: HakyllConfiguration -> IO ()
+deploy conf = do
+    _ <- system $ deployCommand conf
+    return ()
