@@ -6,7 +6,7 @@ import Data.Monoid (mempty)
 import Text.Pandoc
 
 main :: IO ()
-main = hakyll $ do
+main = hakyllWith config $ do
     match "css/*" $ do
         route   idRoute
         compile compressCssCompiler
@@ -63,3 +63,9 @@ main = hakyll $ do
             , "philosophy.markdown"
             , "reference.markdown"
             ]
+
+config :: HakyllConfiguration
+config = defaultHakyllConfiguration
+    { deployCommand = "rsync --checksum -ave 'ssh -p 2222' \
+                      \_site/* jaspervdj@jaspervdj.be:jaspervdj.be/hakyll"
+    }
