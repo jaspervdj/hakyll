@@ -29,13 +29,13 @@ Description:
   Additionally, there's the Haddock documentation in the different modules,
   meant as a reference.
 
-Author:       Jasper Van der Jeugt
-Maintainer:   jaspervdj@gmail.com
+Author:       Jasper Van der Jeugt <m@jaspervdj.be>
+Maintainer:   Jasper Van der Jeugt <m@jaspervdj.be>
 Homepage:     http://jaspervdj.be/hakyll
 Bug-Reports:  http://github.com/jaspervdj/Hakyll/issues
 License:      BSD3
 License-File: LICENSE
-Category:     Text
+Category:     Web
 
 Cabal-Version: >= 1.6
 Build-Type:    Simple
@@ -105,7 +105,6 @@ Library
     Hakyll.Core.Writable
     Hakyll.Core.Writable.CopyFile
     Hakyll.Core.Writable.WritableTuple
-    Hakyll.Configs.SmallBlog
     Hakyll.Main
     Hakyll.Web.Blaze
     Hakyll.Web.CompressCss
