@@ -1,12 +1,9 @@
-# Hakyll
+# hakyll
 
-Hakyll is a static site generator library in Haskell.
+Hakyll is a static site generator library in Haskell. More information
+(including and a tutorial) can be found on
+[the hakyll homepage](http://jaspervdj.be/hakyll).
 
-## Installation
+You can install this library using cabal:
 
     cabal install hakyll
-
-## Tutorial and information
-
-More information can be found on
-[the hakyll homepage](http://jaspervdj.be/hakyll).
