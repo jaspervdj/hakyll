@@ -47,7 +47,7 @@ data FeedConfiguration = FeedConfiguration
       feedAuthorName  :: String
     , -- | Absolute root URL of the feed site (e.g. @http://jaspervdj.be@)
       feedRoot        :: String
-    }
+    } deriving (Show, Eq)
 
 -- | This is an auxiliary function to create a listing that is, in fact, a feed.
 -- The items should be sorted on date. The @$timestamp@ field should be set.
