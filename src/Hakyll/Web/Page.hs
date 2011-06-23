@@ -109,8 +109,12 @@ pageCompilerWith state options = pageCompilerWithPandoc state options id
 pageCompilerWithPandoc :: ParserState -> WriterOptions
                        -> (Pandoc -> Pandoc)
                        -> Compiler Resource (Page String)
-pageCompilerWithPandoc state options f =
-    pageCompilerWithFields state options f id
+pageCompilerWithPandoc state options f = cached cacheName $
+    readPageCompiler >>> addDefaultFields >>> arr applySelf
+                     >>> pageReadPandocWith state
+                     >>> arr (fmap (writePandocWith options . f))
+  where
+    cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"
 
 -- | This is another, even more advanced version of 'pageCompilerWithPandoc'.
 -- This function allows you to provide an arrow which is applied before the
@@ -121,12 +125,10 @@ pageCompilerWithFields :: ParserState -> WriterOptions
                        -> (Pandoc -> Pandoc)
                        -> Compiler (Page String) (Page String)
                        -> Compiler Resource (Page String)
-pageCompilerWithFields state options f g = cached cacheName $
+pageCompilerWithFields state options f g =
     readPageCompiler >>> addDefaultFields >>> g >>> arr applySelf
                      >>> pageReadPandocWith state
                      >>> arr (fmap (writePandocWith options . f))
-  where
-    cacheName = "Hakyll.Web.Page.pageCompilerWithFields"
 
 -- | Add a number of default metadata fields to a page. These fields include:
 --
