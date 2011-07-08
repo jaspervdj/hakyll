@@ -132,13 +132,13 @@ pageCompilerWithFields state options f g =
 
 -- | Add a number of default metadata fields to a page. These fields include:
 --
--- * @$url@
+-- * @$url$@
 --
--- * @$category@
+-- * @$category$@
 --
--- * @$title@
+-- * @$title$@
 --
--- * @$path@
+-- * @$path$@
 --
 addDefaultFields :: Compiler (Page a) (Page a)
 addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
