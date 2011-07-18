@@ -4,57 +4,53 @@ module Hakyll.Web.Page.Read
     ( readPage
     ) where
 
-import Control.Applicative ((<$>), (<*>))
-import Control.Arrow (second, (***))
-import Control.Monad.State (State, get, put, evalState)
-import Data.List (isPrefixOf)
-import Data.Map (Map)
+import Control.Applicative ((<$>), (<*>), (<*))
 import qualified Data.Map as M
 
-import Hakyll.Web.Page.Internal
+import Text.Parsec.Char (alphaNum, anyChar, char, newline, oneOf, string)
+import Text.Parsec.Combinator (choice, many1, manyTill, option, skipMany1)
+import Text.Parsec.Prim (many, parse, skipMany, (<?>))
+import Text.Parsec.String (Parser)
+
 import Hakyll.Core.Util.String
+import Hakyll.Web.Page.Internal
 
--- | We're using a simple state monad as parser
---
-type LineParser = State [String]
+-- | Space or tab, no newline
+inlineSpace :: Parser Char
+inlineSpace = oneOf ['\t', ' '] <?> "space"
 
--- | Read the metadata section from a page
+-- | Parse a single metadata field
 --
-parseMetadata :: LineParser (Map String String)
-parseMetadata = get >>= \content -> case content of
-    -- No lines means no metadata
-    [] -> return M.empty
-    -- Check if the file begins with a delimiter
-    (l : ls) -> if not (isPossibleDelimiter l)
-        then -- No delimiter means no metadata
-             return M.empty
-        else do -- Break the metadata section
-                let (metadata, rest) = second (drop 1) $ break (== l) ls
-                -- Put the rest back
-                put rest
-                -- Parse the metadata
-                return $ M.fromList $ map parseMetadata' metadata
+metadataField :: Parser (String, String)
+metadataField = do
+    key <- manyTill alphaNum $ char ':'
+    skipMany1 inlineSpace
+    value <- manyTill anyChar newline
+    trailing' <- many trailing
+    return (key, trim $ value ++ concat trailing')
   where
-    -- Check if a line can be a delimiter
-    isPossibleDelimiter = isPrefixOf "---"
+    trailing = (++) <$> many1 inlineSpace <*> manyTill anyChar newline
 
-    -- Parse a "key: value" string to a (key, value) tupple
-    parseMetadata' = (trim *** trim . drop 1) . break (== ':')
-
--- | Read the body section of a page
+-- | Parse a metadata block, including delimiters and trailing newlines
 --
-parseBody :: LineParser String
-parseBody = do
-    body <- get
-    put []
-    return $ unlines body
+metadata :: Parser [(String, String)]
+metadata = do
+    open <- many1 (char '-') <* many inlineSpace <* newline
+    metadata' <- many metadataField
+    _ <- choice $ map (string . replicate (length open)) ['-', '.']
+    skipMany inlineSpace
+    skipMany1 newline
+    return metadata'
 
--- | Read an entire page
+-- | Parse a Hakyll page
 --
-parsePage :: LineParser (Page String)
-parsePage = Page <$> parseMetadata <*> parseBody
+page :: Parser ([(String, String)], String)
+page = do
+    metadata' <- option [] metadata
+    body <- many anyChar
+    return (metadata', body)
 
--- | Read a page from a string
---
 readPage :: String -> Page String
-readPage = evalState parsePage . lines
+readPage input = case parse page "page" input of
+    Left err      -> error (show err)
+    Right (md, b) -> Page (M.fromList md) b
