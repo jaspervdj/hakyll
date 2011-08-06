@@ -1,25 +1,30 @@
 -- | Module providing the main hakyll function and command-line argument parsing
 --
+{-# LANGUAGE CPP #-}
 module Hakyll.Main
     ( hakyll
     , hakyllWith
     ) where
 
-import Control.Applicative ((<$>))
-import Control.Concurrent (forkIO)
 import Control.Monad (when)
 import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
 import System.Environment (getProgName, getArgs)
 import System.Process (system)
-import qualified Data.Set as S
 
 import Hakyll.Core.Configuration
-import Hakyll.Core.Resource
 import Hakyll.Core.Run
 import Hakyll.Core.Rules
+
+#ifdef PREVIEW_SERVER
+import Control.Applicative ((<$>))
+import Control.Concurrent (forkIO)
+import qualified Data.Set as S
+
+import Hakyll.Core.Resource
 import Hakyll.Core.Rules.Internal
 import Hakyll.Web.Preview.Poll
 import Hakyll.Web.Preview.Server
+#endif
 
 -- | This usualy is the function with which the user runs the hakyll compiler
 --
@@ -83,11 +88,17 @@ help = do
         , name ++ " rebuild         Clean up and build again"
         , name ++ " server [port]   Run a local test server"
         , name ++ " deploy          Upload/deploy your site"
+        , ""
         ]
+
+#ifndef PREVIEW_SERVER
+    previewServerDisabled
+#endif
 
 -- | Preview the site
 --
 preview :: HakyllConfiguration -> RulesM a -> Int -> IO ()
+#ifdef PREVIEW_SERVER
 preview conf rules port = do
     -- Fork a thread polling for changes
     _ <- forkIO $ previewPoll conf update
@@ -96,6 +107,9 @@ preview conf rules port = do
     server conf port
   where
     update = map unResource . S.toList . rulesResources <$> run conf rules
+#else
+preview _ _ _ = previewServerDisabled
+#endif
 
 -- | Rebuild the site
 --
@@ -107,15 +121,33 @@ rebuild conf rules = do
 -- | Start a server
 --
 server :: HakyllConfiguration -> Int -> IO ()
+#ifdef PREVIEW_SERVER
 server conf port = do
     let destination = destinationDirectory conf
     staticServer destination preServeHook port
   where
     preServeHook _ = return ()
+#else
+server _ _ = previewServerDisabled
+#endif
 
--- Upload the site
+-- | Upload the site
 --
 deploy :: HakyllConfiguration -> IO ()
 deploy conf = do
     _ <- system $ deployCommand conf
     return ()
+
+-- | Print a warning message about the preview serving not being enabled
+--
+#ifndef PREVIEW_SERVER
+previewServerDisabled :: IO ()
+previewServerDisabled =
+    mapM_ putStrLn
+        [ "PREVIEW SERVER"
+        , ""
+        , "The preview server is not enabled in the version of Hakyll. To"
+        , "enable it, set the flag to True and recompile Hakyll."
+        , "Alternatively, use an external tool to serve your site directory."
+        ]
+#endif

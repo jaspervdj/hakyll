@@ -50,6 +50,10 @@ Source-Repository head
   Type:     git
   Location: git://github.com/jaspervdj/hakyll.git
 
+Flag previewServer
+  Description: Include the preview server
+  default:     True
+
 Library
   Ghc-Options:    -Wall
   Hs-Source-Dirs: src
@@ -72,8 +76,6 @@ Library
     process     >= 1.0   && < 1.4,
     regex-base  >= 0.93  && < 1.0,
     regex-pcre  >= 0.93  && < 1.0,
-    snap-core   >= 0.5.1 && < 0.6,
-    snap-server >= 0.5.1 && < 0.6,
     tagsoup     >= 0.12  && < 0.13,
     time        >= 1.1   && < 1.3,
     unix        >= 2.4   && < 2.6
@@ -113,8 +115,6 @@ Library
     Hakyll.Web.Page.Read
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.FileType
-    Hakyll.Web.Preview.Poll
-    Hakyll.Web.Preview.Server
     Hakyll.Web.RelativizeUrls
     Hakyll.Web.Tags
     Hakyll.Web.Template
@@ -131,3 +131,13 @@ Library
     Hakyll.Web.Template.Read.Hakyll
     Hakyll.Web.Template.Read.Hamlet
     Paths_hakyll
+
+  If flag(previewServer)
+    Build-depends:
+      snap-core   >= 0.5.1 && < 0.6,
+      snap-server >= 0.5.1 && < 0.6
+    Cpp-Options:
+      -DPREVIEW_SERVER
+    Other-Modules:
+      Hakyll.Web.Preview.Poll
+      Hakyll.Web.Preview.Server
