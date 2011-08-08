@@ -28,3 +28,5 @@ this list. This list has no particular ordering.
   [source](https://bitbucket.org/paul_r/blog-de-demotera)
 - <http://projects.haskell.org/diagrams/>,
   [source](http://patch-tag.com/r/byorgey/diagrams-doc/snapshot/current/content/pretty/web/)
+- <http://wunki.org>,
+  [source](https://github.com/wunki/www.wunki.org)
