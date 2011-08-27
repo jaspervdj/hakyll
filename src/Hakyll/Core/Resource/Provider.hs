@@ -20,14 +20,12 @@ module Hakyll.Core.Resource.Provider
 
 import Control.Applicative ((<$>))
 import Control.Concurrent (MVar, readMVar, modifyMVar_, newMVar)
-import Control.Monad ((<=<))
-import Data.Word (Word8)
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import qualified Crypto.Hash.MD5 as MD5
+import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
-import OpenSSL.Digest.ByteString.Lazy (digest)
-import OpenSSL.Digest (MessageDigest (MD5))
 
 import Hakyll.Core.Store
 import Hakyll.Core.Resource
@@ -60,8 +58,8 @@ resourceExists provider = flip elem $ resourceList provider
 
 -- | Retrieve a digest for a given resource
 --
-resourceDigest :: ResourceProvider -> Resource -> IO [Word8]
-resourceDigest provider = digest MD5 <=< resourceLBS provider
+resourceDigest :: ResourceProvider -> Resource -> IO B.ByteString
+resourceDigest provider = fmap MD5.hashlazy . resourceLBS provider
 
 -- | Check if a resource was modified
 --
