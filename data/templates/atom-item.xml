@@ -2,6 +2,6 @@
     <title>$title$</title>
     <link href="$root$$url$" />
     <id>$root$$url$</id>
-    <updated>$timestamp$</updated>
+    <published>$timestamp$</published>
     <summary type="html"><![CDATA[$description$]]></summary>
 </entry>
