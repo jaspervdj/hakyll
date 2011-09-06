@@ -55,7 +55,7 @@ import qualified Text.Blaze.Html5.Attributes as A
 
 import Hakyll.Web.Page
 import Hakyll.Web.Page.Metadata
-import Hakyll.Web.Util.Url
+import Hakyll.Web.Urls
 import Hakyll.Core.Writable
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler

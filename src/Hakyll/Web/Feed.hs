@@ -33,7 +33,7 @@ import Hakyll.Web.Page
 import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Template
 import Hakyll.Web.Template.Read.Hakyll (readTemplate)
-import Hakyll.Web.Util.Url
+import Hakyll.Web.Urls
 
 import Paths_hakyll
 

@@ -115,12 +115,12 @@ Library
     Hakyll.Web.Page.Read
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.FileType
-    Hakyll.Web.RelativizeUrls
     Hakyll.Web.Tags
     Hakyll.Web.Template
     Hakyll.Web.Template.Read
+    Hakyll.Web.Urls
+    Hakyll.Web.Urls.Relativize
     Hakyll.Web.Util.Html
-    Hakyll.Web.Util.Url
 
   Other-Modules:
     Hakyll.Core.Compiler.Internal
