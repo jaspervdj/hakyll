@@ -78,7 +78,7 @@ import Hakyll.Web.Page.Read
 import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Pandoc
 import Hakyll.Web.Template
-import Hakyll.Web.Util.Url
+import Hakyll.Web.Urls
 
 -- | Create a page from a body, without metadata
 --

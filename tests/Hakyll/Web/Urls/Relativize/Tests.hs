@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Hakyll.Web.RelativizeUrls.Tests
+module Hakyll.Web.Urls.Relativize.Tests
     ( tests
     ) where
 
 import Test.Framework
 import Test.HUnit hiding (Test)
 
-import Hakyll.Web.RelativizeUrls
+import Hakyll.Web.Urls.Relativize
 import TestSuite.Util
 
 tests :: [Test]

@@ -10,10 +10,10 @@ import qualified Hakyll.Core.Store.Tests
 import qualified Hakyll.Core.UnixFilter.Tests
 import qualified Hakyll.Web.Page.Tests
 import qualified Hakyll.Web.Page.Metadata.Tests
-import qualified Hakyll.Web.RelativizeUrls.Tests
 import qualified Hakyll.Web.Template.Tests
+import qualified Hakyll.Web.Urls.Tests
+import qualified Hakyll.Web.Urls.Relativize.Tests
 import qualified Hakyll.Web.Util.Html.Tests
-import qualified Hakyll.Web.Util.Url.Tests
 
 main :: IO ()
 main = defaultMain
@@ -33,12 +33,12 @@ main = defaultMain
         Hakyll.Web.Page.Tests.tests
     , testGroup "Hakyll.Web.Page.Metadata.Tests"
         Hakyll.Web.Page.Metadata.Tests.tests
-    , testGroup "Hakyll.Web.RelativizeUrls.Tests"
-        Hakyll.Web.RelativizeUrls.Tests.tests
     , testGroup "Hakyll.Web.Template.Tests"
         Hakyll.Web.Template.Tests.tests
+    , testGroup "Hakyll.Web.Urls.Tests"
+        Hakyll.Web.Urls.Tests.tests
+    , testGroup "Hakyll.Web.Urls.Relativize.Tests"
+        Hakyll.Web.Urls.Relativize.Tests.tests
     , testGroup "Hakyll.Web.Util.Html.Tests"
         Hakyll.Web.Util.Html.Tests.tests
-    , testGroup "Hakyll.Web.Util.Url.Tests"
-        Hakyll.Web.Util.Url.Tests.tests
     ]

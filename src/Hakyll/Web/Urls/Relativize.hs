@@ -14,7 +14,7 @@
 --
 -- > <img src="../images/lolcat.png" alt="Funny zomgroflcopter" />
 --
-module Hakyll.Web.RelativizeUrls
+module Hakyll.Web.Urls.Relativize
     ( relativizeUrlsCompiler
     , relativizeUrls
     ) where
@@ -23,13 +23,10 @@ import Prelude hiding (id)
 import Control.Category (id)
 import Control.Arrow ((&&&), (>>^))
 import Data.List (isPrefixOf)
-import qualified Data.Set as S
-
-import Text.HTML.TagSoup
 
 import Hakyll.Core.Compiler
 import Hakyll.Web.Page
-import Hakyll.Web.Util.Url
+import Hakyll.Web.Urls
 
 -- | Compiler form of 'relativizeUrls' which automatically picks the right root
 -- path
@@ -45,18 +42,6 @@ relativizeUrlsCompiler = getRoute &&& id >>^ uncurry relativize
 relativizeUrls :: String  -- ^ Path to the site root
                -> String  -- ^ HTML to relativize
                -> String  -- ^ Resulting HTML
-relativizeUrls root = renderTags . map relativizeUrls' . parseTags
+relativizeUrls root = withUrls rel
   where
-    relativizeUrls' (TagOpen s a) = TagOpen s $ map (relativizeUrlsAttrs root) a
-    relativizeUrls' x = x
-
--- | Relativize URL's in attributes
---
-relativizeUrlsAttrs :: String            -- ^ Path to the site root
-                    -> Attribute String  -- ^ Attribute to relativize
-                    -> Attribute String  -- ^ Resulting attribute
-relativizeUrlsAttrs root (key, value)
-    | key `S.member` urls && "/" `isPrefixOf` value = (key, root ++ value)
-    | otherwise = (key, value)
-  where
-    urls = S.fromList ["src", "href"]
+    rel x = if "/" `isPrefixOf` x then root ++ x else x

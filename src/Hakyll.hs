@@ -26,11 +26,11 @@ module Hakyll
     , module Hakyll.Web.Page.Read
     , module Hakyll.Web.Pandoc
     , module Hakyll.Web.Pandoc.FileType
-    , module Hakyll.Web.RelativizeUrls
+    , module Hakyll.Web.Urls
+    , module Hakyll.Web.Urls.Relativize
     , module Hakyll.Web.Tags
     , module Hakyll.Web.Template
     , module Hakyll.Web.Util.Html
-    , module Hakyll.Web.Util.Url
     ) where
 
 import Hakyll.Core.Compiler
@@ -58,8 +58,8 @@ import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Pandoc
 import Hakyll.Web.Pandoc.FileType
-import Hakyll.Web.RelativizeUrls
+import Hakyll.Web.Urls
+import Hakyll.Web.Urls.Relativize
 import Hakyll.Web.Tags
 import Hakyll.Web.Template
 import Hakyll.Web.Util.Html
-import Hakyll.Web.Util.Url
