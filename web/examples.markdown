@@ -30,3 +30,5 @@ this list. This list has no particular ordering.
   [source](http://patch-tag.com/r/byorgey/diagrams-doc/snapshot/current/content/pretty/web/)
 - <http://wunki.org>,
   [source](https://github.com/wunki/www.wunki.org)
+- <http://rs.io>,
+  [source](https://github.com/robertseaton/rs.io/)
