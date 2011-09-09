@@ -12,7 +12,7 @@ in order to play with them locally, use:
 
     git clone git://github.com/jaspervdj/hakyll-examples.git
 
-or nagivate to the download menu on GitHub.
+or navigate to the download menu on GitHub.
 
 Now, for this first tutorial, there's a number of files we will use:
 
