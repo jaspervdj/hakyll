@@ -23,6 +23,7 @@ import Control.Concurrent (MVar, readMVar, modifyMVar_, newMVar)
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import Data.Time (UTCTime)
 import qualified Crypto.Hash.MD5 as MD5
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
@@ -34,13 +35,15 @@ import Hakyll.Core.Resource
 --
 data ResourceProvider = ResourceProvider
     { -- | A list of all resources this provider is able to provide
-      resourceList          :: [Resource]
+      resourceList             :: [Resource]
     , -- | Retrieve a certain resource as string
-      resourceString        :: Resource -> IO String
+      resourceString           :: Resource -> IO String
     , -- | Retrieve a certain resource as lazy bytestring
-      resourceLBS           :: Resource -> IO LB.ByteString
+      resourceLBS              :: Resource -> IO LB.ByteString
+    , -- | Check when a resource was last modified
+      resourceModificationTime :: Resource -> IO UTCTime
     , -- | Cache keeping track of modified items
-      resourceModifiedCache :: MVar (Map Resource Bool)
+      resourceModifiedCache    :: MVar (Map Resource Bool)
     }
 
 -- | Create a resource provider
@@ -48,8 +51,9 @@ data ResourceProvider = ResourceProvider
 makeResourceProvider :: [Resource]                      -- ^ Resource list
                      -> (Resource -> IO String)         -- ^ String reader
                      -> (Resource -> IO LB.ByteString)  -- ^ ByteString reader
+                     -> (Resource -> IO UTCTime)        -- ^ Time checker
                      -> IO ResourceProvider             -- ^ Resulting provider
-makeResourceProvider l s b = ResourceProvider l s b <$> newMVar M.empty
+makeResourceProvider l s b t = ResourceProvider l s b t <$> newMVar M.empty
 
 -- | Check if a given identifier has a resource
 --

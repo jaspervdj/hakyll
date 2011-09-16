@@ -6,6 +6,10 @@ module Hakyll.Core.Resource.Provider.File
 
 import Control.Applicative ((<$>))
 
+import Data.Time (readTime)
+import System.Directory (getModificationTime)
+import System.Locale (defaultTimeLocale)
+import System.Time (formatCalendarTime, toCalendarTime)
 import qualified Data.ByteString.Lazy as LB
 
 import Hakyll.Core.Resource
@@ -22,3 +26,9 @@ fileResourceProvider configuration = do
         getRecursiveContents False "."
     makeResourceProvider list (readFile . unResource)
                               (LB.readFile . unResource)
+                              mtime
+  where
+    mtime (Resource r) = do
+        ct <- toCalendarTime =<< getModificationTime r
+        let str = formatCalendarTime defaultTimeLocale "%s" ct
+        return $ readTime defaultTimeLocale "%s" str
