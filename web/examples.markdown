@@ -32,3 +32,5 @@ this list. This list has no particular ordering.
   [source](https://github.com/wunki/www.wunki.org)
 - <http://rs.io>,
   [source](https://github.com/robertseaton/rs.io/)
+- <http://www.gwern.net/>,
+  source: `darcs get http://www.gwern.net`
