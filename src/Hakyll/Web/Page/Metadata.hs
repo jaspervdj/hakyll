@@ -12,6 +12,8 @@ module Hakyll.Web.Page.Metadata
     , copyField
     , renderDateField
     , renderDateFieldWith
+    , renderModificationTime
+    , renderModificationTimeWith
     , copyBodyToField
     , copyBodyFromField
     ) where
@@ -31,6 +33,7 @@ import Hakyll.Web.Page.Internal
 import Hakyll.Core.Util.String
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
+import Hakyll.Core.Resource.Provider
 
 -- | Get a metadata field. If the field does not exist, the empty string is
 -- returned.
@@ -150,6 +153,28 @@ renderDateFieldWith locale key format defaultValue =
                           "%Y-%m-%d"
                           dateString :: Maybe UTCTime
         return $ formatTime locale format time
+
+-- | Set the modification time as a field in the page
+--
+renderModificationTime :: String
+                       -- ^ Destination key
+                       -> String
+                       -- ^ Format to use on the time
+                       -> Compiler (Page String) (Page String)
+                       -- ^ Resulting compiler
+renderModificationTime = renderModificationTimeWith defaultTimeLocale
+
+renderModificationTimeWith :: TimeLocale
+                           -- ^ Output time locale
+                           -> String
+                           -- ^ Destination key
+                           -> String
+                           -- ^ Format to use on the time
+                           -> Compiler (Page String) (Page String)
+                           -- ^ Resulting compiler
+renderModificationTimeWith locale key format =
+    id &&& (getResource >>> getResourceWith resourceModificationTime) >>>
+    setFieldA key (arr (formatTime locale format))
 
 -- | Copy the body of a page to a metadata field
 --

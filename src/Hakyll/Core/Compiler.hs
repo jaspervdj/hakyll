@@ -98,6 +98,7 @@ module Hakyll.Core.Compiler
     , getRouteFor
     , getResourceString
     , getResourceLBS
+    , getResourceWith
     , fromDependency
     , require_
     , require
