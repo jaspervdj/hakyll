@@ -28,9 +28,10 @@ you will have to license your code under a GPL-compatible license.
 Hakyll was originally written by [Jasper Van der Jeugt](http://jaspervdj.be),
 who still maintains the package. Contributors:
 
-- [seschwar](http://github.com/seschwar)
-- [JD Marble](http://github.com/jdmarble)
-- [sargon](http://github.com/sargon)
-- [Paolo Veronelli](http://github.com/paolino)
+- [Andy Irving](https://github.com/irv)
 - [Benedict Eastaugh](http://extralogical.net/)
+- [JD Marble](http://github.com/jdmarble)
 - [Nicolas Wu](http://zenzike.com/)
+- [Paolo Veronelli](http://github.com/paolino)
+- [sargon](http://github.com/sargon)
+- [seschwar](http://github.com/seschwar)

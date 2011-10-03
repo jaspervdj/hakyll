@@ -17,4 +17,9 @@ tests = fromAssertions "relativizeUrls"
         relativizeUrls "../.." "<img src=\"/images/lolcat.png\" />"
     , "<a href=\"http://haskell.org\">Haskell</a>" @=?
         relativizeUrls "../.." "<a href=\"http://haskell.org\">Haskell</a>"
+    , "<a href=\"http://haskell.org\">Haskell</a>" @=?
+        relativizeUrls "../.." "<a href=\"http://haskell.org\">Haskell</a>"
+    , "<script src=\"//ajax.googleapis.com/jquery.min.js\"></script>" @=?
+        relativizeUrls "../.."
+            "<script src=\"//ajax.googleapis.com/jquery.min.js\"></script>"
     ]
