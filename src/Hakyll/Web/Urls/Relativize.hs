@@ -44,4 +44,4 @@ relativizeUrls :: String  -- ^ Path to the site root
                -> String  -- ^ Resulting HTML
 relativizeUrls root = withUrls rel
   where
-    rel x = if "/" `isPrefixOf` x then root ++ x else x
+    rel x = if "/" `isPrefixOf` x && not ("//" `isPrefixOf` x) then root ++ x else x
