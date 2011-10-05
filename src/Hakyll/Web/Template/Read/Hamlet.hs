@@ -6,7 +6,7 @@ module Hakyll.Web.Template.Read.Hamlet
     , readHamletTemplateWith
     ) where
 
-import Text.Hamlet (HamletSettings (..), defaultHamletSettings)
+import Text.Hamlet (HamletSettings, defaultHamletSettings)
 import Text.Hamlet.RT
 
 import Hakyll.Web.Template.Internal
