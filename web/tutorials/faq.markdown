@@ -1,5 +1,6 @@
 ---
 title: FAQ
+author: Jasper Van der Jeugt
 ---
 
 ## Does Hakyll support syntax highlighting?

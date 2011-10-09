@@ -30,6 +30,7 @@ who still maintains the package. Contributors:
 
 - [Andy Irving](https://github.com/irv)
 - [Benedict Eastaugh](http://extralogical.net/)
+- [Florian Hars](http://github.com/fhars)
 - [JD Marble](http://github.com/jdmarble)
 - [Nicolas Wu](http://zenzike.com/)
 - [Paolo Veronelli](http://github.com/paolino)

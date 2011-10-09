@@ -1,5 +1,6 @@
 ---
 title: The basics
+author: Jasper Van der Jeugt
 ---
 
 ## Let's get started!

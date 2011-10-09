@@ -1,5 +1,6 @@
 ---
 title: Installation
+author: Jasper Van der Jeugt
 ---
 
 Why static websites?
