@@ -170,7 +170,7 @@ renderTagList :: (String -> Identifier (Page a)) -> Compiler (Tags a) (String)
 renderTagList makeUrl = renderTags makeUrl makeLink (intercalate ", ")
   where
     makeLink tag url count _ _ = renderHtml $
-        H.a ! A.href (toValue url) $ toHtml (tag ++ "(" ++ show count ++ ")")
+        H.a ! A.href (toValue url) $ toHtml (tag ++ " (" ++ show count ++ ")")
 
 -- | Render tags with links
 --
