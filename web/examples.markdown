@@ -34,3 +34,5 @@ this list. This list has no particular ordering.
   [source](https://github.com/robertseaton/rs.io/)
 - <http://www.gwern.net/>,
   source: `darcs get http://www.gwern.net`
+- <http://www.skybluetrades.net/>,
+  [source](https://github.com/ian-ross/blog)
