@@ -63,6 +63,7 @@ Library
     binary      >= 0.5    && < 1.0,
     blaze-html  >= 0.4    && < 0.6,
     bytestring  >= 0.9    && < 1.0,
+    citeproc-hs >= 0.3.2  && < 0.4,
     containers  >= 0.3    && < 1.0,
     cryptohash  >= 0.7    && < 0.8,
     directory   >= 1.0    && < 1.3,
@@ -114,6 +115,7 @@ Library
     Hakyll.Web.Page.Metadata
     Hakyll.Web.Page.Read
     Hakyll.Web.Pandoc
+    Hakyll.Web.Pandoc.Biblio
     Hakyll.Web.Pandoc.FileType
     Hakyll.Web.Tags
     Hakyll.Web.Template
