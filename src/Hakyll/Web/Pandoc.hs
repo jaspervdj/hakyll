@@ -10,6 +10,7 @@ module Hakyll.Web.Pandoc
       -- * Functions working on pages/compilers
     , pageReadPandoc
     , pageReadPandocWith
+    , pageReadPandocWithA
     , pageRenderPandoc
     , pageRenderPandocWith
 
@@ -20,7 +21,7 @@ module Hakyll.Web.Pandoc
 
 import Prelude hiding (id)
 import Control.Applicative ((<$>))
-import Control.Arrow ((>>^), (&&&))
+import Control.Arrow ((>>>), (>>^), (&&&), (***))
 import Control.Category (id)
 import Data.Maybe (fromMaybe)
 
@@ -28,6 +29,7 @@ import Text.Pandoc
 
 import Hakyll.Core.Compiler
 import Hakyll.Core.Identifier
+import Hakyll.Core.Util.Arrow
 import Hakyll.Web.Pandoc.FileType
 import Hakyll.Web.Page.Internal
 
@@ -78,10 +80,16 @@ pageReadPandoc = pageReadPandocWith defaultHakyllParserState
 -- | Read the resource using pandoc
 --
 pageReadPandocWith :: ParserState -> Compiler (Page String) (Page Pandoc)
-pageReadPandocWith state =
-    id &&& getIdentifier &&& getFileType >>^ pageReadPandocWith'
+pageReadPandocWith state = constA state &&& id >>> pageReadPandocWithA
+
+-- | Read the resource using pandoc. This is a (rarely needed) variant, which
+-- comes in very useful when the parser state is the result of some arrow.
+--
+pageReadPandocWithA :: Compiler (ParserState, Page String) (Page Pandoc)
+pageReadPandocWithA =
+    id *** id &&& getIdentifier &&& getFileType >>^ pageReadPandocWithA'
   where
-    pageReadPandocWith' (p, (i, t)) = readPandocWith state t (Just i) <$> p
+    pageReadPandocWithA' (s, (p, (i, t))) = readPandocWith s t (Just i) <$> p
 
 -- | Render the resource using pandoc
 --

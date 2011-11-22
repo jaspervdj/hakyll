@@ -25,6 +25,7 @@ module Hakyll
     , module Hakyll.Web.Page.Metadata
     , module Hakyll.Web.Page.Read
     , module Hakyll.Web.Pandoc
+    , module Hakyll.Web.Pandoc.Biblio
     , module Hakyll.Web.Pandoc.FileType
     , module Hakyll.Web.Urls
     , module Hakyll.Web.Urls.Relativize
@@ -57,6 +58,7 @@ import Hakyll.Web.Page.List
 import Hakyll.Web.Page.Metadata
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Pandoc
+import Hakyll.Web.Pandoc.Biblio
 import Hakyll.Web.Pandoc.FileType
 import Hakyll.Web.Urls
 import Hakyll.Web.Urls.Relativize

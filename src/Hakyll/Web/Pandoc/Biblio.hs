@@ -1,11 +1,19 @@
 -- | Wraps pandocs bibiliography handling
+--
+-- In order to add a bibliography, you will need a bibliography file (e.g.
+-- @.bib@) and a CSL file (@.csl@). Both need to be compiled with their
+-- respective compilers ('biblioCompiler' and 'cslCompiler'). Then, you can
+-- refer to these files when you use 'pageReadPandocBiblio'. This function also
+-- takes a parser state for completeness -- you can use
+-- 'defaultHakyllParserState' if you're unsure.
+--
 {-# LANGUAGE Arrows, DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
 module Hakyll.Web.Pandoc.Biblio
     ( CSL
     , cslCompiler
-    , References (..)
-    , referencesCompiler
-    , processBiblioCompiler
+    , Biblio (..)
+    , biblioCompiler
+    , pageReadPandocBiblio
     ) where
 
 import Control.Applicative ((<$>))
@@ -13,7 +21,7 @@ import Control.Arrow (arr, returnA)
 import Data.Typeable (Typeable)
 
 import Data.Binary (Binary (..))
-import Text.Pandoc (Pandoc)
+import Text.Pandoc (Pandoc, ParserState (..))
 import Text.Pandoc.Biblio (processBiblio)
 import qualified Text.CSL as CSL
 
@@ -22,6 +30,7 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.Resource
 import Hakyll.Core.Writable
 import Hakyll.Web.Page
+import Hakyll.Web.Pandoc
 
 newtype CSL = CSL FilePath
     deriving (Binary, Show, Typeable, Writable)
@@ -29,29 +38,36 @@ newtype CSL = CSL FilePath
 cslCompiler :: Compiler Resource CSL
 cslCompiler = arr (CSL . unResource)
 
-newtype References = References [CSL.Reference]
+newtype Biblio = Biblio [CSL.Reference]
     deriving (Show, Typeable)
 
-instance Binary References where
+instance Binary Biblio where
     -- Ugly.
-    get                 = References . read <$> get
-    put (References rs) = put $ show rs
+    get             = Biblio . read <$> get
+    put (Biblio rs) = put $ show rs
 
-instance Writable References where
+instance Writable Biblio where
     write _ _ = return ()
 
-referencesCompiler :: Compiler Resource References
-referencesCompiler = unsafeCompiler $
-    fmap References . CSL.readBiblioFile . unResource
+biblioCompiler :: Compiler Resource Biblio
+biblioCompiler = unsafeCompiler $
+    fmap Biblio . CSL.readBiblioFile . unResource
 
-processBiblioCompiler :: Identifier CSL
-                      -> Identifier References
-                      -> Compiler (Page Pandoc) (Page Pandoc)
-processBiblioCompiler csl refs = proc page -> do
-    let body = pageBody page
+pageReadPandocBiblio :: ParserState
+                     -> Identifier CSL
+                     -> Identifier Biblio
+                     -> Compiler (Page String) (Page Pandoc)
+pageReadPandocBiblio state csl refs = proc page -> do
     CSL csl' <- require_ csl -< ()
-    References refs' <- require_ refs -< ()
-    body' <- unsafeCompiler (tuc processBiblio) -< (csl', refs', body)
-    returnA -< page {pageBody = body'}
+    Biblio refs' <- require_ refs -< ()
+    -- We need to know the citation keys, add then *before* actually parsing the
+    -- actual page. If we don't do this, pandoc won't even consider them
+    -- citations!
+    let cits   = map CSL.refId refs'
+        state' = state {stateCitations = stateCitations state ++ cits}
+    pandocPage <- pageReadPandocWithA -< (state', page)
+    let pandoc = pageBody pandocPage
+    pandoc' <- unsafeCompiler (tuc processBiblio) -< (csl', refs', pandoc)
+    returnA -< pandocPage {pageBody = pandoc'}
   where
     tuc f (x, y, z) = f x y z
