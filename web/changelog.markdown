@@ -2,6 +2,19 @@
 title: Changelog
 ---
 
+## Hakyll 3.2.2
+
+- Add `applyTemplateWith`, `applyTemplateCompilerWith` to allows missing keys
+
+## Hakyll 3.2.1
+
+- Add `Pandoc.Biblio` module for reference handling
+
+## Hakyll 3.2
+
+- Switch to type-safe identifiers: e.g. `Identifier` becomes
+  `Identifier (Page String)`
+
 ## Hakyll 3.1.1
 
 - Allow `group` in rules DSL
