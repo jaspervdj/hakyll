@@ -44,10 +44,12 @@
 module Hakyll.Web.Template
     ( Template
     , applyTemplate
+    , applyTemplateWith
     , applySelf
     , templateCompiler
     , templateCompilerWith
     , applyTemplateCompiler
+    , applyTemplateCompilerWith
     ) where
 
 import Control.Arrow
@@ -65,17 +67,29 @@ import Hakyll.Web.Template.Read
 import Hakyll.Web.Page.Internal
 
 -- | Substitutes @$identifiers@ in the given @Template@ by values from the given
--- "Page". When a key is not found, it is left as it is. You can specify
--- the characters used to replace escaped dollars (@$$@) here.
+-- "Page". When a key is not found, it is left as it is.
 --
 applyTemplate :: Template -> Page String -> Page String
-applyTemplate template page =
+applyTemplate = applyTemplateWith defaultMissingHandler
+
+-- | Default solution if a key is missing: render it again
+defaultMissingHandler :: String -> String
+defaultMissingHandler k = "$" ++ k ++ "$"
+
+-- | A version of 'applyTemplate' which allows you to give a fallback option,
+-- which can produce the value for a key if it is missing.
+--
+applyTemplateWith :: (String -> String)  -- ^ Fallback if key missing
+                  -> Template            -- ^ Template to apply
+                  -> Page String         -- ^ Input page
+                  -> Page String         -- ^ Resulting page
+applyTemplateWith missing template page =
     fmap (const $ substitute =<< unTemplate template) page
   where
     map' = toMap page
     substitute (Chunk chunk) = chunk
-    substitute (Key key) = fromMaybe ("$" ++ key ++ "$") $ M.lookup key map'
-    substitute (Escaped) = "$"
+    substitute (Key key)     = fromMaybe (missing key) $ M.lookup key map'
+    substitute (Escaped)     = "$"
 
 -- | Apply a page as it's own template. This is often very useful to fill in
 -- certain keys like @$root@ and @$url@.
@@ -106,4 +120,13 @@ templateCompilerWith settings =
 
 applyTemplateCompiler :: Identifier Template                   -- ^ Template
                       -> Compiler (Page String) (Page String)  -- ^ Compiler
-applyTemplateCompiler identifier = require identifier (flip applyTemplate)
+applyTemplateCompiler = applyTemplateCompilerWith defaultMissingHandler
+
+-- | A version of 'applyTemplateCompiler' which allows you to pass a function
+-- which is called for a key when it is missing.
+--
+applyTemplateCompilerWith :: (String -> String)
+                          -> Identifier Template
+                          -> Compiler (Page String) (Page String)
+applyTemplateCompilerWith missing identifier =
+    require identifier (flip $ applyTemplateWith missing)

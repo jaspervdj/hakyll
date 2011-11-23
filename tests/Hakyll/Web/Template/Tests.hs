@@ -16,29 +16,39 @@ import TestSuite.Util
 tests :: [Test]
 tests = fromAssertions "applyTemplate"
     -- Hakyll templates
-    [ applyTemplateAssertion readTemplate
+    [ applyTemplateAssertion readTemplate applyTemplate
         "bar" "$foo$" [("foo", "bar")]
 
-    , applyTemplateAssertion readTemplate
+    , applyTemplateAssertion readTemplate applyTemplate
         "$ barqux" "$$ $foo$$bar$" [("foo", "bar"), ("bar", "qux")]
 
+    , applyTemplateAssertion readTemplate applyTemplate
+        "$foo$" "$foo$" []
+
     -- Hamlet templates
-    , applyTemplateAssertion readHamletTemplate
+    , applyTemplateAssertion readHamletTemplate applyTemplate
         "<head><title>notice</title></head><body>A paragraph</body>"
         "<head\n\
         \    <title>#{title}\n\
         \<body\n\
         \    A paragraph\n"
         [("title", "notice")]
+
+    -- Missing keys
+    , let missing "foo" = "bar"
+          missing "bar" = "qux"
+          missing x     = reverse x
+      in applyTemplateAssertion readTemplate (applyTemplateWith missing)
+        "bar foo ver" "$foo$ $bar$ $rev$" [("bar", "foo")]
     ]
 
 -- | Utility function to create quick template tests
 --
-applyTemplateAssertion :: (String -> Template)  -- ^ Template parser
-                       -> String                -- ^ Expected
-                       -> String                -- ^ Template
-                       -> [(String, String)]    -- ^ Page
-                       -> Assertion             -- ^ Resulting assertion
-applyTemplateAssertion parser expected template page =
-    expected @=? pageBody (applyTemplate (parser template)
-                                         (fromMap $ M.fromList page))
+applyTemplateAssertion :: (String -> Template)
+                       -> (Template -> Page String -> Page String)
+                       -> String
+                       -> String
+                       -> [(String, String)]
+                       -> Assertion
+applyTemplateAssertion parser apply expected template page =
+    expected @=? pageBody (apply (parser template) (fromMap $ M.fromList page))
