@@ -15,4 +15,8 @@ tests = concat
         , "foo bar" @=? stripTags "<p>foo</p> bar"
         , "foo"     @=? stripTags "<p>foo</p"
         ]
+    , fromAssertions "escapeHtml"
+        [ "Me &amp; Dean" @=? escapeHtml "Me & Dean"
+        , "&lt;img&gt;"   @=? escapeHtml "<img>"
+        ]
     ]

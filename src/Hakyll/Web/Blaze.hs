@@ -12,8 +12,8 @@ import Text.Blaze (Html, toHtml, preEscapedString)
 import Hakyll.Web.Page
 import Hakyll.Web.Page.Metadata
 
--- | Get a field from a page and convert it to HTML. This version does escape
--- the given HTML
+-- | Get a field from a page and convert it to HTML. This version does not
+-- escape the given HTML
 --
 getFieldHtml :: String -> Page a -> Html
 getFieldHtml key = preEscapedString . getField key
