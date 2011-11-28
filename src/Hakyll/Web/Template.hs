@@ -39,7 +39,25 @@
 --
 -- In addition to the native format, Hakyll also supports hamlet templates. For
 -- more information on hamlet templates, please refer to:
--- <http://hackage.haskell.org/package/hamlet>.
+-- <http://hackage.haskell.org/package/hamlet>. Internally, hamlet templates are
+-- converted to hakyll templates -- which means that you can only use variable
+-- insertion (and not all hamlet's features).
+--
+-- This is an example of a valid hamlet template. You should place them in
+-- files with a @.hamlet@ extension:
+--
+-- > !!!
+-- > <html>
+-- >     <head>
+-- >         <meta charset="UTF-8">
+-- >         <title> MyAweSomeCompany - #{title}
+-- >     <body>
+-- >         <h1> MyAweSomeCompany - #{title}
+-- >         <div id="navigation">
+-- >             <a href="/index.html"> Home
+-- >             <a href="/about.html"> About
+-- >             <a href="/code.html"> Code
+-- >         #{body}
 --
 module Hakyll.Web.Template
     ( Template
