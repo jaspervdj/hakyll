@@ -136,8 +136,8 @@ Library
 
   If flag(previewServer)
     Build-depends:
-      snap-core   >= 0.5.1 && < 0.6,
-      snap-server >= 0.5.1 && < 0.6
+      snap-core   >= 0.6 && < 0.8,
+      snap-server >= 0.6 && < 0.8
     Cpp-Options:
       -DPREVIEW_SERVER
     Other-Modules:

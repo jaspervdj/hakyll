@@ -7,25 +7,21 @@ module Hakyll.Web.Preview.Server
 
 import Control.Monad.Trans (liftIO)
 
-import Snap.Types (Snap)
-import Snap.Util.FileServe ( DirectoryConfig (..), fancyDirectoryConfig
-                           , serveDirectoryWith
-                           )
-import Snap.Http.Server ( httpServe, setAccessLog, setErrorLog
-                        , setPort, emptyConfig
-                        )
+import qualified Snap.Core as Snap
+import qualified Snap.Http.Server as Snap
+import qualified Snap.Util.FileServe as Snap
 
 -- | Serve a given directory
 --
 static :: FilePath             -- ^ Directory to serve
        -> (FilePath -> IO ())  -- ^ Pre-serve hook
-       -> Snap ()
+       -> Snap.Snap ()
 static directory preServe =
-    serveDirectoryWith directoryConfig directory
+    Snap.serveDirectoryWith directoryConfig directory
   where
-    directoryConfig :: DirectoryConfig Snap
-    directoryConfig = fancyDirectoryConfig
-        { preServeHook = liftIO . preServe
+    directoryConfig :: Snap.DirectoryConfig Snap.Snap
+    directoryConfig = Snap.fancyDirectoryConfig
+        { Snap.preServeHook = liftIO . preServe
         }
 
 -- | Main method, runs a static server in the given directory
@@ -35,10 +31,10 @@ staticServer :: FilePath             -- ^ Directory to serve
              -> Int                  -- ^ Port to listen on
              -> IO ()                -- ^ Blocks forever
 staticServer directory preServe port =
-    httpServe config $ static directory preServe
+    Snap.httpServe config $ static directory preServe
   where
     -- Snap server config
-    config = setPort port
-           $ setAccessLog Nothing
-           $ setErrorLog Nothing
-           $ emptyConfig
+    config = Snap.setPort      port
+           $ Snap.setAccessLog Snap.ConfigNoLog
+           $ Snap.setErrorLog  Snap.ConfigNoLog
+           $ Snap.emptyConfig
