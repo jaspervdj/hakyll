@@ -16,9 +16,9 @@ constA = arr . const
 sequenceA :: Arrow a
           => [a b c]
           -> a b [c]
-sequenceA = foldl reduce $ constA []
+sequenceA = foldr reduce $ constA []
   where
-    reduce la xa = xa &&& la >>^ arr (uncurry (:))
+    reduce xa la = xa &&& la >>^ arr (uncurry (:))
 
 unitA :: Arrow a
       => a b ()
