@@ -26,12 +26,6 @@ and TeX support, including syntax highlighting and other goodies.
 
 ![Compile it](/images/hakyll-system-3.png)
 
-# Hakyll 3
-
-Hakyll 3 has been released, and it can be installed by running
-`cabal install hakyll`. For a limited time (but as long as is necessary) you can
-access the old site and documentation [here](/hakyll2).
-
 # Getting Started
 
 You can get the latest version from hackage using `cabal install hakyll`. Then,
