@@ -22,7 +22,7 @@ has a `published` metadata element that does not have the value
 isPublished :: Page a -> Bool
 isPublished p =
   let published = getField "published" p in
-  published /= "" && published /= "false"       
+  published /= "" && published /= "false"
 ~~~~~
 
 The next step is to write a function that tags a page with its
