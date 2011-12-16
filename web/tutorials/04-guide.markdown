@@ -20,7 +20,7 @@ you need to get started building a site with hakyll.
     This is one of the modules you should look at first.  It defines the
     fundamental `Compiler` type and has a bunch of documentation explaining how to
     use `Compiler`s and their `Arrow`-based interface.
-    
+
     It also defines many primitive `Compiler`s as well as several
     variants on `require`, which allow you to bring together multiple
     resources to create a single output.
@@ -33,14 +33,14 @@ you need to get started building a site with hakyll.
 
     Specify which compilers and routes should be used on which
     resources.
-    
+
     Also has combinators for grouping (necessary if you want to use
     the same resources for multiple purposes), creating outputs that
     are not based on any resources, and even dynamically generating
     compilers.
 
 * [Hakyll.Core.Identifier.Pattern](/reference/Hakyll-Core-Identifier-Pattern.html)
-  
+
     Combinators for creating *patterns*, i.e. predicates that pick out
     a set of resources: filesystem globs, arbitrary predicates,
     explicit lists, regular expressions, and so on.
@@ -66,7 +66,7 @@ you need to get started building a site with hakyll.
     The main `hakyll` function that runs the whole show.  There is
     also a `hakyllWith` function which allows for a custom
     configuration.
-    
+
 ## Pre-packaged solutions
 
 These modules contain some "pre-packaged" solutions for common
@@ -108,7 +108,7 @@ inspiration for your own tools.
     find and replace, split on regexp).
 
 * [Hakyll.Core.Writable.WritableTuple](/reference/Hakyll-Core-Writable-WritableTuple.html)
-  
+
     A utility type covering the situation where you generate some
     data, some of which you want to write to disk, and some of which
     you don't want to write but will be needed in order to generate
