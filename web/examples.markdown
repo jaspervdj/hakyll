@@ -36,3 +36,5 @@ this list. This list has no particular ordering.
   source: `darcs get http://www.gwern.net`
 - <http://www.skybluetrades.net/>,
   [source](https://github.com/ian-ross/blog)
+- <http://blog.coldflake.com/>,
+  [source](https://github.com/marcmo/blog.coldflake)
