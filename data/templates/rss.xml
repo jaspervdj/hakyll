@@ -6,7 +6,7 @@
         <description><![CDATA[$description$]]></description>
         <atom:link href="$root$$url$" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>$timestamp$</lastBuildDate>
+        <lastBuildDate>$updated$</lastBuildDate>
         $body$
     </channel> 
 </rss>

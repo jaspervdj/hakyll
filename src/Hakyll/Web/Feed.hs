@@ -50,7 +50,8 @@ data FeedConfiguration = FeedConfiguration
     } deriving (Show, Eq)
 
 -- | This is an auxiliary function to create a listing that is, in fact, a feed.
--- The items should be sorted on date. The @$timestamp@ field should be set.
+-- The items should be sorted on date. The @$updated@ field should be set for
+-- each item.
 --
 createFeed :: Template           -- ^ Feed template
            -> Template           -- ^ Item template
@@ -60,7 +61,7 @@ createFeed :: Template           -- ^ Feed template
            -> String             -- ^ Resulting feed
 createFeed feedTemplate itemTemplate url configuration items =
     pageBody $ applyTemplate feedTemplate
-             $ trySetField "timestamp"   timestamp
+             $ trySetField "updated"     updated
              $ trySetField "title"       (feedTitle configuration)
              $ trySetField "description" (feedDescription configuration)
              $ trySetField "authorName"  (feedDescription configuration)
@@ -75,10 +76,10 @@ createFeed feedTemplate itemTemplate url configuration items =
     -- Body: concatenated items
     body = concat $ map pageBody items'
 
-    -- Take the first timestamp, which should be the most recent
-    timestamp = fromMaybe "Unknown" $ do
+    -- Take the first updated, which should be the most recent
+    updated = fromMaybe "Unknown" $ do
         p <- listToMaybe items
-        return $ getField "timestamp" p
+        return $ getField "updated" p
 
 
 -- | Abstract function to render any feed.
@@ -107,18 +108,23 @@ renderFeed feedTemplate itemTemplate configuration =
 --
 renderRss :: FeedConfiguration              -- ^ Feed configuration
           -> Compiler [Page String] String  -- ^ Feed compiler
-renderRss configuration = arr (map renderDate)
+renderRss configuration = arr (map (addUpdated . renderDate))
     >>> renderFeed "templates/rss.xml" "templates/rss-item.xml" configuration
   where
-    renderDate = renderDateField "timestamp" "%a, %d %b %Y %H:%M:%S UT"
+    renderDate = renderDateField "published" "%a, %d %b %Y %H:%M:%S UT"
                                  "No date found."
 
 -- | Render an Atom feed with a number of items.
 --
 renderAtom :: FeedConfiguration              -- ^ Feed configuration
            -> Compiler [Page String] String  -- ^ Feed compiler
-renderAtom configuration = arr (map renderDate)
+renderAtom configuration = arr (map (addUpdated . renderDate))
     >>> renderFeed "templates/atom.xml" "templates/atom-item.xml" configuration
   where
-    renderDate = renderDateField "timestamp" "%Y-%m-%dT%H:%M:%SZ"
+    renderDate = renderDateField "published" "%Y-%m-%dT%H:%M:%SZ"
                                  "No date found."
+
+-- | Copies @$updated$@ from @$published$@ if it is not already set.
+--
+addUpdated :: Page a -> Page a
+addUpdated page = trySetField "updated" (getField "published" page) page

@@ -2,6 +2,6 @@
     <title>$title$</title>
     <link>$root$$url$</link>
     <description><![CDATA[$description$]]></description>
-    <pubDate>$timestamp$</pubDate>
+    <pubDate>$published$</pubDate>
     <guid>$root$$url$</guid>
 </item>
