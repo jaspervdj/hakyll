@@ -7,6 +7,6 @@
     <author>
         <name>$authorName$</name>
     </author>
-    <updated>$timestamp$</updated>
+    <updated>$updated$</updated>
     $body$
 </feed>
