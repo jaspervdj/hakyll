@@ -56,7 +56,7 @@ instance Monoid RuleSet where
 -- | Rule state
 --
 data RuleState = RuleState
-    { rulesMetaCompilerIndex :: Int
+    { rulesNextIdentifier :: Int
     } deriving (Show)
 
 -- | Rule environment
@@ -84,7 +84,7 @@ runRules :: RulesM a -> ResourceProvider -> RuleSet
 runRules rules provider = nubCompilers $
     evalState (execWriterT $ runReaderT (unRulesM rules) env) state
   where
-    state = RuleState {rulesMetaCompilerIndex = 0}
+    state = RuleState {rulesNextIdentifier = 0}
     env = RuleEnvironment { rulesResourceProvider = provider
                           , rulesPattern          = mempty
                           , rulesGroup            = Nothing

@@ -26,6 +26,7 @@ module Hakyll.Core.Rules
     , resources
     , metaCompile
     , metaCompileWith
+    , freshIdentifier
     ) where
 
 import Control.Applicative ((<$>))
@@ -208,17 +209,9 @@ metaCompile :: (Binary a, Typeable a, Writable a)
             -- ^ Compiler generating the other compilers
             -> Rules
             -- ^ Resulting rules
-metaCompile compiler = RulesM $ do
-    -- Create an identifier from the state
-    state <- get
-    let index = rulesMetaCompilerIndex state
-        id' = fromCapture "Hakyll.Core.Rules.metaCompile/*" (show index)
-
-    -- Update the state with a new identifier
-    put $ state {rulesMetaCompilerIndex = index + 1}
-
-    -- Fallback to 'metaCompileWith' with now known identifier
-    unRulesM $ metaCompileWith id' compiler
+metaCompile compiler = do
+    id' <- freshIdentifier "Hakyll.Core.Rules.metaCompile"
+    metaCompileWith id' compiler
 
 -- | Version of 'metaCompile' that allows you to specify a custom identifier for
 -- the metacompiler.
@@ -243,3 +236,13 @@ metaCompileWith identifier compiler = RulesM $ do
         compilers = [(id', compiler >>> arr makeRule )]
 
     tell $ RuleSet mempty compilers mempty
+
+-- | Generate a fresh Identifier with a given prefix
+freshIdentifier :: String                 -- ^ Prefix
+                -> RulesM (Identifier a)  -- ^ Fresh identifier
+freshIdentifier prefix = RulesM $ do
+    state <- get
+    let index = rulesNextIdentifier state
+        id'   = parseIdentifier $ prefix ++ "/" ++ show index
+    put $ state {rulesNextIdentifier = index + 1}
+    return id'
