@@ -11,17 +11,18 @@ import Data.List (isPrefixOf)
 import System.FilePath (splitPath, takeDirectory, joinPath)
 import qualified Data.Set as S
 
-import Text.HTML.TagSoup (Tag (..), renderTags, parseTags)
+import qualified Text.HTML.TagSoup as TS
 
 -- | Apply a function to each URL on a webpage
 --
 withUrls :: (String -> String) -> String -> String
-withUrls f = renderTags . map tag . parseTags
+withUrls f = TS.renderTagsOptions opts . map tag . TS.parseTags
   where
-    tag (TagOpen s a) = TagOpen s $ map attr a
-    tag x = x
-    attr (k, v) = (k, if k `S.member` refs then f v else v)
-    refs = S.fromList ["src", "href"]
+    tag (TS.TagOpen s a) = TS.TagOpen s $ map attr a
+    tag x                = x
+    attr (k, v)          = (k, if k `S.member` refs then f v else v)
+    refs                 = S.fromList ["src", "href"]
+    opts                 = TS.renderOptions {TS.optEscape = id}
 
 -- | Convert a filepath to an URL starting from the site root
 --
@@ -43,12 +44,12 @@ toSiteRoot :: String -> String
 toSiteRoot = emptyException . joinPath . map parent
            . filter relevant . splitPath . takeDirectory
   where
-    parent = const ".."
+    parent            = const ".."
     emptyException [] = "."
     emptyException x  = x
-    relevant "." = False
-    relevant "/" = False
-    relevant _   = True
+    relevant "."      = False
+    relevant "/"      = False
+    relevant _        = True
 
 -- | Check if an URL links to an external HTTP(S) source
 --

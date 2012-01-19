@@ -34,7 +34,7 @@ import Hakyll.Web.Urls
 relativizeUrlsCompiler :: Compiler (Page String) (Page String)
 relativizeUrlsCompiler = getRoute &&& id >>^ uncurry relativize
   where
-    relativize Nothing = id
+    relativize Nothing  = id
     relativize (Just r) = fmap (relativizeUrls $ toSiteRoot r)
 
 -- | Relativize URL's in HTML
