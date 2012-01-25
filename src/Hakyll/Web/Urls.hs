@@ -16,13 +16,12 @@ import qualified Text.HTML.TagSoup as TS
 -- | Apply a function to each URL on a webpage
 --
 withUrls :: (String -> String) -> String -> String
-withUrls f = TS.renderTagsOptions opts . map tag . TS.parseTags
+withUrls f = TS.renderTags . map tag . TS.parseTags
   where
     tag (TS.TagOpen s a) = TS.TagOpen s $ map attr a
     tag x                = x
     attr (k, v)          = (k, if k `S.member` refs then f v else v)
     refs                 = S.fromList ["src", "href"]
-    opts                 = TS.renderOptions {TS.optEscape = id}
 
 -- | Convert a filepath to an URL starting from the site root
 --

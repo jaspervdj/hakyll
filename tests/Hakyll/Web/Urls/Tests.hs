@@ -17,6 +17,12 @@ tests = concat
             withUrls (map toUpper) "<a href=\"foo\">bar</a>"
         , "<img src=\"OH BAR\">" @=?
             withUrls (map toUpper) "<img src=\"oh bar\">"
+
+        -- Test escaping
+        , "<script>\"sup\"</script>" @=?
+            withUrls id "<script>\"sup\"</script>"
+        , "<code>&lt;stdio&gt;</code>" @=?
+            withUrls id "<code>&lt;stdio&gt;</code>"
         ]
     , fromAssertions "toUrl"
         [ "/foo/bar.html"    @=? toUrl "foo/bar.html"
