@@ -35,13 +35,17 @@ module Hakyll.Web.Tags
     , renderTagList
     , renderTagsField
     , renderCategoryField
+    , sortTagsBy
+    , caseInsensitiveTags
     ) where
 
 import Prelude hiding (id)
 import Control.Category (id)
 import Control.Applicative ((<$>))
+import Data.Char (toLower)
+import Data.Ord (comparing)
 import qualified Data.Map as M
-import Data.List (intersperse, intercalate)
+import Data.List (intersperse, intercalate, sortBy)
 import Control.Arrow (arr, (&&&), (>>>), (***), (<<^), returnA)
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Monoid (mconcat)
@@ -206,3 +210,15 @@ renderCategoryField :: String                      -- ^ Destination key
                     -> (String -> Identifier a)    -- ^ Create a category link
                     -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
 renderCategoryField = renderTagsFieldWith getCategory
+
+-- | Sort tags using supplied function. First element of the tuple passed to
+-- the comparing function is the actual tag name.
+--
+sortTagsBy :: ((String, [Page a]) -> (String, [Page a]) -> Ordering)
+           -> Compiler (Tags a) (Tags a)
+sortTagsBy f = arr $ Tags . sortBy f . tagsMap
+
+-- | Sample sorting function that compares tags case insensitively.
+--
+caseInsensitiveTags :: (String, [Page a]) -> (String, [Page a]) -> Ordering
+caseInsensitiveTags = comparing $ map toLower . fst
