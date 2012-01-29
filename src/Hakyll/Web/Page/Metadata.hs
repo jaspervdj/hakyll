@@ -118,11 +118,15 @@ copyField :: String  -- ^ Key to copy
           -> Page a  -- ^ Resulting page
 copyField src dst = renderField src dst id
 
--- | When the metadata has a field called @path@ in a
+-- | When the metadata has a field called @datetime@ in a
+-- format such as "January 1, 2000 1:00 AM", then
+-- this function can render the date.
+--
+-- Alternatively, when the metadata has a field called @path@ in a
 -- @folder/yyyy-mm-dd-title.extension@ format (the convention for pages),
 -- this function can render the date.
 --
--- > renderDate "date" "%B %e, %Y" "Date unknown"
+-- > renderDateField "date" "%B %e, %Y" "Date unknown"
 --
 -- Will render something like @January 32, 2010@.
 --
@@ -143,19 +147,25 @@ renderDateFieldWith :: TimeLocale  -- ^ Output time locale
                     -> String      -- ^ Default value
                     -> Page a      -- ^ Target page
                     -> Page a      -- ^ Resulting page
-renderDateFieldWith locale key format defaultValue =
-    renderField "path" key renderDate'
+renderDateFieldWith locale key format defaultValue page =
+    setField key renderTimeString page
   where
-    renderDate' filePath = fromMaybe defaultValue $ do
+    renderTimeString = fromMaybe renderDateString $ do
+        dateString  <- getFieldMaybe "datetime" page
+        time <- parseTime locale "%B %e, %Y %l:%M %P" dateString :: Maybe UTCTime
+        return $ formatTime locale format time
+    renderDateString = fromMaybe renderFilePathDate $ do
+        dateString <- getFieldMaybe "datetime" page
+        time <- parseTime locale "%B %e, %Y" dateString :: Maybe UTCTime
+        return $ formatTime locale format time
+    renderFilePathDate = fromMaybe defaultValue $ do
+        filePath <- getFieldMaybe "path" page
         let dateString = intercalate "-" $ take 3
                        $ splitAll "-" $ takeFileName filePath
-        time <- parseTime defaultTimeLocale
-                          "%Y-%m-%d"
-                          dateString :: Maybe UTCTime
+        time <- parseTime locale "%Y-%m-%d" dateString :: Maybe UTCTime
         return $ formatTime locale format time
 
 -- | Set the modification time as a field in the page
---
 renderModificationTime :: String
                        -- ^ Destination key
                        -> String
