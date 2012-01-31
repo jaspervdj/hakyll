@@ -31,6 +31,7 @@ module Hakyll
     , module Hakyll.Web.Urls.Relativize
     , module Hakyll.Web.Tags
     , module Hakyll.Web.Template
+    , module Hakyll.Web.Template.Read
     , module Hakyll.Web.Util.Html
     ) where
 
@@ -64,4 +65,5 @@ import Hakyll.Web.Urls
 import Hakyll.Web.Urls.Relativize
 import Hakyll.Web.Tags
 import Hakyll.Web.Template
+import Hakyll.Web.Template.Read
 import Hakyll.Web.Util.Html
