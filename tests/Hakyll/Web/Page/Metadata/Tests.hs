@@ -42,6 +42,15 @@ tests = concat $
             setFieldA "bar" (map toLower) (mempty, "FOO")
         ]
 
+    , fromAssertions "renderDateField"
+        [ (@=?) "January 31, 2010" $ getField "date" $ renderDateField
+            "date" "%B %e, %Y" "Date unknown" $ Page
+                (M.singleton "path" "/posts/2010-01-31-a-post.mkdwn") ""
+        , (@=?) "Date unknown" $ getField "date" $ renderDateField
+            "date" "%B %e, %Y" "Date unknown" $ Page
+                (M.singleton "path" "/posts/a-post.mkdwn") ""
+        ]
+
     , fromAssertions "copyBodyToField"
         [ (Page (M.singleton "bar" "foo") "foo") @=?
             copyBodyToField "bar" (Page M.empty "foo")

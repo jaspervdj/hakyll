@@ -7,11 +7,11 @@
 -- Also note that the pages should have (at least) the following fields to
 -- produce a correct feed:
 --
--- - @$title@: Title of the item
+-- - @$title$@: Title of the item
 --
--- - @$description@: Description to appear in the feed
+-- - @$description$@: Description to appear in the feed
 --
--- - @$url@: URL to the item - this is usually set automatically.
+-- - @$url$@: URL to the item - this is usually set automatically.
 --
 -- In addition, the posts should be named according to the rules for
 -- 'Hakyll.Page.Metadata.renderDateField'.
