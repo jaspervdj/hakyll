@@ -12,6 +12,7 @@ module Hakyll.Web.Page.Metadata
     , copyField
     , renderDateField
     , renderDateFieldWith
+    , comparePagesByDate
     , renderModificationTime
     , renderModificationTimeWith
     , copyBodyToField
@@ -22,7 +23,7 @@ import Prelude hiding (id)
 import Control.Category (id)
 import Control.Arrow (Arrow, arr, (>>>), (***), (&&&))
 import Data.List (intercalate)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, fromJust, isJust)
 import Data.Time.Clock (UTCTime)
 import Data.Time.Format (parseTime, formatTime)
 import qualified Data.Map as M
@@ -118,13 +119,21 @@ copyField :: String  -- ^ Key to copy
           -> Page a  -- ^ Resulting page
 copyField src dst = renderField src dst id
 
--- | When the metadata has a field called @datetime@ in a
--- format such as "January 1, 2000 1:00 AM", then
--- this function can render the date.
+-- | When the metadata has a field called @published@ in one of the
+-- following formats then this function can render the date.
+--
+--   * @Sun, 01 Feb 2000 13:00:00 UT@ (RSS date format)                                  
+--
+--   * @2000-02-01T13:00:00Z@ (Atom date format)                                         
+-- 
+--   * @February 1, 2000 1:00 PM@ (PM is usually uppercase)
+--
+--   * @February 1, 2000@ (assumes 12:00 AM for the time)
 --
 -- Alternatively, when the metadata has a field called @path@ in a
--- @folder/yyyy-mm-dd-title.extension@ format (the convention for pages),
--- this function can render the date.
+-- @folder/yyyy-mm-dd-title.extension@ format (the convention for pages)
+-- and no @published@ metadata field set, this function can render
+-- the date.
 --
 -- > renderDateField "date" "%B %e, %Y" "Date unknown"
 --
@@ -150,20 +159,42 @@ renderDateFieldWith :: TimeLocale  -- ^ Output time locale
 renderDateFieldWith locale key format defaultValue page =
     setField key renderTimeString page
   where
-    renderTimeString = fromMaybe renderDateString $ do
-        dateString  <- getFieldMaybe "datetime" page
-        time <- parseTime locale "%B %e, %Y %l:%M %P" dateString :: Maybe UTCTime
+    renderTimeString = fromMaybe defaultValue $ do
+        time <- getUTCMaybe locale page
         return $ formatTime locale format time
-    renderDateString = fromMaybe renderFilePathDate $ do
-        dateString <- getFieldMaybe "datetime" page
-        time <- parseTime locale "%B %e, %Y" dateString :: Maybe UTCTime
-        return $ formatTime locale format time
-    renderFilePathDate = fromMaybe defaultValue $ do
+
+-- | Parser to try to extract and parse the time from the @published@
+-- field or from the filename. See 'renderDateField' for more information.
+getUTCMaybe :: TimeLocale     -- ^ Output time locale
+            -> Page a         -- ^ Input page
+            -> Maybe UTCTime  -- ^ Parsed UTCTime
+getUTCMaybe locale page = getUTCMaybe' formats
+  where
+    formats = [ "%a, %d %b %Y %H:%M:%S UT" -- RSS format
+              , "%Y-%m-%dT%H:%M:%SZ"       -- Atom format
+              , "%B %e, %Y %l:%M %p" 
+              , "%B %e, %Y" 
+              ]
+    getUTCMaybe' [] = do
         filePath <- getFieldMaybe "path" page
         let dateString = intercalate "-" $ take 3
                        $ splitAll "-" $ takeFileName filePath
-        time <- parseTime locale "%Y-%m-%d" dateString :: Maybe UTCTime
-        return $ formatTime locale format time
+        parseTime locale "%Y-%m-%d" dateString :: Maybe UTCTime
+    getUTCMaybe' (f:fs) = if isJust timeMaybe
+                             then timeMaybe
+                             else getUTCMaybe' fs
+        where timeMaybe = do dateString <- getFieldMaybe "published" page
+                             parseTime locale f dateString :: Maybe UTCTime
+
+-- | Compare pages by the date and time parsed as in 'renderDateField',
+-- where 'LT' implies earlier, and 'GT' implies later. For more details,
+-- see 'renderDateField'.
+comparePagesByDate :: Page a -> Page a -> Ordering
+comparePagesByDate p1 p2 = compare p1UTC p2UTC
+  where p1UTC       = fromMaybe defaultTime $ getUTCMaybe defaultTimeLocale p1
+        p2UTC       = fromMaybe defaultTime $ getUTCMaybe defaultTimeLocale p2
+        defaultTime = fromJust $ parseTime defaultTimeLocale
+            "%B %e, %Y %l:%M %p" "January 1, 1900 12:00 AM"
 
 -- | Set the modification time as a field in the page
 renderModificationTime :: String
