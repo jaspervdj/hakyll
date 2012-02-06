@@ -67,7 +67,7 @@ pageReadPandocBiblio state csl refs = proc page -> do
         state' = state {stateCitations = stateCitations state ++ cits}
     pandocPage <- pageReadPandocWithA -< (state', page)
     let pandoc = pageBody pandocPage
-    pandoc' <- unsafeCompiler (tuc processBiblio) -< (csl', refs', pandoc)
+    pandoc' <- unsafeCompiler processBiblio' -< (csl', refs', pandoc)
     returnA -< pandocPage {pageBody = pandoc'}
   where
-    tuc f (x, y, z) = f x y z
+    processBiblio' (c, r, p) = processBiblio c Nothing r p
