@@ -49,6 +49,11 @@ tests = concat $
         , (@=?) "Date unknown" $ getField "date" $ renderDateField
             "date" "%B %e, %Y" "Date unknown" $ Page
                 (M.singleton "path" "/posts/a-post.mkdwn") ""
+        , (@=?) "February 20, 2000" $ getField "date" $ renderDateField
+            "date" "%B %e, %Y" "Date unknown" $ flip Page "" $ M.fromList
+                [ ("path",      "/posts/2010-01-31-a-post.mkdwn")
+                , ("published", "February 20, 2000 1:00 PM")
+                ]
         ]
 
     , fromAssertions "copyBodyToField"
@@ -59,5 +64,11 @@ tests = concat $
     , fromAssertions "copyBodyFromField"
         [ (Page (M.singleton "bar" "foo") "foo") @=?
             copyBodyFromField "bar" (Page (M.singleton "bar" "foo") "qux")
+        ]
+
+    , fromAssertions "comparePagesByDate"
+        [ GT @=? comparePagesByDate
+            (Page (M.singleton "path" "/posts/1990-08-26-foo.mkdwn") "")
+            (Page (M.singleton "path" "/posts/1990-06-18-qux.mkdwn") "")
         ]
     ]
