@@ -9,7 +9,7 @@ module Hakyll.Core.Util.String
 import Data.Char (isSpace)
 import Data.Maybe (listToMaybe)
 
-import Text.Regex.PCRE ((=~~))
+import Text.Regex.TDFA ((=~~))
 
 -- | Trim a string (drop spaces, tabs and newlines at both sides).
 --

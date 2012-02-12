@@ -76,7 +76,7 @@ Library
     parsec      >= 3.0    && < 3.2,
     process     >= 1.0    && < 1.2,
     regex-base  >= 0.93   && < 0.94,
-    regex-pcre  >= 0.93   && < 0.95,
+    regex-tdfa  >= 1.1    && < 1.2,
     tagsoup     >= 0.12.6 && < 0.13,
     time        >= 1.1    && < 1.5,
     unix        >= 2.4    && < 2.6

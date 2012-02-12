@@ -57,7 +57,7 @@ import Data.Maybe (isJust, fromMaybe)
 import Data.Monoid (Monoid, mempty, mappend)
 
 import GHC.Exts (IsString, fromString)
-import Text.Regex.PCRE ((=~~))
+import Text.Regex.TDFA ((=~~))
 
 import Hakyll.Core.Identifier
 
