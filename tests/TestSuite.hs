@@ -9,6 +9,7 @@ import qualified Hakyll.Core.Rules.Tests
 import qualified Hakyll.Core.Store.Tests
 import qualified Hakyll.Core.UnixFilter.Tests
 import qualified Hakyll.Core.Util.Arrow.Tests
+import qualified Hakyll.Core.Util.String.Tests
 import qualified Hakyll.Web.Page.Tests
 import qualified Hakyll.Web.Page.Metadata.Tests
 import qualified Hakyll.Web.Template.Tests
@@ -32,6 +33,8 @@ main = defaultMain
         Hakyll.Core.UnixFilter.Tests.tests
     , testGroup "Hakyll.Core.Util.Arrow.Tests"
         Hakyll.Core.Util.Arrow.Tests.tests
+    , testGroup "Hakyll.Core.Util.String.Tests"
+        Hakyll.Core.Util.String.Tests.tests
     , testGroup "Hakyll.Web.Page.Tests"
         Hakyll.Web.Page.Tests.tests
     , testGroup "Hakyll.Web.Page.Metadata.Tests"
