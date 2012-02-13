@@ -111,7 +111,7 @@ module Hakyll.Core.Compiler
     , traceShowCompiler
     , mapCompiler
     , timedCompiler
-    , byIdentifier
+    , byPattern
     , byExtension
     ) where
 
@@ -348,20 +348,19 @@ timedCompiler msg (Compiler d j) = Compiler d $ \x -> CompilerM $ do
 -- For example, assume that most content files need to be compiled
 -- normally, but a select few need an extra step in the pipeline:
 --
--- > compile $ pageCompiler
--- >           >>> byIdentifier id
--- >               [ ((=="projects.md") . toFilePath, addProjectListCompiler)
--- >               , ((=="sitemap.md") . toFilePath, addSiteMapCompiler)
--- >               ]
+-- > compile $ pageCompiler >>> byPattern id
+-- >     [ ("projects.md", addProjectListCompiler)
+-- >     , ("sitemap.md", addSiteMapCompiler)
+-- >     ]
 --
-byIdentifier :: Compiler a b                            -- ^ Default compiler
-             -> [(Identifier a -> Bool, Compiler a b)]  -- ^ Choices
-             -> Compiler a b                            -- ^ Resulting compiler
-byIdentifier defaultCompiler choices = Compiler deps job
+byPattern :: Compiler a b                  -- ^ Default compiler
+          -> [(Pattern (), Compiler a b)]  -- ^ Choices
+          -> Compiler a b                  -- ^ Resulting compiler
+byPattern defaultCompiler choices = Compiler deps job
   where
     -- Lookup the compiler, give an error when it is not found
-    lookup' identifier =
-        maybe defaultCompiler snd $ find (\(f,_) -> f identifier) choices
+    lookup' identifier = maybe defaultCompiler snd $
+        find (\(p, _) -> matches p identifier) choices
     -- Collect the dependencies of the choice
     deps = do
         identifier <- castIdentifier . dependencyIdentifier <$> ask
@@ -388,5 +387,6 @@ byIdentifier defaultCompiler choices = Compiler deps job
 byExtension :: Compiler a b              -- ^ Default compiler
             -> [(String, Compiler a b)]  -- ^ Choices
             -> Compiler a b              -- ^ Resulting compiler
-byExtension defaultCompiler = byIdentifier defaultCompiler . map (first cmp)
-  where cmp c = (==c) . takeExtension . toFilePath
+byExtension defaultCompiler = byPattern defaultCompiler . map (first extPattern)
+  where
+    extPattern c = predicate $ (== c) . takeExtension . toFilePath
