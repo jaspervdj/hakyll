@@ -111,17 +111,18 @@ module Hakyll.Core.Compiler
     , traceShowCompiler
     , mapCompiler
     , timedCompiler
+    , byIdentifier
     , byExtension
     ) where
 
 import Prelude hiding ((.), id)
-import Control.Arrow ((>>>), (&&&), arr)
+import Control.Arrow ((>>>), (&&&), arr, first)
 import Control.Applicative ((<$>))
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Error (throwError)
 import Control.Category (Category, (.), id)
-import Data.Maybe (fromMaybe)
+import Data.List (find)
 import System.FilePath (takeExtension)
 
 import Data.Binary (Binary)
@@ -342,15 +343,44 @@ timedCompiler msg (Compiler d j) = Compiler d $ \x -> CompilerM $ do
     logger <- compilerLogger <$> ask
     timed logger msg $ unCompilerM $ j x
 
+-- | Choose a compiler by identifier
+--
+-- For example, assume that most content files need to be compiled
+-- normally, but a select few need an extra step in the pipeline:
+--
+-- > compile $ pageCompiler
+-- >           >>> byIdentifier id
+-- >               [ ((=="projects.md") . toFilePath, addProjectListCompiler)
+-- >               , ((=="sitemap.md") . toFilePath, addSiteMapCompiler)
+-- >               ]
+--
+byIdentifier :: Compiler a b                            -- ^ Default compiler
+             -> [(Identifier a -> Bool, Compiler a b)]  -- ^ Choices
+             -> Compiler a b                            -- ^ Resulting compiler
+byIdentifier defaultCompiler choices = Compiler deps job
+  where
+    -- Lookup the compiler, give an error when it is not found
+    lookup' identifier =
+        maybe defaultCompiler snd $ find (\(f,_) -> f identifier) choices
+    -- Collect the dependencies of the choice
+    deps = do
+        identifier <- castIdentifier . dependencyIdentifier <$> ask
+        compilerDependencies $ lookup' identifier
+    -- Collect the job of the choice
+    job x = CompilerM $ do
+        identifier <- castIdentifier . compilerIdentifier <$> ask
+        unCompilerM $ compilerJob (lookup' identifier) x
+
 -- | Choose a compiler by extension
 --
 -- Example:
 --
--- > route   "css/*" $ setExtension "css"
--- > compile "css/*" $ byExtension (error "Not a (S)CSS file")
--- >     [ (".css",  compressCssCompiler)
--- >     , (".scss", sass)
--- >     ]
+-- > match "css/*" $ do
+-- >   route $ setExtension "css"
+-- >   compile $ byExtension (error "Not a (S)CSS file")
+-- >             [ (".css",  compressCssCompiler)
+-- >             , (".scss", sass)
+-- >             ]
 --
 -- This piece of code will select the @compressCssCompiler@ for @.css@ files,
 -- and the @sass@ compiler (defined elsewhere) for @.scss@ files.
@@ -358,17 +388,5 @@ timedCompiler msg (Compiler d j) = Compiler d $ \x -> CompilerM $ do
 byExtension :: Compiler a b              -- ^ Default compiler
             -> [(String, Compiler a b)]  -- ^ Choices
             -> Compiler a b              -- ^ Resulting compiler
-byExtension defaultCompiler choices = Compiler deps job
-  where
-    -- Lookup the compiler, give an error when it is not found
-    lookup' identifier =
-        let extension = takeExtension $ toFilePath identifier
-        in fromMaybe defaultCompiler $ lookup extension choices
-    -- Collect the dependencies of the choice
-    deps = do
-        identifier <- dependencyIdentifier <$> ask
-        compilerDependencies $ lookup' identifier
-    -- Collect the job of the choice
-    job x = CompilerM $ do
-        identifier <- compilerIdentifier <$> ask
-        unCompilerM $ compilerJob (lookup' identifier) x
+byExtension defaultCompiler = byIdentifier defaultCompiler . map (first cmp)
+  where cmp c = (==c) . takeExtension . toFilePath
