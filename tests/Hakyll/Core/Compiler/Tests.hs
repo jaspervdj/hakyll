@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Hakyll.Core.Compiler.Tests
-    where
+    ( tests
+    ) where
 
 import qualified Data.Map as M
 
