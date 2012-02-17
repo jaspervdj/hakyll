@@ -140,7 +140,9 @@ compile compiler = do
 -- This sets a compiler for the given identifier. No resource is needed, since
 -- we are creating the item from scratch. This is useful if you want to create a
 -- page on your site that just takes content from other items -- but has no
--- actual content itself.
+-- actual content itself. Note that the group of the given identifier is
+-- replaced by the group set via 'group' (or 'Nothing', if 'group' has not been
+-- used).
 --
 create :: (Binary a, Typeable a, Writable a)
        => Identifier a -> Compiler () a -> RulesM (Identifier a)
