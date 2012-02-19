@@ -37,8 +37,10 @@ captureTests = fromAssertions "capture"
 
 matchesTests :: [Test]
 matchesTests = fromAssertions "matches"
-    [ True  @=? matches (regex "^foo/[^x]*$") "foo/bar"
-    , False @=? matches (regex "^foo/[^x]*$") "foo/barx"
-    , True  @=? matches (list ["foo.markdown"]) "foo.markdown"
+    [ True  @=? matches (list ["foo.markdown"]) "foo.markdown"
     , False @=? matches (list ["foo"]) (Identifier (Just "foo") "foo")
+    , True  @=? matches (regex "^foo/[^x]*$") "foo/bar"
+    , False @=? matches (regex "^foo/[^x]*$") "foo/barx"
+    , True  @=? matches (complement "foo.markdown") "bar.markdown"
+    , False @=? matches (complement "foo.markdown") "foo.markdown"
     ]

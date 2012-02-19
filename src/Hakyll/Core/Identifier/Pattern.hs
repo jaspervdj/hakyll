@@ -36,13 +36,19 @@
 -- function.
 --
 module Hakyll.Core.Identifier.Pattern
-    ( Pattern
+    ( -- * The pattern type
+      Pattern
     , castPattern
+
+      -- * Creating patterns
     , parseGlob
     , predicate
     , list
     , regex
     , inGroup
+    , complement
+
+      -- * Applying patterns
     , matches
     , filterMatches
     , capture
@@ -130,6 +136,15 @@ regex str = predicate $ fromMaybe False . (=~~ str) . toFilePath
 --
 inGroup :: Maybe String -> Pattern a
 inGroup group = predicate $ (== group) . identifierGroup
+
+-- | Inverts a pattern, e.g.
+--
+-- > complement "foo/bar.html"
+--
+-- will match /anything/ except @\"foo\/bar.html\"@
+--
+complement :: Pattern a -> Pattern a
+complement p = predicate (not . matches p)
 
 -- | Check if an identifier matches a pattern
 --
