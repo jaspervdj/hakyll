@@ -40,3 +40,5 @@ this list. This list has no particular ordering.
   [source](https://github.com/marcmo/blog.coldflake)
 - <http://deepak.jois.name>,
   [source](https://github.com/deepakjois/website)
+- <http://sigkill.dk/>,
+  [literate source](http://sigkill.dk/programs/sigkill.html)
