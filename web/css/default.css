@@ -1,10 +1,10 @@
 html {
-    padding: 0px;
-    margin: 0px;
     background-color: white;
     color: black;
     font-family: sans-serif;
-    line-height: 160%;
+    line-height: 140%;
+    margin: 0px;
+    padding: 0px;
 }
 
 body {
@@ -34,15 +34,24 @@ div#sidebar {
     margin-right: 30px;
     width: 160px;
     float: left;
-    text-align: right;
+}
+
+div#sidebar h1 {
+    clear: both;
+    float: right;
 }
 
 div#sidebar a {
+    clear: both;
     display: block;
-    font-size: 110%;
-    text-decoration: none;
+    float: right;
     margin-bottom: 10px;
+    text-decoration: none;
     text-transform: uppercase;
+}
+
+div#sidebar img {
+    margin: 0px;
 }
 
 div#content {
@@ -57,16 +66,23 @@ div#footer {
     text-align: center;
 }
 
+p {
+    padding: 0px;
+    margin: 10px 0px 10px 0px;
+}
+
 a {
     color: black;
 }
 
 h1 {
     font-size: 20px;
+    margin: 24px 0px 16px 0px;
 }
 
 h2 {
     font-size: 18px;
+    margin: 24px 0px 16px 0px;
 }
 
 h3 {
@@ -81,19 +97,10 @@ h1 a, h2 a, h3 a {
     text-decoration: none;
 }
 
-div.column {
-    width: 50%;
-    float: left;
-}
-
-div.column p {
-    padding-right: 15px;
-}
-
 img {
-    display: block;
-    margin: 10px auto 10px auto;
     border: none;
+    display: block;
+    margin: 6px auto 30px auto;
 }
 
 ul {

@@ -1,5 +1,3 @@
-# Navigation
-
 [home](/index.html)
 [philosophy](/philosophy.html)
 [about](/about.html)
