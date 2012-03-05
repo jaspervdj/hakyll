@@ -42,3 +42,5 @@ this list. This list has no particular ordering.
   [source](https://github.com/deepakjois/website)
 - <http://sigkill.dk/>,
   [literate source](http://sigkill.dk/programs/sigkill.html)
+- <http://variadic.me>,
+  [source](https://github.com/eakron/variadic.me)
