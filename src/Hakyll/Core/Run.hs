@@ -5,33 +5,35 @@ module Hakyll.Core.Run
     ( run
     ) where
 
-import Prelude hiding (reverse)
-import Control.Monad (filterM, forM_)
-import Control.Monad.Trans (liftIO)
 import Control.Applicative (Applicative, (<$>))
+import Control.Exception (handle)
+import Control.Monad (filterM, forM_)
+import Control.Monad.Error (ErrorT, runErrorT, throwError)
 import Control.Monad.Reader (ReaderT, runReaderT, ask)
 import Control.Monad.State.Strict (StateT, runStateT, get, put)
+import Control.Monad.Trans (liftIO)
 import Data.Map (Map)
-import qualified Data.Map as M
 import Data.Monoid (mempty, mappend)
+import Prelude hiding (reverse)
 import System.FilePath ((</>))
+import qualified Data.Map as M
 import qualified Data.Set as S
 
-import Hakyll.Core.Routes
-import Hakyll.Core.Identifier
-import Hakyll.Core.Util.File
 import Hakyll.Core.Compiler
 import Hakyll.Core.Compiler.Internal
+import Hakyll.Core.Configuration
+import Hakyll.Core.DependencyAnalyzer
+import Hakyll.Core.DirectedGraph
+import Hakyll.Core.Identifier
+import Hakyll.Core.Logger
 import Hakyll.Core.Resource
 import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Resource.Provider.File
+import Hakyll.Core.Routes
 import Hakyll.Core.Rules.Internal
-import Hakyll.Core.DirectedGraph
-import Hakyll.Core.DependencyAnalyzer
-import Hakyll.Core.Writable
 import Hakyll.Core.Store
-import Hakyll.Core.Configuration
-import Hakyll.Core.Logger
+import Hakyll.Core.Util.File
+import Hakyll.Core.Writable
 
 -- | Run all rules needed, return the rule set used
 --
@@ -66,14 +68,18 @@ run configuration rules = do
                     }
 
     -- Run the program and fetch the resulting state
-    ((), state') <- runStateT stateT $ RuntimeState
+    result <- runErrorT $ runStateT stateT $ RuntimeState
         { hakyllAnalyzer  = makeDependencyAnalyzer mempty (const False) oldGraph
         , hakyllCompilers = M.empty
         }
 
-    -- We want to save the final dependency graph for the next run
-    storeSet store "Hakyll.Core.Run.run" "dependencies" $
-        analyzerGraph $ hakyllAnalyzer state'
+    case result of
+        Left e             ->
+            thrown logger e
+        Right ((), state') ->
+            -- We want to save the final dependency graph for the next run
+            storeSet store "Hakyll.Core.Run.run" "dependencies" $
+                analyzerGraph $ hakyllAnalyzer state'
 
     -- Flush and return
     flushLogger logger
@@ -94,7 +100,8 @@ data RuntimeState = RuntimeState
     }
 
 newtype Runtime a = Runtime
-    { unRuntime :: ReaderT RuntimeEnvironment (StateT RuntimeState IO) a
+    { unRuntime :: ReaderT RuntimeEnvironment
+        (StateT RuntimeState (ErrorT String IO)) a
     } deriving (Functor, Applicative, Monad)
 
 -- | Add a number of compilers and continue using these compilers
@@ -205,7 +212,5 @@ build id' = Runtime $ do
             -- Actually I was just kidding, it's not hard at all
             unRuntime $ addNewCompilers newCompilers
 
-        -- Some error happened, log and continue
-        Left err -> do
-            thrown logger err 
-            unRuntime stepAnalyzer
+        -- Some error happened, rethrow in Runtime monad
+        Left err -> throwError err

@@ -88,7 +88,7 @@
 -- the type @a@. It is /very/ important that the compiler which produced this
 -- value, produced the right type as well!
 --
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
 module Hakyll.Core.Compiler
     ( Compiler
     , runCompiler
@@ -118,6 +118,7 @@ module Hakyll.Core.Compiler
 import Prelude hiding ((.), id)
 import Control.Arrow ((>>>), (&&&), arr, first)
 import Control.Applicative ((<$>))
+import Control.Exception (SomeException, handle)
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans (liftIO)
 import Control.Monad.Error (throwError)
@@ -155,8 +156,9 @@ runCompiler :: Compiler () CompileRule    -- ^ Compiler to run
             -> IO (Throwing CompileRule)  -- ^ Resulting item
 runCompiler compiler id' provider universe routes store modified logger = do
     -- Run the compiler job
-    result <- runCompilerJob compiler id' provider universe
-                             routes store modified logger
+    result <- handle (\(e :: SomeException) -> return $ Left $ show e) $
+        runCompilerJob compiler id' provider universe routes store modified
+            logger
 
     -- Inspect the result
     case result of
