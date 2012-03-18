@@ -37,7 +37,7 @@ License:      BSD3
 License-File: LICENSE
 Category:     Web
 
-Cabal-Version: >= 1.6
+Cabal-Version: >= 1.8
 Build-Type:    Simple
 Data-Dir:      data
 Data-Files:
@@ -136,8 +136,8 @@ Library
 
   If flag(previewServer)
     Build-depends:
-      snap-core   >= 0.6 && < 0.8,
-      snap-server >= 0.6 && < 0.8
+      snap-core   >= 0.6 && < 0.9,
+      snap-server >= 0.6 && < 0.9
     Cpp-Options:
       -DPREVIEW_SERVER
     Other-Modules:

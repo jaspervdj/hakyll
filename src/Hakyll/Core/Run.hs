@@ -6,7 +6,6 @@ module Hakyll.Core.Run
     ) where
 
 import Control.Applicative (Applicative, (<$>))
-import Control.Exception (handle)
 import Control.Monad (filterM, forM_)
 import Control.Monad.Error (ErrorT, runErrorT, throwError)
 import Control.Monad.Reader (ReaderT, runReaderT, ask)
