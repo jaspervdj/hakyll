@@ -24,7 +24,7 @@ inlineSpace = oneOf ['\t', ' '] <?> "space"
 metadataField :: Parser (String, String)
 metadataField = do
     key <- manyTill alphaNum $ char ':'
-    skipMany1 inlineSpace
+    skipMany1 inlineSpace <?> "space followed by metadata for: " ++ key
     value <- manyTill anyChar newline
     trailing' <- many trailing
     return (key, trim $ value ++ concat trailing')
