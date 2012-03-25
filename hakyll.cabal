@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 3.2.6.2
+Version: 3.2.6.3
 
 Synopsis: A static website compiler library
 Description:
@@ -179,3 +179,21 @@ Test-suite hakyll-tests
     text        >= 0.11   && < 0.12,
     time        >= 1.1    && < 1.5,
     unix        >= 2.4    && < 2.6
+
+  Other-modules:
+    Hakyll.Web.Util.Html.Tests
+    Hakyll.Web.Urls.Relativize.Tests
+    Hakyll.Web.Urls.Tests
+    Hakyll.Web.Template.Tests
+    Hakyll.Web.Page.Metadata.Tests
+    Hakyll.Web.Page.Tests
+    Hakyll.Core.Compiler.Tests
+    Hakyll.Core.Identifier.Tests
+    Hakyll.Core.Util.Arrow.Tests
+    Hakyll.Core.Util.String.Tests
+    Hakyll.Core.UnixFilter.Tests
+    Hakyll.Core.Routes.Tests
+    Hakyll.Core.Store.Tests
+    Hakyll.Core.Rules.Tests
+    Hakyll.Core.DependencyAnalyzer.Tests
+    TestSuite.Util
