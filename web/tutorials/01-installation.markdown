@@ -35,3 +35,13 @@ Features include:
 - powerful syntax highlighting;
 - modules for common items such as tags and feeds;
 - easily extensible.
+
+Installation
+------------
+
+Installation is provided using [cabal], and some packages are available for
+different distributions.
+
+    cabal install hakyll
+
+[cabal]: http://www.haskell.org/cabal/
