@@ -29,7 +29,7 @@ this list. This list has no particular ordering.
 - <http://projects.haskell.org/diagrams/>,
   [source](http://patch-tag.com/r/byorgey/diagrams-doc/snapshot/current/content/pretty/web/)
 - <http://wunki.org>,
-  [source](https://github.com/wunki/www.wunki.org)
+  [source](https://github.com/wunki/wunki.org)
 - <http://rs.io>,
   [source](https://github.com/robertseaton/rs.io/)
 - <http://www.gwern.net/>,
