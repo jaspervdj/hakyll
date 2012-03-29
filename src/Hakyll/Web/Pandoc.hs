@@ -55,6 +55,7 @@ readPandocWith state fileType' id' = case fileType' of
         readPandocWith state {stateLiterateHaskell = True} t id'
     Markdown          -> readMarkdown state
     Rst               -> readRST state
+    Textile           -> readTextile state
     t                 -> error $
         "Hakyll.Web.readPandocWith: I don't know how to read a file of the " ++
         "type " ++ show t ++ fromMaybe "" (fmap ((" for: " ++) . show) id')

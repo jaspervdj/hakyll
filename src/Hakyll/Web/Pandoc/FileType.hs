@@ -25,6 +25,7 @@ data FileType
     | OrgMode
     | PlainText
     | Rst
+    | Textile
     deriving (Eq, Ord, Show, Read)
 
 -- | Get the file type for a certain file. The type is determined by extension.
@@ -48,6 +49,7 @@ fileType = fileType' . takeExtension
     fileType' ".rst"      = Rst
     fileType' ".tex"      = LaTeX
     fileType' ".text"     = PlainText
+    fileType' ".textile"  = Textile
     fileType' ".txt"      = PlainText
     fileType' _           = Binary  -- Treat unknown files as binary
 
