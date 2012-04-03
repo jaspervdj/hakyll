@@ -64,7 +64,7 @@ createFeed feedTemplate itemTemplate url configuration items =
              $ trySetField "updated"     updated
              $ trySetField "title"       (feedTitle configuration)
              $ trySetField "description" (feedDescription configuration)
-             $ trySetField "authorName"  (feedDescription configuration)
+             $ trySetField "authorName"  (feedAuthorName configuration)
              $ trySetField "root"        (feedRoot configuration)
              $ trySetField "url"         url
              $ fromBody body
