@@ -28,9 +28,9 @@ tests = fromAssertions "applyTemplate"
     -- Hamlet templates
     , applyTemplateAssertion readHamletTemplate applyTemplate
         "<head><title>notice</title></head><body>A paragraph</body>"
-        "<head\n\
+        "<head>\n\
         \    <title>#{title}\n\
-        \<body\n\
+        \<body>\n\
         \    A paragraph\n"
         [("title", "notice")]
 
