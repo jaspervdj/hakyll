@@ -145,7 +145,7 @@ good impression:
 </html>
 ~~~~~
 
-A template is a text file to lay our some content. The content it lays out is
+A template is a text file to lay out some content. The content it lays out is
 called a page -- we'll see that in the next section. The syntax for templates is
 intentionally very simplistic. You can bind some content by referencing the name
 of the content *field* by using `$$field$$`, and that's it.
