@@ -5,8 +5,8 @@ module Hakyll.Web.Util.Html
     , escapeHtml
     ) where
 
-import Text.Blaze (toHtml)
-import Text.Blaze.Renderer.String (renderHtml)
+import Text.Blaze.Html (toHtml)
+import Text.Blaze.Html.Renderer.String (renderHtml)
 
 -- | Strip all HTML tags from a string
 --
