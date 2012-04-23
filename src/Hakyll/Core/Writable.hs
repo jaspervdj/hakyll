@@ -9,8 +9,8 @@ import Data.Word (Word8)
 
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Lazy as LB
-import Text.Blaze (Html)
-import Text.Blaze.Renderer.String (renderHtml)
+import Text.Blaze.Html (Html)
+import Text.Blaze.Html.Renderer.String (renderHtml)
 
 import Hakyll.Core.Identifier
 
