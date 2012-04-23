@@ -7,7 +7,8 @@ module Hakyll.Web.Blaze
     , getBodyHtml'
     ) where
 
-import Text.Blaze (Html, toHtml, preEscapedString)
+import Text.Blaze.Html (Html, toHtml)
+import Text.Blaze.Internal (preEscapedString)
 
 import Hakyll.Web.Page
 import Hakyll.Web.Page.Metadata
