@@ -179,7 +179,7 @@ Test-suite hakyll-tests
     regex-base  >= 0.93   && < 0.94,
     regex-tdfa  >= 1.1    && < 1.2,
     tagsoup     >= 0.12.6 && < 0.13,
-    text        >= 0.11   && < 1.12,
+    text        >= 0.11   && < 0.12,
     time        >= 1.1    && < 1.5,
     unix        >= 2.4    && < 2.6
 
