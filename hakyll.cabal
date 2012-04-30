@@ -69,7 +69,7 @@ Library
     cryptohash  >= 0.7    && < 0.8,
     directory   >= 1.0    && < 1.2,
     filepath    >= 1.0    && < 1.4,
-    hamlet      >= 0.10.3 && < 1.1,
+    hamlet      >= 1.0    && < 1.1,
     mtl         >= 1      && < 2.2,
     old-locale  >= 1.0    && < 1.1,
     old-time    >= 1.0    && < 1.2,
