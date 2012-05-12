@@ -9,6 +9,7 @@ module Hakyll.Core.Store
     , storeGet
     ) where
 
+import Control.Applicative ((<$>))
 import Control.Concurrent.MVar (MVar, newMVar, readMVar, modifyMVar_)
 import System.FilePath ((</>))
 import System.Directory (doesFileExist)
@@ -39,14 +40,16 @@ data Store = Store
     { -- | All items are stored on the filesystem
       storeDirectory :: FilePath
     , -- | And some items are also kept in-memory
-      storeMap :: MVar (Map FilePath Storable)
+      storeMap       :: Maybe (MVar (Map FilePath Storable))
     }
 
 -- | Initialize the store
 --
-makeStore :: FilePath -> IO Store
-makeStore directory = do
-    mvar <- newMVar M.empty
+makeStore :: Bool      -- ^ Use in-memory caching
+          -> FilePath  -- ^ Directory to use for hard disk storage
+          -> IO Store  -- ^ Store
+makeStore inMemory directory = do
+    mvar <- if inMemory then Just <$> newMVar M.empty else return Nothing
     return Store
         { storeDirectory = directory
         , storeMap       = mvar
@@ -54,9 +57,23 @@ makeStore directory = do
 
 -- | Auxiliary: add an item to the map
 --
-addToMap :: (Binary a, Typeable a) => Store -> FilePath -> a -> IO ()
-addToMap store path value =
-    modifyMVar_ (storeMap store) $ return . M.insert path (Storable value)
+cacheInsert :: (Binary a, Typeable a) => Store -> FilePath -> a -> IO ()
+cacheInsert (Store _ Nothing)   _    _     = return ()
+cacheInsert (Store _ (Just mv)) path value =
+    modifyMVar_ mv $ return . M.insert path (Storable value)
+
+-- | Auxiliary: get an item from the cache
+--
+cacheLookup :: forall a. (Binary a, Typeable a)
+            => Store -> FilePath -> IO (StoreGet a)
+cacheLookup (Store _ Nothing) _      = return NotFound
+cacheLookup (Store _ (Just mv)) path = do
+    map' <- readMVar mv
+    case M.lookup path map' of
+        Nothing           -> return NotFound
+        Just (Storable s) -> return $ case cast s of
+            Nothing -> WrongType (typeOf s) $ typeOf (undefined :: a)
+            Just s' -> Found s'
 
 -- | Create a path
 --
@@ -73,31 +90,29 @@ storeSet :: (Binary a, Typeable a)
 storeSet store name identifier value = do
     makeDirectories path
     encodeFile path value
-    addToMap store path value
+    cacheInsert store path value
   where
     path = makePath store name identifier
 
 -- | Load an item
 --
-storeGet :: forall a. (Binary a, Typeable a)
+storeGet :: (Binary a, Typeable a)
          => Store -> String -> Identifier a -> IO (StoreGet a)
 storeGet store name identifier = do
     -- First check the in-memory map
-    map' <- readMVar $ storeMap store
-    case M.lookup path map' of
-        -- Found in the in-memory map
-        Just (Storable s) -> return $ case cast s of
-            Nothing -> WrongType (typeOf s) $ typeOf (undefined :: a)
-            Just s' -> Found s'
+    mv <- cacheLookup store path
+    case mv of
         -- Not found in the map, try the filesystem
-        Nothing -> do
+        NotFound -> do
             exists <- doesFileExist path
             if not exists
                 -- Not found in the filesystem either
                 then return NotFound
                 -- Found in the filesystem
                 else do v <- decodeFile path
-                        addToMap store path v
+                        cacheInsert store path v
                         return $ Found v
+        -- Found in the in-memory map, just return
+        s -> return s
   where
     path = makePath store name identifier
