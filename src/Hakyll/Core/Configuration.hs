@@ -53,7 +53,7 @@ defaultHakyllConfiguration = HakyllConfiguration
     , storeDirectory       = "_cache"
     , ignoreFile           = ignoreFile'
     , deployCommand        = "echo 'No deploy command specified'"
-    , inMemoryCache        = False
+    , inMemoryCache        = True
     }
   where
     ignoreFile' path
