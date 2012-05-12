@@ -28,7 +28,7 @@ fromAssertions name = zipWith testCase names
 -- | Create a store for testing
 --
 makeStoreTest :: IO Store
-makeStoreTest = makeStore "_store"
+makeStoreTest = makeStore True "_store"
 
 -- | Testing for 'runCompilerJob'
 --

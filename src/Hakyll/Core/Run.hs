@@ -42,7 +42,7 @@ run configuration rules = do
 
     section logger "Initialising"
     store <- timed logger "Creating store" $
-        makeStore $ storeDirectory configuration
+        makeStore (inMemoryCache configuration) $ storeDirectory configuration
     provider <- timed logger "Creating provider" $
         fileResourceProvider configuration
 

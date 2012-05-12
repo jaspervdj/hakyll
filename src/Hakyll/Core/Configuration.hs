@@ -40,6 +40,9 @@ data HakyllConfiguration = HakyllConfiguration
       -- > ./hakyll deploy
       --
       deployCommand :: String
+    , -- | Use an in-memory cache for items. This is faster but uses more
+      -- memory.
+      inMemoryCache :: Bool
     }
 
 -- | Default configuration for a hakyll application
@@ -50,6 +53,7 @@ defaultHakyllConfiguration = HakyllConfiguration
     , storeDirectory       = "_cache"
     , ignoreFile           = ignoreFile'
     , deployCommand        = "echo 'No deploy command specified'"
+    , inMemoryCache        = False
     }
   where
     ignoreFile' path
