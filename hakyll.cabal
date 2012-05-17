@@ -52,7 +52,11 @@ Source-Repository head
 
 Flag previewServer
   Description: Include the preview server
-  default:     True
+  Default:     True
+
+Flag unixFilter
+  Description: Include the UnixFilter module
+  Default:     True
 
 Library
   Ghc-Options:    -Wall
@@ -80,8 +84,7 @@ Library
     regex-tdfa  >= 1.1    && < 1.2,
     tagsoup     >= 0.12.6 && < 0.13,
     text        >= 0.11   && < 1.12,
-    time        >= 1.1    && < 1.5,
-    unix        >= 2.4    && < 2.6
+    time        >= 1.1    && < 1.5
 
   Exposed-Modules:
     Hakyll
@@ -102,7 +105,6 @@ Library
     Hakyll.Core.Rules
     Hakyll.Core.Run
     Hakyll.Core.Store
-    Hakyll.Core.UnixFilter
     Hakyll.Core.Util.Arrow
     Hakyll.Core.Util.File
     Hakyll.Core.Util.String
@@ -141,11 +143,19 @@ Library
     Build-depends:
       snap-core   >= 0.6 && < 0.9,
       snap-server >= 0.6 && < 0.9
-    Cpp-Options:
+    Cpp-options:
       -DPREVIEW_SERVER
-    Other-Modules:
+    Other-modules:
       Hakyll.Web.Preview.Poll
       Hakyll.Web.Preview.Server
+
+  If flag(unixFilter)
+    Build-depends:
+      unix >= 2.4 && < 2.6
+    Cpp-options:
+      -DUNIX_FILTER
+    Other-modules:
+      Hakyll.Core.UnixFilter
 
 Test-suite hakyll-tests
   Type:           exitcode-stdio-1.0
