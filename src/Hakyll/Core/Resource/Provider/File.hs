@@ -22,13 +22,13 @@ import Hakyll.Core.Configuration
 fileResourceProvider :: HakyllConfiguration -> IO ResourceProvider
 fileResourceProvider configuration = do
     -- Retrieve a list of paths
-    list <- map Resource . filter (not . shouldIgnoreFile configuration) <$>
+    list <- map resource . filter (not . shouldIgnoreFile configuration) <$>
         getRecursiveContents False "."
     makeResourceProvider list (readFile . unResource)
                               (LB.readFile . unResource)
-                              mtime
+                              (mtime . unResource)
   where
-    mtime (Resource r) = do
+    mtime r = do
         ct <- toCalendarTime =<< getModificationTime r
         let str = formatCalendarTime defaultTimeLocale "%s" ct
         return $ readTime defaultTimeLocale "%s" str

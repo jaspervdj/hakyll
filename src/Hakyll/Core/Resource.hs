@@ -1,7 +1,9 @@
 -- | Module exporting the simple 'Resource' type
 --
 module Hakyll.Core.Resource
-    ( Resource (..)
+    ( Resource
+    , unResource
+    , resource
     , fromIdentifier
     , toIdentifier
     ) where
@@ -10,8 +12,13 @@ import Hakyll.Core.Identifier
 
 -- | A resource
 --
-newtype Resource = Resource {unResource :: String}
-                 deriving (Eq, Show, Ord)
+newtype Resource = Resource {unResource :: FilePath}
+    deriving (Eq, Show, Ord)
+
+-- | Smart constructor to ensure we have @/@ as path separator
+--
+resource :: FilePath -> Resource
+resource = fromIdentifier . parseIdentifier
 
 -- | Create a resource from an identifier
 --

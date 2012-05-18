@@ -19,7 +19,7 @@ import Hakyll.Core.Resource.Provider
 --
 dummyResourceProvider :: Map String ByteString -> IO ResourceProvider
 dummyResourceProvider vfs = makeResourceProvider
-    (map Resource (M.keys vfs))
+    (map resource (M.keys vfs))
     (return . TL.unpack . TL.decodeUtf8 . (vfs M.!) . unResource)
     (return . (vfs M.!) . unResource)
     (const getCurrentTime)

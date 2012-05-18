@@ -211,12 +211,12 @@ getResourceLBS = getResourceWith resourceLBS
 --
 getResourceWith :: (ResourceProvider -> Resource -> IO a)
                 -> Compiler Resource a
-getResourceWith reader = fromJob $ \resource -> CompilerM $ do
-    let identifier = unResource resource
+getResourceWith reader = fromJob $ \r -> CompilerM $ do
+    let filePath = unResource r
     provider <- compilerResourceProvider <$> ask
-    if resourceExists provider resource
-        then liftIO $ reader provider resource
-        else throwError $ error' identifier
+    if resourceExists provider r
+        then liftIO $ reader provider r
+        else throwError $ error' filePath
   where
     error' id' =  "Hakyll.Core.Compiler.getResourceWith: resource "
                ++ show id' ++ " not found"

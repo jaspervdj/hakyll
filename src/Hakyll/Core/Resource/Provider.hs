@@ -68,17 +68,17 @@ resourceDigest provider = fmap MD5.hashlazy . resourceLBS provider
 -- | Check if a resource was modified
 --
 resourceModified :: ResourceProvider -> Store -> Resource -> IO Bool
-resourceModified provider store resource = do
+resourceModified provider store r = do
     cache <- readMVar mvar
-    case M.lookup resource cache of
+    case M.lookup r cache of
         -- Already in the cache
         Just m  -> return m
         -- Not yet in the cache, check digests (if it exists)
         Nothing -> do
-            m <- if resourceExists provider resource
-                        then digestModified provider store resource
+            m <- if resourceExists provider r
+                        then digestModified provider store r
                         else return False
-            modifyMVar_ mvar (return . M.insert resource m)
+            modifyMVar_ mvar (return . M.insert r m)
             return m
   where
     mvar = resourceModifiedCache provider
@@ -86,11 +86,11 @@ resourceModified provider store resource = do
 -- | Check if a resource digest was modified
 --
 digestModified :: ResourceProvider -> Store -> Resource -> IO Bool
-digestModified provider store resource = do
+digestModified provider store r = do
     -- Get the latest seen digest from the store
     lastDigest <- storeGet store itemName identifier
     -- Calculate the digest for the resource
-    newDigest <- resourceDigest provider resource
+    newDigest <- resourceDigest provider r
     -- Check digests
     if Found newDigest == lastDigest
         -- All is fine, not modified
@@ -99,5 +99,5 @@ digestModified provider store resource = do
         else do storeSet store itemName identifier newDigest
                 return True
   where
-    identifier = toIdentifier resource
+    identifier = toIdentifier r
     itemName = "Hakyll.Core.ResourceProvider.digestModified"
