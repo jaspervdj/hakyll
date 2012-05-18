@@ -38,11 +38,11 @@ module Hakyll.Core.Identifier
     , setGroup
     ) where
 
-import Control.Arrow (second)
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (mplus)
 import Data.Monoid (Monoid, mempty, mappend)
 import Data.List (intercalate)
+import System.FilePath (dropTrailingPathSeparator, splitPath)
 
 import Data.Binary (Binary, get, put)
 import GHC.Exts (IsString, fromString)
@@ -83,9 +83,7 @@ parseIdentifier :: String -> Identifier a
 parseIdentifier = Identifier Nothing
                 . intercalate "/" . filter (not . null) . split'
   where
-    split' [] = [[]]
-    split' str = let (pre, post) = second (drop 1) $ break (== '/') str
-                 in pre : split' post
+    split' = map dropTrailingPathSeparator . splitPath
 
 -- | Convert an identifier to a relative 'FilePath'
 --

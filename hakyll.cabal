@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 3.2.8.0
+Version: 3.2.8.1
 
 Synopsis: A static website compiler library
 Description:
@@ -63,28 +63,28 @@ Library
   Hs-Source-Dirs: src
 
   Build-Depends:
-    base        >= 4      && < 5,
-    binary      >= 0.5    && < 0.6,
-    blaze-html  >= 0.5    && < 0.6,
+    base         >= 4      && < 5,
+    binary       >= 0.5    && < 0.6,
+    blaze-html   >= 0.5    && < 0.6,
     blaze-markup >= 0.5.1  && < 0.6,
-    bytestring  >= 0.9    && < 0.10,
-    citeproc-hs >= 0.3.2  && < 0.4,
-    containers  >= 0.3    && < 0.5,
-    cryptohash  >= 0.7    && < 0.8,
-    directory   >= 1.0    && < 1.2,
-    filepath    >= 1.0    && < 1.4,
-    hamlet      >= 1.0    && < 1.1,
-    mtl         >= 1      && < 2.2,
-    old-locale  >= 1.0    && < 1.1,
-    old-time    >= 1.0    && < 1.2,
-    pandoc      >= 1.9.3  && < 1.10,
-    parsec      >= 3.0    && < 3.2,
-    process     >= 1.0    && < 1.2,
-    regex-base  >= 0.93   && < 0.94,
-    regex-tdfa  >= 1.1    && < 1.2,
-    tagsoup     >= 0.12.6 && < 0.13,
-    text        >= 0.11   && < 1.12,
-    time        >= 1.1    && < 1.5
+    bytestring   >= 0.9    && < 0.10,
+    citeproc-hs  >= 0.3.2  && < 0.4,
+    containers   >= 0.3    && < 0.5,
+    cryptohash   >= 0.7    && < 0.8,
+    directory    >= 1.0    && < 1.2,
+    filepath     >= 1.0    && < 1.4,
+    hamlet       >= 1.0    && < 1.1,
+    mtl          >= 1      && < 2.2,
+    old-locale   >= 1.0    && < 1.1,
+    old-time     >= 1.0    && < 1.2,
+    pandoc       >= 1.9.3  && < 1.10,
+    parsec       >= 3.0    && < 3.2,
+    process      >= 1.0    && < 1.2,
+    regex-base   >= 0.93   && < 0.94,
+    regex-tdfa   >= 1.1    && < 1.2,
+    tagsoup      >= 0.12.6 && < 0.13,
+    text         >= 0.11   && < 1.12,
+    time         >= 1.1    && < 1.5
 
   Exposed-Modules:
     Hakyll
@@ -170,28 +170,29 @@ Test-suite hakyll-tests
     test-framework-hunit       >= 0.2 && < 0.3,
     test-framework-quickcheck2 >= 0.2 && < 0.3,
     -- Copy pasted from hakyll dependencies:
-    base        >= 4      && < 5,
-    binary      >= 0.5    && < 0.6,
-    blaze-html  >= 0.4    && < 0.6,
-    bytestring  >= 0.9    && < 0.10,
-    citeproc-hs >= 0.3.2  && < 0.4,
-    containers  >= 0.3    && < 0.5,
-    cryptohash  >= 0.7    && < 0.8,
-    directory   >= 1.0    && < 1.2,
-    filepath    >= 1.0    && < 1.4,
-    hamlet      >= 0.10.3 && < 1.1,
-    mtl         >= 1      && < 2.2,
-    old-locale  >= 1.0    && < 1.1,
-    old-time    >= 1.0    && < 1.2,
-    pandoc      >= 1.9.3  && < 1.10,
-    parsec      >= 3.0    && < 3.2,
-    process     >= 1.0    && < 1.2,
-    regex-base  >= 0.93   && < 0.94,
-    regex-tdfa  >= 1.1    && < 1.2,
-    tagsoup     >= 0.12.6 && < 0.13,
-    text        >= 0.11   && < 0.12,
-    time        >= 1.1    && < 1.5,
-    unix        >= 2.4    && < 2.6
+    base         >= 4      && < 5,
+    binary       >= 0.5    && < 0.6,
+    blaze-html   >= 0.5    && < 0.6,
+    blaze-markup >= 0.5.1  && < 0.6,
+    bytestring   >= 0.9    && < 0.10,
+    citeproc-hs  >= 0.3.2  && < 0.4,
+    containers   >= 0.3    && < 0.5,
+    cryptohash   >= 0.7    && < 0.8,
+    directory    >= 1.0    && < 1.2,
+    filepath     >= 1.0    && < 1.4,
+    hamlet       >= 1.0    && < 1.1,
+    mtl          >= 1      && < 2.2,
+    old-locale   >= 1.0    && < 1.1,
+    old-time     >= 1.0    && < 1.2,
+    pandoc       >= 1.9.3  && < 1.10,
+    parsec       >= 3.0    && < 3.2,
+    process      >= 1.0    && < 1.2,
+    regex-base   >= 0.93   && < 0.94,
+    regex-tdfa   >= 1.1    && < 1.2,
+    tagsoup      >= 0.12.6 && < 0.13,
+    text         >= 0.11   && < 1.12,
+    time         >= 1.1    && < 1.5,
+    unix         >= 2.4    && < 2.6
 
   Other-modules:
     Hakyll.Web.Util.Html.Tests
