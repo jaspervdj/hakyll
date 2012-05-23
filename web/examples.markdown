@@ -48,3 +48,5 @@ this list. This list has no particular ordering.
   [source](https://github.com/orftz/orftz.com)
 - <http://citationneeded.me/>,
   [literate source](http://citationneeded.me/hakyll.html)
+- <http://shakthimaan.com/news.html>,
+  [source](http://gitorious.org/shakthimaan-blog)
