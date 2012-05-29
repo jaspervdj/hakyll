@@ -33,6 +33,7 @@ module Hakyll.Core.Routes
     , setExtension
     , matchRoute
     , customRoute
+    , constRoute
     , gsubRoute
     , composeRoutes
     ) where
@@ -98,6 +99,11 @@ matchRoute pattern (Routes route) = Routes $ \id' ->
 --
 customRoute :: (Identifier a -> FilePath) -> Routes
 customRoute f = Routes $ Just . f . castIdentifier
+
+-- | A route that always gives the same result. Obviously, you should only use
+-- this for a single compilation rule.
+constRoute :: FilePath -> Routes
+constRoute = customRoute . const
 
 -- | Create a gsub route
 --
