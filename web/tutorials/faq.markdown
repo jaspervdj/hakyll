@@ -1,5 +1,6 @@
 ---
 title: FAQ
+author: Jasper Van der Jeugt
 ---
 
 ## "File name does not match module name" on Mac OS
@@ -44,10 +45,12 @@ And using this instead of `pageCompiler` should solve the issue.
 
 ## Does Hakyll support syntax highlighting?
 
-Syntax highlighting is enabled by default in Hakyll. However, you also need to
-enable it in pandoc. If no syntax highlighting shows up, try
+Syntax highlighting is enabled by default in Hakyll if you are using a somewhat
+recent version of Pandoc (1.9 and onwards). Note that you also need to include
+some CSS in order for this to work! This site, for example, uses the [default
+Pandoc syntax CSS file][syntax-css].
 
-    [jasper@phoenix] cabal install --reinstall -fhighlighting pandoc
+[syntax-css]: https://github.com/jaspervdj/hakyll/blob/master/web/css/syntax.css
 
 ## When should I rebuild and when should I build?
 
