@@ -24,12 +24,13 @@ withUrls f = renderTags' . map tag . TS.parseTags
     attr (k, v)          = (k, if k `S.member` refs then f v else v)
     refs                 = S.fromList ["src", "href"]
 
--- | Customized TagSoup renderer.
--- (The default TagSoup renderer escape CSS within style tags.)
+-- | Customized TagSoup renderer. (The default TagSoup renderer escape CSS
+-- within style tags.)
+--
 renderTags' :: [TS.Tag String] -> String
 renderTags' = TS.renderTagsOptions TS.renderOptions
-              { TS.optRawTag = (`elem` ["script", "style"]) . map toLower
-              }
+    { TS.optRawTag = (`elem` ["script", "style"]) . map toLower
+    }
 
 -- | Convert a filepath to an URL starting from the site root
 --

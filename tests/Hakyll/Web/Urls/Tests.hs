@@ -23,6 +23,8 @@ tests = concat
             withUrls id "<script>\"sup\"</script>"
         , "<code>&lt;stdio&gt;</code>" @=?
             withUrls id "<code>&lt;stdio&gt;</code>"
+        , "<style>body > p { line-height: 1.3 }</style>" @=?
+            withUrls id "<style>body > p { line-height: 1.3 }</style>"
         ]
     , fromAssertions "toUrl"
         [ "/foo/bar.html"    @=? toUrl "foo/bar.html"
