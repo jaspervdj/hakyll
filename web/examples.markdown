@@ -50,3 +50,5 @@ this list. This list has no particular ordering.
   [literate source](http://citationneeded.me/hakyll.html)
 - <http://shakthimaan.com/news.html>,
   [source](http://gitorious.org/shakthimaan-blog)
+- <http://www.alfredodinapoli.com/>,
+  [source](https://github.com/CharlesStain/alfredodinapoli.com)
