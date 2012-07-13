@@ -52,3 +52,5 @@ this list. This list has no particular ordering.
   [source](http://gitorious.org/shakthimaan-blog)
 - <http://www.alfredodinapoli.com/>,
   [source](https://github.com/CharlesStain/alfredodinapoli.com)
+- <http://www.rohanjain.in/>,
+  [source](https://github.com/crodjer/rohanjain.in)
