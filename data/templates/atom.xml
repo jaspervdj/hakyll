@@ -6,6 +6,7 @@
     <id>$root$$url$</id>
     <author>
         <name>$authorName$</name>
+        <email>$authorEmail$</email>
     </author>
     <updated>$updated$</updated>
     $body$

@@ -45,6 +45,8 @@ data FeedConfiguration = FeedConfiguration
       feedDescription :: String
     , -- | Name of the feed author.
       feedAuthorName  :: String
+    , -- | Email of the feed author.
+      feedAuthorEmail :: String
     , -- | Absolute root URL of the feed site (e.g. @http://jaspervdj.be@)
       feedRoot        :: String
     } deriving (Show, Eq)
@@ -65,6 +67,7 @@ createFeed feedTemplate itemTemplate url configuration items =
              $ trySetField "title"       (feedTitle configuration)
              $ trySetField "description" (feedDescription configuration)
              $ trySetField "authorName"  (feedAuthorName configuration)
+             $ trySetField "authorEmail" (feedAuthorEmail configuration)
              $ trySetField "root"        (feedRoot configuration)
              $ trySetField "url"         url
              $ fromBody body
