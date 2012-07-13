@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 3.3.0.1
+Version: 3.4.0.0
 
 Synopsis: A static website compiler library
 Description:
@@ -69,7 +69,7 @@ Library
     blaze-markup >= 0.5.1  && < 0.6,
     bytestring   >= 0.9    && < 0.10,
     citeproc-hs  >= 0.3.2  && < 0.4,
-    containers   >= 0.3    && < 0.5,
+    containers   >= 0.3    && < 0.6,
     cryptohash   >= 0.7    && < 0.8,
     directory    >= 1.0    && < 1.2,
     filepath     >= 1.0    && < 1.4,
@@ -176,7 +176,7 @@ Test-suite hakyll-tests
     blaze-markup >= 0.5.1  && < 0.6,
     bytestring   >= 0.9    && < 0.10,
     citeproc-hs  >= 0.3.2  && < 0.4,
-    containers   >= 0.3    && < 0.5,
+    containers   >= 0.3    && < 0.6,
     cryptohash   >= 0.7    && < 0.8,
     directory    >= 1.0    && < 1.2,
     filepath     >= 1.0    && < 1.4,
