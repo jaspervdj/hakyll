@@ -31,12 +31,12 @@ compressCss = compressSeparators
 compressSeparators :: String -> String
 compressSeparators = replaceAll "; *}" (const "}")
                    . replaceAll " *([{};:]) *" (take 1 . dropWhile isSpace)
-                   . replaceAll ";;*" (const ";")
+                   . replaceAll ";+" (const ";")
 
 -- | Compresses all whitespace.
 --
 compressWhitespace :: String -> String
-compressWhitespace = replaceAll "[ \t\n][ \t\n]*" (const " ")
+compressWhitespace = replaceAll "[ \t\n\r]+" (const " ")
 
 -- | Function that strips CSS comments away.
 --
