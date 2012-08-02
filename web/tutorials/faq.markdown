@@ -38,7 +38,7 @@ You can add your own version in your `hakyll.hs` file:
 myPageCompiler =
    readPageCompiler >>>
    addDefaultFields >>>  -- Sets some things like $path$
-   arr applySelf    >>>  -- Used to fill in $var$s in the page
+   arr applySelf          -- Used to fill in $var$s in the page
 ~~~~~
 
 And using this instead of `pageCompiler` should solve the issue.
