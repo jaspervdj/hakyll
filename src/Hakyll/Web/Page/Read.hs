@@ -4,10 +4,10 @@ module Hakyll.Web.Page.Read
     ( readPage
     ) where
 
-import Control.Applicative ((<$>), (<*>), (<*))
+import Control.Applicative ((<$>), (<*>), (<*), (<|>))
 import qualified Data.Map as M
 
-import Text.Parsec.Char (alphaNum, anyChar, char, newline, oneOf, string)
+import Text.Parsec.Char (alphaNum, anyChar, char, oneOf, string)
 import Text.Parsec.Combinator (choice, many1, manyTill, option, skipMany1)
 import Text.Parsec.Prim (many, parse, skipMany, (<?>))
 import Text.Parsec.String (Parser)
@@ -18,6 +18,11 @@ import Hakyll.Web.Page.Internal
 -- | Space or tab, no newline
 inlineSpace :: Parser Char
 inlineSpace = oneOf ['\t', ' '] <?> "space"
+
+-- | Parse Windows newlines as well (i.e. "\n" or "\r\n")
+newline :: Parser String
+newline = string "\n"   -- Unix
+      <|> string "\r\n" -- DOS
 
 -- | Parse a single metadata field
 --
