@@ -60,6 +60,7 @@ Flag unixFilter
 
 Library
   Ghc-Options:    -Wall
+  Ghc-Prof-Options: -auto-all -caf-all
   Hs-Source-Dirs: src
 
   Build-Depends:
@@ -84,7 +85,8 @@ Library
     regex-tdfa   >= 1.1    && < 1.2,
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
-    time         >= 1.1    && < 1.5
+    time         >= 1.1    && < 1.5,
+    lrucache     >= 1.1.1  && < 1.2
 
   Exposed-Modules:
     Hakyll
@@ -192,6 +194,7 @@ Test-suite hakyll-tests
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
     time         >= 1.1    && < 1.5,
+    lrucache     >= 1.1.1  && < 1.2,
     unix         >= 2.4    && < 2.6
 
   Other-modules:

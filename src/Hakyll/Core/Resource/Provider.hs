@@ -12,6 +12,7 @@
 --
 module Hakyll.Core.Resource.Provider
     ( ResourceProvider (..)
+    , resourceList
     , makeResourceProvider
     , resourceExists
     , resourceDigest
@@ -22,6 +23,7 @@ import Control.Applicative ((<$>))
 import Control.Concurrent (MVar, readMVar, modifyMVar_, newMVar)
 import Data.Map (Map)
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 import Data.Time (UTCTime)
 import qualified Crypto.Hash.MD5 as MD5
@@ -35,7 +37,7 @@ import Hakyll.Core.Resource
 --
 data ResourceProvider = ResourceProvider
     { -- | A list of all resources this provider is able to provide
-      resourceList             :: [Resource]
+      resourceSet             :: S.Set Resource
     , -- | Retrieve a certain resource as string
       resourceString           :: Resource -> IO String
     , -- | Retrieve a certain resource as lazy bytestring
@@ -53,12 +55,16 @@ makeResourceProvider :: [Resource]                      -- ^ Resource list
                      -> (Resource -> IO LB.ByteString)  -- ^ ByteString reader
                      -> (Resource -> IO UTCTime)        -- ^ Time checker
                      -> IO ResourceProvider             -- ^ Resulting provider
-makeResourceProvider l s b t = ResourceProvider l s b t <$> newMVar M.empty
+makeResourceProvider l s b t = ResourceProvider (S.fromList l) s b t <$> newMVar M.empty
+
+-- | Get the list of all resources
+resourceList :: ResourceProvider -> [Resource]
+resourceList = S.toList . resourceSet
 
 -- | Check if a given identifier has a resource
 --
 resourceExists :: ResourceProvider -> Resource -> Bool
-resourceExists provider = flip elem $ resourceList provider
+resourceExists provider = flip S.member $ resourceSet provider
 
 -- | Retrieve a digest for a given resource
 --
