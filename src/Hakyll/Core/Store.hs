@@ -54,7 +54,9 @@ makeStore :: Bool      -- ^ Use in-memory caching
           -> FilePath  -- ^ Directory to use for hard disk storage
           -> IO Store  -- ^ Store
 makeStore inMemory directory = do
-    lru <- if inMemory then Just <$> LRU.newAtomicLRU storeLRUSize else return Nothing
+    lru <- if inMemory
+            then Just <$> LRU.newAtomicLRU storeLRUSize
+            else return Nothing
     return Store
         { storeDirectory = directory
         , storeLRU       = lru
@@ -63,7 +65,7 @@ makeStore inMemory directory = do
 -- | Auxiliary: add an item to the map
 --
 cacheInsert :: (Binary a, Typeable a) => Store -> FilePath -> a -> IO ()
-cacheInsert (Store _ Nothing)   _    _     = return ()
+cacheInsert (Store _ Nothing)    _    _     = return ()
 cacheInsert (Store _ (Just lru)) path value =
     LRU.insert path (Storable value) lru
 
@@ -75,10 +77,10 @@ cacheLookup (Store _ Nothing) _      = return NotFound
 cacheLookup (Store _ (Just lru)) path = do
     res <- LRU.lookup path lru
     case res of
-      Nothing           -> return NotFound
-      Just (Storable s) -> return $ case cast s of
-        Nothing -> WrongType (typeOf s) $ typeOf (undefined :: a)
-        Just s' -> Found s'
+        Nothing           -> return NotFound
+        Just (Storable s) -> return $ case cast s of
+            Nothing -> WrongType (typeOf s) $ typeOf (undefined :: a)
+            Just s' -> Found s'
 
 -- | Create a path
 --

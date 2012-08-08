@@ -36,8 +36,8 @@ import Hakyll.Core.Resource
 -- | A value responsible for retrieving and listing resources
 --
 data ResourceProvider = ResourceProvider
-    { -- | A list of all resources this provider is able to provide
-      resourceSet             :: S.Set Resource
+    { -- | A set of all resources this provider is able to provide
+      resourceSet              :: S.Set Resource
     , -- | Retrieve a certain resource as string
       resourceString           :: Resource -> IO String
     , -- | Retrieve a certain resource as lazy bytestring
@@ -55,7 +55,8 @@ makeResourceProvider :: [Resource]                      -- ^ Resource list
                      -> (Resource -> IO LB.ByteString)  -- ^ ByteString reader
                      -> (Resource -> IO UTCTime)        -- ^ Time checker
                      -> IO ResourceProvider             -- ^ Resulting provider
-makeResourceProvider l s b t = ResourceProvider (S.fromList l) s b t <$> newMVar M.empty
+makeResourceProvider l s b t =
+    ResourceProvider (S.fromList l) s b t <$> newMVar M.empty
 
 -- | Get the list of all resources
 resourceList :: ResourceProvider -> [Resource]
