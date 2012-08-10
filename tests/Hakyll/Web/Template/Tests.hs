@@ -17,17 +17,18 @@ tests :: [Test]
 tests = fromAssertions "applyTemplate"
     -- Hakyll templates
     [ applyTemplateAssertion readTemplate applyTemplate
-        "bar" "$foo$" [("foo", "bar")]
+        ("bar" @=?) "$foo$" [("foo", "bar")]
 
     , applyTemplateAssertion readTemplate applyTemplate
-        "$ barqux" "$$ $foo$$bar$" [("foo", "bar"), ("bar", "qux")]
+        ("$ barqux" @=?) "$$ $foo$$bar$" [("foo", "bar"), ("bar", "qux")]
 
     , applyTemplateAssertion readTemplate applyTemplate
-        "$foo$" "$foo$" []
+        ("$foo$" @=?) "$foo$" []
 
     -- Hamlet templates
     , applyTemplateAssertion readHamletTemplate applyTemplate
-        "<head><title>notice</title></head><body>A paragraph</body>"
+        (("<head><title>notice</title></head><body>A paragraph</body>" @=?) .
+            filter (/= '\n'))
         "<head>\n\
         \    <title>#{title}\n\
         \<body>\n\
@@ -39,16 +40,16 @@ tests = fromAssertions "applyTemplate"
           missing "bar" = "qux"
           missing x     = reverse x
       in applyTemplateAssertion readTemplate (applyTemplateWith missing)
-        "bar foo ver" "$foo$ $bar$ $rev$" [("bar", "foo")]
+        ("bar foo ver" @=?) "$foo$ $bar$ $rev$" [("bar", "foo")]
     ]
 
 -- | Utility function to create quick template tests
 --
 applyTemplateAssertion :: (String -> Template)
                        -> (Template -> Page String -> Page String)
-                       -> String
+                       -> (String -> Assertion)
                        -> String
                        -> [(String, String)]
                        -> Assertion
-applyTemplateAssertion parser apply expected template page =
-    expected @=? pageBody (apply (parser template) (fromMap $ M.fromList page))
+applyTemplateAssertion parser apply correct template page =
+    correct $ pageBody (apply (parser template) (fromMap $ M.fromList page))

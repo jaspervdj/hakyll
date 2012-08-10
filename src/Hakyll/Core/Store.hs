@@ -10,12 +10,9 @@ module Hakyll.Core.Store
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Concurrent.MVar (MVar, newMVar, readMVar, modifyMVar_)
 import System.FilePath ((</>))
 import System.Directory (doesFileExist)
 import Data.Maybe (fromMaybe)
-import Data.Map (Map)
-import qualified Data.Map as M
 
 import Data.Binary (Binary, encodeFile, decodeFile)
 import Data.Typeable (Typeable, TypeRep, cast, typeOf)
