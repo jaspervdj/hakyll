@@ -28,12 +28,14 @@
 {-# LANGUAGE DeriveDataTypeable, OverloadedStrings, Arrows #-}
 module Hakyll.Web.Tags
     ( Tags (..)
+    , getTags
     , readTagsWith
     , readTags
     , readCategory
     , renderTagCloud
     , renderTagList
     , renderTagsField
+    , renderTagsFieldWith
     , renderCategoryField
     , sortTagsBy
     , caseInsensitiveTags
@@ -176,7 +178,12 @@ renderTagList makeUrl = renderTags makeUrl makeLink (intercalate ", ")
     makeLink tag url count _ _ = renderHtml $
         H.a ! A.href (toValue url) $ toHtml (tag ++ " (" ++ show count ++ ")")
 
--- | Render tags with links
+-- | Render tags with links with custom function to get tags. It is typically
+-- together with 'getTags' like this:
+-- 
+-- @
+-- 'renderTagsFieldWith' (customFunction . 'getTags') \"tags\" ('fromCapture' \"tags/*\")
+-- @
 --
 renderTagsFieldWith :: (Page a -> [String])        -- ^ Function to get the tags
                     -> String                      -- ^ Destination key
