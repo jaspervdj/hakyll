@@ -59,8 +59,11 @@
 -- >             <a href="/code.html"> Code
 -- >         #{body}
 --
+{-# LANGUAGE OverloadedStrings #-}
 module Hakyll.Web.Template
     ( Template
+    , TemplateString
+    , tsToString
     , applyTemplate
     , applyTemplateWith
     , applySelf
@@ -71,9 +74,13 @@ module Hakyll.Web.Template
     ) where
 
 import Control.Arrow
+import Control.Applicative
 import Data.Maybe (fromMaybe)
 import System.FilePath (takeExtension)
 import qualified Data.Map as M
+import Data.String
+import Data.Monoid
+import qualified Data.ByteString.Lazy.Char8 as LBS
 
 import Text.Hamlet (HamletSettings, defaultHamletSettings)
 
@@ -87,64 +94,68 @@ import Hakyll.Web.Page.Internal
 -- | Substitutes @$identifiers@ in the given @Template@ by values from the given
 -- "Page". When a key is not found, it is left as it is.
 --
-applyTemplate :: Template -> Page String -> Page String
+applyTemplate :: TemplateString a => Template a -> Page a -> Page a
 applyTemplate = applyTemplateWith defaultMissingHandler
 
 -- | Default solution if a key is missing: render it again
-defaultMissingHandler :: String -> String
-defaultMissingHandler k = "$" ++ k ++ "$"
+defaultMissingHandler :: TemplateString a => String -> a
+defaultMissingHandler k = "$" <> fromString k <> "$"
 
 -- | A version of 'applyTemplate' which allows you to give a fallback option,
 -- which can produce the value for a key if it is missing.
 --
-applyTemplateWith :: (String -> String)  -- ^ Fallback if key missing
-                  -> Template            -- ^ Template to apply
-                  -> Page String         -- ^ Input page
-                  -> Page String         -- ^ Resulting page
+applyTemplateWith :: TemplateString a =>
+  (String -> a)  -- ^ Fallback if key missing
+  -> Template a          -- ^ Template to apply
+  -> Page a              -- ^ Input page
+  -> Page a              -- ^ Resulting page
 applyTemplateWith missing template page =
-    fmap (const $ substitute =<< unTemplate template) page
+    page { pageBody = mconcat $ map substitute (unTemplate template) }
   where
-    map' = toMap page
     substitute (Chunk chunk) = chunk
-    substitute (Key key)     = fromMaybe (missing key) $ M.lookup key map'
+    substitute (Key key)
+      | key == "body" = pageBody page
+      | otherwise = fromMaybe (missing key) (fromString <$> M.lookup key (pageMetadata page))
     substitute (Escaped)     = "$"
 
 -- | Apply a page as it's own template. This is often very useful to fill in
 -- certain keys like @$root@ and @$url@.
 --
-applySelf :: Page String -> Page String
+applySelf :: TemplateString a => Page a -> Page a
 applySelf page = applyTemplate (readTemplate $ pageBody page) page
 
 -- | Read a template. If the extension of the file we're compiling is
 -- @.hml@ or @.hamlet@, it will be considered as a Hamlet template, and parsed
 -- as such.
 --
-templateCompiler :: Compiler Resource Template
+templateCompiler :: TemplateString a => Compiler Resource (Template a)
 templateCompiler = templateCompilerWith defaultHamletSettings
 
 -- | Version of 'templateCompiler' that enables custom settings.
 --
-templateCompilerWith :: HamletSettings -> Compiler Resource Template
+templateCompilerWith :: TemplateString a => HamletSettings -> Compiler Resource (Template a)
 templateCompilerWith settings =
     cached "Hakyll.Web.Template.templateCompilerWith" $
-        getIdentifier &&& getResourceString >>^ uncurry read'
+        getIdentifier &&& tsGetResource >>^ uncurry read'
   where
     read' identifier string =
         if takeExtension (toFilePath identifier) `elem` [".hml", ".hamlet"]
             -- Hamlet template
-            then readHamletTemplateWith settings string
+            then readHamletTemplateWith settings (tsToString string)
             -- Hakyll template
             else readTemplate string
 
-applyTemplateCompiler :: Identifier Template                   -- ^ Template
-                      -> Compiler (Page String) (Page String)  -- ^ Compiler
+applyTemplateCompiler :: TemplateString a =>
+  Identifier (Template a)       -- ^ Template
+  -> Compiler (Page a) (Page a) -- ^ Compiler
 applyTemplateCompiler = applyTemplateCompilerWith defaultMissingHandler
 
 -- | A version of 'applyTemplateCompiler' which allows you to pass a function
 -- which is called for a key when it is missing.
 --
-applyTemplateCompilerWith :: (String -> String)
-                          -> Identifier Template
-                          -> Compiler (Page String) (Page String)
+applyTemplateCompilerWith :: TemplateString a =>
+  (String -> a)
+  -> Identifier (Template a)
+  -> Compiler (Page a) (Page a)
 applyTemplateCompilerWith missing identifier =
     require identifier (flip $ applyTemplateWith missing)

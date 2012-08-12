@@ -8,17 +8,18 @@ module Hakyll.Web.Template.Read.Hamlet
 
 import Text.Hamlet (HamletSettings, defaultHamletSettings)
 import Text.Hamlet.RT
+import Data.String
 
 import Hakyll.Web.Template.Internal
 
 -- | Read a hamlet template using the default settings
 --
-readHamletTemplate :: String -> Template
+readHamletTemplate :: TemplateString a => String -> Template a
 readHamletTemplate = readHamletTemplateWith defaultHamletSettings
 
 -- | Read a hamlet template using the specified settings
 --
-readHamletTemplateWith :: HamletSettings -> String -> Template
+readHamletTemplateWith :: TemplateString a => HamletSettings -> String -> Template a
 readHamletTemplateWith settings string =
     let result = parseHamletRT settings string
     in case result of
@@ -29,13 +30,13 @@ readHamletTemplateWith settings string =
 
 -- | Convert a 'HamletRT' to a 'Template'
 --
-fromHamletRT :: HamletRT  -- ^ Hamlet runtime template
-             -> Template  -- ^ Hakyll template
+fromHamletRT :: TemplateString a => HamletRT   -- ^ Hamlet runtime template
+                                 -> Template a -- ^ Hakyll template
 fromHamletRT (HamletRT sd) = Template $ map fromSimpleDoc sd
   where
-    fromSimpleDoc :: SimpleDoc -> TemplateElement
-    fromSimpleDoc (SDRaw chunk) = Chunk chunk
-    fromSimpleDoc (SDVar [var]) = Key var
+    fromSimpleDoc :: TemplateString a => SimpleDoc -> TemplateElement a
+    fromSimpleDoc (SDRaw chunk) = Chunk (fromString chunk)
+    fromSimpleDoc (SDVar [var]) = Key (fromString var)
     fromSimpleDoc (SDVar _) = error
         "Hakyll.Web.Template.Read.Hamlet.fromHamletRT: \
         \Hakyll does not support '.' in identifier names when using \

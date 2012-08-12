@@ -15,7 +15,7 @@ module Hakyll.Web.Page.List
     , sortByBaseName
     ) where
 
-import Control.Arrow ((>>>), arr)
+import Control.Arrow ((>>>), arr, (>>^))
 import Data.List (sortBy)
 import Data.Monoid (Monoid, mconcat)
 import Data.Ord (comparing)
@@ -30,31 +30,33 @@ import Hakyll.Web.Template
 
 -- | Set a field of a page to a listing of pages
 --
-setFieldPageList :: ([Page String] -> [Page String])  
+setFieldPageList :: TemplateString a =>
+                    ([Page a] -> [Page a])
                  -- ^ Determines list order
-                 -> Identifier Template               
+                 -> Identifier (Template a)
                  -- ^ Applied to every page
                  -> String
                  -- ^ Key indicating which field should be set
-                 -> Pattern (Page String)             
+                 -> Pattern (Page a)
                  -- ^ Selects pages to include in the list
-                 -> Compiler (Page String) (Page String)
+                 -> Compiler (Page a) (Page a)
                  -- ^ Compiler that sets the page list in a field
 setFieldPageList sort template key pattern =
-    requireAllA pattern $ setFieldA key $ pageListCompiler sort template
+    requireAllA pattern $ setFieldA key $ pageListCompiler sort template >>^ tsToString
 
 -- | Create a list of pages
 --
-pageListCompiler :: ([Page String] -> [Page String])  -- ^ Determine list order
-                 -> Identifier Template               -- ^ Applied to pages
-                 -> Compiler [Page String] String     -- ^ Compiles page list
+pageListCompiler :: TemplateString a =>
+                    ([Page a] -> [Page a])  -- ^ Determine list order
+                 -> Identifier (Template a) -- ^ Applied to pages
+                 -> Compiler [Page a] a     -- ^ Compiles page list
 pageListCompiler sort template =
     arr sort >>> applyTemplateToList template >>> arr concatPages
 
 -- | Apply a template to every page in a list
 --
-applyTemplateToList :: Identifier Template
-                    -> Compiler [Page String] [Page String]
+applyTemplateToList :: TemplateString a => Identifier (Template a)
+                    -> Compiler [Page a] [Page a]
 applyTemplateToList identifier =
     require identifier $ \posts template -> map (applyTemplate template) posts
 

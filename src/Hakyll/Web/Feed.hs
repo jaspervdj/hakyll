@@ -27,6 +27,7 @@ import Control.Category (id)
 import Control.Arrow ((>>>), arr, (&&&))
 import Control.Monad ((<=<))
 import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Monoid
 
 import Hakyll.Core.Compiler
 import Hakyll.Web.Page
@@ -55,12 +56,13 @@ data FeedConfiguration = FeedConfiguration
 -- The items should be sorted on date. The @$updated@ field should be set for
 -- each item.
 --
-createFeed :: Template           -- ^ Feed template
-           -> Template           -- ^ Item template
+createFeed :: TemplateString a =>
+              Template a         -- ^ Feed template
+           -> Template a         -- ^ Item template
            -> String             -- ^ URL of the feed
            -> FeedConfiguration  -- ^ Feed configuration
-           -> [Page String]      -- ^ Items to include
-           -> String             -- ^ Resulting feed
+           -> [Page a]           -- ^ Items to include
+           -> a                  -- ^ Resulting feed
 createFeed feedTemplate itemTemplate url configuration items =
     pageBody $ applyTemplate feedTemplate
              $ trySetField "updated"     updated
@@ -77,7 +79,7 @@ createFeed feedTemplate itemTemplate url configuration items =
                             . trySetField "root" (feedRoot configuration)
 
     -- Body: concatenated items
-    body = concat $ map pageBody items'
+    body = mconcat $ map pageBody items'
 
     -- Take the first updated, which should be the most recent
     updated = fromMaybe "Unknown" $ do
