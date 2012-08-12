@@ -80,7 +80,8 @@ instance Binary a => Binary (Tags a) where
 instance Writable (Tags a) where
     write _ _ = return ()
 
--- | Obtain tags from a page
+-- | Obtain tags from a page in the default way: parse them from the @tags@
+-- metadata field.
 --
 getTags :: Page a -> [String]
 getTags = map trim . splitAll "," . getField "tags"
@@ -181,9 +182,8 @@ renderTagList makeUrl = renderTags makeUrl makeLink (intercalate ", ")
 -- | Render tags with links with custom function to get tags. It is typically
 -- together with 'getTags' like this:
 -- 
--- @
--- 'renderTagsFieldWith' (customFunction . 'getTags') \"tags\" ('fromCapture' \"tags/*\")
--- @
+-- > renderTagsFieldWith (customFunction . getTags)
+-- >     "tags" (fromCapture "tags/*")
 --
 renderTagsFieldWith :: (Page a -> [String])        -- ^ Function to get the tags
                     -> String                      -- ^ Destination key
