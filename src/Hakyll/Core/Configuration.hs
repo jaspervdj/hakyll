@@ -20,6 +20,8 @@ data HakyllConfiguration = HakyllConfiguration
       --
       -- * files starting with a @.@
       --
+      -- * files starting with a @#@
+      --
       -- * files ending with a @~@
       --
       -- * files ending with @.swp@
@@ -57,8 +59,9 @@ defaultHakyllConfiguration = HakyllConfiguration
     }
   where
     ignoreFile' path
-        | "." `isPrefixOf` fileName = True
-        | "~" `isSuffixOf` fileName = True
+        | "."    `isPrefixOf` fileName = True
+        | "#"    `isPrefixOf` fileName = True
+        | "~"    `isSuffixOf` fileName = True
         | ".swp" `isSuffixOf` fileName = True
         | otherwise = False
       where
