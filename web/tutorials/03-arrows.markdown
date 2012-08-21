@@ -40,7 +40,7 @@ For the next processing steps we now need a compiler that takes an
 `Either (Page a) (Page a)` instead of the usual `Page a` as an
 input. But the former can be built up from the latter using some
 standard combinators from the `Control.Arrow` library.  The simplest
-one is `|||`, which takes two comilers (arrows) with the same output
+one is `|||`, which takes two compilers (arrows) with the same output
 type and returns a new compiler that takes an `Either` of the input
 types of the Compilers as an input. Maybe we just want to render our
 unpublished posts with a big warning that they are provisional, so we
@@ -62,7 +62,7 @@ With the conditional rendering in place, the next step is to hide
 the unpublished posts from the homepage and the list of posts.
 Both lists are generated from the results of a requireAllA call.
 The last argument of requireAllA is a Compiler, and requireAllA
-passes a pair consiting of the currently rendered page and a list
+passes a pair consisting of the currently rendered page and a list
 of all the required pages. All we have to do to suppress the pages
 is to write a Compiler that takes such a pair as input, leaves the
 first element of the pair unchanged and filters out all the unpublished
@@ -131,7 +131,7 @@ type pair:
   match "posts/*" $ do
     route   $ setExtension ".html"
     compile $ pageCompiler
-       >>> isPublishedPage
+       >>> isPagePublished
        >>> (id +++ (applyTemplateCompiler "templates/post.html"
                     >>> applyTemplateCompiler "templates/default.html"
                     >>> relativizeUrlsCompiler))
