@@ -124,6 +124,7 @@ import Control.Monad.Trans (liftIO)
 import Control.Monad.Error (throwError)
 import Control.Category (Category, (.), id)
 import Data.List (find)
+import System.Environment (getProgName)
 import System.FilePath (takeExtension)
 
 import Data.Binary (Binary)
@@ -305,6 +306,7 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
     identifier <- castIdentifier . compilerIdentifier <$> ask
     store <- compilerStore <$> ask
     modified <- compilerResourceModified <$> ask
+    progName <- liftIO getProgName
     report logger $ "Checking cache: " ++ if modified then "modified" else "OK"
     if modified
         then do v <- unCompilerM $ j $ fromIdentifier identifier
@@ -312,10 +314,11 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
                 return v
         else do v <- liftIO $ storeGet store name identifier
                 case v of Found v' -> return v'
-                          _        -> throwError error'
+                          _        -> throwError (error' progName)
   where
-    error' = "Hakyll.Core.Compiler.cached: Cache corrupt!"
-          ++ " Try deleting the _cache folder."
+    error' progName =
+        "Hakyll.Core.Compiler.cached: Cache corrupt! " ++
+         "Try running: " ++ progName ++ " clean"
 
 -- | Create an unsafe compiler from a function in IO
 --
