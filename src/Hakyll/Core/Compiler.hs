@@ -315,6 +315,7 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
                           _        -> throwError error'
   where
     error' = "Hakyll.Core.Compiler.cached: Cache corrupt!"
+          ++ " Try deleting the _cache folder."
 
 -- | Create an unsafe compiler from a function in IO
 --
