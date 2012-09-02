@@ -69,7 +69,7 @@ idRoute = Routes $ Just . toFilePath
 --
 -- Example:
 --
--- > runRoute (setExtension "html") "foo/bar"
+-- > runRoutes (setExtension "html") "foo/bar"
 --
 -- Result:
 --
@@ -77,7 +77,7 @@ idRoute = Routes $ Just . toFilePath
 --
 -- Example:
 --
--- > runRoute (setExtension "html") "posts/the-art-of-trolling.markdown"
+-- > runRoutes (setExtension "html") "posts/the-art-of-trolling.markdown"
 --
 -- Result:
 --
