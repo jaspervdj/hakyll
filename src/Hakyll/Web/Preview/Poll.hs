@@ -1,5 +1,6 @@
 -- | Interval-based implementation of preview polling
 --
+{-# LANGUAGE CPP #-}
 module Hakyll.Web.Preview.Poll
     ( previewPoll
     ) where
@@ -7,7 +8,11 @@ module Hakyll.Web.Preview.Poll
 import Control.Applicative ((<$>))
 import Control.Concurrent (threadDelay)
 import Control.Monad (filterM)
+#if MIN_VERSION_directory(1,2,0)
+import Data.Time (getCurrentTime)
+#else
 import System.Time (getClockTime)
+#endif
 import System.Directory (getModificationTime, doesFileExist)
 
 import Hakyll.Core.Configuration
@@ -18,7 +23,11 @@ previewPoll :: HakyllConfiguration  -- ^ Configuration
             -> IO [FilePath]        -- ^ Updating action
             -> IO ()                -- ^ Can block forever
 previewPoll _ update = do
+#if MIN_VERSION_directory(1,2,0)
+    time <- getCurrentTime
+#else
     time <- getClockTime
+#endif
     loop time =<< update
   where
     delay = 1000000
