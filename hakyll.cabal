@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 3.4.2.0
+Version: 3.4.2.1
 
 Synopsis: A static website compiler library
 Description:
@@ -143,8 +143,8 @@ Library
 
   If flag(previewServer)
     Build-depends:
-      snap-core   >= 0.6 && < 0.9,
-      snap-server >= 0.6 && < 0.9
+      snap-core   >= 0.6 && < 0.10,
+      snap-server >= 0.6 && < 0.10
     Cpp-options:
       -DPREVIEW_SERVER
     Other-modules:
@@ -153,7 +153,7 @@ Library
 
   If flag(unixFilter)
     Build-depends:
-      unix >= 2.4 && < 2.6
+      unix >= 2.4 && < 2.7
     Cpp-options:
       -DUNIX_FILTER
     Other-modules:
@@ -195,7 +195,7 @@ Test-suite hakyll-tests
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
     time         >= 1.1    && < 1.5,
-    unix         >= 2.4    && < 2.6
+    unix         >= 2.4    && < 2.7
 
   Other-modules:
     Hakyll.Web.Util.Html.Tests
