@@ -1,5 +1,6 @@
 -- | A concrete 'ResourceProvider' that gets it's resources from the filesystem
 --
+{-# LANGUAGE CPP #-}
 module Hakyll.Core.Resource.Provider.File
     ( fileResourceProvider
     ) where
@@ -29,6 +30,10 @@ fileResourceProvider configuration = do
                               (mtime . unResource)
   where
     mtime r = do
+#if MIN_VERSION_directory(1,2,0)
+        getModificationTime r
+#else
         ct <- toCalendarTime =<< getModificationTime r
         let str = formatCalendarTime defaultTimeLocale "%s" ct
         return $ readTime defaultTimeLocale "%s" str
+#endif
