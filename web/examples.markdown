@@ -56,3 +56,5 @@ this list. This list has no particular ordering.
   [source](https://github.com/crodjer/rohanjain.in)
 - <http://datahackermd.com>,
   [source](http://github.com/akshayjshah/datahackermd)
+- <http://michaelxavier.net>,
+  [source](https://github.com/michaelxavier/michaelxavier.net)
