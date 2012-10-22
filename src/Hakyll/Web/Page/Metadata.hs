@@ -175,6 +175,7 @@ getUTCMaybe :: TimeLocale     -- ^ Output time locale
 getUTCMaybe locale page = msum
     [ fromPublished "%a, %d %b %Y %H:%M:%S UT"
     , fromPublished "%Y-%m-%dT%H:%M:%SZ"
+    , fromPublished "%Y-%m-%d %H:%M:%S"
     , fromPublished "%B %e, %Y %l:%M %p"
     , fromPublished "%B %e, %Y"
     , getFieldMaybe "path" page >>= parseTime' "%Y-%m-%d" .
