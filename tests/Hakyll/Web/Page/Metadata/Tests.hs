@@ -54,6 +54,9 @@ tests = concat $
                 [ ("path",      "/posts/2010-01-31-a-post.mkdwn")
                 , ("published", "February 20, 2000 1:00 PM")
                 ]
+        , (@=?) "October 22, 2012" $ getField "date" $ renderDateField
+            "date" "%B %e, %Y" "Date unknown" $ Page
+                (M.singleton "date" "2012-10-22 14:35:24") ""
         ]
 
     , fromAssertions "copyBodyToField"

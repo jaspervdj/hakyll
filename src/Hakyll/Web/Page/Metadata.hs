@@ -172,18 +172,23 @@ renderDateFieldWith locale key format defaultValue page =
 getUTCMaybe :: TimeLocale     -- ^ Output time locale
             -> Page a         -- ^ Input page
             -> Maybe UTCTime  -- ^ Parsed UTCTime
-getUTCMaybe locale page = msum
-    [ fromPublished "%a, %d %b %Y %H:%M:%S UT"
-    , fromPublished "%Y-%m-%dT%H:%M:%SZ"
-    , fromPublished "%Y-%m-%d %H:%M:%S"
-    , fromPublished "%B %e, %Y %l:%M %p"
-    , fromPublished "%B %e, %Y"
-    , getFieldMaybe "path" page >>= parseTime' "%Y-%m-%d" .
+getUTCMaybe locale page = msum $
+    [fromField "published" fmt | fmt <- formats] ++
+    [fromField "date"      fmt | fmt <- formats] ++
+    [ getFieldMaybe "path" page >>= parseTime' "%Y-%m-%d" .
         intercalate "-" . take 3 . splitAll "-" . takeFileName
     ]
   where
-    fromPublished f  = getFieldMaybe "published" page >>= parseTime' f
     parseTime' f str = parseTime locale f str
+    fromField k fmt  = getFieldMaybe k page >>= parseTime' fmt
+
+    formats =
+        [ "%a, %d %b %Y %H:%M:%S UT"
+        , "%Y-%m-%dT%H:%M:%SZ"
+        , "%Y-%m-%d %H:%M:%S"
+        , "%B %e, %Y %l:%M %p"
+        , "%B %e, %Y"
+        ]
 
 -- | Set the modification time as a field in the page
 renderModificationTime :: String
