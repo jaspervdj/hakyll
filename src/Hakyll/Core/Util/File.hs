@@ -8,7 +8,7 @@ module Hakyll.Core.Util.File
     ) where
 
 import Control.Applicative ((<$>))
-import System.Time (ClockTime)
+import Data.Time.Clock (UTCTime)
 import Control.Monad (forM, filterM)
 import Data.List (isPrefixOf)
 import System.Directory ( createDirectoryIfMissing, doesDirectoryExist
@@ -52,7 +52,7 @@ getRecursiveContents includeDirs topdir = do
 -- | Check if a timestamp is obsolete compared to the timestamps of a number of
 -- files. When they are no files, it is never obsolete.
 --
-isObsolete :: ClockTime    -- ^ The time to check.
+isObsolete :: UTCTime    -- ^ The time to check.
            -> [FilePath]   -- ^ Dependencies of the cached file.
            -> IO Bool
 isObsolete _ [] = return False

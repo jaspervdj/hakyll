@@ -28,7 +28,4 @@ fileResourceProvider configuration = do
                               (LB.readFile . unResource)
                               (mtime . unResource)
   where
-    mtime r = do
-        ct <- toCalendarTime =<< getModificationTime r
-        let str = formatCalendarTime defaultTimeLocale "%s" ct
-        return $ readTime defaultTimeLocale "%s" str
+    mtime r = getModificationTime r

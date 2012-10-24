@@ -8,6 +8,7 @@ import Control.Applicative ((<$>))
 import Control.Concurrent (threadDelay)
 import Control.Monad (filterM)
 import System.Time (getClockTime)
+import Data.Time
 import System.Directory (getModificationTime, doesFileExist)
 
 import Hakyll.Core.Configuration
@@ -18,7 +19,7 @@ previewPoll :: HakyllConfiguration  -- ^ Configuration
             -> IO [FilePath]        -- ^ Updating action
             -> IO ()                -- ^ Can block forever
 previewPoll _ update = do
-    time <- getClockTime
+    time <- getCurrentTime
     loop time =<< update
   where
     delay = 1000000

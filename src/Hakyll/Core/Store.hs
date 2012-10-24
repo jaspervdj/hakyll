@@ -45,8 +45,8 @@ data Store = Store
     }
 
 -- | The size of the in-memory cache to use in items.
-storeLRUSize :: Maybe Integer
-storeLRUSize = Just 500
+storeLRUSize :: Integer
+storeLRUSize = 500
 
 -- | Initialize the store
 --
@@ -64,8 +64,9 @@ makeStore inMemory directory = do
 --
 cacheInsert :: (Binary a, Typeable a) => Store -> FilePath -> a -> IO ()
 cacheInsert (Store _ Nothing)   _    _     = return ()
-cacheInsert (Store _ (Just lru)) path value =
+cacheInsert (Store _ (Just lru)) path value = do
     LRU.insert path (Storable value) lru
+    return ()
 
 -- | Auxiliary: get an item from the cache
 --

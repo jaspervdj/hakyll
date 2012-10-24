@@ -65,16 +65,16 @@ Library
 
   Build-Depends:
     base         >= 4      && < 5,
-    binary       >= 0.5    && < 0.6,
+    binary       >= 0.5    && < 0.7,
     blaze-html   >= 0.5    && < 0.6,
     blaze-markup >= 0.5.1  && < 0.6,
-    bytestring   >= 0.9    && < 0.10,
+    bytestring   >= 0.9    && < 0.11,
     citeproc-hs  >= 0.3.2  && < 0.4,
     containers   >= 0.3    && < 0.6,
     cryptohash   >= 0.7    && < 0.8,
-    directory    >= 1.0    && < 1.2,
+    directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
-    hamlet       >= 1.0    && < 1.1,
+    hamlet       >= 1.0    && < 1.2,
     mtl          >= 1      && < 2.2,
     old-locale   >= 1.0    && < 1.1,
     old-time     >= 1.0    && < 1.2,
@@ -86,7 +86,7 @@ Library
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
     time         >= 1.1    && < 1.5,
-    lrucache     >= 1.1.1  && < 1.2
+    lrucache     >= 2.0  && < 2.2
 
   Exposed-Modules:
     Hakyll
@@ -143,8 +143,8 @@ Library
 
   If flag(previewServer)
     Build-depends:
-      snap-core   >= 0.6 && < 0.9,
-      snap-server >= 0.6 && < 0.9
+      snap-core   >= 0.6 && < 0.10,
+      snap-server >= 0.6 && < 0.10
     Cpp-options:
       -DPREVIEW_SERVER
     Other-modules:
@@ -153,7 +153,7 @@ Library
 
   If flag(unixFilter)
     Build-depends:
-      unix >= 2.4 && < 2.6
+      unix >= 2.4 && < 2.7
     Cpp-options:
       -DUNIX_FILTER
     Other-modules:
@@ -173,16 +173,16 @@ Test-suite hakyll-tests
     test-framework-quickcheck2 >= 0.2 && < 0.3,
     -- Copy pasted from hakyll dependencies:
     base         >= 4      && < 5,
-    binary       >= 0.5    && < 0.6,
+    binary       >= 0.5    && < 0.7,
     blaze-html   >= 0.5    && < 0.6,
     blaze-markup >= 0.5.1  && < 0.6,
-    bytestring   >= 0.9    && < 0.10,
+    bytestring   >= 0.9    && < 0.11,
     citeproc-hs  >= 0.3.2  && < 0.4,
     containers   >= 0.3    && < 0.6,
     cryptohash   >= 0.7    && < 0.8,
-    directory    >= 1.0    && < 1.2,
+    directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
-    hamlet       >= 1.0    && < 1.1,
+    hamlet       >= 1.0    && < 1.2,
     mtl          >= 1      && < 2.2,
     old-locale   >= 1.0    && < 1.1,
     old-time     >= 1.0    && < 1.2,
@@ -194,8 +194,8 @@ Test-suite hakyll-tests
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
     time         >= 1.1    && < 1.5,
-    lrucache     >= 1.1.1  && < 1.2,
-    unix         >= 2.4    && < 2.6
+    lrucache     >= 1.1.1  && < 2.2,
+    unix         >= 2.4    && < 2.7
 
   Other-modules:
     Hakyll.Web.Util.Html.Tests
