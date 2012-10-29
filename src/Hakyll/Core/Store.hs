@@ -1,111 +1,120 @@
--- | A store for stroing and retreiving items
---
-{-# LANGUAGE ExistentialQuantification, ScopedTypeVariables #-}
+--------------------------------------------------------------------------------
+-- | A store for storing and retreiving items
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 module Hakyll.Core.Store
     ( Store
-    , StoreGet (..)
-    , makeStore
-    , storeSet
-    , storeGet
+    , Result (..)
+    , new
+    , set
+    , get
+    , delete
     ) where
 
-import Control.Applicative ((<$>))
-import System.FilePath ((</>))
-import System.Directory (doesFileExist)
-import Data.Maybe (fromMaybe)
 
-import Data.Binary (Binary, encodeFile, decodeFile)
-import Data.Typeable (Typeable, TypeRep, cast, typeOf)
+--------------------------------------------------------------------------------
+import           Control.Applicative ((<$>))
+import           Control.Exception   (IOException, handle)
+import qualified Crypto.Hash.MD5     as MD5
+import           Data.Binary         (Binary, decodeFile, encodeFile)
+import qualified Data.ByteString     as B
+import qualified Data.Cache.LRU.IO   as Lru
+import           Data.List           (intercalate)
+import qualified Data.Text           as T
+import qualified Data.Text.Encoding  as T
+import           Data.Typeable       (TypeRep, Typeable, cast, typeOf)
+import           System.Directory    (createDirectoryIfMissing)
+import           System.Directory    (doesFileExist, removeFile)
+import           System.FilePath     ((</>))
+import           Text.Printf         (printf)
 
-import Hakyll.Core.Identifier
-import Hakyll.Core.Util.File
-import qualified Data.Cache.LRU.IO as LRU
 
--- | Items we can store
---
-data Storable = forall a. (Binary a, Typeable a) => Storable a
+--------------------------------------------------------------------------------
+-- | Simple wrapper type
+data Box = forall a. Typeable a => Box a
 
--- | Result when an item from the store
---
-data StoreGet a = Found a
-                | NotFound
-                | WrongType TypeRep TypeRep
-                deriving (Show, Eq)
 
--- | Data structure used for the store
---
+--------------------------------------------------------------------------------
 data Store = Store
     { -- | All items are stored on the filesystem
       storeDirectory :: FilePath
-    , -- | And some items are also kept in-memory
-      storeLRU       :: Maybe (LRU.AtomicLRU FilePath Storable)
+    , -- | Optionally, items are also kept in-memory
+      storeMap       :: Maybe (Lru.AtomicLRU FilePath Box)
     }
 
--- | The size of the in-memory cache to use in items.
-storeLRUSize :: Maybe Integer
-storeLRUSize = Just 500
 
+--------------------------------------------------------------------------------
+-- | Result of a store query
+data Result a
+    = Found a                    -- ^ Found, result
+    | NotFound                   -- ^ Not found
+    | WrongType TypeRep TypeRep  -- ^ Expected, true type
+    deriving (Show, Eq)
+
+
+--------------------------------------------------------------------------------
 -- | Initialize the store
---
-makeStore :: Bool      -- ^ Use in-memory caching
-          -> FilePath  -- ^ Directory to use for hard disk storage
-          -> IO Store  -- ^ Store
-makeStore inMemory directory = do
-    lru <- if inMemory
-            then Just <$> LRU.newAtomicLRU storeLRUSize
-            else return Nothing
+new :: Bool      -- ^ Use in-memory caching
+    -> FilePath  -- ^ Directory to use for hard disk storage
+    -> IO Store  -- ^ Store
+new inMemory directory = do
+    createDirectoryIfMissing True directory
+    ref <- if inMemory then Just <$> Lru.newAtomicLRU csize else return Nothing
     return Store
         { storeDirectory = directory
-        , storeLRU       = lru
+        , storeMap       = ref
         }
-
--- | Auxiliary: add an item to the map
---
-cacheInsert :: (Binary a, Typeable a) => Store -> FilePath -> a -> IO ()
-cacheInsert (Store _ Nothing)    _    _     = return ()
-cacheInsert (Store _ (Just lru)) path value =
-    LRU.insert path (Storable value) lru
-
--- | Auxiliary: get an item from the cache
---
-cacheLookup :: forall a. (Binary a, Typeable a)
-            => Store -> FilePath -> IO (StoreGet a)
-cacheLookup (Store _ Nothing) _      = return NotFound
-cacheLookup (Store _ (Just lru)) path = do
-    res <- LRU.lookup path lru
-    case res of
-        Nothing           -> return NotFound
-        Just (Storable s) -> return $ case cast s of
-            Nothing -> WrongType (typeOf s) $ typeOf (undefined :: a)
-            Just s' -> Found s'
-
--- | Create a path
---
-makePath :: Store -> String -> Identifier a -> FilePath
-makePath store name identifier = storeDirectory store </> name
-    </> group </> toFilePath identifier </> "hakyllstore"
   where
-    group = fromMaybe "" $ identifierGroup identifier
+    csize = Just 500
 
+
+--------------------------------------------------------------------------------
+-- | Auxiliary: add an item to the in-memory cache
+cacheInsert :: Typeable a => Store -> String -> a -> IO ()
+cacheInsert (Store _ Nothing)    _   _     = return ()
+cacheInsert (Store _ (Just lru)) key x =
+    Lru.insert key (Box x) lru
+
+
+--------------------------------------------------------------------------------
+-- | Auxiliary: get an item from the in-memory cache
+cacheLookup :: forall a. Typeable a => Store -> String -> IO (Result a)
+cacheLookup (Store _ Nothing)    _   = return NotFound
+cacheLookup (Store _ (Just lru)) key = do
+    res <- Lru.lookup key lru
+    return $ case res of
+        Nothing      -> NotFound
+        Just (Box x) -> case cast x of
+            Just x' -> Found x'
+            Nothing -> WrongType (typeOf (undefined :: a)) (typeOf x)
+
+
+--------------------------------------------------------------------------------
+-- | Auxiliary: delete an item from the in-memory cache
+cacheDelete :: Store -> String -> IO ()
+cacheDelete (Store _ Nothing)    _   = return ()
+cacheDelete (Store _ (Just lru)) key = do
+    _ <- Lru.delete key lru
+    return ()
+
+
+--------------------------------------------------------------------------------
 -- | Store an item
---
-storeSet :: (Binary a, Typeable a)
-         => Store -> String -> Identifier a -> a -> IO ()
-storeSet store name identifier value = do
-    makeDirectories path
-    encodeFile path value
-    cacheInsert store path value
+set :: (Binary a, Typeable a) => Store -> [String] -> a -> IO ()
+set store identifier value = do
+    encodeFile (storeDirectory store </> key) value
+    cacheInsert store key value
   where
-    path = makePath store name identifier
+    key = hash identifier
 
+
+--------------------------------------------------------------------------------
 -- | Load an item
---
-storeGet :: (Binary a, Typeable a)
-         => Store -> String -> Identifier a -> IO (StoreGet a)
-storeGet store name identifier = do
+get :: (Binary a, Typeable a) => Store -> [String] -> IO (Result a)
+get store identifier = do
     -- First check the in-memory map
-    mv <- cacheLookup store path
-    case mv of
+    ref <- cacheLookup store key
+    case ref of
         -- Not found in the map, try the filesystem
         NotFound -> do
             exists <- doesFileExist path
@@ -113,10 +122,34 @@ storeGet store name identifier = do
                 -- Not found in the filesystem either
                 then return NotFound
                 -- Found in the filesystem
-                else do v <- decodeFile path
-                        cacheInsert store path v
-                        return $ Found v
-        -- Found in the in-memory map, just return
+                else do
+                    v <- decodeFile path
+                    cacheInsert store key v
+                    return $ Found v
+        -- Found in the in-memory map (or wrong type), just return
         s -> return s
   where
-    path = makePath store name identifier
+    key  = hash identifier
+    path = storeDirectory store </> key
+
+
+--------------------------------------------------------------------------------
+-- | Delete an item
+delete :: Store -> [String] -> IO ()
+delete store identifier = do
+    cacheDelete store key
+    deleteFile $ storeDirectory store </> key
+  where
+    key  = hash identifier
+
+
+--------------------------------------------------------------------------------
+hash :: [String] -> String
+hash = concatMap (printf "%02x") . B.unpack .
+    MD5.hash . T.encodeUtf8 . T.pack . intercalate "/"
+
+
+--------------------------------------------------------------------------------
+-- | Delete a file unless it doesn't exist...
+deleteFile :: FilePath -> IO ()
+deleteFile = handle (\(_ :: IOException) -> return ()) . removeFile

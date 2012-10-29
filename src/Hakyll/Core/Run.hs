@@ -30,9 +30,10 @@ import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Resource.Provider.File
 import Hakyll.Core.Routes
 import Hakyll.Core.Rules.Internal
-import Hakyll.Core.Store
+import Hakyll.Core.Store (Store)
 import Hakyll.Core.Util.File
 import Hakyll.Core.Writable
+import qualified Hakyll.Core.Store as Store
 
 -- | Run all rules needed, return the rule set used
 --
@@ -42,15 +43,15 @@ run configuration rules = do
 
     section logger "Initialising"
     store <- timed logger "Creating store" $
-        makeStore (inMemoryCache configuration) $ storeDirectory configuration
+        Store.new (inMemoryCache configuration) $ storeDirectory configuration
     provider <- timed logger "Creating provider" $
         fileResourceProvider configuration
 
     -- Fetch the old graph from the store. If we don't find it, we consider this
     -- to be the first run
-    graph <- storeGet store "Hakyll.Core.Run.run" "dependencies"
-    let (firstRun, oldGraph) = case graph of Found g -> (False, g)
-                                             _       -> (True, mempty)
+    graph <- Store.get store ["Hakyll.Core.Run.run", "dependencies"]
+    let (firstRun, oldGraph) = case graph of Store.Found g -> (False, g)
+                                             _             -> (True, mempty)
 
     let ruleSet = runRules rules provider
         compilers = rulesCompilers ruleSet
@@ -77,7 +78,7 @@ run configuration rules = do
             thrown logger e
         Right ((), state') ->
             -- We want to save the final dependency graph for the next run
-            storeSet store "Hakyll.Core.Run.run" "dependencies" $
+            Store.set store ["Hakyll.Core.Run.run", "dependencies"] $
                 analyzerGraph $ hakyllAnalyzer state'
 
     -- Flush and return

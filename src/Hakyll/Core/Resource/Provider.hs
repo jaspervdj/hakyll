@@ -1,3 +1,4 @@
+--------------------------------------------------------------------------------
 -- | This module provides an API for resource providers. Resource providers
 -- allow Hakyll to get content from resources; the type of resource depends on
 -- the concrete instance.
@@ -19,22 +20,30 @@ module Hakyll.Core.Resource.Provider
     , resourceModified
     ) where
 
+
+--------------------------------------------------------------------------------
 import Control.Applicative ((<$>))
 import Control.Concurrent (MVar, readMVar, modifyMVar_, newMVar)
 import Data.Map (Map)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+
+--------------------------------------------------------------------------------
 import Data.Time (UTCTime)
 import qualified Crypto.Hash.MD5 as MD5
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 
-import Hakyll.Core.Store
-import Hakyll.Core.Resource
 
+--------------------------------------------------------------------------------
+import Hakyll.Core.Store (Store)
+import Hakyll.Core.Resource
+import qualified Hakyll.Core.Store as Store
+
+
+--------------------------------------------------------------------------------
 -- | A value responsible for retrieving and listing resources
---
 data ResourceProvider = ResourceProvider
     { -- | A set of all resources this provider is able to provide
       resourceSet              :: S.Set Resource
@@ -48,8 +57,9 @@ data ResourceProvider = ResourceProvider
       resourceModifiedCache    :: MVar (Map Resource Bool)
     }
 
+
+--------------------------------------------------------------------------------
 -- | Create a resource provider
---
 makeResourceProvider :: [Resource]                      -- ^ Resource list
                      -> (Resource -> IO String)         -- ^ String reader
                      -> (Resource -> IO LB.ByteString)  -- ^ ByteString reader
@@ -58,22 +68,27 @@ makeResourceProvider :: [Resource]                      -- ^ Resource list
 makeResourceProvider l s b t =
     ResourceProvider (S.fromList l) s b t <$> newMVar M.empty
 
+
+--------------------------------------------------------------------------------
 -- | Get the list of all resources
 resourceList :: ResourceProvider -> [Resource]
 resourceList = S.toList . resourceSet
 
+
+--------------------------------------------------------------------------------
 -- | Check if a given identifier has a resource
---
 resourceExists :: ResourceProvider -> Resource -> Bool
 resourceExists provider = flip S.member $ resourceSet provider
 
+
+--------------------------------------------------------------------------------
 -- | Retrieve a digest for a given resource
---
 resourceDigest :: ResourceProvider -> Resource -> IO B.ByteString
 resourceDigest provider = fmap MD5.hashlazy . resourceLBS provider
 
+
+--------------------------------------------------------------------------------
 -- | Check if a resource was modified
---
 resourceModified :: ResourceProvider -> Store -> Resource -> IO Bool
 resourceModified provider store r = do
     cache <- readMVar mvar
@@ -90,21 +105,21 @@ resourceModified provider store r = do
   where
     mvar = resourceModifiedCache provider
 
+
+--------------------------------------------------------------------------------
 -- | Check if a resource digest was modified
---
 digestModified :: ResourceProvider -> Store -> Resource -> IO Bool
 digestModified provider store r = do
     -- Get the latest seen digest from the store
-    lastDigest <- storeGet store itemName identifier
+    lastDigest <- Store.get store key
     -- Calculate the digest for the resource
     newDigest <- resourceDigest provider r
     -- Check digests
-    if Found newDigest == lastDigest
+    if Store.Found newDigest == lastDigest
         -- All is fine, not modified
         then return False
         -- Resource modified; store new digest
-        else do storeSet store itemName identifier newDigest
+        else do Store.set store key newDigest
                 return True
   where
-    identifier = toIdentifier r
-    itemName = "Hakyll.Core.ResourceProvider.digestModified"
+    key = ["Hakyll.Core.ResourceProvider.digestModified", unResource r]

@@ -16,7 +16,8 @@ import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Identifier
 import Hakyll.Core.Logger
 import Hakyll.Core.Resource.Provider
-import Hakyll.Core.Store
+import Hakyll.Core.Store (Store)
+import qualified Hakyll.Core.Store as Store
 
 fromAssertions :: String       -- ^ Name
                -> [Assertion]  -- ^ Cases
@@ -28,7 +29,7 @@ fromAssertions name = zipWith testCase names
 -- | Create a store for testing
 --
 makeStoreTest :: IO Store
-makeStoreTest = makeStore True "_store"
+makeStoreTest = Store.new True "_store"
 
 -- | Testing for 'runCompilerJob'
 --
