@@ -210,13 +210,12 @@ getResourceLBS = getResourceWith resourceLBS
 
 -- | Overloadable function for 'getResourceString' and 'getResourceLBS'
 --
-getResourceWith :: (ResourceProvider -> Resource -> IO a)
-                -> Compiler Resource a
+getResourceWith :: (Resource -> IO a) -> Compiler Resource a
 getResourceWith reader = fromJob $ \r -> CompilerM $ do
     let filePath = unResource r
     provider <- compilerResourceProvider <$> ask
     if resourceExists provider r
-        then liftIO $ reader provider r
+        then liftIO $ reader r
         else throwError $ error' filePath
   where
     error' id' =  "Hakyll.Core.Compiler.getResourceWith: resource "

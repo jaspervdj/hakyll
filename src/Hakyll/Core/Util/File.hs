@@ -24,9 +24,7 @@ import Hakyll.Core.Configuration
 makeDirectories :: FilePath -> IO ()
 makeDirectories = createDirectoryIfMissing True . takeDirectory
 
--- | Get all contents of a directory. Note that files starting with a dot (.)
--- will be ignored.
---
+-- | Get all contents of a directory.
 getRecursiveContents :: Bool           -- ^ Include directories?
                      -> FilePath       -- ^ Directory to search
                      -> IO [FilePath]  -- ^ List of files found

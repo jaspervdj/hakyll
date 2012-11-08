@@ -101,8 +101,10 @@ Library
     Hakyll.Core.Logger
     Hakyll.Core.Resource
     Hakyll.Core.Resource.Provider
-    Hakyll.Core.Resource.Provider.Dummy
-    Hakyll.Core.Resource.Provider.File
+    Hakyll.Core.Resource.Provider.Internal
+    Hakyll.Core.Resource.Metadata
+    Hakyll.Core.Resource.MetadataCache
+    Hakyll.Core.Resource.Modified
     Hakyll.Core.Routes
     Hakyll.Core.Rules
     Hakyll.Core.Run

@@ -27,7 +27,6 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.Logger
 import Hakyll.Core.Resource
 import Hakyll.Core.Resource.Provider
-import Hakyll.Core.Resource.Provider.File
 import Hakyll.Core.Routes
 import Hakyll.Core.Rules.Internal
 import Hakyll.Core.Store (Store)
@@ -44,8 +43,8 @@ run configuration rules = do
     section logger "Initialising"
     store <- timed logger "Creating store" $
         Store.new (inMemoryCache configuration) $ storeDirectory configuration
-    provider <- timed logger "Creating provider" $
-        fileResourceProvider configuration
+    provider <- timed logger "Creating provider" $ newResourceProvider
+        store (ignoreFile configuration) "."
 
     -- Fetch the old graph from the store. If we don't find it, we consider this
     -- to be the first run
@@ -114,7 +113,6 @@ addNewCompilers newCompilers = Runtime $ do
     logger <- hakyllLogger <$> ask
     section logger "Adding new compilers"
     provider <- hakyllResourceProvider <$> ask
-    store <- hakyllStore <$> ask
     firstRun <- hakyllFirstRun <$> ask
 
     -- Old state information
@@ -134,7 +132,7 @@ addNewCompilers newCompilers = Runtime $ do
 
     -- Check which items have been modified
     modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $
-        liftIO . resourceModified provider store . fromIdentifier
+        liftIO . resourceModified provider . fromIdentifier
     let checkModified = if firstRun then const True else (`S.member` modified)
 
     -- Create a new analyzer and append it to the currect one
@@ -185,7 +183,7 @@ build id' = Runtime $ do
     let compiler = compilers M.! id'
 
     -- Check if the resource was modified
-    isModified <- liftIO $ resourceModified provider store $ fromIdentifier id'
+    isModified <- liftIO $ resourceModified provider $ fromIdentifier id'
 
     -- Run the compiler
     result <- timed logger "Total compile time" $ liftIO $
