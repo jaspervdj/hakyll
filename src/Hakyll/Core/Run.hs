@@ -52,8 +52,8 @@ run configuration rules = do
     let (firstRun, oldGraph) = case graph of Store.Found g -> (False, g)
                                              _             -> (True, mempty)
 
-    let ruleSet = runRules rules provider
-        compilers = rulesCompilers ruleSet
+    ruleSet <- timed logger "Running rules" $ runRules rules provider
+    let compilers = rulesCompilers ruleSet
 
         -- Extract the reader/state
         reader = unRuntime $ addNewCompilers compilers

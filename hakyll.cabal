@@ -101,10 +101,6 @@ Library
     Hakyll.Core.Logger
     Hakyll.Core.Resource
     Hakyll.Core.Resource.Provider
-    Hakyll.Core.Resource.Provider.Internal
-    Hakyll.Core.Resource.Metadata
-    Hakyll.Core.Resource.MetadataCache
-    Hakyll.Core.Resource.Modified
     Hakyll.Core.Routes
     Hakyll.Core.Rules
     Hakyll.Core.Run
@@ -136,6 +132,10 @@ Library
   Other-Modules:
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.DirectedGraph.Internal
+    Hakyll.Core.Resource.Metadata
+    Hakyll.Core.Resource.MetadataCache
+    Hakyll.Core.Resource.Modified
+    Hakyll.Core.Resource.Provider.Internal
     Hakyll.Core.Rules.Internal
     Hakyll.Web.Page.Internal
     Hakyll.Web.Template.Internal

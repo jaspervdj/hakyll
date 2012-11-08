@@ -42,7 +42,7 @@ resourceModified rp r
                     <*> resourceModified rp (resourceMetadataResource r)
                 modifyIORef cacheRef (M.insert r m)
 
-                -- Important!
+                -- Important! (But ugly)
                 when m $ resourceInvalidateMetadataCache rp r
 
                 return m
