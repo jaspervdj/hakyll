@@ -12,6 +12,7 @@ import System.Environment (getProgName, getArgs)
 import System.Process (system)
 
 import Hakyll.Core.Configuration
+import Hakyll.Core.Identifier
 import Hakyll.Core.Run
 import Hakyll.Core.Rules
 
@@ -20,7 +21,6 @@ import Control.Applicative ((<$>))
 import Control.Concurrent (forkIO)
 import qualified Data.Set as S
 
-import Hakyll.Core.Resource
 import Hakyll.Core.Rules.Internal
 import Hakyll.Web.Preview.Poll
 import Hakyll.Web.Preview.Server
@@ -106,7 +106,7 @@ preview conf rules port = do
     -- Run the server in the main thread
     server conf port
   where
-    update = map unResource . S.toList . rulesResources <$> run conf rules
+    update = map toFilePath . S.toList . rulesResources <$> run conf rules
 #else
 preview _ _ _ = previewServerDisabled
 #endif

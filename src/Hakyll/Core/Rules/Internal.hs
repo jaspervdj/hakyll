@@ -26,8 +26,7 @@ import           Hakyll.Core.CompiledItem
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
-import           Hakyll.Core.Resource
-import           Hakyll.Core.Resource.Provider
+import           Hakyll.Core.ResourceProvider
 import           Hakyll.Core.Routes
 
 
@@ -49,8 +48,8 @@ data RuleSet = RuleSet
       rulesRoutes    :: Routes
     , -- | Compilation rules
       rulesCompilers :: [(Identifier (), Compiler () CompileRule)]
-    , -- | A list of the used resources
-      rulesResources :: Set Resource
+    , -- | A set of the actually used files
+      rulesResources :: Set (Identifier ())
     }
 
 

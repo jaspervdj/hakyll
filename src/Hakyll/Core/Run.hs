@@ -25,8 +25,7 @@ import Hakyll.Core.DependencyAnalyzer
 import Hakyll.Core.DirectedGraph
 import Hakyll.Core.Identifier
 import Hakyll.Core.Logger
-import Hakyll.Core.Resource
-import Hakyll.Core.Resource.Provider
+import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Routes
 import Hakyll.Core.Rules.Internal
 import Hakyll.Core.Store (Store)
@@ -132,7 +131,7 @@ addNewCompilers newCompilers = Runtime $ do
 
     -- Check which items have been modified
     modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $
-        liftIO . resourceModified provider . fromIdentifier
+        liftIO . resourceModified provider
     let checkModified = if firstRun then const True else (`S.member` modified)
 
     -- Create a new analyzer and append it to the currect one
@@ -183,7 +182,7 @@ build id' = Runtime $ do
     let compiler = compilers M.! id'
 
     -- Check if the resource was modified
-    isModified <- liftIO $ resourceModified provider $ fromIdentifier id'
+    isModified <- liftIO $ resourceModified provider id'
 
     -- Run the compiler
     result <- timed logger "Total compile time" $ liftIO $

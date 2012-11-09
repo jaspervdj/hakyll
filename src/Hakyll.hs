@@ -6,8 +6,8 @@ module Hakyll
     , module Hakyll.Core.Configuration
     , module Hakyll.Core.Identifier
     , module Hakyll.Core.Identifier.Pattern
-    , module Hakyll.Core.Resource
-    , module Hakyll.Core.Resource.Provider
+    , module Hakyll.Core.Metadata
+    , module Hakyll.Core.ResourceProvider
     , module Hakyll.Core.Routes
     , module Hakyll.Core.Rules
 #ifdef UNIX_FILTER
@@ -42,8 +42,8 @@ import Hakyll.Core.Compiler
 import Hakyll.Core.Configuration
 import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
-import Hakyll.Core.Resource
-import Hakyll.Core.Resource.Provider
+import Hakyll.Core.Metadata
+import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Routes
 import Hakyll.Core.Rules
 #ifdef UNIX_FILTER

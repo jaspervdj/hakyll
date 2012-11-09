@@ -51,11 +51,9 @@ import           Hakyll.Core.CompiledItem
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
-import           Hakyll.Core.Resource
-import           Hakyll.Core.Resource.Provider
+import           Hakyll.Core.ResourceProvider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules.Internal
-import           Hakyll.Core.Util.Arrow
 import           Hakyll.Core.Writable
 
 
@@ -80,10 +78,10 @@ tellCompilers compilers = RulesM $ do
 
 --------------------------------------------------------------------------------
 -- | Add resources
-tellResources :: [Resource]
+tellResources :: [Identifier a]
               -> Rules
 tellResources resources' = RulesM $ tell $
-    RuleSet mempty mempty $ S.fromList resources'
+    RuleSet mempty mempty $ S.fromList $ map castIdentifier resources'
 
 
 --------------------------------------------------------------------------------
@@ -139,13 +137,12 @@ group g = RulesM . local setGroup' . unRulesM
 -- no resources match the current selection, nothing will happen. In this case,
 -- you might want to have a look at 'create'.
 compile :: (Binary a, Typeable a, Writable a)
-        => Compiler Resource a -> RulesM (Pattern a)
+        => Compiler () a -> RulesM (Pattern a)
 compile compiler = do
     ids <- resources
-    tellCompilers $ flip map ids $ \identifier ->
-        (identifier, constA (fromIdentifier identifier) >>> compiler)
-    tellResources $ map fromIdentifier ids
-    return $ list ids
+    tellCompilers [(castIdentifier id', compiler) | id' <- ids]
+    tellResources ids
+    return $ list $ map castIdentifier ids
 
 
 --------------------------------------------------------------------------------
@@ -182,14 +179,12 @@ route route' = RulesM $ do
 --------------------------------------------------------------------------------
 -- | Get a list of resources matching the current pattern. This will also set
 -- the correct group to the identifiers.
-resources :: RulesM [Identifier a]
+resources :: RulesM [Identifier ()]
 resources = RulesM $ do
-    pattern <- rulesPattern <$> ask
+    pattern  <- rulesPattern <$> ask
     provider <- rulesResourceProvider <$> ask
-    group' <- rulesGroup <$> ask
-    return $ filterMatches pattern $ map (toId group') $ resourceList provider
-  where
-    toId g = setGroup g . toIdentifier
+    g        <- rulesGroup <$> ask
+    return $ filterMatches pattern $ map (setGroup g) $ resourceList provider
 
 
 --------------------------------------------------------------------------------

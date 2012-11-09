@@ -79,7 +79,6 @@ import Text.Hamlet (HamletSettings, defaultHamletSettings)
 
 import Hakyll.Core.Compiler
 import Hakyll.Core.Identifier
-import Hakyll.Core.Resource
 import Hakyll.Web.Template.Internal
 import Hakyll.Web.Template.Read
 import Hakyll.Web.Page.Internal
@@ -119,12 +118,12 @@ applySelf page = applyTemplate (readTemplate $ pageBody page) page
 -- @.hml@ or @.hamlet@, it will be considered as a Hamlet template, and parsed
 -- as such.
 --
-templateCompiler :: Compiler Resource Template
+templateCompiler :: Compiler () Template
 templateCompiler = templateCompilerWith defaultHamletSettings
 
 -- | Version of 'templateCompiler' that enables custom settings.
 --
-templateCompilerWith :: HamletSettings -> Compiler Resource Template
+templateCompilerWith :: HamletSettings -> Compiler () Template
 templateCompilerWith settings =
     cached "Hakyll.Web.Template.templateCompilerWith" $
         getIdentifier &&& getResourceString >>^ uncurry read'

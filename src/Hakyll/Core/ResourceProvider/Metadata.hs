@@ -1,42 +1,43 @@
 --------------------------------------------------------------------------------
 -- | Internal module to parse metadata
-module Hakyll.Core.Resource.Metadata
+module Hakyll.Core.ResourceProvider.Metadata
     ( loadMetadata
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative                    ((<$>), (<*), (<*>))
-import           Control.Arrow                          (second)
-import qualified Data.ByteString.Char8                  as BC
-import qualified Data.Map                               as M
-import           System.IO                              as IO
-import           Text.Parsec                            ((<?>))
-import qualified Text.Parsec                            as P
-import           Text.Parsec.String                     (Parser)
+import           Control.Applicative                   ((<$>), (<*), (<*>))
+import           Control.Arrow                         (second)
+import qualified Data.ByteString.Char8                 as BC
+import qualified Data.Map                              as M
+import           System.IO                             as IO
+import           Text.Parsec                           ((<?>))
+import qualified Text.Parsec                           as P
+import           Text.Parsec.String                    (Parser)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Resource
-import           Hakyll.Core.Resource.Provider.Internal
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Metadata
+import           Hakyll.Core.ResourceProvider.Internal
 import           Hakyll.Core.Util.String
 
 
 --------------------------------------------------------------------------------
-loadMetadata :: ResourceProvider -> Resource -> IO (Metadata, Maybe String)
-loadMetadata rp r = do
+loadMetadata :: ResourceProvider -> Identifier a -> IO (Metadata, Maybe String)
+loadMetadata rp identifier = do
     hasHeader  <- probablyHasMetadataHeader fp
     (md, body) <- if hasHeader
         then second Just <$> loadMetadataHeader fp
         else return (M.empty, Nothing)
 
-    emd <- if resourceExists rp mr then loadMetadataFile mfp else return M.empty
+    emd <- if resourceExists rp mi then loadMetadataFile mfp else return M.empty
 
     return (M.union md emd, body)
   where
-    fp  = unResource r
-    mr  = resourceMetadataResource r
-    mfp = unResource mr
+    fp  = toFilePath identifier
+    mi  = resourceMetadataResource identifier
+    mfp = toFilePath mi
 
 
 --------------------------------------------------------------------------------

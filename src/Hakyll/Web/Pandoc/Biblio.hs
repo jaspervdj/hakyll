@@ -17,7 +17,7 @@ module Hakyll.Web.Pandoc.Biblio
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Arrow (arr, returnA)
+import Control.Arrow (arr, returnA, (>>>))
 import Data.Typeable (Typeable)
 
 import Data.Binary (Binary (..))
@@ -27,7 +27,6 @@ import qualified Text.CSL as CSL
 
 import Hakyll.Core.Compiler
 import Hakyll.Core.Identifier
-import Hakyll.Core.Resource
 import Hakyll.Core.Writable
 import Hakyll.Web.Page
 import Hakyll.Web.Pandoc
@@ -35,8 +34,8 @@ import Hakyll.Web.Pandoc
 newtype CSL = CSL FilePath
     deriving (Binary, Show, Typeable, Writable)
 
-cslCompiler :: Compiler Resource CSL
-cslCompiler = arr (CSL . unResource)
+cslCompiler :: Compiler () CSL
+cslCompiler = getIdentifier >>> arr (CSL . toFilePath)
 
 newtype Biblio = Biblio [CSL.Reference]
     deriving (Show, Typeable)
@@ -49,9 +48,9 @@ instance Binary Biblio where
 instance Writable Biblio where
     write _ _ = return ()
 
-biblioCompiler :: Compiler Resource Biblio
-biblioCompiler = unsafeCompiler $
-    fmap Biblio . CSL.readBiblioFile . unResource
+biblioCompiler :: Compiler () Biblio
+biblioCompiler = getIdentifier >>>
+    arr toFilePath >>> unsafeCompiler CSL.readBiblioFile >>> arr Biblio
 
 pageReadPandocBiblio :: ParserState
                      -> Identifier CSL

@@ -11,12 +11,11 @@ import Data.List (isPrefixOf)
 import Control.Arrow ((>>^))
 
 import Hakyll.Core.Compiler
-import Hakyll.Core.Resource
 import Hakyll.Core.Util.String
 
 -- | Compiler form of 'compressCss'
 --
-compressCssCompiler :: Compiler Resource String
+compressCssCompiler :: Compiler a String
 compressCssCompiler = getResourceString >>^ compressCss
 
 -- | Compress CSS to speed up your site.

@@ -38,7 +38,7 @@ import Hakyll.Web.Page.Internal
 import Hakyll.Core.Util.String
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
-import Hakyll.Core.Resource.Provider
+import Hakyll.Core.ResourceProvider
 
 -- | Get a metadata field. If the field does not exist, the empty string is
 -- returned.
@@ -208,7 +208,7 @@ renderModificationTimeWith :: TimeLocale
                            -> Compiler (Page String) (Page String)
                            -- ^ Resulting compiler
 renderModificationTimeWith locale key format =
-    id &&& (getResource >>> getResourceWith resourceModificationTime) >>>
+    id &&& (getResourceWith resourceModificationTime) >>>
     setFieldA key (arr (formatTime locale format))
 
 -- | Copy the body of a page to a metadata field

@@ -34,6 +34,7 @@ module Hakyll.Core.Identifier
     ( Identifier (..)
     , castIdentifier
     , parseIdentifier
+    , fromFilePath
     , toFilePath
     , setGroup
     ) where
@@ -77,16 +78,24 @@ castIdentifier :: Identifier a -> Identifier b
 castIdentifier (Identifier g p) = Identifier g p
 {-# INLINE castIdentifier #-}
 
+
+--------------------------------------------------------------------------------
 -- | Parse an identifier from a string
---
 parseIdentifier :: String -> Identifier a
-parseIdentifier = Identifier Nothing
-                . intercalate "/" . filter (not . null) . split'
+parseIdentifier = Identifier Nothing .
+    intercalate "/" . filter (not . null) . split'
   where
     split' = map dropTrailingPathSeparator . splitPath
 
+
+--------------------------------------------------------------------------------
+-- | Create an identifier from a filepath
+fromFilePath :: FilePath -> Identifier a
+fromFilePath = parseIdentifier
+
+
+--------------------------------------------------------------------------------
 -- | Convert an identifier to a relative 'FilePath'
---
 toFilePath :: Identifier a -> FilePath
 toFilePath = identifierPath
 

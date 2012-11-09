@@ -1,55 +1,56 @@
 --------------------------------------------------------------------------------
-module Hakyll.Core.Resource.Modified
+module Hakyll.Core.ResourceProvider.Modified
     ( resourceModified
     , resourceModificationTime
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative                    ((<$>), (<*>))
-import           Control.Monad                          (when)
-import qualified Crypto.Hash.MD5                        as MD5
-import qualified Data.ByteString                        as B
-import qualified Data.ByteString.Lazy                   as BL
+import           Control.Applicative                        ((<$>), (<*>))
+import           Control.Monad                              (when)
+import qualified Crypto.Hash.MD5                            as MD5
+import qualified Data.ByteString                            as B
+import qualified Data.ByteString.Lazy                       as BL
 import           Data.IORef
-import qualified Data.Map                               as M
-import           Data.Time                              (UTCTime)
-import           System.Directory                       (getModificationTime)
+import qualified Data.Map                                   as M
+import           Data.Time                                  (UTCTime)
+import           System.Directory                           (getModificationTime)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Resource
-import           Hakyll.Core.Resource.MetadataCache
-import           Hakyll.Core.Resource.Provider.Internal
-import           Hakyll.Core.Store                      (Store)
-import qualified Hakyll.Core.Store                      as Store
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.ResourceProvider.Internal
+import           Hakyll.Core.ResourceProvider.MetadataCache
+import           Hakyll.Core.Store                          (Store)
+import qualified Hakyll.Core.Store                          as Store
 
 
 --------------------------------------------------------------------------------
 -- | A resource is modified if it or its metadata has changed
-resourceModified :: ResourceProvider -> Resource -> IO Bool
+resourceModified :: ResourceProvider -> Identifier a -> IO Bool
 resourceModified rp r
     | not exists = return False
     | otherwise  = do
         cache <- readIORef cacheRef
-        case M.lookup r cache of
+        case M.lookup normalized cache of
             Just m  -> return m
             Nothing -> do
                 -- Check if the actual file was modified, and do a recursive
                 -- call to check if the metadata file was modified
                 m <- (||)
-                    <$> fileDigestModified store (unResource r)
+                    <$> fileDigestModified store (toFilePath r)
                     <*> resourceModified rp (resourceMetadataResource r)
-                modifyIORef cacheRef (M.insert r m)
+                modifyIORef cacheRef (M.insert normalized m)
 
                 -- Important! (But ugly)
                 when m $ resourceInvalidateMetadataCache rp r
 
                 return m
   where
-    exists   = resourceExists rp r
-    store    = resourceStore rp
-    cacheRef = resourceModifiedCache rp
+    normalized = castIdentifier $ setGroup Nothing r
+    exists     = resourceExists rp r
+    store      = resourceStore rp
+    cacheRef   = resourceModifiedCache rp
 
 
 --------------------------------------------------------------------------------
@@ -78,5 +79,5 @@ fileDigest = fmap MD5.hashlazy . BL.readFile
 
 
 --------------------------------------------------------------------------------
-resourceModificationTime :: Resource -> IO UTCTime
-resourceModificationTime = getModificationTime . unResource
+resourceModificationTime :: Identifier a -> IO UTCTime
+resourceModificationTime = getModificationTime . toFilePath

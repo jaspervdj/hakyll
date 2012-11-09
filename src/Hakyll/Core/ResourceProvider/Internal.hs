@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
-module Hakyll.Core.Resource.Provider.Internal
+module Hakyll.Core.ResourceProvider.Internal
     ( ResourceProvider (..)
     , newResourceProvider
 
@@ -24,18 +24,18 @@ import           System.FilePath       (addExtension)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Resource
 import           Hakyll.Core.Store
 import           Hakyll.Core.Util.File
+import           Hakyll.Core.Identifier
 
 
 --------------------------------------------------------------------------------
 -- | Responsible for retrieving and listing resources
 data ResourceProvider = ResourceProvider
     { -- | A list of all files found
-      resourceSet           :: Set Resource
+      resourceSet           :: Set (Identifier ())
     , -- | Cache keeping track of modified files
-      resourceModifiedCache :: IORef (Map Resource Bool)
+      resourceModifiedCache :: IORef (Map (Identifier ()) Bool)
     , -- | Underlying persistent store for caching
       resourceStore         :: Store
     }
@@ -48,37 +48,39 @@ newResourceProvider :: Store                -- ^ Store to use
                     -> FilePath             -- ^ Search directory
                     -> IO ResourceProvider  -- ^ Resulting provider
 newResourceProvider store ignore directory = do
-    list  <- map resource . filter (not . ignore) <$>
+    list  <- map parseIdentifier . filter (not . ignore) <$>
         getRecursiveContents False directory
     cache <- newIORef M.empty
     return $ ResourceProvider (S.fromList list) cache store
 
 
 --------------------------------------------------------------------------------
-resourceList :: ResourceProvider -> [Resource]
+resourceList :: ResourceProvider -> [Identifier ()]
 resourceList = S.toList . resourceSet
 
 
 --------------------------------------------------------------------------------
 -- | Check if a given resiyrce exists
-resourceExists :: ResourceProvider -> Resource -> Bool
-resourceExists provider = (`S.member` resourceSet provider)
+resourceExists :: ResourceProvider -> Identifier a -> Bool
+resourceExists provider =
+    (`S.member` resourceSet provider) . setGroup Nothing . castIdentifier
 
 
 --------------------------------------------------------------------------------
 -- | Each resource may have an associated metadata resource (with a @.metadata@
 -- filename)
-resourceMetadataResource :: Resource -> Resource
-resourceMetadataResource = resource . flip addExtension "metadata" . unResource
+resourceMetadataResource :: Identifier a -> Identifier ()
+resourceMetadataResource =
+    parseIdentifier . flip addExtension "metadata" . toFilePath
 
 
 --------------------------------------------------------------------------------
 -- | Get the raw body of a resource as string
-resourceString :: Resource -> IO String
-resourceString = readFile . unResource
+resourceString :: Identifier a -> IO String
+resourceString = readFile . toFilePath
 
 
 --------------------------------------------------------------------------------
 -- | Get the raw body of a resource of a lazy bytestring
-resourceLBS :: Resource -> IO BL.ByteString
-resourceLBS = BL.readFile . unResource
+resourceLBS :: Identifier a -> IO BL.ByteString
+resourceLBS = BL.readFile . toFilePath

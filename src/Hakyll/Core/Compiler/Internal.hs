@@ -26,7 +26,7 @@ import Control.Category (Category, (.), id)
 import Control.Arrow (Arrow, ArrowChoice, arr, first, left)
 
 import Hakyll.Core.Identifier
-import Hakyll.Core.Resource.Provider
+import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Store
 import Hakyll.Core.Routes
 import Hakyll.Core.Logger

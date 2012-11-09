@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- | This module provides an wrapper API around the file system which does some
 -- caching.
-module Hakyll.Core.Resource.Provider
+module Hakyll.Core.ResourceProvider
     ( -- * Constructing resource providers
       ResourceProvider
     , newResourceProvider
@@ -23,15 +23,16 @@ module Hakyll.Core.Resource.Provider
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Resource
-import qualified Hakyll.Core.Resource.MetadataCache     as Internal
-import           Hakyll.Core.Resource.Modified
-import           Hakyll.Core.Resource.Provider.Internal
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Metadata
+import           Hakyll.Core.ResourceProvider.Internal
+import qualified Hakyll.Core.ResourceProvider.MetadataCache as Internal
+import           Hakyll.Core.ResourceProvider.Modified
 
 
 --------------------------------------------------------------------------------
 -- | Wrapper to ensure metadata cache is invalidated if necessary
-resourceMetadata :: ResourceProvider -> Resource -> IO Metadata
+resourceMetadata :: ResourceProvider -> Identifier a -> IO Metadata
 resourceMetadata rp r = do
     _ <- resourceModified rp r
     Internal.resourceMetadata rp r
@@ -39,7 +40,7 @@ resourceMetadata rp r = do
 
 --------------------------------------------------------------------------------
 -- | Wrapper to ensure metadata cache is invalidated if necessary
-resourceBody :: ResourceProvider -> Resource -> IO String
+resourceBody :: ResourceProvider -> Identifier a -> IO String
 resourceBody rp r = do
     _ <- resourceModified rp r
     Internal.resourceBody rp r

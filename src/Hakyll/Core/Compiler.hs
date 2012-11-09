@@ -93,7 +93,6 @@ module Hakyll.Core.Compiler
     ( Compiler
     , runCompiler
     , getIdentifier
-    , getResource
     , getRoute
     , getRouteFor
     , getResourceString
@@ -135,8 +134,7 @@ import Hakyll.Core.Identifier
 import Hakyll.Core.Identifier.Pattern
 import Hakyll.Core.CompiledItem
 import Hakyll.Core.Writable
-import Hakyll.Core.Resource
-import Hakyll.Core.Resource.Provider
+import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store (Store)
 import Hakyll.Core.Rules.Internal
@@ -181,11 +179,6 @@ getIdentifier :: Compiler a (Identifier b)
 getIdentifier = fromJob $ const $ CompilerM $
     castIdentifier . compilerIdentifier <$> ask
 
--- | Get the resource that is currently being compiled
---
-getResource :: Compiler a Resource
-getResource = getIdentifier >>> arr fromIdentifier
-
 -- | Get the route we are using for this item
 --
 getRoute :: Compiler a (Maybe FilePath)
@@ -200,22 +193,23 @@ getRouteFor = fromJob $ \identifier -> CompilerM $ do
 
 -- | Get the resource we are compiling as a string
 --
-getResourceString :: Compiler Resource String
+getResourceString :: Compiler a String
 getResourceString = getResourceWith resourceString
 
 -- | Get the resource we are compiling as a lazy bytestring
 --
-getResourceLBS :: Compiler Resource ByteString
+getResourceLBS :: Compiler a ByteString
 getResourceLBS = getResourceWith resourceLBS
 
 -- | Overloadable function for 'getResourceString' and 'getResourceLBS'
 --
-getResourceWith :: (Resource -> IO a) -> Compiler Resource a
-getResourceWith reader = fromJob $ \r -> CompilerM $ do
-    let filePath = unResource r
+getResourceWith :: (Identifier a -> IO b) -> Compiler c b
+getResourceWith reader = fromJob $ \_ -> CompilerM $ do
     provider <- compilerResourceProvider <$> ask
+    r        <- compilerIdentifier <$> ask
+    let filePath = toFilePath r
     if resourceExists provider r
-        then liftIO $ reader r
+        then liftIO $ reader $ castIdentifier r
         else throwError $ error' filePath
   where
     error' id' =  "Hakyll.Core.Compiler.getResourceWith: resource "
@@ -299,17 +293,17 @@ requireAllA pattern = (id &&& requireAll_ pattern >>>)
 
 cached :: (Binary a, Typeable a, Writable a)
        => String
-       -> Compiler Resource a
-       -> Compiler Resource a
+       -> Compiler () a
+       -> Compiler () a
 cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
-    logger <- compilerLogger <$> ask
+    logger     <- compilerLogger <$> ask
     identifier <- castIdentifier . compilerIdentifier <$> ask
-    store <- compilerStore <$> ask
-    modified <- compilerResourceModified <$> ask
-    progName <- liftIO getProgName
+    store      <- compilerStore <$> ask
+    modified   <- compilerResourceModified <$> ask
+    progName   <- liftIO getProgName
     report logger $ "Checking cache: " ++ if modified then "modified" else "OK"
     if modified
-        then do v <- unCompilerM $ j $ fromIdentifier identifier
+        then do v <- unCompilerM $ j ()
                 liftIO $ Store.set store [name, show identifier] v
                 return v
         else do v <- liftIO $ Store.get store [name, show identifier]

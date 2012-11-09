@@ -72,7 +72,6 @@ import Text.Pandoc (Pandoc, ParserState, WriterOptions)
 
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
-import Hakyll.Core.Resource
 import Hakyll.Web.Page.Internal
 import Hakyll.Web.Page.Read
 import Hakyll.Web.Page.Metadata
@@ -87,12 +86,12 @@ fromBody = Page M.empty
 
 -- | Read a page (do not render it)
 --
-readPageCompiler :: Compiler Resource (Page String)
+readPageCompiler :: Compiler () (Page String)
 readPageCompiler = getResourceString >>^ readPage
 
 -- | Read a page, add default fields, substitute fields and render using pandoc
 --
-pageCompiler :: Compiler Resource (Page String)
+pageCompiler :: Compiler () (Page String)
 pageCompiler =
     pageCompilerWith defaultHakyllParserState defaultHakyllWriterOptions
 
@@ -100,7 +99,7 @@ pageCompiler =
 -- options
 --
 pageCompilerWith :: ParserState -> WriterOptions
-                 -> Compiler Resource (Page String)
+                 -> Compiler () (Page String)
 pageCompilerWith state options = pageCompilerWithPandoc state options id
 
 -- | An extension of 'pageCompilerWith' which allows you to specify a custom
@@ -108,7 +107,7 @@ pageCompilerWith state options = pageCompilerWithPandoc state options id
 --
 pageCompilerWithPandoc :: ParserState -> WriterOptions
                        -> (Pandoc -> Pandoc)
-                       -> Compiler Resource (Page String)
+                       -> Compiler () (Page String)
 pageCompilerWithPandoc state options f = cached cacheName $
     readPageCompiler >>> addDefaultFields >>> arr applySelf
                      >>> pageReadPandocWith state
@@ -124,7 +123,7 @@ pageCompilerWithPandoc state options f = cached cacheName $
 pageCompilerWithFields :: ParserState -> WriterOptions
                        -> (Pandoc -> Pandoc)
                        -> Compiler (Page String) (Page String)
-                       -> Compiler Resource (Page String)
+                       -> Compiler () (Page String)
 pageCompilerWithFields state options f g =
     readPageCompiler >>> addDefaultFields >>> g >>> arr applySelf
                      >>> pageReadPandocWith state
