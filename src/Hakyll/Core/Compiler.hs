@@ -108,7 +108,6 @@ module Hakyll.Core.Compiler
     , cached
     , unsafeCompiler
     , traceShowCompiler
-    , mapCompiler
     , timedCompiler
     , byPattern
     , byExtension
@@ -327,12 +326,6 @@ traceShowCompiler = fromJob $ \x -> CompilerM $ do
     logger <- compilerLogger <$> ask
     report logger $ show x
     return x
-
--- | Map over a compiler
---
-mapCompiler :: Compiler a b
-            -> Compiler [a] [b]
-mapCompiler (Compiler d j) = Compiler d $ mapM j
 
 -- | Log and time a compiler
 --

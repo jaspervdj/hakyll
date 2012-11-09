@@ -55,8 +55,8 @@ pageListCompiler sort template =
 --
 applyTemplateToList :: Identifier Template
                     -> Compiler [Page String] [Page String]
-applyTemplateToList identifier =
-    require identifier $ \posts template -> map (applyTemplate template) posts
+applyTemplateToList identifier = require identifier $
+    \posts template -> map (applyTemplateToPage template) posts
 
 -- | Concatenate the bodies of a page list
 --

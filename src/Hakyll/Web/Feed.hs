@@ -62,7 +62,7 @@ createFeed :: Template           -- ^ Feed template
            -> [Page String]      -- ^ Items to include
            -> String             -- ^ Resulting feed
 createFeed feedTemplate itemTemplate url configuration items =
-    pageBody $ applyTemplate feedTemplate
+    pageBody $ applyTemplateToPage feedTemplate
              $ trySetField "updated"     updated
              $ trySetField "title"       (feedTitle configuration)
              $ trySetField "description" (feedDescription configuration)
@@ -73,7 +73,7 @@ createFeed feedTemplate itemTemplate url configuration items =
              $ fromBody body
   where
     -- Preprocess items
-    items' = flip map items $ applyTemplate itemTemplate
+    items' = flip map items $ applyTemplateToPage itemTemplate
                             . trySetField "root" (feedRoot configuration)
 
     -- Body: concatenated items

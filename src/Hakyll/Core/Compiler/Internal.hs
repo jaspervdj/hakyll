@@ -38,6 +38,7 @@ import           Hakyll.Core.Logger
 import           Hakyll.Core.ResourceProvider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Store
+import           Hakyll.Core.Util.Arrow
 
 
 --------------------------------------------------------------------------------
@@ -136,6 +137,11 @@ instance ArrowChoice Compiler where
     left ~(Compiler d j) = Compiler d $ \e -> case e of
         Left l  -> Left  <$> j l
         Right r -> Right <$> return r
+
+
+--------------------------------------------------------------------------------
+instance ArrowMap Compiler where
+    mapA (Compiler d j) = Compiler d $ mapM j
 
 
 --------------------------------------------------------------------------------

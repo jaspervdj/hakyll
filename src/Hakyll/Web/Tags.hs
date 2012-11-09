@@ -65,6 +65,7 @@ import Hakyll.Web.Urls
 import Hakyll.Core.Writable
 import Hakyll.Core.Identifier
 import Hakyll.Core.Compiler
+import Hakyll.Core.Util.Arrow
 import Hakyll.Core.Util.String
 
 -- | Data about tags
@@ -128,8 +129,7 @@ renderTags :: (String -> Identifier (Page a))
            -- ^ Tag cloud renderer
 renderTags makeUrl makeItem concatItems = proc (Tags tags) -> do
     -- In tags' we create a list: [((tag, route), count)]
-    tags' <- mapCompiler ((id &&& (getRouteFor <<^ makeUrl)) *** arr length)
-                -< tags
+    tags' <- mapA ((id &&& (getRouteFor <<^ makeUrl)) *** arr length) -< tags
 
     let -- Absolute frequencies of the pages
         freqs = map snd tags'
@@ -195,7 +195,7 @@ renderTagsFieldWith tags destination makeUrl =
     -- Compiler creating a comma-separated HTML string for a list of tags
     renderTags' :: Compiler [String] String
     renderTags' =   arr (map $ id &&& makeUrl)
-                >>> mapCompiler (id *** getRouteFor)
+                >>> mapA (id *** getRouteFor)
                 >>> arr (map $ uncurry renderLink)
                 >>> arr (renderHtml . mconcat . intersperse ", " . catMaybes)
 
