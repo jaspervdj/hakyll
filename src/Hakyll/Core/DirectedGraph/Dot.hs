@@ -1,15 +1,18 @@
+--------------------------------------------------------------------------------
 -- | Dump a directed graph in dot format. Used for debugging purposes
---
 module Hakyll.Core.DirectedGraph.Dot
     ( toDot
     , writeDot
     ) where
 
-import Hakyll.Core.DirectedGraph
-import qualified Data.Set as S
 
+--------------------------------------------------------------------------------
+import qualified Data.Set                  as S
+import           Hakyll.Core.DirectedGraph
+
+
+--------------------------------------------------------------------------------
 -- | Convert a directed graph into dot format for debugging purposes
---
 toDot :: Ord a
       => (a -> String)    -- ^ Convert nodes to dot names
       -> DirectedGraph a  -- ^ Graph to dump
@@ -25,8 +28,9 @@ toDot showTag graph = unlines $ concat
     showEdges node = map (showEdge node) $ S.toList $ neighbours node graph
     showEdge x y = "    \"" ++ showTag x ++ "\" -> \"" ++ showTag y ++ "\";"
 
+
+--------------------------------------------------------------------------------
 -- | Write out the @.dot@ file to a given file path. See 'toDot' for more
 -- information.
---
 writeDot :: Ord a => FilePath -> (a -> String) -> DirectedGraph a -> IO ()
 writeDot path showTag = writeFile path . toDot showTag
