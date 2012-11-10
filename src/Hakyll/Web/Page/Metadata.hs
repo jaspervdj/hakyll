@@ -186,6 +186,7 @@ getUTCMaybe locale page = msum $
         [ "%a, %d %b %Y %H:%M:%S UT"
         , "%Y-%m-%dT%H:%M:%SZ"
         , "%Y-%m-%d %H:%M:%S"
+        , "%Y-%m-%d"
         , "%B %e, %Y %l:%M %p"
         , "%B %e, %Y"
         ]
