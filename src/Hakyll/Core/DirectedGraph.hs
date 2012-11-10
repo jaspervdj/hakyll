@@ -1,45 +1,61 @@
 --------------------------------------------------------------------------------
 -- | Representation of a directed graph. In Hakyll, this is used for dependency
 -- tracking.
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.DirectedGraph
     ( DirectedGraph
+
     , fromList
     , toList
+
     , member
     , nodes
     , neighbours
-    , reverse
-    , reachableNodes
     ) where
 
 
 --------------------------------------------------------------------------------
-import Prelude hiding (reverse)
-import Control.Arrow (second)
-import Data.Monoid (mconcat)
-import Data.Set (Set)
-import Data.Maybe (fromMaybe)
-import qualified Data.Map as M
-import qualified Data.Set as S
+import           Control.Arrow   (second)
+import           Control.DeepSeq (NFData)
+import           Data.Binary     (Binary)
+import           Data.Map        (Map)
+import qualified Data.Map        as M
+import           Data.Maybe      (fromMaybe)
+import           Data.Monoid     (Monoid (..))
+import           Data.Set        (Set)
+import qualified Data.Set        as S
+import           Data.Typeable   (Typeable)
+import           Prelude         hiding (reverse)
 
 
 --------------------------------------------------------------------------------
-import Hakyll.Core.DirectedGraph.Internal
+-- | Type used to represent a directed graph
+newtype DirectedGraph a = DirectedGraph {unDirectedGraph :: Map a [a]}
+    deriving (Show, Binary, NFData, Typeable)
+
+
+--------------------------------------------------------------------------------
+-- | Allow users to concatenate different graphs
+instance Ord a => Monoid (DirectedGraph a) where
+    mempty                                        = DirectedGraph M.empty
+    mappend (DirectedGraph m1) (DirectedGraph m2) = DirectedGraph $
+        M.unionWith (\x y -> sortUnique (x ++ y)) m1 m2
 
 
 --------------------------------------------------------------------------------
 -- | Construction of directed graphs
 fromList :: Ord a
-         => [(a, Set a)]     -- ^ List of (node, reachable neighbours)
+         => [(a, [a])]       -- ^ List of (node, reachable neighbours)
          -> DirectedGraph a  -- ^ Resulting directed graph
-fromList = DirectedGraph . M.fromList . map (\(t, d) -> (t, Node t d))
+fromList = DirectedGraph . M.fromList . map (second sortUnique)
 
 
 --------------------------------------------------------------------------------
 -- | Deconstruction of directed graphs
 toList :: DirectedGraph a
-       -> [(a, Set a)]
-toList = map (second nodeNeighbours) . M.toList . unDirectedGraph
+       -> [(a, [a])]
+toList = M.toList . unDirectedGraph
 
 
 --------------------------------------------------------------------------------
@@ -64,32 +80,11 @@ nodes = M.keysSet . unDirectedGraph
 neighbours :: Ord a
            => a                -- ^ Node to get the neighbours of
            -> DirectedGraph a  -- ^ Graph to search in
-           -> Set a            -- ^ Set containing the neighbours
-neighbours x = fromMaybe S.empty . fmap nodeNeighbours .
-    M.lookup x . unDirectedGraph
+           -> [a]              -- ^ Set containing the neighbours
+neighbours x dg = fromMaybe [] $ M.lookup x $ unDirectedGraph dg
 
 
 --------------------------------------------------------------------------------
--- | Reverse a directed graph (i.e. flip all edges)
-reverse :: Ord a
-        => DirectedGraph a
-        -> DirectedGraph a
-reverse = mconcat . map reverse' . M.toList . unDirectedGraph
-  where
-    reverse' (id', Node _ neighbours') = fromList $
-        zip (S.toList neighbours') $ repeat $ S.singleton id'
-
-
---------------------------------------------------------------------------------
--- | Find all reachable nodes from a given set of nodes in the directed graph
-reachableNodes :: Ord a => Set a -> DirectedGraph a -> Set a
-reachableNodes set graph = reachable (setNeighbours set) set
-  where
-    reachable next visited
-        | S.null next = visited
-        | otherwise = reachable (sanitize neighbours') (next `S.union` visited)
-      where
-        sanitize = S.filter (`S.notMember` visited)
-        neighbours' = setNeighbours (sanitize next)
-
-    setNeighbours = S.unions . map (`neighbours` graph) . S.toList
+-- | Sort and make unique
+sortUnique :: Ord a => [a] -> [a]
+sortUnique = S.toAscList . S.fromList

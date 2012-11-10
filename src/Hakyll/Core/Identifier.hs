@@ -40,6 +40,7 @@ module Hakyll.Core.Identifier
     ) where
 
 import Control.Applicative ((<$>), (<*>))
+import Control.DeepSeq (NFData (..))
 import Control.Monad (mplus)
 import Data.Monoid (Monoid, mempty, mappend)
 import Data.List (intercalate)
@@ -71,6 +72,9 @@ instance Show (Identifier a) where
 
 instance IsString (Identifier a) where
     fromString = parseIdentifier
+
+instance NFData (Identifier a) where
+    rnf (Identifier g p) = rnf g `seq` rnf p `seq` ()
 
 -- | Discard the phantom type parameter of an identifier
 --

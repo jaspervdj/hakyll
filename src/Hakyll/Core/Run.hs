@@ -1,41 +1,47 @@
+--------------------------------------------------------------------------------
 -- | This is the module which binds it all together
---
-{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
 module Hakyll.Core.Run
     ( run
     ) where
 
-import Control.Applicative (Applicative, (<$>))
-import Control.Monad (filterM, forM_)
-import Control.Monad.Error (ErrorT, runErrorT, throwError)
-import Control.Monad.Reader (ReaderT, runReaderT, ask)
-import Control.Monad.State.Strict (StateT, runStateT, get, put)
-import Control.Monad.Trans (liftIO)
-import Data.Map (Map)
-import Data.Monoid (mempty, mappend)
-import Prelude hiding (reverse)
-import System.FilePath ((</>))
-import qualified Data.Map as M
-import qualified Data.Set as S
 
-import Hakyll.Core.CompiledItem
-import Hakyll.Core.Compiler
-import Hakyll.Core.Compiler.Internal
-import Hakyll.Core.Configuration
-import Hakyll.Core.DependencyAnalyzer
-import Hakyll.Core.DirectedGraph
-import Hakyll.Core.Identifier
-import Hakyll.Core.Logger
-import Hakyll.Core.ResourceProvider
-import Hakyll.Core.Routes
-import Hakyll.Core.Rules.Internal
-import Hakyll.Core.Store (Store)
-import Hakyll.Core.Util.File
-import Hakyll.Core.Writable
-import qualified Hakyll.Core.Store as Store
+--------------------------------------------------------------------------------
+import           Control.Applicative            (Applicative, (<$>))
+import           Control.DeepSeq                (deepseq)
+import           Control.Monad                  (filterM, forM_)
+import           Control.Monad.Error            (ErrorT, runErrorT, throwError)
+import           Control.Monad.Reader           (ReaderT, ask, runReaderT)
+import           Control.Monad.Trans            (liftIO)
+import           Data.Map                       (Map)
+import qualified Data.Map                       as M
+import           Data.Monoid                    (mempty)
+import qualified Data.Set                       as S
+import           Prelude                        hiding (reverse)
+import           System.FilePath                ((</>))
 
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.CompiledItem
+import           Hakyll.Core.Compiler
+import           Hakyll.Core.Compiler.Internal
+import           Hakyll.Core.Configuration
+import           Hakyll.Core.DependencyAnalyzer
+import qualified Hakyll.Core.DirectedGraph      as DG
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Logger
+import           Hakyll.Core.ResourceProvider
+import           Hakyll.Core.Routes
+import           Hakyll.Core.Rules.Internal
+import           Hakyll.Core.Store              (Store)
+import qualified Hakyll.Core.Store              as Store
+import           Hakyll.Core.Util.File
+import           Hakyll.Core.Writable
+
+
+--------------------------------------------------------------------------------
 -- | Run all rules needed, return the rule set used
---
 run :: HakyllConfiguration -> RulesM a -> IO RuleSet
 run configuration rules = do
     logger <- makeLogger putStrLn
@@ -46,136 +52,113 @@ run configuration rules = do
     provider <- timed logger "Creating provider" $ newResourceProvider
         store (ignoreFile configuration) "."
 
-    -- Fetch the old graph from the store. If we don't find it, we consider this
-    -- to be the first run
-    graph <- Store.get store ["Hakyll.Core.Run.run", "dependencies"]
-    let (firstRun, oldGraph) = case graph of Store.Found g -> (False, g)
-                                             _             -> (True, mempty)
-
     ruleSet <- timed logger "Running rules" $ runRules rules provider
     let compilers = rulesCompilers ruleSet
 
         -- Extract the reader/state
-        reader = unRuntime $ addNewCompilers compilers
-        stateT = runReaderT reader $ RuntimeEnvironment
-                    { hakyllLogger           = logger
-                    , hakyllConfiguration    = configuration
-                    , hakyllRoutes           = rulesRoutes ruleSet
-                    , hakyllResourceProvider = provider
-                    , hakyllStore            = store
-                    , hakyllFirstRun         = firstRun
+        reader = unRuntime analyzeAndBuild
+        errorT = runReaderT reader $ RuntimeEnvironment
+                    { runtimeLogger        = logger
+                    , runtimeConfiguration = configuration
+                    , runtimeRoutes        = rulesRoutes ruleSet
+                    , runtimeProvider      = provider
+                    , runtimeStore         = store
+                    , runtimeCompilers     = M.fromList compilers
                     }
 
     -- Run the program and fetch the resulting state
-    result <- runErrorT $ runStateT stateT $ RuntimeState
-        { hakyllAnalyzer  = makeDependencyAnalyzer mempty (const False) oldGraph
-        , hakyllCompilers = M.empty
-        }
-
+    result <- runErrorT errorT
     case result of
-        Left e             ->
-            thrown logger e
-        Right ((), state') ->
-            -- We want to save the final dependency graph for the next run
-            Store.set store ["Hakyll.Core.Run.run", "dependencies"] $
-                analyzerGraph $ hakyllAnalyzer state'
+        Left e -> thrown logger e
+        _      -> return ()
 
     -- Flush and return
     flushLogger logger
     return ruleSet
 
+
+--------------------------------------------------------------------------------
 data RuntimeEnvironment = RuntimeEnvironment
-    { hakyllLogger           :: Logger
-    , hakyllConfiguration    :: HakyllConfiguration
-    , hakyllRoutes           :: Routes
-    , hakyllResourceProvider :: ResourceProvider
-    , hakyllStore            :: Store
-    , hakyllFirstRun         :: Bool
+    { runtimeLogger        :: Logger
+    , runtimeConfiguration :: HakyllConfiguration
+    , runtimeRoutes        :: Routes
+    , runtimeProvider      :: ResourceProvider
+    , runtimeStore         :: Store
+    , runtimeCompilers     :: Map (Identifier ()) (Compiler () CompiledItem)
     }
 
-data RuntimeState = RuntimeState
-    { hakyllAnalyzer  :: DependencyAnalyzer (Identifier ())
-    , hakyllCompilers :: Map (Identifier ()) (Compiler () CompiledItem)
-    }
 
+--------------------------------------------------------------------------------
 newtype Runtime a = Runtime
-    { unRuntime :: ReaderT RuntimeEnvironment
-        (StateT RuntimeState (ErrorT String IO)) a
+    { unRuntime :: ReaderT RuntimeEnvironment (ErrorT String IO) a
     } deriving (Functor, Applicative, Monad)
 
--- | Add a number of compilers and continue using these compilers
---
-addNewCompilers :: [(Identifier (), Compiler () CompiledItem)]
-                -- ^ Compilers to add
-                -> Runtime ()
-addNewCompilers newCompilers = Runtime $ do
-    -- Get some information
-    logger <- hakyllLogger <$> ask
-    section logger "Adding new compilers"
-    provider <- hakyllResourceProvider <$> ask
-    firstRun <- hakyllFirstRun <$> ask
 
-    -- Old state information
-    oldCompilers <- hakyllCompilers <$> get
-    oldAnalyzer <- hakyllAnalyzer <$> get
+--------------------------------------------------------------------------------
+analyzeAndBuild :: Runtime ()
+analyzeAndBuild = Runtime $ do
+    -- Get some stuff
+    logger    <- runtimeLogger <$> ask
+    provider  <- runtimeProvider <$> ask
+    store     <- runtimeStore <$> ask
+    compilers <- runtimeCompilers <$> ask
 
-    let -- All known compilers
-        universe = M.keys oldCompilers ++ map fst newCompilers
+    -- Checking which items have been modified
+    let universe = M.keys compilers
+    modified <- timed logger "Checking for modified items" $
+        fmap S.fromList $ flip filterM universe $
+            liftIO . resourceModified provider
 
-        -- Create a new partial dependency graph
-        dependencies = flip map newCompilers $ \(id', compiler) ->
-            let deps = runCompilerDependencies compiler id' universe
-            in (id', deps)
+    -- Fetch the old graph from the store. If we don't find it, we consider this
+    -- to be the first run
+    mOldGraph <- liftIO $ Store.get store graphKey
+    let (firstRun, oldGraph) = case mOldGraph of Store.Found g -> (False, g)
+                                                 _             -> (True, mempty)
 
-        -- Create the dependency graph
-        newGraph = fromList dependencies
+        -- Create a new dependency graph
+        graph    = DG.fromList $
+            flip map (M.toList compilers) $ \(id', compiler) ->
+                let deps = runCompilerDependencies compiler id' universe
+                in (id', S.toList deps)
 
-    -- Check which items have been modified
-    modified <- fmap S.fromList $ flip filterM (map fst newCompilers) $
-        liftIO . resourceModified provider
-    let checkModified = if firstRun then const True else (`S.member` modified)
+        ood | firstRun  = const True
+            | otherwise = (`S.member` modified)
 
-    -- Create a new analyzer and append it to the currect one
-    let newAnalyzer = makeDependencyAnalyzer newGraph checkModified $
-            analyzerPreviousGraph oldAnalyzer
-        analyzer = mappend oldAnalyzer newAnalyzer
+        -- Check for cycles and analyze the graph
+        analysis = analyze oldGraph graph ood
 
-    -- Update the state
-    put $ RuntimeState
-        { hakyllAnalyzer  = analyzer
-        , hakyllCompilers = M.union oldCompilers (M.fromList newCompilers)
-        }
+    -- Make sure this stuff is evaluated
+    () <- timed logger "Analyzing dependency graph" $
+        oldGraph `deepseq` analysis `deepseq` return ()
 
-    -- Continue
-    unRuntime stepAnalyzer
+    -- We want to save the new dependency graph for the next run
+    liftIO $ Store.set store graphKey graph
 
-stepAnalyzer :: Runtime ()
-stepAnalyzer = Runtime $ do
-    -- Step the analyzer
-    state <- get
-    let (signal, analyzer') = step $ hakyllAnalyzer state
-    put $ state { hakyllAnalyzer = analyzer' }
+    case analysis of
+        Cycle c -> unRuntime $ dumpCycle c
+        Order o -> mapM_ (unRuntime . build) o
+  where
+    graphKey = ["Hakyll.Core.Run.run", "dependencies"]
 
-    case signal of Done      -> return ()
-                   Cycle c   -> unRuntime $ dumpCycle c
-                   Build id' -> unRuntime $ build id'
 
+--------------------------------------------------------------------------------
 -- | Dump cyclic error and quit
---
 dumpCycle :: [Identifier ()] -> Runtime ()
 dumpCycle cycle' = Runtime $ do
-    logger <- hakyllLogger <$> ask
+    logger <- runtimeLogger <$> ask
     section logger "Dependency cycle detected! Conflict:"
     forM_ (zip cycle' $ drop 1 cycle') $ \(x, y) ->
         report logger $ show x ++ " -> " ++ show y
 
+
+--------------------------------------------------------------------------------
 build :: Identifier () -> Runtime ()
 build id' = Runtime $ do
-    logger <- hakyllLogger <$> ask
-    routes <- hakyllRoutes <$> ask
-    provider <- hakyllResourceProvider <$> ask
-    store <- hakyllStore <$> ask
-    compilers <- hakyllCompilers <$> get
+    logger    <- runtimeLogger <$> ask
+    routes    <- runtimeRoutes <$> ask
+    provider  <- runtimeProvider <$> ask
+    store     <- runtimeStore <$> ask
+    compilers <- runtimeCompilers <$> ask
 
     section logger $ "Compiling " ++ show id'
 
@@ -197,13 +180,10 @@ build id' = Runtime $ do
                 Nothing  -> return ()
                 Just url -> timed logger ("Routing to " ++ url) $ do
                     destination <-
-                        destinationDirectory . hakyllConfiguration <$> ask
+                        destinationDirectory . runtimeConfiguration <$> ask
                     let path = destination </> url
                     liftIO $ makeDirectories path
                     liftIO $ write path compiled
-
-            -- Continue for the remaining compilers
-            unRuntime stepAnalyzer
 
         -- Some error happened, rethrow in Runtime monad
         Left err -> throwError err

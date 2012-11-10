@@ -25,7 +25,7 @@ toDot showTag graph = unlines $ concat
     ]
   where
     showNode node = "    \"" ++ showTag node ++ "\";"
-    showEdges node = map (showEdge node) $ S.toList $ neighbours node graph
+    showEdges node = map (showEdge node) $ neighbours node graph
     showEdge x y = "    \"" ++ showTag x ++ "\" -> \"" ++ showTag y ++ "\";"
 
 
