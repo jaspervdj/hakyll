@@ -97,53 +97,87 @@ data Compiler a b = Compiler
 
 --------------------------------------------------------------------------------
 instance Functor (Compiler a) where
-    fmap f ~(Compiler d j) = Compiler d $ fmap f . j
+    fmap f (Compiler d j) = Compiler d $ fmap f . j
+    {-# INLINE fmap #-}
 
 
 --------------------------------------------------------------------------------
 instance Applicative (Compiler a) where
     pure = fromJob . const . return
-    ~(Compiler d1 j1) <*> ~(Compiler d2 j2) =
+    {-# INLINE pure #-}
+
+    Compiler d1 j1 <*> Compiler d2 j2 =
         Compiler (liftM2 S.union d1 d2) $ \x -> j1 x <*> j2 x
+    {-# INLINE (<*>) #-}
 
 
 --------------------------------------------------------------------------------
 instance Alternative (Compiler a) where
     empty = fromJob $ const $ CompilerM $
         throwError "Hakyll.Core.Compiler.Internal: empty alternative"
-    ~(Compiler d1 j1) <|> ~(Compiler d2 j2) =
+
+    Compiler d1 j1 <|> Compiler d2 j2 =
         Compiler (liftM2 S.union d1 d2) $ \x -> CompilerM $
             catchError (unCompilerM $ j1 x) (\_ -> unCompilerM $ j2 x)
+    {-# INLINE (<|>) #-}
 
 
 --------------------------------------------------------------------------------
 instance Category Compiler where
     id = Compiler (return S.empty) return
-    ~(Compiler d1 j1) . ~(Compiler d2 j2) =
+    {-# INLINE id #-}
+
+    Compiler d1 j1 . Compiler d2 j2 =
         Compiler (liftM2 S.union d1 d2) (j1 <=< j2)
+    {-# INLINE (.) #-}
 
 
 --------------------------------------------------------------------------------
 instance Arrow Compiler where
     arr f = fromJob (return . f)
-    first ~(Compiler d j) = Compiler d $ \(x, y) -> do
+    {-# INLINE arr #-}
+
+    first (Compiler d j) = Compiler d $ \(x, y) -> do
         x' <- j x
         return (x', y)
+    {-# INLINE first #-}
+
+    second (Compiler d j) = Compiler d $ \(x, y) -> do
+        y' <- j y
+        return (x, y')
+    {-# INLINE second #-}
+
+    Compiler d1 j1 *** Compiler d2 j2 =
+        Compiler (liftM2 S.union d1 d2) $ \(x, y) -> do
+            x' <- j1 x
+            y' <- j2 y
+            return (x', y')
+    {-# INLINE (***) #-}
+
+    Compiler d1 j1 &&& Compiler d2 j2 =
+        Compiler (liftM2 S.union d1 d2) $ \x -> do
+            y1 <- j1 x
+            y2 <- j2 x
+            return (y1, y2)
+    {-# INLINE (&&&) #-}
 
 
 --------------------------------------------------------------------------------
 instance ArrowChoice Compiler where
-    left ~(Compiler d j) = Compiler d $ \e -> case e of
+    left (Compiler d j) = Compiler d $ \e -> case e of
         Left l  -> Left  <$> j l
         Right r -> Right <$> return r
-    -- Defined here for efficiency
-    ~(Compiler d1 j1) ||| ~(Compiler d2 j2) = Compiler (liftM2 S.union d1 d2) $
+    {-# INLINE left #-}
+
+    Compiler d1 j1 ||| Compiler d2 j2 = Compiler (liftM2 S.union d1 d2) $
         \e -> case e of Left x  -> j1 x; Right y -> j2 y
+    {-# INLINE (|||) #-}
 
 
 --------------------------------------------------------------------------------
 instance ArrowMap Compiler where
     mapA (Compiler d j) = Compiler d $ mapM j
+    {-# INLINE mapA #-}
 
 
 --------------------------------------------------------------------------------
