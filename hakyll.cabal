@@ -90,7 +90,6 @@ Library
 
   Exposed-Modules:
     Hakyll
-    Hakyll.Core.CompiledItem
     Hakyll.Core.Compiler
     Hakyll.Core.Configuration
     Hakyll.Core.DependencyAnalyzer
@@ -129,6 +128,7 @@ Library
     Hakyll.Web.Util.Html
 
   Other-Modules:
+    Hakyll.Core.CompiledItem
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.DirectedGraph.Internal
     Hakyll.Core.ResourceProvider.Internal

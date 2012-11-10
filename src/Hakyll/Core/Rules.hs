@@ -25,15 +25,13 @@ module Hakyll.Core.Rules
     , create
     , route
     , resources
-    , metaCompile
-    , metaCompileWith
     , freshIdentifier
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative            ((<$>))
-import           Control.Arrow                  (arr, (***), (>>>), (>>^))
+import           Control.Arrow                  (arr, (***), (>>>))
 import           Control.Monad.Reader           (ask, local)
 import           Control.Monad.State            (get, put)
 import           Control.Monad.Writer           (tell)
@@ -73,7 +71,7 @@ tellCompilers compilers = RulesM $ do
     let compilers' = map (castIdentifier *** boxCompiler) compilers
     tell $ RuleSet mempty compilers' mempty
   where
-    boxCompiler = (>>> arr compiledItem >>> arr CompileRule)
+    boxCompiler = (>>> arr compiledItem)
 
 
 --------------------------------------------------------------------------------
@@ -188,72 +186,8 @@ resources = RulesM $ do
 
 
 --------------------------------------------------------------------------------
--- | Apart from regular compilers, one is also able to specify metacompilers.
--- Metacompilers are a special class of compilers: they are compilers which
--- produce other compilers.
---
--- This is needed when the list of compilers depends on something we cannot know
--- before actually running other compilers. The most typical example is if we
--- have a blogpost using tags.
---
--- Every post has a collection of tags. For example,
---
--- > post1: code, haskell
--- > post2: code, random
---
--- Now, we want to create a list of posts for every tag. We cannot write this
--- down in our 'Rules' DSL directly, since we don't know what tags the different
--- posts will have -- we depend on information that will only be available when
--- we are actually compiling the pages.
---
--- The solution is simple, using 'metaCompile', we can add a compiler that will
--- parse the pages and produce the compilers needed for the different tag pages.
---
--- And indeed, we can see that the first argument to 'metaCompile' is a
--- 'Compiler' which produces a list of ('Identifier', 'Compiler') pairs. The
--- idea is simple: 'metaCompile' produces a list of compilers, and the
--- corresponding identifiers.
---
--- For simple hakyll systems, it is no need for this construction. More
--- formally, it is only needed when the content of one or more items determines
--- which items must be rendered.
-metaCompile :: (Binary a, Typeable a, Writable a)
-            => Compiler () [(Identifier a, Compiler () a)]
-            -- ^ Compiler generating the other compilers
-            -> Rules
-            -- ^ Resulting rules
-metaCompile compiler = do
-    id' <- freshIdentifier "Hakyll.Core.Rules.metaCompile"
-    metaCompileWith id' compiler
-
-
---------------------------------------------------------------------------------
--- | Version of 'metaCompile' that allows you to specify a custom identifier for
--- the metacompiler.
-metaCompileWith :: (Binary a, Typeable a, Writable a)
-                => Identifier ()
-                -- ^ Identifier for this compiler
-                -> Compiler () [(Identifier a, Compiler () a)]
-                -- ^ Compiler generating the other compilers
-                -> Rules
-                -- ^ Resulting rules
-metaCompileWith identifier compiler = RulesM $ do
-    group' <- rulesGroup <$> ask
-
-    let -- Set the correct group on the identifier
-        id' = setGroup group' identifier
-        -- Function to box an item into a rule
-        makeRule = MetaCompileRule . map (castIdentifier *** box)
-        -- Entire boxing function
-        box = (>>> fromDependency id' >>^ CompileRule . compiledItem)
-        -- Resulting compiler list
-        compilers = [(id', compiler >>> arr makeRule )]
-
-    tell $ RuleSet mempty compilers mempty
-
-
---------------------------------------------------------------------------------
 -- | Generate a fresh Identifier with a given prefix
+-- TODO: remove?
 freshIdentifier :: String                 -- ^ Prefix
                 -> RulesM (Identifier a)  -- ^ Fresh identifier
 freshIdentifier prefix = RulesM $ do

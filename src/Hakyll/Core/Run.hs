@@ -18,6 +18,7 @@ import System.FilePath ((</>))
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+import Hakyll.Core.CompiledItem
 import Hakyll.Core.Compiler
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Configuration
@@ -94,7 +95,7 @@ data RuntimeEnvironment = RuntimeEnvironment
 
 data RuntimeState = RuntimeState
     { hakyllAnalyzer  :: DependencyAnalyzer (Identifier ())
-    , hakyllCompilers :: Map (Identifier ()) (Compiler () CompileRule)
+    , hakyllCompilers :: Map (Identifier ()) (Compiler () CompiledItem)
     }
 
 newtype Runtime a = Runtime
@@ -104,7 +105,7 @@ newtype Runtime a = Runtime
 
 -- | Add a number of compilers and continue using these compilers
 --
-addNewCompilers :: [(Identifier (), Compiler () CompileRule)]
+addNewCompilers :: [(Identifier (), Compiler () CompiledItem)]
                 -- ^ Compilers to add
                 -> Runtime ()
 addNewCompilers newCompilers = Runtime $ do
@@ -190,8 +191,8 @@ build id' = Runtime $ do
                     store isModified logger
 
     case result of
-        -- Compile rule for one item, easy stuff
-        Right (CompileRule compiled) -> do
+        -- Success
+        Right compiled -> do
             case runRoutes routes id' of
                 Nothing  -> return ()
                 Just url -> timed logger ("Routing to " ++ url) $ do
@@ -203,11 +204,6 @@ build id' = Runtime $ do
 
             -- Continue for the remaining compilers
             unRuntime stepAnalyzer
-
-        -- Metacompiler, slightly more complicated
-        Right (MetaCompileRule newCompilers) ->
-            -- Actually I was just kidding, it's not hard at all
-            unRuntime $ addNewCompilers newCompilers
 
         -- Some error happened, rethrow in Runtime monad
         Left err -> throwError err

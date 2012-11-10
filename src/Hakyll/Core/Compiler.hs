@@ -137,7 +137,6 @@ import Hakyll.Core.Writable
 import Hakyll.Core.ResourceProvider
 import Hakyll.Core.Compiler.Internal
 import Hakyll.Core.Store (Store)
-import Hakyll.Core.Rules.Internal
 import Hakyll.Core.Routes
 import Hakyll.Core.Logger
 import qualified Hakyll.Core.Store as Store
@@ -145,15 +144,15 @@ import qualified Hakyll.Core.Store as Store
 -- | Run a compiler, yielding the resulting target and it's dependencies. This
 -- version of 'runCompilerJob' also stores the result
 --
-runCompiler :: Compiler () CompileRule    -- ^ Compiler to run
-            -> Identifier ()              -- ^ Target identifier
-            -> ResourceProvider           -- ^ Resource provider
-            -> [Identifier ()]            -- ^ Universe
-            -> Routes                     -- ^ Route
-            -> Store                      -- ^ Store
-            -> Bool                       -- ^ Was the resource modified?
-            -> Logger                     -- ^ Logger
-            -> IO (Throwing CompileRule)  -- ^ Resulting item
+runCompiler :: Compiler () CompiledItem    -- ^ Compiler to run
+            -> Identifier ()               -- ^ Target identifier
+            -> ResourceProvider            -- ^ Resource provider
+            -> [Identifier ()]             -- ^ Universe
+            -> Routes                      -- ^ Route
+            -> Store                       -- ^ Store
+            -> Bool                        -- ^ Was the resource modified?
+            -> Logger                      -- ^ Logger
+            -> IO (Throwing CompiledItem)  -- ^ Resulting item
 runCompiler compiler id' provider universe routes store modified logger = do
     -- Run the compiler job
     result <- handle (\(e :: SomeException) -> return $ Left $ show e) $
@@ -165,7 +164,7 @@ runCompiler compiler id' provider universe routes store modified logger = do
         -- In case we compiled an item, we will store a copy in the cache first,
         -- before we return control. This makes sure the compiled item can later
         -- be accessed by e.g. require.
-        Right (CompileRule (CompiledItem x)) ->
+        Right (CompiledItem x) ->
             Store.set store ["Hakyll.Core.Compiler.runCompiler", show id'] x
 
         -- Otherwise, we do nothing here

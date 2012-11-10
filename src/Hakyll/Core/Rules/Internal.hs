@@ -3,8 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Rank2Types                 #-}
 module Hakyll.Core.Rules.Internal
-    ( CompileRule (..)
-    , RuleSet (..)
+    ( RuleSet (..)
     , RuleState (..)
     , RuleEnvironment (..)
     , RulesM (..)
@@ -31,23 +30,12 @@ import           Hakyll.Core.Routes
 
 
 --------------------------------------------------------------------------------
--- | Output of a compiler rule
---
--- * The compiler will produce a simple item. This is the most common case.
---
--- * The compiler will produce more compilers. These new compilers need to be
---   added to the runtime if possible, since other items might depend upon them.
-data CompileRule = CompileRule CompiledItem
-                 | MetaCompileRule [(Identifier (), Compiler () CompileRule)]
-
-
---------------------------------------------------------------------------------
 -- | A collection of rules for the compilation process
 data RuleSet = RuleSet
     { -- | Routes used in the compilation structure
       rulesRoutes    :: Routes
     , -- | Compilation rules
-      rulesCompilers :: [(Identifier (), Compiler () CompileRule)]
+      rulesCompilers :: [(Identifier (), Compiler () CompiledItem)]
     , -- | A set of the actually used files
       rulesResources :: Set (Identifier ())
     }
