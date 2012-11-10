@@ -19,8 +19,7 @@ module Hakyll.Core.Compiler.Internal
 --------------------------------------------------------------------------------
 import           Control.Applicative          (Alternative (..), Applicative,
                                                pure, (<$>), (<*>))
-import           Control.Arrow                (Arrow, ArrowChoice, arr, first,
-                                               left)
+import           Control.Arrow
 import           Control.Category             (Category, id, (.))
 import           Control.Monad                (liftM2, (<=<))
 import           Control.Monad.Error          (ErrorT, catchError, runErrorT,
@@ -137,6 +136,9 @@ instance ArrowChoice Compiler where
     left ~(Compiler d j) = Compiler d $ \e -> case e of
         Left l  -> Left  <$> j l
         Right r -> Right <$> return r
+    -- Defined here for efficiency
+    ~(Compiler d1 j1) ||| ~(Compiler d2 j2) = Compiler (liftM2 S.union d1 d2) $
+        \e -> case e of Left x  -> j1 x; Right y -> j2 y
 
 
 --------------------------------------------------------------------------------
