@@ -1,3 +1,4 @@
+--------------------------------------------------------------------------------
 -- | This module exposes a function which can relativize URL's on a webpage.
 --
 -- This means that one can deploy the resulting site on
@@ -13,36 +14,41 @@
 -- will result in (suppose your blogpost is located at @\/posts\/foo.html@:
 --
 -- > <img src="../images/lolcat.png" alt="Funny zomgroflcopter" />
---
 module Hakyll.Web.Urls.Relativize
     ( relativizeUrlsCompiler
     , relativizeUrls
     ) where
 
-import Prelude hiding (id)
-import Control.Category (id)
-import Control.Arrow ((&&&), (>>^))
-import Data.List (isPrefixOf)
 
-import Hakyll.Core.Compiler
-import Hakyll.Web.Page
-import Hakyll.Web.Urls
+--------------------------------------------------------------------------------
+import           Control.Arrow        ((&&&), (>>^))
+import           Control.Category     (id)
+import           Data.List            (isPrefixOf)
+import           Prelude              hiding (id)
 
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler
+import           Hakyll.Web.Page
+import           Hakyll.Web.Urls
+
+
+--------------------------------------------------------------------------------
 -- | Compiler form of 'relativizeUrls' which automatically picks the right root
 -- path
---
-relativizeUrlsCompiler :: Compiler (Page String) (Page String)
+relativizeUrlsCompiler :: Compiler Page Page
 relativizeUrlsCompiler = getRoute &&& id >>^ uncurry relativize
   where
     relativize Nothing  = id
-    relativize (Just r) = fmap (relativizeUrls $ toSiteRoot r)
+    relativize (Just r) = relativizeUrls $ toSiteRoot r
 
+
+--------------------------------------------------------------------------------
 -- | Relativize URL's in HTML
---
 relativizeUrls :: String  -- ^ Path to the site root
-               -> String  -- ^ HTML to relativize
-               -> String  -- ^ Resulting HTML
+               -> Page    -- ^ HTML to relativize
+               -> Page    -- ^ Resulting HTML
 relativizeUrls root = withUrls rel
   where
     isRel x = "/" `isPrefixOf` x && not ("//" `isPrefixOf` x)
-    rel x = if isRel x then root ++ x else x
+    rel x   = if isRel x then root ++ x else x

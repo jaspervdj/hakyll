@@ -1,3 +1,4 @@
+--------------------------------------------------------------------------------
 -- | A page is a key-value mapping, representing a page on your site
 --
 -- A page is an important concept in Hakyll. It is a key-value mapping, and has
@@ -47,109 +48,57 @@
 -- we simply list all @key: value@ pairs, and end with @---@ again. This page
 -- contains three metadata fields and a body. The body is given in markdown
 -- format, which can be easily rendered to HTML by Hakyll, using pandoc.
---
-{-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Web.Page
-    ( Page (..)
-    , fromBody
-    , fromMap
-    , toMap
+    ( Page
     , readPageCompiler
     , pageCompiler
     , pageCompilerWith
     , pageCompilerWithPandoc
-    , pageCompilerWithFields
-    , addDefaultFields
     ) where
 
-import Prelude hiding (id)
-import Control.Category (id)
-import Control.Arrow (arr, (>>^), (&&&), (>>>))
-import System.FilePath (takeBaseName, takeDirectory)
-import qualified Data.Map as M
 
-import Text.Pandoc (Pandoc, ParserState, WriterOptions)
+--------------------------------------------------------------------------------
+import           Control.Arrow            (arr, (>>>))
+import           Control.Category         (id)
+import           Prelude                  hiding (id)
+import           Text.Pandoc              (Pandoc, ParserState, WriterOptions)
 
-import Hakyll.Core.Identifier
-import Hakyll.Core.Compiler
-import Hakyll.Web.Page.Internal
-import Hakyll.Web.Page.Read
-import Hakyll.Web.Page.Metadata
-import Hakyll.Web.Pandoc
-import Hakyll.Web.Template
-import Hakyll.Web.Urls
 
--- | Create a page from a body, without metadata
---
-fromBody :: a -> Page a
-fromBody = Page M.empty
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler
+import           Hakyll.Web.Page.Internal
+import           Hakyll.Web.Pandoc
 
+
+--------------------------------------------------------------------------------
 -- | Read a page (do not render it)
---
-readPageCompiler :: Compiler () (Page String)
-readPageCompiler = getResourceString >>^ readPage
+readPageCompiler :: Compiler () Page
+readPageCompiler = getResourceBody
+{-# DEPRECATED readPageCompiler "Use getResourceBody" #-}
 
--- | Read a page, add default fields, substitute fields and render using pandoc
---
-pageCompiler :: Compiler () (Page String)
+
+--------------------------------------------------------------------------------
+-- | Read a page render using pandoc
+pageCompiler :: Compiler () Page
 pageCompiler =
     pageCompilerWith defaultHakyllParserState defaultHakyllWriterOptions
 
+
+--------------------------------------------------------------------------------
 -- | A version of 'pageCompiler' which allows you to specify your own pandoc
 -- options
---
-pageCompilerWith :: ParserState -> WriterOptions
-                 -> Compiler () (Page String)
+pageCompilerWith :: ParserState -> WriterOptions -> Compiler () Page
 pageCompilerWith state options = pageCompilerWithPandoc state options id
 
+
+--------------------------------------------------------------------------------
 -- | An extension of 'pageCompilerWith' which allows you to specify a custom
--- pandoc transformer for the content
---
+-- pandoc transformation for the content
 pageCompilerWithPandoc :: ParserState -> WriterOptions
                        -> (Pandoc -> Pandoc)
-                       -> Compiler () (Page String)
+                       -> Compiler () Page
 pageCompilerWithPandoc state options f = cached cacheName $
-    readPageCompiler >>> addDefaultFields >>> arr applySelf
-                     >>> pageReadPandocWith state
-                     >>> arr (fmap (writePandocWith options . f))
+    readPageCompiler >>> pageReadPandocWith state >>>
+    arr (writePandocWith options . f)
   where
     cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"
-
--- | This is another, even more advanced version of 'pageCompilerWithPandoc'.
--- This function allows you to provide an arrow which is applied before the
--- fields in a page are rendered. This means you can use this extra customizable
--- stage to add custom fields which are inserted in the page.
---
-pageCompilerWithFields :: ParserState -> WriterOptions
-                       -> (Pandoc -> Pandoc)
-                       -> Compiler (Page String) (Page String)
-                       -> Compiler () (Page String)
-pageCompilerWithFields state options f g =
-    readPageCompiler >>> addDefaultFields >>> g >>> arr applySelf
-                     >>> pageReadPandocWith state
-                     >>> arr (fmap (writePandocWith options . f))
-
--- | Add a number of default metadata fields to a page. These fields include:
---
--- * @$url$@
---
--- * @$category$@
---
--- * @$title$@
---
--- * @$path$@
---
-addDefaultFields :: Compiler (Page a) (Page a)
-addDefaultFields =   (getRoute &&& id >>^ uncurry addRoute)
-                 >>> (getIdentifier &&& id >>^ uncurry addIdentifier)
-  where
-    -- Add root and url, based on route
-    addRoute Nothing  = id
-    addRoute (Just r) = trySetField "url" (toUrl r)
-
-    -- Add title and category, based on identifier
-    addIdentifier i = trySetField "title" (takeBaseName p)
-                    . trySetField "category" (takeBaseName $ takeDirectory p)
-                    . trySetField "path" p
-      where
-        p = toFilePath i

@@ -63,8 +63,6 @@
 module Hakyll.Web.Template
     ( Template
     , applyTemplate
-    , applyTemplateToPage
-    , applySelf
     , templateCompiler
     , templateCompilerWith
     , applyTemplateCompiler
@@ -76,16 +74,19 @@ import           Control.Arrow
 import           Control.Category             (id)
 import qualified Data.Map                     as M
 import           Data.Maybe                   (fromMaybe)
+import           Data.Tuple                   (swap)
 import           Prelude                      hiding (id)
 import           System.FilePath              (takeExtension)
 import           Text.Hamlet                  (HamletSettings,
                                                defaultHamletSettings)
+
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Util.Arrow
 import           Hakyll.Web.Page.Internal
+import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
 import           Hakyll.Web.Template.Read
 
@@ -94,12 +95,12 @@ import           Hakyll.Web.Template.Read
 applyTemplate :: forall a b. (ArrowChoice a, ArrowMap a)
               => a (String, b) String
               -> a (Template, b) String
-applyTemplate field =
+applyTemplate context =
     arr (\(tpl, x) -> [(e, x) | e <- unTemplate tpl]) >>>
     mapA applyElement >>^ concat
   where
     applyElement :: a (TemplateElement, b) String
-    applyElement = unElement >>> (id ||| field)
+    applyElement = unElement >>> (id ||| context)
 
     unElement :: a (TemplateElement, b) (Either String (String, b))
     unElement = arr $ \(e, x) -> case e of
@@ -109,32 +110,15 @@ applyTemplate field =
 
 
 --------------------------------------------------------------------------------
--- | TODO: Remove
-applyTemplateToPage :: Template -> Page String -> Page String
-applyTemplateToPage tpl page =
-    fmap (const $ applyTemplate pageField (tpl, page)) page
-  where
-    pageField (k, p) = fromMaybe ("$" ++ k ++ "$") $ M.lookup k $ toMap p
-{-# DEPRECATED applyTemplateToPage "Use applyTemplate" #-}
-
-
---------------------------------------------------------------------------------
--- | Apply a page as it's own template. This is often very useful to fill in
--- certain keys like @$root@ and @$url@.
-applySelf :: Page String -> Page String
-applySelf page = applyTemplateToPage (readTemplate $ pageBody page) page
-{-# DEPRECATED applySelf "Use applyTemplate" #-}
-
-
---------------------------------------------------------------------------------
 -- | Read a template. If the extension of the file we're compiling is
 -- @.hml@ or @.hamlet@, it will be considered as a Hamlet template, and parsed
 -- as such.
 templateCompiler :: Compiler () Template
 templateCompiler = templateCompilerWith defaultHamletSettings
 
+
+--------------------------------------------------------------------------------
 -- | Version of 'templateCompiler' that enables custom settings.
---
 templateCompilerWith :: HamletSettings -> Compiler () Template
 templateCompilerWith settings =
     cached "Hakyll.Web.Template.templateCompilerWith" $
@@ -149,7 +133,12 @@ templateCompilerWith settings =
 
 
 --------------------------------------------------------------------------------
-applyTemplateCompiler :: Identifier Template                   -- ^ Template
-                      -> Compiler (Page String) (Page String)  -- ^ Compiler
-applyTemplateCompiler identifier = require identifier $
-    flip applyTemplateToPage
+applyTemplateCompiler :: Identifier Template  -- ^ Template
+                      -> Context Page         -- ^ Context
+                      -> Compiler Page Page   -- ^ Compiler
+applyTemplateCompiler identifier context = requireA identifier $
+    arr swap >>> applyTemplate context'
+  where
+    context' = proc (k, x) -> do
+        id' <- getIdentifier -< ()
+        context -< (k, (id', x))

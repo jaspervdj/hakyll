@@ -1,3 +1,4 @@
+--------------------------------------------------------------------------------
 -- | Wraps pandocs bibiliography handling
 --
 -- In order to add a bibliography, you will need a bibliography file (e.g.
@@ -6,7 +7,6 @@
 -- refer to these files when you use 'pageReadPandocBiblio'. This function also
 -- takes a parser state for completeness -- you can use
 -- 'defaultHakyllParserState' if you're unsure.
---
 {-# LANGUAGE Arrows, DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
 module Hakyll.Web.Pandoc.Biblio
     ( CSL
@@ -16,30 +16,41 @@ module Hakyll.Web.Pandoc.Biblio
     , pageReadPandocBiblio
     ) where
 
+
+--------------------------------------------------------------------------------
 import Control.Applicative ((<$>))
 import Control.Arrow (arr, returnA, (>>>))
 import Data.Typeable (Typeable)
-
 import Data.Binary (Binary (..))
 import Text.Pandoc (Pandoc, ParserState (..))
 import Text.Pandoc.Biblio (processBiblio)
 import qualified Text.CSL as CSL
 
+
+--------------------------------------------------------------------------------
 import Hakyll.Core.Compiler
 import Hakyll.Core.Identifier
 import Hakyll.Core.Writable
 import Hakyll.Web.Page
 import Hakyll.Web.Pandoc
 
+
+--------------------------------------------------------------------------------
 newtype CSL = CSL FilePath
     deriving (Binary, Show, Typeable, Writable)
 
+
+--------------------------------------------------------------------------------
 cslCompiler :: Compiler () CSL
 cslCompiler = getIdentifier >>> arr (CSL . toFilePath)
 
+
+--------------------------------------------------------------------------------
 newtype Biblio = Biblio [CSL.Reference]
     deriving (Show, Typeable)
 
+
+--------------------------------------------------------------------------------
 instance Binary Biblio where
     -- Ugly.
     get             = Biblio . read <$> get
@@ -48,14 +59,18 @@ instance Binary Biblio where
 instance Writable Biblio where
     write _ _ = return ()
 
+
+--------------------------------------------------------------------------------
 biblioCompiler :: Compiler () Biblio
 biblioCompiler = getIdentifier >>>
     arr toFilePath >>> unsafeCompiler CSL.readBiblioFile >>> arr Biblio
 
+
+--------------------------------------------------------------------------------
 pageReadPandocBiblio :: ParserState
                      -> Identifier CSL
                      -> Identifier Biblio
-                     -> Compiler (Page String) (Page Pandoc)
+                     -> Compiler Page Pandoc
 pageReadPandocBiblio state csl refs = proc page -> do
     CSL csl' <- require_ csl -< ()
     Biblio refs' <- require_ refs -< ()
@@ -64,9 +79,8 @@ pageReadPandocBiblio state csl refs = proc page -> do
     -- citations!
     let cits   = map CSL.refId refs'
         state' = state {stateCitations = stateCitations state ++ cits}
-    pandocPage <- pageReadPandocWithA -< (state', page)
-    let pandoc = pageBody pandocPage
+    pandoc  <- pageReadPandocWithA -< (state', page)
     pandoc' <- unsafeCompiler processBiblio' -< (csl', refs', pandoc)
-    returnA -< pandocPage {pageBody = pandoc'}
+    returnA -< pandoc'
   where
     processBiblio' (c, r, p) = processBiblio c Nothing r p

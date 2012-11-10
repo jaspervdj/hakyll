@@ -1,7 +1,8 @@
 -- | Provides various functions to manipulate the metadata fields of a page
---
+-- TODO: PORT
 module Hakyll.Web.Page.Metadata
-    ( getField
+    (
+    {- getField
     , getFieldMaybe
     , setField
     , trySetField
@@ -17,8 +18,10 @@ module Hakyll.Web.Page.Metadata
     , copyBodyToField
     , copyBodyFromField
     , comparePagesByDate
+    -}
     ) where
 
+{-
 import Control.Arrow (Arrow, arr, (>>>), (***), (&&&))
 import Control.Category (id)
 import Control.Monad (msum)
@@ -209,7 +212,7 @@ renderModificationTimeWith :: TimeLocale
                            -> Compiler (Page String) (Page String)
                            -- ^ Resulting compiler
 renderModificationTimeWith locale key format =
-    id &&& (getResourceWith resourceModificationTime) >>>
+    id &&& (getResourceWith $ const resourceModificationTime) >>>
     setFieldA key (arr (formatTime locale format))
 
 -- | Copy the body of a page to a metadata field
@@ -233,3 +236,4 @@ comparePagesByDate :: Page a -> Page a -> Ordering
 comparePagesByDate = comparing $ fromMaybe zero . getUTCMaybe defaultTimeLocale
   where
     zero = UTCTime (ModifiedJulianDay 0) 0
+-}

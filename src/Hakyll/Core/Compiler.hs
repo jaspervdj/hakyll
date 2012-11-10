@@ -95,6 +95,7 @@ module Hakyll.Core.Compiler
     , getIdentifier
     , getRoute
     , getRouteFor
+    , getResourceBody
     , getResourceString
     , getResourceLBS
     , getResourceWith
@@ -190,25 +191,36 @@ getRouteFor = fromJob $ \identifier -> CompilerM $ do
     routes <- compilerRoutes <$> ask
     return $ runRoutes routes identifier
 
--- | Get the resource we are compiling as a string
---
-getResourceString :: Compiler a String
-getResourceString = getResourceWith resourceString
 
+--------------------------------------------------------------------------------
+-- | Get the body of the underlying resource
+getResourceBody :: Compiler a String
+getResourceBody = getResourceWith resourceBody
+
+
+
+--------------------------------------------------------------------------------
+-- | Get the resource we are compiling as a string
+getResourceString :: Compiler a String
+getResourceString = getResourceWith $ const resourceString
+
+
+--------------------------------------------------------------------------------
 -- | Get the resource we are compiling as a lazy bytestring
 --
 getResourceLBS :: Compiler a ByteString
-getResourceLBS = getResourceWith resourceLBS
+getResourceLBS = getResourceWith $ const resourceLBS
 
+
+--------------------------------------------------------------------------------
 -- | Overloadable function for 'getResourceString' and 'getResourceLBS'
---
-getResourceWith :: (Identifier a -> IO b) -> Compiler c b
+getResourceWith :: (ResourceProvider -> Identifier a -> IO b) -> Compiler c b
 getResourceWith reader = fromJob $ \_ -> CompilerM $ do
     provider <- compilerResourceProvider <$> ask
     r        <- compilerIdentifier <$> ask
     let filePath = toFilePath r
     if resourceExists provider r
-        then liftIO $ reader $ castIdentifier r
+        then liftIO $ reader provider $ castIdentifier r
         else throwError $ error' filePath
   where
     error' id' =  "Hakyll.Core.Compiler.getResourceWith: resource "

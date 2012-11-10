@@ -6,7 +6,7 @@ module Hakyll.Core.ResourceProvider.Metadata
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative                   ((<$>), (<*), (<*>))
+import           Control.Applicative
 import           Control.Arrow                         (second)
 import qualified Data.ByteString.Char8                 as BC
 import qualified Data.Map                              as M
@@ -80,16 +80,22 @@ inlineSpace = P.oneOf ['\t', ' '] <?> "space"
 
 
 --------------------------------------------------------------------------------
+-- | Parse Windows newlines as well (i.e. "\n" or "\r\n")
+newline :: Parser String
+newline = P.string "\n" <|> P.string "\r\n"
+
+
+--------------------------------------------------------------------------------
 -- | Parse a single metadata field
 metadataField :: Parser (String, String)
 metadataField = do
     key <- P.manyTill P.alphaNum $ P.char ':'
     P.skipMany1 inlineSpace <?> "space followed by metadata for: " ++ key
-    value     <- P.manyTill P.anyChar P.newline
+    value     <- P.manyTill P.anyChar newline
     trailing' <- P.many trailing
     return (key, trim $ value ++ concat trailing')
   where
-    trailing = (++) <$> P.many1 inlineSpace <*> P.manyTill P.anyChar P.newline
+    trailing = (++) <$> P.many1 inlineSpace <*> P.manyTill P.anyChar newline
 
 
 --------------------------------------------------------------------------------
@@ -102,11 +108,11 @@ metadata = P.many metadataField
 -- | Parse a metadata block, including delimiters and trailing newlines
 metadataBlock :: Parser [(String, String)]
 metadataBlock = do
-    open      <- P.many1 (P.char '-') <* P.many inlineSpace <* P.newline
+    open      <- P.many1 (P.char '-') <* P.many inlineSpace <* newline
     metadata' <- metadata
     _         <- P.choice $ map (P.string . replicate (length open)) ['-', '.']
     P.skipMany inlineSpace
-    P.skipMany1 P.newline
+    P.skipMany1 newline
     return metadata'
 
 
