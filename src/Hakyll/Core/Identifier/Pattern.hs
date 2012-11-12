@@ -1,3 +1,4 @@
+--------------------------------------------------------------------------------
 -- | Module providing pattern matching and capturing on 'Identifier's.
 -- 'Pattern's come in two kinds:
 --
@@ -34,71 +35,116 @@
 -- Like an 'Identifier', a 'Pattern' also has a type parameter. This is simply
 -- an extra layer of safety, and can be discarded using the 'castPattern'
 -- function.
---
 module Hakyll.Core.Identifier.Pattern
     ( -- * The pattern type
       Pattern
-    , castPattern
 
       -- * Creating patterns
-    , parseGlob
-    , predicate
-    , list
-    , regex
-    , inGroup
+    , fromGlob
+    , fromList
+    , fromRegex
+
+      -- * Manipulating patterns
     , complement
+    , castPattern
 
       -- * Applying patterns
     , matches
     , filterMatches
+
+      -- * Capturing strings
     , capture
     , fromCapture
     , fromCaptures
     ) where
 
-import Data.List (isPrefixOf, inits, tails)
-import Control.Arrow ((&&&), (>>>))
-import Control.Monad (msum)
-import Data.Maybe (isJust, fromMaybe)
-import Data.Monoid (Monoid, mempty, mappend)
 
-import GHC.Exts (IsString, fromString)
-import Text.Regex.TDFA ((=~~))
+--------------------------------------------------------------------------------
+import           Control.Applicative    (pure, (<$>), (<*>))
+import           Control.Arrow          ((&&&), (>>>))
+import           Control.Monad          (msum)
+import           Data.Binary            (Binary (..), getWord8, putWord8)
+import           Data.List              (inits, isPrefixOf, tails)
+import           Data.Maybe             (isJust)
+import           Data.Monoid            (Monoid, mappend, mempty)
 
-import Hakyll.Core.Identifier
 
--- | One base element of a pattern
---
-data GlobComponent = Capture
-                   | CaptureMany
-                   | Literal String
-                   deriving (Eq, Show)
+--------------------------------------------------------------------------------
+import           GHC.Exts               (IsString, fromString)
+import           Text.Regex.TDFA        ((=~))
 
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Identifier
+
+
+--------------------------------------------------------------------------------
+-- | Elements of a glob pattern
+data GlobComponent
+    = Capture
+    | CaptureMany
+    | Literal String
+    deriving (Eq, Show)
+
+
+--------------------------------------------------------------------------------
+instance Binary GlobComponent where
+    put Capture     = putWord8 0
+    put CaptureMany = putWord8 1
+    put (Literal s) = putWord8 2 >> put s
+
+    get = getWord8 >>= \t -> case t of
+        0 -> pure Capture
+        1 -> pure CaptureMany
+        2 -> Literal <$> get
+        _ -> error "Data.Binary.get: Invalid GlobComponent"
+
+
+--------------------------------------------------------------------------------
 -- | Type that allows matching on identifiers
---
-data Pattern a = Glob [GlobComponent]
-               | Predicate (Identifier a -> Bool)
-               | List [Identifier a]
+data Pattern a
+    = Everything
+    | Complement (Pattern a)
+    | And (Pattern a) (Pattern a)
+    | Glob [GlobComponent]
+    | List [Identifier a]  -- TODO Maybe use a set here
+    | Regex String
+    deriving (Show)
 
+
+--------------------------------------------------------------------------------
+instance Binary (Pattern a) where
+    put Everything     = putWord8 0
+    put (Complement p) = putWord8 1 >> put p
+    put (And x y)      = putWord8 2 >> put x >> put y
+    put (Glob g)       = putWord8 3 >> put g
+    put (List is)      = putWord8 4 >> put is
+    put (Regex r)      = putWord8 5 >> put r
+
+    get = getWord8 >>= \t -> case t of
+        0 -> pure Everything
+        1 -> Complement <$> get
+        2 -> And <$> get <*> get
+        3 -> Glob <$> get
+        4 -> List <$> get
+        _ -> Regex <$> get
+
+
+--------------------------------------------------------------------------------
 instance IsString (Pattern a) where
-    fromString = parseGlob
+    fromString = fromGlob
 
+
+--------------------------------------------------------------------------------
 instance Monoid (Pattern a) where
-    mempty = Predicate (const True)
-    p1 `mappend` p2 = Predicate $ \i -> matches p1 i && matches p2 i
+    mempty  = Everything
+    mappend = And
 
--- | Discard the phantom type parameter
---
-castPattern :: Pattern a -> Pattern b
-castPattern (Glob g)      = Glob g
-castPattern (Predicate p) = Predicate $ p . castIdentifier
-castPattern (List l)      = List $ map castIdentifier l
-{-# INLINE castPattern #-}
 
+--------------------------------------------------------------------------------
 -- | Parse a pattern from a string
---
-parseGlob :: String -> Pattern a
-parseGlob = Glob . parse'
+fromGlob :: String -> Pattern a
+fromGlob = Glob . parse'
   where
     parse' str =
         let (chunk, rest) = break (`elem` "\\*") str
@@ -108,35 +154,24 @@ parseGlob = Glob . parse'
             ('*'  : xs)       -> Literal chunk : Capture : parse' xs
             xs                -> Literal chunk : Literal xs : []
 
--- | Create a 'Pattern' from an arbitrary predicate
---
--- Example:
---
--- > predicate (\i -> matches "foo/*" i && not (matches "foo/bar" i))
---
-predicate :: (Identifier a -> Bool) -> Pattern a
-predicate = Predicate
 
+--------------------------------------------------------------------------------
 -- | Create a 'Pattern' from a list of 'Identifier's it should match
---
-list :: [Identifier a] -> Pattern a
-list = List
+fromList :: [Identifier a] -> Pattern a
+fromList = List
 
+
+--------------------------------------------------------------------------------
 -- | Create a 'Pattern' from a regex
 --
 -- Example:
 --
 -- > regex "^foo/[^x]*$
---
-regex :: String -> Pattern a
-regex str = predicate $ fromMaybe False . (=~~ str) . toFilePath
+fromRegex :: String -> Pattern a
+fromRegex = Regex
 
--- | Create a 'Pattern' which matches if the identifier is in a certain group
--- (or in no group)
---
-inGroup :: Maybe String -> Pattern a
-inGroup group = predicate $ (== group) . identifierGroup
 
+--------------------------------------------------------------------------------
 -- | Inverts a pattern, e.g.
 --
 -- > complement "foo/bar.html"
@@ -144,34 +179,53 @@ inGroup group = predicate $ (== group) . identifierGroup
 -- will match /anything/ except @\"foo\/bar.html\"@
 --
 complement :: Pattern a -> Pattern a
-complement p = predicate (not . matches p)
+complement = Complement
 
+
+--------------------------------------------------------------------------------
+-- | Discard the phantom type parameter
+castPattern :: Pattern a -> Pattern b
+castPattern Everything     = Everything
+castPattern (Complement x) = Complement (castPattern x)
+castPattern (And x y)      = And (castPattern x) (castPattern y)
+castPattern (Glob g)       = Glob g
+castPattern (List l)       = List $ map castIdentifier l
+castPattern (Regex r)      = Regex r
+
+
+--------------------------------------------------------------------------------
 -- | Check if an identifier matches a pattern
---
 matches :: Pattern a -> Identifier a -> Bool
-matches (Glob p)      = isJust . capture (Glob p)
-matches (Predicate p) = (p $)
-matches (List l)      = (`elem` l)
+matches Everything     _ = True
+matches (Complement p) i = not $ matches p i
+matches (And x y)      i = matches x i && matches y i
+matches (Glob p)       i = isJust $ capture (Glob p) i
+matches (List l)       i = i `elem` l
+matches (Regex r)      i = toFilePath i =~ r
 
+
+--------------------------------------------------------------------------------
 -- | Given a list of identifiers, retain only those who match the given pattern
---
 filterMatches :: Pattern a -> [Identifier a] -> [Identifier a]
 filterMatches = filter . matches
 
+
+--------------------------------------------------------------------------------
 -- | Split a list at every possible point, generate a list of (init, tail)
 -- cases. The result is sorted with inits decreasing in length.
---
 splits :: [a] -> [([a], [a])]
 splits = inits &&& tails >>> uncurry zip >>> reverse
 
--- | Match a glob against a pattern, generating a list of captures
---
-capture :: Pattern a -> Identifier a -> Maybe [String]
-capture (Glob p) (Identifier _ i) = capture' p i
-capture _        _                = Nothing
 
+--------------------------------------------------------------------------------
+-- | Match a glob against a pattern, generating a list of captures
+capture :: Pattern a -> Identifier a -> Maybe [String]
+capture (Glob p) i = capture' p (toFilePath i)
+capture _        _ = Nothing
+
+
+--------------------------------------------------------------------------------
 -- | Internal verion of 'capture'
---
 capture' :: [GlobComponent] -> String -> Maybe [String]
 capture' [] [] = Just []  -- An empty match
 capture' [] _  = Nothing  -- No match
@@ -186,7 +240,9 @@ capture' (Capture : ms) str =
 capture' (CaptureMany : ms) str =
     -- Match everything
     msum $ [ fmap (i :) (capture' ms t) | (i, t) <- splits str ]
-    
+
+
+--------------------------------------------------------------------------------
 -- | Create an identifier from a pattern by filling in the captures with a given
 -- string
 --
@@ -197,21 +253,22 @@ capture' (CaptureMany : ms) str =
 -- Result:
 --
 -- > "tags/foo"
---
 fromCapture :: Pattern a -> String -> Identifier a
 fromCapture pattern = fromCaptures pattern . repeat
 
+
+--------------------------------------------------------------------------------
 -- | Create an identifier from a pattern by filling in the captures with the
 -- given list of strings
---
 fromCaptures :: Pattern a -> [String] -> Identifier a
-fromCaptures (Glob p) = Identifier Nothing . fromCaptures' p
+fromCaptures (Glob p) = fromFilePath . fromCaptures' p
 fromCaptures _        = error $
     "Hakyll.Core.Identifier.Pattern.fromCaptures: fromCaptures only works " ++
     "on simple globs!"
 
+
+--------------------------------------------------------------------------------
 -- | Internally used version of 'fromCaptures'
---
 fromCaptures' :: [GlobComponent] -> [String] -> String
 fromCaptures' []        _ = mempty
 fromCaptures' (m : ms) [] = case m of

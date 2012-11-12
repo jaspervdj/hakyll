@@ -1,3 +1,4 @@
+--------------------------------------------------------------------------------
 -- | An identifier is a type used to uniquely identify a resource, target...
 --
 -- One can think of an identifier as something similar to a file path. An
@@ -28,82 +29,60 @@
 -- function.
 --
 -- If the @a@ type is not known, Hakyll traditionally uses @Identifier ()@.
---
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Identifier
-    ( Identifier (..)
-    , castIdentifier
-    , parseIdentifier
+    ( Identifier
     , fromFilePath
     , toFilePath
-    , setGroup
+    , castIdentifier
     ) where
 
-import Control.Applicative ((<$>), (<*>))
-import Control.DeepSeq (NFData (..))
-import Control.Monad (mplus)
-import Data.Monoid (Monoid, mempty, mappend)
-import Data.List (intercalate)
-import System.FilePath (dropTrailingPathSeparator, splitPath)
 
-import Data.Binary (Binary, get, put)
-import GHC.Exts (IsString, fromString)
-import Data.Typeable (Typeable)
+--------------------------------------------------------------------------------
+import           Control.DeepSeq (NFData)
+import           Data.List       (intercalate)
+import           System.FilePath (dropTrailingPathSeparator, splitPath)
 
+
+--------------------------------------------------------------------------------
+import           Data.Binary     (Binary)
+import           Data.Typeable   (Typeable)
+import           GHC.Exts        (IsString, fromString)
+
+
+--------------------------------------------------------------------------------
 -- | An identifier used to uniquely identify a value
---
-data Identifier a = Identifier
-    { identifierGroup :: Maybe String
-    , identifierPath  :: String
-    } deriving (Eq, Ord, Typeable)
+newtype Identifier a = Identifier {unIdentifier :: String}
+    deriving (Binary, Eq, NFData, Ord, Typeable)
 
-instance Monoid (Identifier a) where
-    mempty = Identifier Nothing ""
-    Identifier g1 p1 `mappend` Identifier g2 p2 =
-        Identifier (g1 `mplus` g2) (p1 `mappend` p2)
 
-instance Binary (Identifier a) where
-    put (Identifier g p) = put g >> put p
-    get = Identifier <$> get <*> get
-
+--------------------------------------------------------------------------------
 instance Show (Identifier a) where
-    show i@(Identifier Nothing _)  = toFilePath i
-    show i@(Identifier (Just g) _) = toFilePath i ++ " (" ++ g ++ ")"
+    show = toFilePath
 
+
+--------------------------------------------------------------------------------
 instance IsString (Identifier a) where
-    fromString = parseIdentifier
-
-instance NFData (Identifier a) where
-    rnf (Identifier g p) = rnf g `seq` rnf p `seq` ()
-
--- | Discard the phantom type parameter of an identifier
---
-castIdentifier :: Identifier a -> Identifier b
-castIdentifier (Identifier g p) = Identifier g p
-{-# INLINE castIdentifier #-}
+    fromString = fromFilePath
 
 
 --------------------------------------------------------------------------------
 -- | Parse an identifier from a string
-parseIdentifier :: String -> Identifier a
-parseIdentifier = Identifier Nothing .
-    intercalate "/" . filter (not . null) . split'
+fromFilePath :: String -> Identifier a
+fromFilePath = Identifier .  intercalate "/" . filter (not . null) . split'
   where
     split' = map dropTrailingPathSeparator . splitPath
 
 
 --------------------------------------------------------------------------------
--- | Create an identifier from a filepath
-fromFilePath :: FilePath -> Identifier a
-fromFilePath = parseIdentifier
+-- | Convert an identifier to a relative 'FilePath'
+toFilePath :: Identifier a -> FilePath
+toFilePath = unIdentifier
 
 
 --------------------------------------------------------------------------------
--- | Convert an identifier to a relative 'FilePath'
-toFilePath :: Identifier a -> FilePath
-toFilePath = identifierPath
-
--- | Set the identifier group for some identifier
---
-setGroup :: Maybe String -> Identifier a -> Identifier a
-setGroup g (Identifier _ p) = Identifier g p
+-- | Discard the phantom type parameter of an identifier
+castIdentifier :: Identifier a -> Identifier b
+castIdentifier (Identifier x) = Identifier x
+{-# INLINE castIdentifier #-}
