@@ -36,30 +36,36 @@ module Hakyll.Core.Identifier
     , fromFilePath
     , toFilePath
     , castIdentifier
+    , identifierVersion
+    , setVersion
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.DeepSeq (NFData)
-import           Data.List       (intercalate)
-import           System.FilePath (dropTrailingPathSeparator, splitPath)
+import           Control.Applicative ((<$>), (<*>))
+import           Control.DeepSeq     (NFData (..))
+import           Data.List           (intercalate)
+import           System.FilePath     (dropTrailingPathSeparator, splitPath)
 
 
 --------------------------------------------------------------------------------
-import           Data.Binary     (Binary)
-import           Data.Typeable   (Typeable)
-import           GHC.Exts        (IsString, fromString)
+import           Data.Binary         (Binary (..))
+import           Data.Typeable       (Typeable)
+import           GHC.Exts            (IsString, fromString)
 
 
 --------------------------------------------------------------------------------
 -- | An identifier used to uniquely identify a value
-newtype Identifier a = Identifier {unIdentifier :: String}
-    deriving (Binary, Eq, NFData, Ord, Typeable)
+data Identifier a = Identifier
+    { identifierVersion :: Maybe String
+    , identifierPath    :: String
+    } deriving (Eq, Ord, Typeable)
 
 
 --------------------------------------------------------------------------------
-instance Show (Identifier a) where
-    show = toFilePath
+instance Binary (Identifier a) where
+    put (Identifier v p) = put v >> put p
+    get = Identifier <$> get <*> get
 
 
 --------------------------------------------------------------------------------
@@ -68,9 +74,22 @@ instance IsString (Identifier a) where
 
 
 --------------------------------------------------------------------------------
+instance NFData (Identifier a) where
+    rnf (Identifier v p) = rnf v `seq` rnf p `seq` ()
+
+
+--------------------------------------------------------------------------------
+instance Show (Identifier a) where
+    show i = case identifierVersion i of
+        Nothing -> toFilePath i
+        Just v  -> toFilePath i ++ " (" ++ v ++ ")"
+
+
+--------------------------------------------------------------------------------
 -- | Parse an identifier from a string
 fromFilePath :: String -> Identifier a
-fromFilePath = Identifier .  intercalate "/" . filter (not . null) . split'
+fromFilePath = Identifier Nothing .
+    intercalate "/" . filter (not . null) . split'
   where
     split' = map dropTrailingPathSeparator . splitPath
 
@@ -78,11 +97,16 @@ fromFilePath = Identifier .  intercalate "/" . filter (not . null) . split'
 --------------------------------------------------------------------------------
 -- | Convert an identifier to a relative 'FilePath'
 toFilePath :: Identifier a -> FilePath
-toFilePath = unIdentifier
+toFilePath = identifierPath
 
 
 --------------------------------------------------------------------------------
 -- | Discard the phantom type parameter of an identifier
 castIdentifier :: Identifier a -> Identifier b
-castIdentifier (Identifier x) = Identifier x
+castIdentifier (Identifier v p) = Identifier v p
 {-# INLINE castIdentifier #-}
+
+
+--------------------------------------------------------------------------------
+setVersion :: Maybe String -> Identifier a -> Identifier a
+setVersion v i = i {identifierVersion = v}

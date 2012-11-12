@@ -46,6 +46,7 @@ module Hakyll.Core.Identifier.Pattern
 
       -- * Manipulating patterns
     , complement
+    , withVersion
     , castPattern
 
       -- * Applying patterns
@@ -109,6 +110,7 @@ data Pattern a
     | Glob [GlobComponent]
     | List [Identifier a]  -- TODO Maybe use a set here
     | Regex String
+    | Version (Maybe String)
     deriving (Show)
 
 
@@ -120,6 +122,7 @@ instance Binary (Pattern a) where
     put (Glob g)       = putWord8 3 >> put g
     put (List is)      = putWord8 4 >> put is
     put (Regex r)      = putWord8 5 >> put r
+    put (Version v)    = putWord8 6 >> put v
 
     get = getWord8 >>= \t -> case t of
         0 -> pure Everything
@@ -127,7 +130,8 @@ instance Binary (Pattern a) where
         2 -> And <$> get <*> get
         3 -> Glob <$> get
         4 -> List <$> get
-        _ -> Regex <$> get
+        5 -> Regex <$> get
+        _ -> Version <$> get
 
 
 --------------------------------------------------------------------------------
@@ -177,9 +181,16 @@ fromRegex = Regex
 -- > complement "foo/bar.html"
 --
 -- will match /anything/ except @\"foo\/bar.html\"@
---
 complement :: Pattern a -> Pattern a
 complement = Complement
+
+
+--------------------------------------------------------------------------------
+-- | Specify a version, e.g.
+--
+-- > "foo/*.markdown" `withVersion` "pdf"
+withVersion :: Pattern a -> String -> Pattern a
+withVersion p v = And p $ Version $ Just v
 
 
 --------------------------------------------------------------------------------
@@ -191,6 +202,7 @@ castPattern (And x y)      = And (castPattern x) (castPattern y)
 castPattern (Glob g)       = Glob g
 castPattern (List l)       = List $ map castIdentifier l
 castPattern (Regex r)      = Regex r
+castPattern (Version v)    = Version v
 
 
 --------------------------------------------------------------------------------
@@ -202,6 +214,7 @@ matches (And x y)      i = matches x i && matches y i
 matches (Glob p)       i = isJust $ capture (Glob p) i
 matches (List l)       i = i `elem` l
 matches (Regex r)      i = toFilePath i =~ r
+matches (Version v)    i = identifierVersion i == v
 
 
 --------------------------------------------------------------------------------
