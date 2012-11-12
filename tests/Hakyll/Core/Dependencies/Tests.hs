@@ -29,7 +29,7 @@ tests = testGroup "Hakyll.Core.Dependencies.Tests"
 
 
 --------------------------------------------------------------------------------
-oldUniverse :: [Identifier ()]
+oldUniverse :: [Identifier]
 oldUniverse = M.keys oldFacts
 
 

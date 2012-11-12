@@ -48,7 +48,7 @@ newResourceProvider :: Store                -- ^ Store to use
                     -> FilePath             -- ^ Search directory
                     -> IO ResourceProvider  -- ^ Resulting provider
 newResourceProvider store ignore directory = do
-    list  <- map parseIdentifier . filter (not . ignore) <$>
+    list  <- map fromFilePath . filter (not . ignore) <$>
         getRecursiveContents False directory
     cache <- newIORef M.empty
     return $ ResourceProvider (S.fromList list) cache store
@@ -60,10 +60,10 @@ resourceList = S.toList . resourceSet
 
 
 --------------------------------------------------------------------------------
--- | Check if a given resiyrce exists
+-- | Check if a given resource exists
 resourceExists :: ResourceProvider -> Identifier a -> Bool
 resourceExists provider =
-    (`S.member` resourceSet provider) . setGroup Nothing . castIdentifier
+    (`S.member` resourceSet provider) . setVersion Nothing . castIdentifier
 
 
 --------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ resourceExists provider =
 -- filename)
 resourceMetadataResource :: Identifier a -> Identifier ()
 resourceMetadataResource =
-    parseIdentifier . flip addExtension "metadata" . toFilePath
+    fromFilePath . flip addExtension "metadata" . toFilePath
 
 
 --------------------------------------------------------------------------------

@@ -116,7 +116,7 @@ module Hakyll.Core.Compiler
 
 import Prelude hiding ((.), id)
 import Control.Arrow ((>>>), (&&&), arr, first)
-import Control.Applicative ((<$>))
+import Control.Applicative ((<$>), (*>))
 import Control.Exception (SomeException, handle)
 import Control.Monad.Reader (ask)
 import Control.Monad.Trans (liftIO)
@@ -144,7 +144,7 @@ import qualified Hakyll.Core.Store as Store
 -- | Run a compiler, yielding the resulting target and it's dependencies. This
 -- version of 'runCompilerJob' also stores the result
 --
-runCompiler :: Compiler () CompiledItem    -- ^ Compiler to run
+runCompiler :: Compiler CompiledItem       -- ^ Compiler to run
             -> Identifier ()               -- ^ Target identifier
             -> ResourceProvider            -- ^ Resource provider
             -> [Identifier ()]             -- ^ Universe
@@ -174,18 +174,18 @@ runCompiler compiler id' provider universe routes store modified logger = do
 
 -- | Get the identifier of the item that is currently being compiled
 --
-getIdentifier :: Compiler a (Identifier b)
+getIdentifier :: Compiler (Identifier b)
 getIdentifier = fromJob $ const $ CompilerM $
     castIdentifier . compilerIdentifier <$> ask
 
 -- | Get the route we are using for this item
 --
-getRoute :: Compiler a (Maybe FilePath)
+getRoute :: Compiler (Maybe FilePath)
 getRoute = getIdentifier >>> getRouteFor
 
 -- | Get the route for a specified item
 --
-getRouteFor :: Compiler (Identifier a) (Maybe FilePath)
+getRouteFor :: Compiler (Identifier a -> Maybe FilePath)
 getRouteFor = fromJob $ \identifier -> CompilerM $ do
     routes <- compilerRoutes <$> ask
     return $ runRoutes routes identifier
@@ -193,27 +193,27 @@ getRouteFor = fromJob $ \identifier -> CompilerM $ do
 
 --------------------------------------------------------------------------------
 -- | Get the body of the underlying resource
-getResourceBody :: Compiler a String
+getResourceBody :: Compiler String
 getResourceBody = getResourceWith resourceBody
 
 
 
 --------------------------------------------------------------------------------
 -- | Get the resource we are compiling as a string
-getResourceString :: Compiler a String
+getResourceString :: Compiler String
 getResourceString = getResourceWith $ const resourceString
 
 
 --------------------------------------------------------------------------------
 -- | Get the resource we are compiling as a lazy bytestring
 --
-getResourceLBS :: Compiler a ByteString
+getResourceLBS :: Compiler ByteString
 getResourceLBS = getResourceWith $ const resourceLBS
 
 
 --------------------------------------------------------------------------------
 -- | Overloadable function for 'getResourceString' and 'getResourceLBS'
-getResourceWith :: (ResourceProvider -> Identifier a -> IO b) -> Compiler c b
+getResourceWith :: (ResourceProvider -> Identifier a -> IO b) -> Compiler b
 getResourceWith reader = fromJob $ \_ -> CompilerM $ do
     provider <- compilerResourceProvider <$> ask
     r        <- compilerIdentifier <$> ask
@@ -251,13 +251,14 @@ getDependency id' = CompilerM $ do
 --
 require_ :: (Binary a, Typeable a, Writable a)
          => Identifier a
-         -> Compiler b a
+         -> Compiler a
 require_ identifier =
     fromDependency identifier >>> fromJob (const $ getDependency identifier)
 
 -- | Require another target. Using this function ensures automatic handling of
 -- dependencies
 --
+{-
 require :: (Binary a, Typeable a, Writable a)
         => Identifier a
         -> (b -> a -> c)
@@ -271,13 +272,14 @@ requireA :: (Binary a, Typeable a, Writable a)
          -> Compiler (b, a) c
          -> Compiler b c
 requireA identifier = (id &&& require_ identifier >>>)
+-}
 
 -- | Variant of 'requireAll' which drops the current value
 --
 requireAll_ :: (Binary a, Typeable a, Writable a)
             => Pattern a
-            -> Compiler b [a]
-requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
+            -> Compiler [a]
+requireAll_ pattern = fromDependencies (const getDeps) *> fromJob requireAll_'
   where
     getDeps = map castIdentifier . filterMatches pattern . map castIdentifier
     requireAll_' = const $ CompilerM $ do
@@ -287,6 +289,7 @@ requireAll_ pattern = fromDependencies (const getDeps) >>> fromJob requireAll_'
 -- | Require a number of targets. Using this function ensures automatic handling
 -- of dependencies
 --
+{-
 requireAll :: (Binary a, Typeable a, Writable a)
            => Pattern a
            -> (b -> [a] -> c)
@@ -300,12 +303,13 @@ requireAllA :: (Binary a, Typeable a, Writable a)
             -> Compiler (b, [a]) c
             -> Compiler b c
 requireAllA pattern = (id &&& requireAll_ pattern >>>)
+-}
 
 cached :: (Binary a, Typeable a, Writable a)
        => String
-       -> Compiler () a
-       -> Compiler () a
-cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
+       -> Compiler a
+       -> Compiler a
+cached name (Compiler d j) = Compiler d $ CompilerM $ do
     logger     <- compilerLogger <$> ask
     identifier <- castIdentifier . compilerIdentifier <$> ask
     store      <- compilerStore <$> ask
@@ -326,8 +330,8 @@ cached name (Compiler d j) = Compiler d $ const $ CompilerM $ do
 
 -- | Create an unsafe compiler from a function in IO
 --
-unsafeCompiler :: (a -> IO b)   -- ^ Function to lift
-               -> Compiler a b  -- ^ Resulting compiler
+unsafeCompiler :: (a -> IO b)        -- ^ Function to lift
+               -> Compiler (a -> b)  -- ^ Resulting compiler
 unsafeCompiler f = fromJob $ CompilerM . liftIO . f
 
 -- | Compiler for debugging purposes

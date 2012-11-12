@@ -35,7 +35,7 @@ data RuleSet = RuleSet
     { -- | Routes used in the compilation structure
       rulesRoutes    :: Routes
     , -- | Compilation rules
-      rulesCompilers :: [(Identifier (), Compiler () CompiledItem)]
+      rulesCompilers :: [(Identifier (), Compiler CompiledItem)]
     , -- | A set of the actually used files
       rulesResources :: Set (Identifier ())
     }
@@ -60,7 +60,7 @@ data RuleState = RuleState
 data RuleEnvironment = RuleEnvironment
     { rulesResourceProvider :: ResourceProvider
     , rulesPattern          :: forall a. Pattern a
-    , rulesGroup            :: Maybe String
+    , rulesVersion          :: Maybe String
     }
 
 
@@ -88,7 +88,7 @@ runRules rules provider = do
     env   = RuleEnvironment
         { rulesResourceProvider = provider
         , rulesPattern          = mempty
-        , rulesGroup            = Nothing
+        , rulesVersion          = Nothing
         }
 
 

@@ -43,6 +43,7 @@ module Hakyll.Core.Identifier.Pattern
     , fromGlob
     , fromList
     , fromRegex
+    , fromVersion
 
       -- * Manipulating patterns
     , complement
@@ -176,6 +177,11 @@ fromRegex = Regex
 
 
 --------------------------------------------------------------------------------
+fromVersion :: Maybe String -> Pattern a
+fromVersion = Version
+
+
+--------------------------------------------------------------------------------
 -- | Inverts a pattern, e.g.
 --
 -- > complement "foo/bar.html"
@@ -190,7 +196,7 @@ complement = Complement
 --
 -- > "foo/*.markdown" `withVersion` "pdf"
 withVersion :: Pattern a -> String -> Pattern a
-withVersion p v = And p $ Version $ Just v
+withVersion p v = And p $ fromVersion $ Just v
 
 
 --------------------------------------------------------------------------------

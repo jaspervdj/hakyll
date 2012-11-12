@@ -47,7 +47,7 @@ resourceModified rp r
 
                 return m
   where
-    normalized = castIdentifier $ setGroup Nothing r
+    normalized = castIdentifier $ setVersion Nothing r
     exists     = resourceExists rp r
     store      = resourceStore rp
     cacheRef   = resourceModifiedCache rp

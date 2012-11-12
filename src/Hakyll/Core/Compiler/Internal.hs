@@ -1,63 +1,35 @@
 --------------------------------------------------------------------------------
 -- | Internally used compiler module
+{-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Compiler.Internal
-    ( Dependencies
-    , DependencyEnvironment (..)
-    , CompilerEnvironment (..)
-    , Throwing
-    , CompilerM (..)
+    ( CompilerRead (..)
     , Compiler (..)
-    , runCompilerJob
-    , runCompilerDependencies
-    , fromJob
-    , fromDependencies
-    , fromDependency
+    , compilerTell
+    , compilerAsk
+    , compilerThrow
+    , compilerCatch
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative          (Alternative (..), Applicative,
-                                               pure, (<$>), (<*>))
-import           Control.Arrow
-import           Control.Category             (Category, id, (.))
-import           Control.Monad                (liftM2, (<=<))
-import           Control.Monad.Error          (ErrorT, catchError, runErrorT,
-                                               throwError)
-import           Control.Monad.Reader         (Reader, ReaderT, ask, runReader,
-                                               runReaderT)
-import           Data.Set                     (Set)
-import qualified Data.Set                     as S
-import           Prelude                      hiding (id, (.))
+import           Control.Applicative          (Alternative (..),
+                                               Applicative (..))
+import           Data.Monoid                  (mappend, mempty)
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Logger
 import           Hakyll.Core.ResourceProvider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Store
-import           Hakyll.Core.Util.Arrow
-
-
---------------------------------------------------------------------------------
--- | A set of dependencies
-type Dependencies = Set (Identifier ())
-
-
---------------------------------------------------------------------------------
--- | Environment in which the dependency analyzer runs
-data DependencyEnvironment = DependencyEnvironment
-    { -- | Target identifier
-      dependencyIdentifier :: Identifier ()
-    , -- | List of available identifiers we can depend upon
-      dependencyUniverse   :: [Identifier ()]
-    }
 
 
 --------------------------------------------------------------------------------
 -- | Environment in which a compiler runs
-data CompilerEnvironment = CompilerEnvironment
+data CompilerRead = CompilerRead
     { -- | Target identifier
       compilerIdentifier       :: Identifier ()
     , -- | Resource provider
@@ -76,10 +48,100 @@ data CompilerEnvironment = CompilerEnvironment
 
 
 --------------------------------------------------------------------------------
--- | A calculation possibly throwing an error
-type Throwing a = Either String a
+type CompilerWrite = [Dependency]
 
 
+--------------------------------------------------------------------------------
+data CompilerResult a where
+    CompilerDone    :: a -> CompilerWrite -> CompilerResult a
+    CompilerError   :: String -> CompilerResult a
+    CompilerRequire :: Identifier b -> (b -> Compiler a) -> CompilerResult a
+
+
+--------------------------------------------------------------------------------
+newtype Compiler a = Compiler
+    { unCompiler :: CompilerRead -> IO (CompilerResult a)
+    }
+
+
+--------------------------------------------------------------------------------
+instance Functor Compiler where
+    fmap f (Compiler c) = Compiler $ \r -> do
+        res <- c r
+        return $ case res of
+            CompilerDone x w    -> CompilerDone (f x) w
+            CompilerError e     -> CompilerError e
+            CompilerRequire i g -> CompilerRequire i (\x -> fmap f (g x))
+    {-# INLINE fmap #-}
+
+
+--------------------------------------------------------------------------------
+instance Monad Compiler where
+    return x = Compiler $ \_ -> return $ CompilerDone x mempty
+    {-# INLINE return #-}
+
+    Compiler c >>= f = Compiler $ \r -> do
+        res <- c r
+        case res of
+            CompilerDone x w    -> do
+                res' <- unCompiler (f x) r
+                return $ case res' of
+                    CompilerDone y w'   -> CompilerDone y (w `mappend` w')
+                    CompilerError e     -> CompilerError e
+                    CompilerRequire i g -> CompilerRequire i $ \z -> do
+                        compilerTell w  -- Save dependencies!
+                        g z
+
+            CompilerError e     -> return $ CompilerError e
+            CompilerRequire i g -> return $ CompilerRequire i $ \z -> g z >>= f
+    {-# INLINE (>>=) #-}
+
+
+--------------------------------------------------------------------------------
+instance Applicative Compiler where
+    pure x = return x
+    {-# INLINE pure #-}
+
+    f <*> x = f >>= \f' -> fmap f' x
+    {-# INLINE (<*>) #-}
+
+
+--------------------------------------------------------------------------------
+instance Alternative Compiler where
+    empty   = compilerThrow "Hakyll.Core.Compiler.Internal: empty alternative"
+    x <|> y = compilerCatch x (\_ -> y)
+    {-# INLINE (<|>) #-}
+
+
+--------------------------------------------------------------------------------
+compilerAsk :: Compiler CompilerRead
+compilerAsk = Compiler $ \r -> return $ CompilerDone r mempty
+{-# INLINE compilerAsk #-}
+
+
+--------------------------------------------------------------------------------
+compilerTell :: [Dependency] -> Compiler ()
+compilerTell deps = Compiler $ \_ -> return $ CompilerDone () deps
+{-# INLINE compilerTell #-}
+
+
+--------------------------------------------------------------------------------
+compilerThrow :: String -> Compiler a
+compilerThrow e = Compiler $ \_ -> return $ CompilerError e
+{-# INLINE compilerThrow #-}
+
+
+--------------------------------------------------------------------------------
+compilerCatch :: Compiler a -> (String -> Compiler a) -> Compiler a
+compilerCatch (Compiler x) f = Compiler $ \r -> do
+    res <- x r
+    case res of
+        CompilerError e -> unCompiler (f e) r
+        _               -> return res
+{-# INLINE compilerCatch #-}
+
+
+{-
 --------------------------------------------------------------------------------
 -- | The compiler monad
 newtype CompilerM a = CompilerM
@@ -89,151 +151,24 @@ newtype CompilerM a = CompilerM
 
 --------------------------------------------------------------------------------
 -- | The compiler arrow
-data Compiler a b = Compiler
+data Compiler a = Compiler
     { compilerDependencies :: Reader DependencyEnvironment Dependencies
-    , compilerJob          :: a -> CompilerM b
+    , compilerJob          :: CompilerM a
     }
 
 
 --------------------------------------------------------------------------------
-instance Functor (Compiler a) where
-    fmap f (Compiler d j) = Compiler d $ fmap f . j
+instance Functor Compiler where
+    fmap f (Compiler d j) = Compiler d $ fmap f j
     {-# INLINE fmap #-}
 
 
 --------------------------------------------------------------------------------
-instance Applicative (Compiler a) where
-    pure = fromJob . const . return
+instance Applicative Compiler where
+    pure = fromJob . return
     {-# INLINE pure #-}
 
     Compiler d1 j1 <*> Compiler d2 j2 =
-        Compiler (liftM2 S.union d1 d2) $ \x -> j1 x <*> j2 x
+        Compiler (liftM2 S.union d1 d2) $ j1 <*> j2
     {-# INLINE (<*>) #-}
-
-
---------------------------------------------------------------------------------
-instance Alternative (Compiler a) where
-    empty = fromJob $ const $ CompilerM $
-        throwError "Hakyll.Core.Compiler.Internal: empty alternative"
-
-    Compiler d1 j1 <|> Compiler d2 j2 =
-        Compiler (liftM2 S.union d1 d2) $ \x -> CompilerM $
-            catchError (unCompilerM $ j1 x) (\_ -> unCompilerM $ j2 x)
-    {-# INLINE (<|>) #-}
-
-
---------------------------------------------------------------------------------
-instance Category Compiler where
-    id = Compiler (return S.empty) return
-    {-# INLINE id #-}
-
-    Compiler d1 j1 . Compiler d2 j2 =
-        Compiler (liftM2 S.union d1 d2) (j1 <=< j2)
-    {-# INLINE (.) #-}
-
-
---------------------------------------------------------------------------------
-instance Arrow Compiler where
-    arr f = fromJob (return . f)
-    {-# INLINE arr #-}
-
-    first (Compiler d j) = Compiler d $ \(x, y) -> do
-        x' <- j x
-        return (x', y)
-    {-# INLINE first #-}
-
-    second (Compiler d j) = Compiler d $ \(x, y) -> do
-        y' <- j y
-        return (x, y')
-    {-# INLINE second #-}
-
-    Compiler d1 j1 *** Compiler d2 j2 =
-        Compiler (liftM2 S.union d1 d2) $ \(x, y) -> do
-            x' <- j1 x
-            y' <- j2 y
-            return (x', y')
-    {-# INLINE (***) #-}
-
-    Compiler d1 j1 &&& Compiler d2 j2 =
-        Compiler (liftM2 S.union d1 d2) $ \x -> do
-            y1 <- j1 x
-            y2 <- j2 x
-            return (y1, y2)
-    {-# INLINE (&&&) #-}
-
-
---------------------------------------------------------------------------------
-instance ArrowChoice Compiler where
-    left (Compiler d j) = Compiler d $ \e -> case e of
-        Left l  -> Left  <$> j l
-        Right r -> Right <$> return r
-    {-# INLINE left #-}
-
-    Compiler d1 j1 ||| Compiler d2 j2 = Compiler (liftM2 S.union d1 d2) $
-        \e -> case e of Left x  -> j1 x; Right y -> j2 y
-    {-# INLINE (|||) #-}
-
-
---------------------------------------------------------------------------------
-instance ArrowMap Compiler where
-    mapA (Compiler d j) = Compiler d $ mapM j
-    {-# INLINE mapA #-}
-
-
---------------------------------------------------------------------------------
--- | Run a compiler, yielding the resulting target
-runCompilerJob :: Compiler () a     -- ^ Compiler to run
-               -> Identifier ()     -- ^ Target identifier
-               -> ResourceProvider  -- ^ Resource provider
-               -> [Identifier ()]   -- ^ Universe
-               -> Routes            -- ^ Route
-               -> Store             -- ^ Store
-               -> Bool              -- ^ Was the resource modified?
-               -> Logger            -- ^ Logger
-               -> IO (Throwing a)   -- ^ Result
-runCompilerJob compiler id' provider universe route store modified logger =
-    runReaderT (runErrorT $ unCompilerM $ compilerJob compiler ()) env
-  where
-    env = CompilerEnvironment
-            { compilerIdentifier       = id'
-            , compilerResourceProvider = provider
-            , compilerUniverse         = universe
-            , compilerRoutes           = route
-            , compilerStore            = store
-            , compilerResourceModified = modified
-            , compilerLogger           = logger
-            }
-
-
---------------------------------------------------------------------------------
-runCompilerDependencies :: Compiler () a
-                        -> Identifier ()
-                        -> [Identifier ()]
-                        -> Dependencies
-runCompilerDependencies compiler identifier universe =
-    runReader (compilerDependencies compiler) env
-  where
-    env = DependencyEnvironment
-            { dependencyIdentifier = identifier
-            , dependencyUniverse   = universe
-            }
-
-
---------------------------------------------------------------------------------
-fromJob :: (a -> CompilerM b) -> Compiler a b
-fromJob = Compiler $ return S.empty
-{-# INLINE fromJob #-}
-
-
---------------------------------------------------------------------------------
-fromDependencies :: (Identifier () -> [Identifier ()] -> [Identifier ()])
-                 -> Compiler b b
-fromDependencies collectDeps = flip Compiler return $ do
-    DependencyEnvironment identifier universe <- ask
-    return $ S.fromList $ collectDeps identifier universe
-
-
---------------------------------------------------------------------------------
--- | Wait until another compiler has finished before running this compiler
-fromDependency :: Identifier a -> Compiler b b
-fromDependency = fromDependencies . const . const . return . castIdentifier
+-}

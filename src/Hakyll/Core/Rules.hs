@@ -31,7 +31,7 @@ module Hakyll.Core.Rules
 
 --------------------------------------------------------------------------------
 import           Control.Applicative            ((<$>))
-import           Control.Arrow                  (arr, (***), (>>>))
+import           Control.Arrow                  ((***))
 import           Control.Monad.Reader           (ask, local)
 import           Control.Monad.State            (get, put)
 import           Control.Monad.Writer           (tell)
@@ -64,14 +64,12 @@ tellRoute route' = RulesM $ tell $ RuleSet route' mempty mempty
 --------------------------------------------------------------------------------
 -- | Add a number of compilers
 tellCompilers :: (Binary a, Typeable a, Writable a)
-             => [(Identifier a, Compiler () a)]
+             => [(Identifier a, Compiler a)]
              -> Rules
 tellCompilers compilers = RulesM $ do
     -- We box the compilers so they have a more simple type
-    let compilers' = map (castIdentifier *** boxCompiler) compilers
+    let compilers' = map (castIdentifier *** fmap compiledItem) compilers
     tell $ RuleSet mempty compilers' mempty
-  where
-    boxCompiler = (>>> arr compiledItem)
 
 
 --------------------------------------------------------------------------------
@@ -123,9 +121,9 @@ match pattern = RulesM . local addPredicate . unRulesM
 -- This will put the compiler for the raw content in a separate group
 -- (@\"raw\"@), which causes it to be compiled as well.
 group :: String -> RulesM a -> RulesM a
-group g = RulesM . local setGroup' . unRulesM
+group g = RulesM . local setVersion' . unRulesM
   where
-    setGroup' env = env { rulesGroup = Just g }
+    setVersion' env = env {rulesVersion = Just g}
 
 
 --------------------------------------------------------------------------------
@@ -135,12 +133,12 @@ group g = RulesM . local setGroup' . unRulesM
 -- no resources match the current selection, nothing will happen. In this case,
 -- you might want to have a look at 'create'.
 compile :: (Binary a, Typeable a, Writable a)
-        => Compiler () a -> RulesM (Pattern a)
+        => Compiler a -> RulesM (Pattern a)
 compile compiler = do
     ids <- resources
     tellCompilers [(castIdentifier id', compiler) | id' <- ids]
     tellResources ids
-    return $ list $ map castIdentifier ids
+    return $ fromList $ map castIdentifier ids
 
 
 --------------------------------------------------------------------------------
@@ -153,10 +151,10 @@ compile compiler = do
 -- replaced by the group set via 'group' (or 'Nothing', if 'group' has not been
 -- used).
 create :: (Binary a, Typeable a, Writable a)
-       => Identifier a -> Compiler () a -> RulesM (Identifier a)
+       => Identifier a -> Compiler a -> RulesM (Identifier a)
 create id' compiler = RulesM $ do
-    group' <- rulesGroup <$> ask
-    let id'' = setGroup group' id'
+    version' <- rulesVersion <$> ask
+    let id'' = setVersion version' id'
     unRulesM $ tellCompilers [(id'', compiler)]
     return id''
 
@@ -168,10 +166,11 @@ create id' compiler = RulesM $ do
 route :: Routes -> Rules
 route route' = RulesM $ do
     -- We want the route only to be applied if we match the current pattern and
-    -- group
-    pattern <- rulesPattern <$> ask
-    group' <- rulesGroup <$> ask
-    unRulesM $ tellRoute $ matchRoute (pattern `mappend` inGroup group') route'
+    -- version
+    pattern  <- rulesPattern <$> ask
+    version' <- rulesVersion <$> ask
+    unRulesM $ tellRoute $ matchRoute
+        (pattern `mappend` fromVersion version') route'
 
 
 --------------------------------------------------------------------------------
@@ -181,8 +180,8 @@ resources :: RulesM [Identifier ()]
 resources = RulesM $ do
     pattern  <- rulesPattern <$> ask
     provider <- rulesResourceProvider <$> ask
-    g        <- rulesGroup <$> ask
-    return $ filterMatches pattern $ map (setGroup g) $ resourceList provider
+    g        <- rulesVersion <$> ask
+    return $ filterMatches pattern $ map (setVersion g) $ resourceList provider
 
 
 --------------------------------------------------------------------------------
@@ -193,6 +192,6 @@ freshIdentifier :: String                 -- ^ Prefix
 freshIdentifier prefix = RulesM $ do
     state <- get
     let index = rulesNextIdentifier state
-        id'   = parseIdentifier $ prefix ++ "/" ++ show index
+        id'   = fromFilePath $ prefix ++ "/" ++ show index
     put $ state {rulesNextIdentifier = index + 1}
     return id'
