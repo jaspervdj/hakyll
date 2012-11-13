@@ -101,7 +101,7 @@ Library
     Hakyll.Core.ResourceProvider
     Hakyll.Core.Routes
     Hakyll.Core.Rules
-    Hakyll.Core.Run
+    Hakyll.Core.Runtime
     Hakyll.Core.Store
     Hakyll.Core.Util.Arrow
     Hakyll.Core.Util.File

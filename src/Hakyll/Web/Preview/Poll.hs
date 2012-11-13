@@ -19,9 +19,9 @@ import Hakyll.Core.Configuration
 
 -- | A preview thread that periodically recompiles the site.
 --
-previewPoll :: HakyllConfiguration  -- ^ Configuration
-            -> IO [FilePath]        -- ^ Updating action
-            -> IO ()                -- ^ Can block forever
+previewPoll :: Configuration  -- ^ Configuration
+            -> IO [FilePath]  -- ^ Updating action
+            -> IO ()          -- ^ Can block forever
 previewPoll _ update = do
 #if MIN_VERSION_directory(1,2,0)
     time <- getCurrentTime

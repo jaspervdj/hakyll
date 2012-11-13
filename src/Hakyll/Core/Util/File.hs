@@ -47,8 +47,8 @@ getRecursiveContents includeDirs topdir = do
 -- | Check if a file is meant for Hakyll internal use, i.e. if it is located in
 -- the destination or store directory
 --
-isFileInternal :: HakyllConfiguration  -- ^ Configuration
-               -> FilePath             -- ^ File to check
+isFileInternal :: Configuration  -- ^ Configuration
+               -> FilePath       -- ^ File to check
                -> Bool                 -- ^ If the given file is internal
 isFileInternal configuration file =
     any (`isPrefixOf` split file) dirs

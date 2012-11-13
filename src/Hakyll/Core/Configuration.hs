@@ -1,19 +1,23 @@
+--------------------------------------------------------------------------------
 -- | Exports a datastructure for the top-level hakyll configuration
---
 module Hakyll.Core.Configuration
-    ( HakyllConfiguration (..)
+    ( Configuration (..)
     , shouldIgnoreFile
-    , defaultHakyllConfiguration
+    , defaultConfiguration
     ) where
 
-import System.FilePath (takeFileName)
-import Data.List (isPrefixOf, isSuffixOf)
 
-data HakyllConfiguration = HakyllConfiguration
+--------------------------------------------------------------------------------
+import           Data.List       (isPrefixOf, isSuffixOf)
+import           System.FilePath (takeFileName)
+
+
+--------------------------------------------------------------------------------
+data Configuration = Configuration
     { -- | Directory in which the output written
       destinationDirectory :: FilePath
     , -- | Directory where hakyll's internal store is kept
-      storeDirectory :: FilePath
+      storeDirectory       :: FilePath
     , -- | Function to determine ignored files
       --
       -- In 'defaultHakyllConfiguration', the following files are ignored:
@@ -30,7 +34,7 @@ data HakyllConfiguration = HakyllConfiguration
       -- also be ignored. Note that this is the configuration parameter, if you
       -- want to use the test, you should use @shouldIgnoreFile@.
       --
-      ignoreFile :: FilePath -> Bool
+      ignoreFile           :: FilePath -> Bool
     , -- | Here, you can plug in a system command to upload/deploy your site.
       --
       -- Example:
@@ -41,16 +45,17 @@ data HakyllConfiguration = HakyllConfiguration
       --
       -- > ./hakyll deploy
       --
-      deployCommand :: String
+      deployCommand        :: String
     , -- | Use an in-memory cache for items. This is faster but uses more
       -- memory.
-      inMemoryCache :: Bool
+      inMemoryCache        :: Bool
     }
 
+
+--------------------------------------------------------------------------------
 -- | Default configuration for a hakyll application
---
-defaultHakyllConfiguration :: HakyllConfiguration
-defaultHakyllConfiguration = HakyllConfiguration
+defaultConfiguration :: Configuration
+defaultConfiguration = Configuration
     { destinationDirectory = "_site"
     , storeDirectory       = "_cache"
     , ignoreFile           = ignoreFile'
@@ -67,9 +72,10 @@ defaultHakyllConfiguration = HakyllConfiguration
       where
         fileName = takeFileName path
 
+
+--------------------------------------------------------------------------------
 -- | Check if a file should be ignored
---
-shouldIgnoreFile :: HakyllConfiguration -> FilePath -> Bool
+shouldIgnoreFile :: Configuration -> FilePath -> Bool
 shouldIgnoreFile conf path =
     destinationDirectory conf `isPrefixOf` path ||
     storeDirectory conf `isPrefixOf` path ||

@@ -4,12 +4,14 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Compiler.Internal
     ( CompilerRead (..)
+    , CompilerResult (..)
     , Compiler
     , runCompiler
     , compilerTell
     , compilerAsk
     , compilerThrow
     , compilerCatch
+    , compilerResult
     ) where
 
 
@@ -56,7 +58,7 @@ type CompilerWrite = [Dependency]
 data CompilerResult a where
     CompilerDone    :: a -> CompilerWrite -> CompilerResult a
     CompilerError   :: String -> CompilerResult a
-    CompilerRequire :: Identifier -> (b -> Compiler a) -> CompilerResult a
+    CompilerRequire :: Identifier -> Compiler a -> CompilerResult a
 
 
 --------------------------------------------------------------------------------
@@ -70,9 +72,9 @@ instance Functor Compiler where
     fmap f (Compiler c) = Compiler $ \r -> do
         res <- c r
         return $ case res of
-            CompilerDone x w    -> CompilerDone (f x) w
-            CompilerError e     -> CompilerError e
-            CompilerRequire i g -> CompilerRequire i (\x -> fmap f (g x))
+            CompilerDone x w     -> CompilerDone (f x) w
+            CompilerError e      -> CompilerError e
+            CompilerRequire i c' -> CompilerRequire i (fmap f c')
     {-# INLINE fmap #-}
 
 
@@ -87,14 +89,14 @@ instance Monad Compiler where
             CompilerDone x w    -> do
                 res' <- unCompiler (f x) r
                 return $ case res' of
-                    CompilerDone y w'   -> CompilerDone y (w `mappend` w')
-                    CompilerError e     -> CompilerError e
-                    CompilerRequire i g -> CompilerRequire i $ \z -> do
+                    CompilerDone y w'    -> CompilerDone y (w `mappend` w')
+                    CompilerError e      -> CompilerError e
+                    CompilerRequire i c' -> CompilerRequire i $ do
                         compilerTell w  -- Save dependencies!
-                        g z
+                        c'
 
-            CompilerError e     -> return $ CompilerError e
-            CompilerRequire i g -> return $ CompilerRequire i $ \z -> g z >>= f
+            CompilerError e      -> return $ CompilerError e
+            CompilerRequire i c' -> return $ CompilerRequire i $ c' >>= f
     {-# INLINE (>>=) #-}
 
 
@@ -145,3 +147,10 @@ compilerCatch (Compiler x) f = Compiler $ \r -> do
         CompilerError e -> unCompiler (f e) r
         _               -> return res
 {-# INLINE compilerCatch #-}
+
+
+--------------------------------------------------------------------------------
+-- | Put the result back in a compiler
+compilerResult :: CompilerResult a -> Compiler a
+compilerResult x = Compiler $ \_ -> return x
+{-# INLINE compilerResult #-}

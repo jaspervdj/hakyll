@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Core.Dependencies
     ( Dependency (..)
     , DependencyFacts
@@ -7,18 +8,21 @@ module Hakyll.Core.Dependencies
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative            ((<$>))
+import           Control.Applicative            ((<$>), (<*>))
 import           Control.Monad                  (foldM, forM_, unless, when)
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWS, runRWS)
-import           Control.Monad.State            (get, modify)
+import qualified Control.Monad.State            as State
 import           Control.Monad.Writer           (tell)
+import           Data.Binary                    (Binary (..), getWord8,
+                                                 putWord8)
 import           Data.List                      (find)
 import           Data.Map                       (Map)
 import qualified Data.Map                       as M
 import           Data.Maybe                     (fromMaybe)
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
+import           Data.Typeable                  (Typeable)
 
 
 --------------------------------------------------------------------------------
@@ -30,7 +34,17 @@ import           Hakyll.Core.Identifier.Pattern
 data Dependency
     = Pattern Pattern [Identifier]
     | Identifier Identifier
-    deriving (Show)
+    deriving (Show, Typeable)
+
+
+--------------------------------------------------------------------------------
+instance Binary Dependency where
+    put (Pattern p is) = putWord8 0 >> put p >> put is
+    put (Identifier i) = putWord8 1 >> put i
+    get = getWord8 >>= \t -> case t of
+        0 -> Pattern <$> get <*> get
+        1 -> Identifier <$> get
+        _ -> error "Data.Binary.get: Invalid Dependency"
 
 
 --------------------------------------------------------------------------------
@@ -66,13 +80,14 @@ type DependencyM a = RWS [Identifier] [String] DependencyState a
 
 --------------------------------------------------------------------------------
 markOod :: Identifier -> DependencyM ()
-markOod id' = modify $ \s -> s {dependencyOod = S.insert id' $ dependencyOod s}
+markOod id' = State.modify $ \s ->
+    s {dependencyOod = S.insert id' $ dependencyOod s}
 
 
 --------------------------------------------------------------------------------
 dependenciesFor :: Identifier -> DependencyM [Identifier]
 dependenciesFor id' = do
-    facts <- dependencyFacts <$> get
+    facts <- dependencyFacts <$> State.get
     let relevant = fromMaybe [] $ M.lookup id' facts
     return [i | Identifier i <- relevant]
 
@@ -81,7 +96,7 @@ dependenciesFor id' = do
 checkNew :: DependencyM ()
 checkNew = do
     universe <- ask
-    facts    <- dependencyFacts <$> get
+    facts    <- dependencyFacts <$> State.get
     forM_ universe $ \id' -> unless (id' `M.member` facts) $ do
         tell [show id' ++ " is out-of-date because it is new"]
         markOod id'
@@ -90,10 +105,10 @@ checkNew = do
 --------------------------------------------------------------------------------
 checkChangedPatterns :: DependencyM ()
 checkChangedPatterns = do
-    facts <- M.toList . dependencyFacts <$> get
+    facts <- M.toList . dependencyFacts <$> State.get
     forM_ facts $ \(id', deps) -> do
         deps' <- foldM (go id') [] deps
-        modify $ \s -> s
+        State.modify $ \s -> s
             {dependencyFacts = M.insert id' deps' $ dependencyFacts s}
   where
     go _   ds (Identifier i) = return $ Identifier i : ds
@@ -120,7 +135,7 @@ bruteForce = do
 
     check (todo, changed) id' = do
         deps <- dependenciesFor id'
-        ood  <- dependencyOod <$> get
+        ood  <- dependencyOod <$> State.get
         case find (`S.member` ood) deps of
             Nothing -> return (id' : todo, changed)
             Just d  -> do
