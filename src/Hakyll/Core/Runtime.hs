@@ -132,7 +132,9 @@ scheduleOutOfDate = do
 
     -- Update facts and todo items
     modify $ \s -> s
-        { runtimeTodo  = todo `M.union` todo'
+        { runtimeDone  = runtimeDone s `S.union`
+            (S.fromList identifiers `S.difference` ood)
+        , runtimeTodo  = todo `M.union` todo'
         , runtimeFacts = facts'
         }
 
@@ -143,7 +145,9 @@ pickAndChase = do
     todo <- runtimeTodo <$> get
     case M.minViewWithKey todo of
         Nothing            -> return ()
-        Just ((id', _), _) -> chase [] id'
+        Just ((id', _), _) -> do
+            chase [] id'
+            pickAndChase
 
 
 --------------------------------------------------------------------------------

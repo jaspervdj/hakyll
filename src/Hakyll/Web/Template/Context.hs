@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 module Hakyll.Web.Template.Context
-    ( Context
+    ( Context (..)
+    , mapContext
     , field
 
     , defaultContext
@@ -13,8 +14,8 @@ module Hakyll.Web.Template.Context
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative      (empty, (<|>))
-import           Control.Arrow
+import           Control.Applicative      (Alternative (..), (<$>))
+import           Data.Monoid              (Monoid (..))
 import           System.FilePath          (takeBaseName, takeDirectory)
 
 
@@ -26,24 +27,35 @@ import           Hakyll.Web.Urls
 
 
 --------------------------------------------------------------------------------
-type Context a = String -> Identifier -> a -> Compiler String
+newtype Context a = Context
+    { unContext :: String -> Identifier -> a -> Compiler String
+    }
+
+
+--------------------------------------------------------------------------------
+instance Monoid (Context a) where
+    mempty                          = Context $ \_ _ _ -> empty
+    mappend (Context f) (Context g) = Context $ \k i x -> f k i x <|> g k i x
+
+
+--------------------------------------------------------------------------------
+mapContext :: (String -> String) -> Context a -> Context a
+mapContext f (Context g) = Context $ \k i x -> f <$> g k i x
 
 
 --------------------------------------------------------------------------------
 field :: String -> (Identifier -> a -> Compiler String) -> Context a
-field key value k' id' x
-    | k' == key = value id' x
-    | otherwise = empty
+field key value = Context $ \k i x -> if k == key then value i x else empty
 
 
 --------------------------------------------------------------------------------
 defaultContext :: Context Page
 defaultContext =
-    bodyField     "body"     <|>
-    urlField      "url"      <|>
-    pathField     "path"     <|>
-    categoryField "category" <|>
-    titleField    "title"    <|>
+    bodyField     "body"     `mappend`
+    urlField      "url"      `mappend`
+    pathField     "path"     `mappend`
+    categoryField "category" `mappend`
+    titleField    "title"    `mappend`
     missingField
 
 
@@ -54,24 +66,24 @@ bodyField key = field key $ \_ x -> return x
 
 --------------------------------------------------------------------------------
 urlField :: String -> Context a
-urlField key = field key $ fst ^>> getRouteFor >>^ maybe empty toUrl
+urlField key = field key $ \i _ -> maybe empty toUrl <$> getRouteFor i
 
 
 --------------------------------------------------------------------------------
 pathField :: String -> Context a
-pathField key = field key $ arr $ toFilePath . fst
+pathField key = field key $ \i _ -> return $ toFilePath i
 
 
 --------------------------------------------------------------------------------
 categoryField :: String -> Context a
-categoryField key = pathField key >>^ (takeBaseName . takeDirectory)
+categoryField key = mapContext (takeBaseName . takeDirectory) $ pathField key
 
 
 --------------------------------------------------------------------------------
 titleField :: String -> Context a
-titleField key = pathField key >>^ takeBaseName
+titleField key = mapContext takeBaseName $ pathField key
 
 
 --------------------------------------------------------------------------------
 missingField :: Context a
-missingField = arr $ \(k, _) -> "$" ++ k ++ "$"
+missingField = Context $ \k _ _ -> return $ "$" ++ k ++ "$"

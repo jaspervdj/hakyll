@@ -58,8 +58,6 @@
 -- >             <a href="/about.html"> About
 -- >             <a href="/code.html"> Code
 -- >         #{body}
-{-# LANGUAGE Arrows              #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 module Hakyll.Web.Template
     ( Template
     , applyTemplate
@@ -70,11 +68,7 @@ module Hakyll.Web.Template
 
 
 --------------------------------------------------------------------------------
-import           Control.Arrow
-import           Control.Category             (id)
-import qualified Data.Map                     as M
-import           Data.Maybe                   (fromMaybe)
-import           Data.Tuple                   (swap)
+import           Control.Monad                (forM, liftM)
 import           Prelude                      hiding (id)
 import           System.FilePath              (takeExtension)
 import           Text.Hamlet                  (HamletSettings,
@@ -84,7 +78,6 @@ import           Text.Hamlet                  (HamletSettings,
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
-import           Hakyll.Core.Util.Arrow
 import           Hakyll.Web.Page.Internal
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
@@ -92,53 +85,44 @@ import           Hakyll.Web.Template.Read
 
 
 --------------------------------------------------------------------------------
-applyTemplate :: forall a b. (ArrowChoice a, ArrowMap a)
-              => a (String, b) String
-              -> a (Template, b) String
-applyTemplate context =
-    arr (\(tpl, x) -> [(e, x) | e <- unTemplate tpl]) >>>
-    mapA applyElement >>^ concat
-  where
-    applyElement :: a (TemplateElement, b) String
-    applyElement = unElement >>> (id ||| context)
-
-    unElement :: a (TemplateElement, b) (Either String (String, b))
-    unElement = arr $ \(e, x) -> case e of
-        Chunk c -> Left c
-        Escaped -> Left "$"
-        Key k   -> Right (k, x)
+applyTemplate :: Monad m
+              => (String -> a -> m String)
+              -> Template -> a -> m String
+applyTemplate context tpl x = liftM concat $
+    forM (unTemplate tpl) $ \e -> case e of
+        Chunk c -> return c
+        Escaped -> return "$"
+        Key k   -> context k x
 
 
 --------------------------------------------------------------------------------
 -- | Read a template. If the extension of the file we're compiling is
 -- @.hml@ or @.hamlet@, it will be considered as a Hamlet template, and parsed
 -- as such.
-templateCompiler :: Compiler () Template
+templateCompiler :: Compiler Template
 templateCompiler = templateCompilerWith defaultHamletSettings
 
 
 --------------------------------------------------------------------------------
 -- | Version of 'templateCompiler' that enables custom settings.
-templateCompilerWith :: HamletSettings -> Compiler () Template
+templateCompilerWith :: HamletSettings -> Compiler Template
 templateCompilerWith settings =
-    cached "Hakyll.Web.Template.templateCompilerWith" $
-        getIdentifier &&& getResourceString >>^ uncurry read'
-  where
-    read' identifier string =
+    cached "Hakyll.Web.Template.templateCompilerWith" $ do
+        identifier <- getIdentifier
+        string     <- getResourceString
         if takeExtension (toFilePath identifier) `elem` [".hml", ".hamlet"]
             -- Hamlet template
-            then readHamletTemplateWith settings string
+            then return $ readHamletTemplateWith settings string
             -- Hakyll template
-            else readTemplate string
+            else return $ readTemplate string
 
 
 --------------------------------------------------------------------------------
-applyTemplateCompiler :: Identifier Template  -- ^ Template
-                      -> Context Page         -- ^ Context
-                      -> Compiler Page Page   -- ^ Compiler
-applyTemplateCompiler identifier context = requireA identifier $
-    arr swap >>> applyTemplate context'
-  where
-    context' = proc (k, x) -> do
-        id' <- getIdentifier -< ()
-        context -< (k, (id', x))
+applyTemplateCompiler :: Template       -- ^ Template
+                      -> Context Page   -- ^ Context
+                      -> Page           -- ^ Page
+                      -> Compiler Page  -- ^ Compiler
+applyTemplateCompiler tpl context page = do
+    identifier <- getIdentifier
+    let context' k x = unContext context k identifier x
+    applyTemplate context' tpl page

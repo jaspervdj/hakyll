@@ -93,7 +93,7 @@ Library
     Hakyll
     Hakyll.Core.Compiler
     Hakyll.Core.Configuration
-    Hakyll.Core.DependencyAnalyzer
+    Hakyll.Core.Dependencies
     Hakyll.Core.Identifier
     Hakyll.Core.Identifier.Pattern
     Hakyll.Core.Logger

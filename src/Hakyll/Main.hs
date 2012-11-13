@@ -13,7 +13,7 @@ import System.Process (system)
 
 import Hakyll.Core.Configuration
 import Hakyll.Core.Identifier
-import Hakyll.Core.Run
+import Hakyll.Core.Runtime
 import Hakyll.Core.Rules
 
 #ifdef PREVIEW_SERVER
@@ -28,13 +28,13 @@ import Hakyll.Web.Preview.Server
 
 -- | This usualy is the function with which the user runs the hakyll compiler
 --
-hakyll :: RulesM a -> IO ()
-hakyll = hakyllWith defaultHakyllConfiguration
+hakyll :: Rules a -> IO ()
+hakyll = hakyllWith defaultConfiguration
 
 -- | A variant of 'hakyll' which allows the user to specify a custom
 -- configuration
 --
-hakyllWith :: HakyllConfiguration -> RulesM a -> IO ()
+hakyllWith :: Configuration -> Rules a -> IO ()
 hakyllWith conf rules = do
     args <- getArgs
     case args of
@@ -51,14 +51,14 @@ hakyllWith conf rules = do
 
 -- | Build the site
 --
-build :: HakyllConfiguration -> RulesM a -> IO ()
+build :: Configuration -> Rules a -> IO ()
 build conf rules = do
     _ <- run conf rules
     return ()
 
 -- | Remove the output directories
 --
-clean :: HakyllConfiguration -> IO ()
+clean :: Configuration -> IO ()
 clean conf = do
     remove $ destinationDirectory conf
     remove $ storeDirectory conf
@@ -97,12 +97,12 @@ help = do
 
 -- | Preview the site
 --
-preview :: HakyllConfiguration -> RulesM a -> Int -> IO ()
+preview :: Configuration -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 preview conf rules port = do
     -- Fork a thread polling for changes
     _ <- forkIO $ previewPoll conf update
-    
+
     -- Run the server in the main thread
     server conf port
   where
@@ -113,14 +113,14 @@ preview _ _ _ = previewServerDisabled
 
 -- | Rebuild the site
 --
-rebuild :: HakyllConfiguration -> RulesM a -> IO ()
+rebuild :: Configuration -> Rules a -> IO ()
 rebuild conf rules = do
     clean conf
     build conf rules
 
 -- | Start a server
 --
-server :: HakyllConfiguration -> Int -> IO ()
+server :: Configuration -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 server conf port = do
     let destination = destinationDirectory conf
@@ -133,7 +133,7 @@ server _ _ = previewServerDisabled
 
 -- | Upload the site
 --
-deploy :: HakyllConfiguration -> IO ()
+deploy :: Configuration -> IO ()
 deploy conf = do
     _ <- system $ deployCommand conf
     return ()
