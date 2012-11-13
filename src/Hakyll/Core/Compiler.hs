@@ -6,6 +6,8 @@ module Hakyll.Core.Compiler
     , getIdentifier
     , getRoute
     , getRouteFor
+    , getMetadata
+    , getMetadataFor
     , getResourceBody
     , getResourceString
     , getResourceLBS
@@ -20,22 +22,24 @@ module Hakyll.Core.Compiler
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative            ((<$>))
-import           Data.Binary                    (Binary)
-import           Data.ByteString.Lazy           (ByteString)
-import           Data.Typeable                  (Typeable)
-import           Prelude                        hiding (id, (.))
-import           System.Environment             (getProgName)
+import           Control.Applicative           ((<$>))
+import           Data.Binary                   (Binary)
+import           Data.ByteString.Lazy          (ByteString)
+import           Data.Typeable                 (Typeable)
+import           Prelude                       hiding (id, (.))
+import           System.Environment            (getProgName)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Compiler.Require
+import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Logger
+import           Hakyll.Core.Metadata
 import           Hakyll.Core.ResourceProvider
 import           Hakyll.Core.Routes
-import qualified Hakyll.Core.Store              as Store
+import qualified Hakyll.Core.Store             as Store
 import           Hakyll.Core.Writable
 
 
@@ -57,6 +61,19 @@ getRouteFor :: Identifier -> Compiler (Maybe FilePath)
 getRouteFor identifier = do
     routes <- compilerRoutes <$> compilerAsk
     return $ runRoutes routes identifier
+
+
+--------------------------------------------------------------------------------
+getMetadata :: Compiler Metadata
+getMetadata = getIdentifier >>= getMetadataFor
+
+
+--------------------------------------------------------------------------------
+getMetadataFor :: Identifier -> Compiler Metadata
+getMetadataFor identifier = do
+    provider <- compilerProvider <$> compilerAsk
+    compilerTell [IdentifierDependency identifier]
+    compilerUnsafeIO $ resourceMetadata provider identifier
 
 
 --------------------------------------------------------------------------------

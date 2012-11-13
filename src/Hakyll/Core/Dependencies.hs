@@ -32,18 +32,18 @@ import           Hakyll.Core.Identifier.Pattern
 
 --------------------------------------------------------------------------------
 data Dependency
-    = Pattern Pattern [Identifier]
-    | Identifier Identifier
+    = PatternDependency Pattern [Identifier]
+    | IdentifierDependency Identifier
     deriving (Show, Typeable)
 
 
 --------------------------------------------------------------------------------
 instance Binary Dependency where
-    put (Pattern p is) = putWord8 0 >> put p >> put is
-    put (Identifier i) = putWord8 1 >> put i
+    put (PatternDependency p is) = putWord8 0 >> put p >> put is
+    put (IdentifierDependency i) = putWord8 1 >> put i
     get = getWord8 >>= \t -> case t of
-        0 -> Pattern <$> get <*> get
-        1 -> Identifier <$> get
+        0 -> PatternDependency <$> get <*> get
+        1 -> IdentifierDependency <$> get
         _ -> error "Data.Binary.get: Invalid Dependency"
 
 
@@ -89,7 +89,7 @@ dependenciesFor :: Identifier -> DependencyM [Identifier]
 dependenciesFor id' = do
     facts <- dependencyFacts <$> State.get
     let relevant = fromMaybe [] $ M.lookup id' facts
-    return [i | Identifier i <- relevant]
+    return [i | IdentifierDependency i <- relevant]
 
 
 --------------------------------------------------------------------------------
@@ -111,16 +111,16 @@ checkChangedPatterns = do
         State.modify $ \s -> s
             {dependencyFacts = M.insert id' deps' $ dependencyFacts s}
   where
-    go _   ds (Identifier i) = return $ Identifier i : ds
-    go id' ds (Pattern p ls) = do
+    go _   ds (IdentifierDependency i) = return $ IdentifierDependency i : ds
+    go id' ds (PatternDependency p ls) = do
         universe <- ask
         let ls' = filterMatches p universe
         if ls == ls'
-            then return $ Pattern p ls : ds
+            then return $ PatternDependency p ls : ds
             else do
                 tell [show id' ++ " is out-of-date because a pattern changed"]
                 markOod id'
-                return $ Pattern p ls' : ds
+                return $ PatternDependency p ls' : ds
 
 
 --------------------------------------------------------------------------------
