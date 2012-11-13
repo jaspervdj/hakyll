@@ -27,7 +27,7 @@ import qualified Hakyll.Core.Store                          as Store
 
 --------------------------------------------------------------------------------
 -- | A resource is modified if it or its metadata has changed
-resourceModified :: ResourceProvider -> Identifier a -> IO Bool
+resourceModified :: ResourceProvider -> Identifier -> IO Bool
 resourceModified rp r
     | not exists = return False
     | otherwise  = do
@@ -47,7 +47,7 @@ resourceModified rp r
 
                 return m
   where
-    normalized = castIdentifier $ setVersion Nothing r
+    normalized = setVersion Nothing r
     exists     = resourceExists rp r
     store      = resourceStore rp
     cacheRef   = resourceModifiedCache rp
@@ -79,5 +79,5 @@ fileDigest = fmap MD5.hashlazy . BL.readFile
 
 
 --------------------------------------------------------------------------------
-resourceModificationTime :: Identifier a -> IO UTCTime
+resourceModificationTime :: Identifier -> IO UTCTime
 resourceModificationTime = getModificationTime . toFilePath

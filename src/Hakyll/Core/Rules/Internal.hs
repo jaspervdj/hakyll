@@ -6,8 +6,7 @@ module Hakyll.Core.Rules.Internal
     ( RuleSet (..)
     , RuleState (..)
     , RuleEnvironment (..)
-    , RulesM (..)
-    , Rules
+    , Rules (..)
     , runRules
     ) where
 
@@ -35,9 +34,9 @@ data RuleSet = RuleSet
     { -- | Routes used in the compilation structure
       rulesRoutes    :: Routes
     , -- | Compilation rules
-      rulesCompilers :: [(Identifier (), Compiler CompiledItem)]
+      rulesCompilers :: [(Identifier, Compiler CompiledItem)]
     , -- | A set of the actually used files
-      rulesResources :: Set (Identifier ())
+      rulesResources :: Set Identifier
     }
 
 
@@ -59,29 +58,23 @@ data RuleState = RuleState
 -- | Rule environment
 data RuleEnvironment = RuleEnvironment
     { rulesResourceProvider :: ResourceProvider
-    , rulesPattern          :: forall a. Pattern a
+    , rulesPattern          :: Pattern
     , rulesVersion          :: Maybe String
     }
 
 
 --------------------------------------------------------------------------------
 -- | The monad used to compose rules
-newtype RulesM a = RulesM
-    { unRulesM :: RWST RuleEnvironment RuleSet RuleState IO a
+newtype Rules a = Rules
+    { unRules :: RWST RuleEnvironment RuleSet RuleState IO a
     } deriving (Monad, Functor, Applicative)
 
 
 --------------------------------------------------------------------------------
--- | Simplification of the RulesM type; usually, it will not return any
--- result.
-type Rules = RulesM ()
-
-
---------------------------------------------------------------------------------
 -- | Run a Rules monad, resulting in a 'RuleSet'
-runRules :: RulesM a -> ResourceProvider -> IO RuleSet
+runRules :: Rules a -> ResourceProvider -> IO RuleSet
 runRules rules provider = do
-    (_, _, ruleSet) <- runRWST (unRulesM rules) env state
+    (_, _, ruleSet) <- runRWST (unRules rules) env state
     return $ nubCompilers ruleSet
   where
     state = RuleState {rulesNextIdentifier = 0}

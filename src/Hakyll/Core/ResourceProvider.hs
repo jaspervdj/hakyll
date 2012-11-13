@@ -32,7 +32,7 @@ import           Hakyll.Core.ResourceProvider.Modified
 
 --------------------------------------------------------------------------------
 -- | Wrapper to ensure metadata cache is invalidated if necessary
-resourceMetadata :: ResourceProvider -> Identifier a -> IO Metadata
+resourceMetadata :: ResourceProvider -> Identifier -> IO Metadata
 resourceMetadata rp r = do
     _ <- resourceModified rp r
     Internal.resourceMetadata rp r
@@ -40,7 +40,7 @@ resourceMetadata rp r = do
 
 --------------------------------------------------------------------------------
 -- | Wrapper to ensure metadata cache is invalidated if necessary
-resourceBody :: ResourceProvider -> Identifier a -> IO String
+resourceBody :: ResourceProvider -> Identifier -> IO String
 resourceBody rp r = do
     _ <- resourceModified rp r
     Internal.resourceBody rp r

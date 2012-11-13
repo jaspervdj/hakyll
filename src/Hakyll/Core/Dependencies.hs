@@ -28,21 +28,21 @@ import           Hakyll.Core.Identifier.Pattern
 
 --------------------------------------------------------------------------------
 data Dependency
-    = Pattern (Pattern ()) [Identifier ()]
-    | Identifier (Identifier ())
+    = Pattern Pattern [Identifier]
+    | Identifier Identifier
     deriving (Show)
 
 
 --------------------------------------------------------------------------------
-type DependencyFacts = Map (Identifier ()) [Dependency]
+type DependencyFacts = Map Identifier [Dependency]
 
 
 --------------------------------------------------------------------------------
 outOfDate
-    :: [Identifier ()]      -- ^ All known identifiers
-    -> Set (Identifier ())  -- ^ Initially out-of-date resources
-    -> DependencyFacts      -- ^ Old dependency facts
-    -> (Set (Identifier ()), DependencyFacts, [String])
+    :: [Identifier]     -- ^ All known identifiers
+    -> Set Identifier   -- ^ Initially out-of-date resources
+    -> DependencyFacts  -- ^ Old dependency facts
+    -> (Set Identifier, DependencyFacts, [String])
 outOfDate universe ood oldFacts =
     let (_, state, logs) = runRWS rws universe (DependencyState oldFacts ood)
     in (dependencyOod state, dependencyFacts state, logs)
@@ -56,21 +56,21 @@ outOfDate universe ood oldFacts =
 --------------------------------------------------------------------------------
 data DependencyState = DependencyState
     { dependencyFacts :: DependencyFacts
-    , dependencyOod   :: Set (Identifier ())
+    , dependencyOod   :: Set Identifier
     } deriving (Show)
 
 
 --------------------------------------------------------------------------------
-type DependencyM a = RWS [Identifier ()] [String] DependencyState a
+type DependencyM a = RWS [Identifier] [String] DependencyState a
 
 
 --------------------------------------------------------------------------------
-markOod :: Identifier () -> DependencyM ()
+markOod :: Identifier -> DependencyM ()
 markOod id' = modify $ \s -> s {dependencyOod = S.insert id' $ dependencyOod s}
 
 
 --------------------------------------------------------------------------------
-dependenciesFor :: Identifier () -> DependencyM [Identifier ()]
+dependenciesFor :: Identifier -> DependencyM [Identifier]
 dependenciesFor id' = do
     facts <- dependencyFacts <$> get
     let relevant = fromMaybe [] $ M.lookup id' facts

@@ -53,7 +53,7 @@ import Hakyll.Core.Util.String
 
 --------------------------------------------------------------------------------
 -- | Type used for a route
-newtype Routes = Routes {unRoutes :: forall a. Identifier a -> Maybe FilePath}
+newtype Routes = Routes {unRoutes :: Identifier -> Maybe FilePath}
 
 
 --------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ instance Monoid Routes where
 
 --------------------------------------------------------------------------------
 -- | Apply a route to an identifier
-runRoutes :: Routes -> Identifier a -> Maybe FilePath
+runRoutes :: Routes -> Identifier -> Maybe FilePath
 runRoutes = unRoutes
 
 
@@ -101,16 +101,16 @@ setExtension extension = Routes $
 --------------------------------------------------------------------------------
 -- | Apply the route if the identifier matches the given pattern, fail
 -- otherwise
-matchRoute :: Pattern a -> Routes -> Routes
+matchRoute :: Pattern -> Routes -> Routes
 matchRoute pattern (Routes route) = Routes $ \id' ->
-    if matches pattern (castIdentifier id') then route id' else Nothing
+    if matches pattern id' then route id' else Nothing
 
 
 --------------------------------------------------------------------------------
 -- | Create a custom route. This should almost always be used with
 -- 'matchRoute'
-customRoute :: (Identifier a -> FilePath) -> Routes
-customRoute f = Routes $ Just . f . castIdentifier
+customRoute :: (Identifier -> FilePath) -> Routes
+customRoute f = Routes $ Just . f
 
 
 --------------------------------------------------------------------------------

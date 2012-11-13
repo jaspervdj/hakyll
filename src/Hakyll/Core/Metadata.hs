@@ -19,6 +19,6 @@ type Metadata = Map String String
 
 --------------------------------------------------------------------------------
 class MonadMetadata m where
-    identifierMetadata :: Identifier a -> m Metadata
+    identifierMetadata :: Identifier -> m Metadata
     -- allMetadata :: m [(Resource, Metadata)]
     -- patternMetadata :: Pattern a -> m [(Resource, Metadata)]

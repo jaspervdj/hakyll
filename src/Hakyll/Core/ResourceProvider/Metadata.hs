@@ -24,7 +24,7 @@ import           Hakyll.Core.Util.String
 
 
 --------------------------------------------------------------------------------
-loadMetadata :: ResourceProvider -> Identifier a -> IO (Metadata, Maybe String)
+loadMetadata :: ResourceProvider -> Identifier -> IO (Metadata, Maybe String)
 loadMetadata rp identifier = do
     hasHeader  <- probablyHasMetadataHeader fp
     (md, body) <- if hasHeader

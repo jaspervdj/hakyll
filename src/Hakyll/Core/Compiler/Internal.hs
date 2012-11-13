@@ -4,7 +4,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Compiler.Internal
     ( CompilerRead (..)
-    , Compiler (..)
+    , Compiler
+    , runCompiler
     , compilerTell
     , compilerAsk
     , compilerThrow
@@ -31,11 +32,11 @@ import           Hakyll.Core.Store
 -- | Environment in which a compiler runs
 data CompilerRead = CompilerRead
     { -- | Target identifier
-      compilerIdentifier       :: Identifier ()
+      compilerIdentifier       :: Identifier
     , -- | Resource provider
       compilerResourceProvider :: ResourceProvider
     , -- | List of all known identifiers
-      compilerUniverse         :: [Identifier ()]
+      compilerUniverse         :: [Identifier]
     , -- | Site routes
       compilerRoutes           :: Routes
     , -- | Compiler store
@@ -55,7 +56,7 @@ type CompilerWrite = [Dependency]
 data CompilerResult a where
     CompilerDone    :: a -> CompilerWrite -> CompilerResult a
     CompilerError   :: String -> CompilerResult a
-    CompilerRequire :: Identifier b -> (b -> Compiler a) -> CompilerResult a
+    CompilerRequire :: Identifier -> (b -> Compiler a) -> CompilerResult a
 
 
 --------------------------------------------------------------------------------
@@ -107,6 +108,11 @@ instance Applicative Compiler where
 
 
 --------------------------------------------------------------------------------
+runCompiler :: Compiler a -> CompilerRead -> IO (CompilerResult a)
+runCompiler = unCompiler
+
+
+--------------------------------------------------------------------------------
 instance Alternative Compiler where
     empty   = compilerThrow "Hakyll.Core.Compiler.Internal: empty alternative"
     x <|> y = compilerCatch x (\_ -> y)
@@ -139,36 +145,3 @@ compilerCatch (Compiler x) f = Compiler $ \r -> do
         CompilerError e -> unCompiler (f e) r
         _               -> return res
 {-# INLINE compilerCatch #-}
-
-
-{-
---------------------------------------------------------------------------------
--- | The compiler monad
-newtype CompilerM a = CompilerM
-    { unCompilerM :: ErrorT String (ReaderT CompilerEnvironment IO) a
-    } deriving (Monad, Functor, Applicative)
-
-
---------------------------------------------------------------------------------
--- | The compiler arrow
-data Compiler a = Compiler
-    { compilerDependencies :: Reader DependencyEnvironment Dependencies
-    , compilerJob          :: CompilerM a
-    }
-
-
---------------------------------------------------------------------------------
-instance Functor Compiler where
-    fmap f (Compiler d j) = Compiler d $ fmap f j
-    {-# INLINE fmap #-}
-
-
---------------------------------------------------------------------------------
-instance Applicative Compiler where
-    pure = fromJob . return
-    {-# INLINE pure #-}
-
-    Compiler d1 j1 <*> Compiler d2 j2 =
-        Compiler (liftM2 S.union d1 d2) $ j1 <*> j2
-    {-# INLINE (<*>) #-}
--}

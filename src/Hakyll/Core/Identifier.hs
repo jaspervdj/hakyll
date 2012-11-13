@@ -35,7 +35,6 @@ module Hakyll.Core.Identifier
     ( Identifier
     , fromFilePath
     , toFilePath
-    , castIdentifier
     , identifierVersion
     , setVersion
     ) where
@@ -56,30 +55,30 @@ import           GHC.Exts            (IsString, fromString)
 
 --------------------------------------------------------------------------------
 -- | An identifier used to uniquely identify a value
-data Identifier a = Identifier
+data Identifier = Identifier
     { identifierVersion :: Maybe String
     , identifierPath    :: String
     } deriving (Eq, Ord, Typeable)
 
 
 --------------------------------------------------------------------------------
-instance Binary (Identifier a) where
+instance Binary Identifier where
     put (Identifier v p) = put v >> put p
     get = Identifier <$> get <*> get
 
 
 --------------------------------------------------------------------------------
-instance IsString (Identifier a) where
+instance IsString Identifier where
     fromString = fromFilePath
 
 
 --------------------------------------------------------------------------------
-instance NFData (Identifier a) where
+instance NFData Identifier where
     rnf (Identifier v p) = rnf v `seq` rnf p `seq` ()
 
 
 --------------------------------------------------------------------------------
-instance Show (Identifier a) where
+instance Show Identifier where
     show i = case identifierVersion i of
         Nothing -> toFilePath i
         Just v  -> toFilePath i ++ " (" ++ v ++ ")"
@@ -87,7 +86,7 @@ instance Show (Identifier a) where
 
 --------------------------------------------------------------------------------
 -- | Parse an identifier from a string
-fromFilePath :: String -> Identifier a
+fromFilePath :: String -> Identifier
 fromFilePath = Identifier Nothing .
     intercalate "/" . filter (not . null) . split'
   where
@@ -96,17 +95,10 @@ fromFilePath = Identifier Nothing .
 
 --------------------------------------------------------------------------------
 -- | Convert an identifier to a relative 'FilePath'
-toFilePath :: Identifier a -> FilePath
+toFilePath :: Identifier -> FilePath
 toFilePath = identifierPath
 
 
 --------------------------------------------------------------------------------
--- | Discard the phantom type parameter of an identifier
-castIdentifier :: Identifier a -> Identifier b
-castIdentifier (Identifier v p) = Identifier v p
-{-# INLINE castIdentifier #-}
-
-
---------------------------------------------------------------------------------
-setVersion :: Maybe String -> Identifier a -> Identifier a
+setVersion :: Maybe String -> Identifier -> Identifier
 setVersion v i = i {identifierVersion = v}

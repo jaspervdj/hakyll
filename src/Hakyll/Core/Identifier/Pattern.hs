@@ -48,7 +48,6 @@ module Hakyll.Core.Identifier.Pattern
       -- * Manipulating patterns
     , complement
     , withVersion
-    , castPattern
 
       -- * Applying patterns
     , matches
@@ -104,19 +103,19 @@ instance Binary GlobComponent where
 
 --------------------------------------------------------------------------------
 -- | Type that allows matching on identifiers
-data Pattern a
+data Pattern
     = Everything
-    | Complement (Pattern a)
-    | And (Pattern a) (Pattern a)
+    | Complement Pattern
+    | And Pattern Pattern
     | Glob [GlobComponent]
-    | List [Identifier a]  -- TODO Maybe use a set here
+    | List [Identifier]  -- TODO Maybe use a set here
     | Regex String
     | Version (Maybe String)
     deriving (Show)
 
 
 --------------------------------------------------------------------------------
-instance Binary (Pattern a) where
+instance Binary Pattern where
     put Everything     = putWord8 0
     put (Complement p) = putWord8 1 >> put p
     put (And x y)      = putWord8 2 >> put x >> put y
@@ -136,19 +135,19 @@ instance Binary (Pattern a) where
 
 
 --------------------------------------------------------------------------------
-instance IsString (Pattern a) where
+instance IsString Pattern where
     fromString = fromGlob
 
 
 --------------------------------------------------------------------------------
-instance Monoid (Pattern a) where
+instance Monoid Pattern where
     mempty  = Everything
     mappend = And
 
 
 --------------------------------------------------------------------------------
 -- | Parse a pattern from a string
-fromGlob :: String -> Pattern a
+fromGlob :: String -> Pattern
 fromGlob = Glob . parse'
   where
     parse' str =
@@ -162,7 +161,7 @@ fromGlob = Glob . parse'
 
 --------------------------------------------------------------------------------
 -- | Create a 'Pattern' from a list of 'Identifier's it should match
-fromList :: [Identifier a] -> Pattern a
+fromList :: [Identifier] -> Pattern
 fromList = List
 
 
@@ -172,12 +171,12 @@ fromList = List
 -- Example:
 --
 -- > regex "^foo/[^x]*$
-fromRegex :: String -> Pattern a
+fromRegex :: String -> Pattern
 fromRegex = Regex
 
 
 --------------------------------------------------------------------------------
-fromVersion :: Maybe String -> Pattern a
+fromVersion :: Maybe String -> Pattern
 fromVersion = Version
 
 
@@ -187,7 +186,7 @@ fromVersion = Version
 -- > complement "foo/bar.html"
 --
 -- will match /anything/ except @\"foo\/bar.html\"@
-complement :: Pattern a -> Pattern a
+complement :: Pattern -> Pattern
 complement = Complement
 
 
@@ -195,25 +194,13 @@ complement = Complement
 -- | Specify a version, e.g.
 --
 -- > "foo/*.markdown" `withVersion` "pdf"
-withVersion :: Pattern a -> String -> Pattern a
+withVersion :: Pattern -> String -> Pattern
 withVersion p v = And p $ fromVersion $ Just v
 
 
 --------------------------------------------------------------------------------
--- | Discard the phantom type parameter
-castPattern :: Pattern a -> Pattern b
-castPattern Everything     = Everything
-castPattern (Complement x) = Complement (castPattern x)
-castPattern (And x y)      = And (castPattern x) (castPattern y)
-castPattern (Glob g)       = Glob g
-castPattern (List l)       = List $ map castIdentifier l
-castPattern (Regex r)      = Regex r
-castPattern (Version v)    = Version v
-
-
---------------------------------------------------------------------------------
 -- | Check if an identifier matches a pattern
-matches :: Pattern a -> Identifier a -> Bool
+matches :: Pattern -> Identifier -> Bool
 matches Everything     _ = True
 matches (Complement p) i = not $ matches p i
 matches (And x y)      i = matches x i && matches y i
@@ -225,7 +212,7 @@ matches (Version v)    i = identifierVersion i == v
 
 --------------------------------------------------------------------------------
 -- | Given a list of identifiers, retain only those who match the given pattern
-filterMatches :: Pattern a -> [Identifier a] -> [Identifier a]
+filterMatches :: Pattern -> [Identifier] -> [Identifier]
 filterMatches = filter . matches
 
 
@@ -238,7 +225,7 @@ splits = inits &&& tails >>> uncurry zip >>> reverse
 
 --------------------------------------------------------------------------------
 -- | Match a glob against a pattern, generating a list of captures
-capture :: Pattern a -> Identifier a -> Maybe [String]
+capture :: Pattern -> Identifier -> Maybe [String]
 capture (Glob p) i = capture' p (toFilePath i)
 capture _        _ = Nothing
 
@@ -272,14 +259,14 @@ capture' (CaptureMany : ms) str =
 -- Result:
 --
 -- > "tags/foo"
-fromCapture :: Pattern a -> String -> Identifier a
+fromCapture :: Pattern -> String -> Identifier
 fromCapture pattern = fromCaptures pattern . repeat
 
 
 --------------------------------------------------------------------------------
 -- | Create an identifier from a pattern by filling in the captures with the
 -- given list of strings
-fromCaptures :: Pattern a -> [String] -> Identifier a
+fromCaptures :: Pattern -> [String] -> Identifier
 fromCaptures (Glob p) = fromFilePath . fromCaptures' p
 fromCaptures _        = error $
     "Hakyll.Core.Identifier.Pattern.fromCaptures: fromCaptures only works " ++

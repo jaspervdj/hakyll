@@ -15,7 +15,7 @@ import qualified Hakyll.Core.Store                     as Store
 
 
 --------------------------------------------------------------------------------
-resourceMetadata :: ResourceProvider -> Identifier a -> IO Metadata
+resourceMetadata :: ResourceProvider -> Identifier -> IO Metadata
 resourceMetadata rp r = do
     load rp r
     Store.Found md <- Store.get (resourceStore rp)
@@ -24,7 +24,7 @@ resourceMetadata rp r = do
 
 
 --------------------------------------------------------------------------------
-resourceBody :: ResourceProvider -> Identifier a -> IO String
+resourceBody :: ResourceProvider -> Identifier -> IO String
 resourceBody rp r = do
     load rp r
     Store.Found bd <- Store.get (resourceStore rp)
@@ -33,14 +33,14 @@ resourceBody rp r = do
 
 
 --------------------------------------------------------------------------------
-resourceInvalidateMetadataCache :: ResourceProvider -> Identifier a -> IO ()
+resourceInvalidateMetadataCache :: ResourceProvider -> Identifier -> IO ()
 resourceInvalidateMetadataCache rp r = do
     Store.delete (resourceStore rp) [name, toFilePath r, "metadata"]
     Store.delete (resourceStore rp) [name, toFilePath r, "body"]
 
 
 --------------------------------------------------------------------------------
-load :: ResourceProvider -> Identifier a -> IO ()
+load :: ResourceProvider -> Identifier -> IO ()
 load rp r = do
     mmd <- Store.get store mdk :: IO (Store.Result Metadata)
     case mmd of

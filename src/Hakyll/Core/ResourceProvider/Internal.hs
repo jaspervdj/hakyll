@@ -33,9 +33,9 @@ import           Hakyll.Core.Identifier
 -- | Responsible for retrieving and listing resources
 data ResourceProvider = ResourceProvider
     { -- | A list of all files found
-      resourceSet           :: Set (Identifier ())
+      resourceSet           :: Set Identifier
     , -- | Cache keeping track of modified files
-      resourceModifiedCache :: IORef (Map (Identifier ()) Bool)
+      resourceModifiedCache :: IORef (Map Identifier Bool)
     , -- | Underlying persistent store for caching
       resourceStore         :: Store
     }
@@ -55,32 +55,32 @@ newResourceProvider store ignore directory = do
 
 
 --------------------------------------------------------------------------------
-resourceList :: ResourceProvider -> [Identifier ()]
+resourceList :: ResourceProvider -> [Identifier]
 resourceList = S.toList . resourceSet
 
 
 --------------------------------------------------------------------------------
 -- | Check if a given resource exists
-resourceExists :: ResourceProvider -> Identifier a -> Bool
+resourceExists :: ResourceProvider -> Identifier -> Bool
 resourceExists provider =
-    (`S.member` resourceSet provider) . setVersion Nothing . castIdentifier
+    (`S.member` resourceSet provider) . setVersion Nothing
 
 
 --------------------------------------------------------------------------------
 -- | Each resource may have an associated metadata resource (with a @.metadata@
 -- filename)
-resourceMetadataResource :: Identifier a -> Identifier ()
+resourceMetadataResource :: Identifier -> Identifier
 resourceMetadataResource =
     fromFilePath . flip addExtension "metadata" . toFilePath
 
 
 --------------------------------------------------------------------------------
 -- | Get the raw body of a resource as string
-resourceString :: Identifier a -> IO String
+resourceString :: Identifier -> IO String
 resourceString = readFile . toFilePath
 
 
 --------------------------------------------------------------------------------
 -- | Get the raw body of a resource of a lazy bytestring
-resourceLBS :: Identifier a -> IO BL.ByteString
+resourceLBS :: Identifier -> IO BL.ByteString
 resourceLBS = BL.readFile . toFilePath
