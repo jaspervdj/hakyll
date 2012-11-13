@@ -23,6 +23,7 @@ import           System.FilePath               ((</>))
 --------------------------------------------------------------------------------
 import           Hakyll.Core.CompiledItem
 import           Hakyll.Core.Compiler.Internal
+import           Hakyll.Core.Compiler.Require
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
@@ -159,16 +160,14 @@ chase trail id'
         config   <- runtimeConfiguration <$> ask
 
         section logger $ "Processing " ++ show id'
-        isModified <- liftIO $ resourceModified provider id'
         let compiler = todo M.! id'
             read' = CompilerRead
-                { compilerIdentifier       = id'
-                , compilerResourceProvider = provider
-                , compilerUniverse         = map fst universe
-                , compilerRoutes           = routes
-                , compilerStore            = store
-                , compilerResourceModified = isModified
-                , compilerLogger           = logger
+                { compilerIdentifier = id'
+                , compilerProvider   = provider
+                , compilerUniverse   = map fst universe
+                , compilerRoutes     = routes
+                , compilerStore      = store
+                , compilerLogger     = logger
                 }
 
         result <- timed logger "Compiling" $ liftIO $ runCompiler compiler read'
@@ -177,7 +176,7 @@ chase trail id'
             CompilerError e -> throwError e
 
             -- Huge success
-            CompilerDone compiled facts -> do
+            CompilerDone (CompiledItem compiled) facts -> do
                 -- Write if necessary
                 case runRoutes routes id' of
                     Nothing  -> return ()
@@ -185,6 +184,9 @@ chase trail id'
                         let path = destinationDirectory config </> url
                         liftIO $ makeDirectories path
                         liftIO $ write path compiled
+
+                -- Save! (For require)
+                liftIO $ save store id' compiled
 
                 -- Update state
                 modify $ \s -> s

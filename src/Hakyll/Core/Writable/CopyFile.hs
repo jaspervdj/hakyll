@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 -- | Exports simple compilers to just copy files
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Writable.CopyFile
     ( CopyFile (..)
     , copyFileCompiler
@@ -8,16 +9,16 @@ module Hakyll.Core.Writable.CopyFile
 
 
 --------------------------------------------------------------------------------
-import Control.Arrow ((>>^))
-import System.Directory (copyFile)
-import Data.Typeable (Typeable)
-import Data.Binary (Binary)
+import           Control.Applicative    ((<$>))
+import           Data.Binary            (Binary)
+import           Data.Typeable          (Typeable)
+import           System.Directory       (copyFile)
 
 
 --------------------------------------------------------------------------------
-import Hakyll.Core.Writable
-import Hakyll.Core.Compiler
-import Hakyll.Core.Identifier
+import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Writable
 
 
 --------------------------------------------------------------------------------
@@ -32,5 +33,5 @@ instance Writable CopyFile where
 
 
 --------------------------------------------------------------------------------
-copyFileCompiler :: Compiler a CopyFile
-copyFileCompiler = getIdentifier >>^ CopyFile . toFilePath
+copyFileCompiler :: Compiler CopyFile
+copyFileCompiler = CopyFile . toFilePath <$> getIdentifier

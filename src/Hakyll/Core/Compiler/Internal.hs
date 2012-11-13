@@ -5,19 +5,21 @@
 module Hakyll.Core.Compiler.Internal
     ( CompilerRead (..)
     , CompilerResult (..)
-    , Compiler
+    , Compiler (..)
     , runCompiler
     , compilerTell
     , compilerAsk
     , compilerThrow
     , compilerCatch
     , compilerResult
+    , compilerUnsafeIO
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative          (Alternative (..),
                                                Applicative (..))
+import           Control.Exception            (SomeException, handle)
 import           Data.Monoid                  (mappend, mempty)
 
 
@@ -34,19 +36,17 @@ import           Hakyll.Core.Store
 -- | Environment in which a compiler runs
 data CompilerRead = CompilerRead
     { -- | Target identifier
-      compilerIdentifier       :: Identifier
+      compilerIdentifier :: Identifier
     , -- | Resource provider
-      compilerResourceProvider :: ResourceProvider
+      compilerProvider   :: ResourceProvider
     , -- | List of all known identifiers
-      compilerUniverse         :: [Identifier]
+      compilerUniverse   :: [Identifier]
     , -- | Site routes
-      compilerRoutes           :: Routes
+      compilerRoutes     :: Routes
     , -- | Compiler store
-      compilerStore            :: Store
-    , -- | Flag indicating if the underlying resource was modified
-      compilerResourceModified :: Bool
+      compilerStore      :: Store
     , -- | Logger
-      compilerLogger           :: Logger
+      compilerLogger     :: Logger
     }
 
 
@@ -111,7 +111,10 @@ instance Applicative Compiler where
 
 --------------------------------------------------------------------------------
 runCompiler :: Compiler a -> CompilerRead -> IO (CompilerResult a)
-runCompiler = unCompiler
+runCompiler compiler read' = handle handler $ unCompiler compiler read'
+  where
+    handler :: SomeException -> IO (CompilerResult a)
+    handler e = return $ CompilerError $ show e
 
 
 --------------------------------------------------------------------------------
@@ -128,7 +131,7 @@ compilerAsk = Compiler $ \r -> return $ CompilerDone r mempty
 
 
 --------------------------------------------------------------------------------
-compilerTell :: [Dependency] -> Compiler ()
+compilerTell :: CompilerWrite -> Compiler ()
 compilerTell deps = Compiler $ \_ -> return $ CompilerDone () deps
 {-# INLINE compilerTell #-}
 
@@ -154,3 +157,11 @@ compilerCatch (Compiler x) f = Compiler $ \r -> do
 compilerResult :: CompilerResult a -> Compiler a
 compilerResult x = Compiler $ \_ -> return x
 {-# INLINE compilerResult #-}
+
+
+--------------------------------------------------------------------------------
+compilerUnsafeIO :: IO a -> Compiler a
+compilerUnsafeIO io = Compiler $ \_ -> do
+    x <- io
+    return $ CompilerDone x mempty
+{-# INLINE compilerUnsafeIO #-}

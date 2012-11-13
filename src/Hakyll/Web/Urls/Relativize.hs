@@ -21,10 +21,7 @@ module Hakyll.Web.Urls.Relativize
 
 
 --------------------------------------------------------------------------------
-import           Control.Arrow        ((&&&), (>>^))
-import           Control.Category     (id)
 import           Data.List            (isPrefixOf)
-import           Prelude              hiding (id)
 
 
 --------------------------------------------------------------------------------
@@ -36,11 +33,12 @@ import           Hakyll.Web.Urls
 --------------------------------------------------------------------------------
 -- | Compiler form of 'relativizeUrls' which automatically picks the right root
 -- path
-relativizeUrlsCompiler :: Compiler Page Page
-relativizeUrlsCompiler = getRoute &&& id >>^ uncurry relativize
-  where
-    relativize Nothing  = id
-    relativize (Just r) = relativizeUrls $ toSiteRoot r
+relativizeUrlsCompiler :: Page -> Compiler Page
+relativizeUrlsCompiler page = do
+    route <- getRoute
+    return $ case route of
+        Nothing -> page
+        Just r  -> relativizeUrls (toSiteRoot r) page
 
 
 --------------------------------------------------------------------------------

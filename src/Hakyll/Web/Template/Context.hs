@@ -26,16 +26,14 @@ import           Hakyll.Web.Urls
 
 
 --------------------------------------------------------------------------------
-type Context a = Compiler (String, (Identifier a, a)) String
+type Context a = String -> Identifier -> a -> Compiler String
 
 
 --------------------------------------------------------------------------------
-field :: String -> Compiler (Identifier a, a) String -> Context a
-field key value = arr checkKey >>> (empty ||| value)
-  where
-    checkKey (k, x)
-        | k /= key  = Left ()
-        | otherwise = Right x
+field :: String -> (Identifier -> a -> Compiler String) -> Context a
+field key value k' id' x
+    | k' == key = value id' x
+    | otherwise = empty
 
 
 --------------------------------------------------------------------------------
@@ -51,7 +49,7 @@ defaultContext =
 
 --------------------------------------------------------------------------------
 bodyField :: String -> Context Page
-bodyField key = field key $ arr snd
+bodyField key = field key $ \_ x -> return x
 
 
 --------------------------------------------------------------------------------

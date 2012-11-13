@@ -58,9 +58,6 @@ module Hakyll.Web.Page
 
 
 --------------------------------------------------------------------------------
-import           Control.Arrow            (arr, (>>>))
-import           Control.Category         (id)
-import           Prelude                  hiding (id)
 import           Text.Pandoc              (Pandoc, ParserState, WriterOptions)
 
 
@@ -72,14 +69,14 @@ import           Hakyll.Web.Pandoc
 
 --------------------------------------------------------------------------------
 -- | Read a page (do not render it)
-readPageCompiler :: Compiler () Page
+readPageCompiler :: Compiler Page
 readPageCompiler = getResourceBody
 {-# DEPRECATED readPageCompiler "Use getResourceBody" #-}
 
 
 --------------------------------------------------------------------------------
 -- | Read a page render using pandoc
-pageCompiler :: Compiler () Page
+pageCompiler :: Compiler Page
 pageCompiler =
     pageCompilerWith defaultHakyllParserState defaultHakyllWriterOptions
 
@@ -87,7 +84,7 @@ pageCompiler =
 --------------------------------------------------------------------------------
 -- | A version of 'pageCompiler' which allows you to specify your own pandoc
 -- options
-pageCompilerWith :: ParserState -> WriterOptions -> Compiler () Page
+pageCompilerWith :: ParserState -> WriterOptions -> Compiler Page
 pageCompilerWith state options = pageCompilerWithPandoc state options id
 
 
@@ -96,9 +93,9 @@ pageCompilerWith state options = pageCompilerWithPandoc state options id
 -- pandoc transformation for the content
 pageCompilerWithPandoc :: ParserState -> WriterOptions
                        -> (Pandoc -> Pandoc)
-                       -> Compiler () Page
+                       -> Compiler Page
 pageCompilerWithPandoc state options f = cached cacheName $
-    readPageCompiler >>> pageReadPandocWith state >>>
-    arr (writePandocWith options . f)
+    readPageCompiler >>= pageReadPandocWith state >>=
+    return . writePandocWith options . f
   where
     cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"

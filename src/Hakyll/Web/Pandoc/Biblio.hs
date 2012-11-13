@@ -7,7 +7,9 @@
 -- refer to these files when you use 'pageReadPandocBiblio'. This function also
 -- takes a parser state for completeness -- you can use
 -- 'defaultHakyllParserState' if you're unsure.
-{-# LANGUAGE Arrows, DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE Arrows                     #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Web.Pandoc.Biblio
     ( CSL
     , cslCompiler
@@ -18,21 +20,20 @@ module Hakyll.Web.Pandoc.Biblio
 
 
 --------------------------------------------------------------------------------
-import Control.Applicative ((<$>))
-import Control.Arrow (arr, returnA, (>>>))
-import Data.Typeable (Typeable)
-import Data.Binary (Binary (..))
-import Text.Pandoc (Pandoc, ParserState (..))
-import Text.Pandoc.Biblio (processBiblio)
-import qualified Text.CSL as CSL
+import           Control.Applicative    ((<$>))
+import           Data.Binary            (Binary (..))
+import           Data.Typeable          (Typeable)
+import qualified Text.CSL               as CSL
+import           Text.Pandoc            (Pandoc, ParserState (..))
+import           Text.Pandoc.Biblio     (processBiblio)
 
 
 --------------------------------------------------------------------------------
-import Hakyll.Core.Compiler
-import Hakyll.Core.Identifier
-import Hakyll.Core.Writable
-import Hakyll.Web.Page
-import Hakyll.Web.Pandoc
+import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Writable
+import           Hakyll.Web.Page
+import           Hakyll.Web.Pandoc
 
 
 --------------------------------------------------------------------------------
@@ -41,8 +42,8 @@ newtype CSL = CSL FilePath
 
 
 --------------------------------------------------------------------------------
-cslCompiler :: Compiler () CSL
-cslCompiler = getIdentifier >>> arr (CSL . toFilePath)
+cslCompiler :: Compiler CSL
+cslCompiler = CSL . toFilePath <$> getIdentifier
 
 
 --------------------------------------------------------------------------------
@@ -61,26 +62,24 @@ instance Writable Biblio where
 
 
 --------------------------------------------------------------------------------
-biblioCompiler :: Compiler () Biblio
-biblioCompiler = getIdentifier >>>
-    arr toFilePath >>> unsafeCompiler CSL.readBiblioFile >>> arr Biblio
+biblioCompiler :: Compiler Biblio
+biblioCompiler = do
+    filePath <- toFilePath <$> getIdentifier
+    unsafeCompiler $ Biblio <$> CSL.readBiblioFile filePath
 
 
 --------------------------------------------------------------------------------
 pageReadPandocBiblio :: ParserState
-                     -> Identifier CSL
-                     -> Identifier Biblio
-                     -> Compiler Page Pandoc
-pageReadPandocBiblio state csl refs = proc page -> do
-    CSL csl' <- require_ csl -< ()
-    Biblio refs' <- require_ refs -< ()
+                     -> CSL
+                     -> Biblio
+                     -> Page
+                     -> Compiler Pandoc
+pageReadPandocBiblio state (CSL csl) (Biblio refs) page = do
     -- We need to know the citation keys, add then *before* actually parsing the
     -- actual page. If we don't do this, pandoc won't even consider them
     -- citations!
-    let cits   = map CSL.refId refs'
+    let cits   = map CSL.refId refs
         state' = state {stateCitations = stateCitations state ++ cits}
-    pandoc  <- pageReadPandocWithA -< (state', page)
-    pandoc' <- unsafeCompiler processBiblio' -< (csl', refs', pandoc)
-    returnA -< pandoc'
-  where
-    processBiblio' (c, r, p) = processBiblio c Nothing r p
+    pandoc  <- pageReadPandocWith state' page
+    pandoc' <- unsafeCompiler $ processBiblio csl Nothing refs pandoc
+    return pandoc'

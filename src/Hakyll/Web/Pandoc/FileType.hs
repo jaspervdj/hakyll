@@ -8,7 +8,7 @@ module Hakyll.Web.Pandoc.FileType
 
 
 --------------------------------------------------------------------------------
-import           Control.Arrow          ((>>^))
+import           Control.Applicative    ((<$>))
 import           System.FilePath        (takeExtension)
 
 
@@ -62,5 +62,5 @@ fileType = fileType' . takeExtension
 
 --------------------------------------------------------------------------------
 -- | Get the file type for the current file
-getFileType :: Compiler a FileType
-getFileType = getIdentifier >>^ fileType . toFilePath
+getFileType :: Compiler FileType
+getFileType = fileType . toFilePath <$> getIdentifier

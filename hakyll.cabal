@@ -108,7 +108,6 @@ Library
     Hakyll.Core.Util.String
     Hakyll.Core.Writable
     Hakyll.Core.Writable.CopyFile
-    Hakyll.Core.Writable.WritableTuple
     Hakyll.Main
     Hakyll.Web.CompressCss
     -- Hakyll.Web.Feed
@@ -129,6 +128,7 @@ Library
   Other-Modules:
     Hakyll.Core.CompiledItem
     Hakyll.Core.Compiler.Internal
+    Hakyll.Core.Compiler.Require
     Hakyll.Core.DirectedGraph
     Hakyll.Core.DirectedGraph.Dot
     Hakyll.Core.ResourceProvider.Internal

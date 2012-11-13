@@ -18,7 +18,6 @@ module Hakyll
     , module Hakyll.Core.Util.String
     , module Hakyll.Core.Writable
     , module Hakyll.Core.Writable.CopyFile
-    , module Hakyll.Core.Writable.WritableTuple
     , module Hakyll.Main
     , module Hakyll.Web.CompressCss
     -- , module Hakyll.Web.Feed
@@ -52,7 +51,6 @@ import Hakyll.Core.Util.File
 import Hakyll.Core.Util.String
 import Hakyll.Core.Writable
 import Hakyll.Core.Writable.CopyFile
-import Hakyll.Core.Writable.WritableTuple
 import Hakyll.Main
 import Hakyll.Web.CompressCss
 -- import Hakyll.Web.Feed

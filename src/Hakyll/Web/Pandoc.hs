@@ -10,7 +10,6 @@ module Hakyll.Web.Pandoc
       -- * Functions working on pages/compilers
     , pageReadPandoc
     , pageReadPandocWith
-    , pageReadPandocWithA
     , pageRenderPandoc
     , pageRenderPandocWith
 
@@ -21,37 +20,34 @@ module Hakyll.Web.Pandoc
 
 
 --------------------------------------------------------------------------------
-import           Control.Arrow              ((&&&), (***), (>>>), (>>^))
-import           Control.Category           (id)
+import           Control.Applicative        ((<$>))
 import           Data.Maybe                 (fromMaybe)
-import           Prelude                    hiding (id)
 import           Text.Pandoc
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
-import           Hakyll.Core.Util.Arrow
 import           Hakyll.Web.Page.Internal
 import           Hakyll.Web.Pandoc.FileType
 
 
 --------------------------------------------------------------------------------
 -- | Read a string using pandoc, with the default options
-readPandoc :: FileType              -- ^ Determines how parsing happens
-           -> Maybe (Identifier a)  -- ^ Optional, for better error messages
-           -> Page                  -- ^ String to read
-           -> Pandoc                -- ^ Resulting document
+readPandoc :: FileType          -- ^ Determines how parsing happens
+           -> Maybe Identifier  -- ^ Optional, for better error messages
+           -> Page              -- ^ String to read
+           -> Pandoc            -- ^ Resulting document
 readPandoc = readPandocWith defaultHakyllParserState
 
 
 --------------------------------------------------------------------------------
 -- | Read a string using pandoc, with the supplied options
-readPandocWith :: ParserState           -- ^ Parser options
-               -> FileType              -- ^ Determines parsing method
-               -> Maybe (Identifier a)  -- ^ Optional, for better error messages
-               -> Page                  -- ^ String to read
-               -> Pandoc                -- ^ Resulting document
+readPandocWith :: ParserState       -- ^ Parser options
+               -> FileType          -- ^ Determines parsing method
+               -> Maybe Identifier  -- ^ Optional, for better error messages
+               -> Page              -- ^ String to read
+               -> Pandoc            -- ^ Resulting document
 readPandocWith state fileType' id' = case fileType' of
     Html              -> readHtml state
     LaTeX             -> readLaTeX state
@@ -82,38 +78,31 @@ writePandocWith = writeHtmlString
 
 --------------------------------------------------------------------------------
 -- | Read the resource using pandoc
-pageReadPandoc :: Compiler Page Pandoc
+pageReadPandoc :: Page -> Compiler Pandoc
 pageReadPandoc = pageReadPandocWith defaultHakyllParserState
 
 
 --------------------------------------------------------------------------------
 -- | Read the resource using pandoc
-pageReadPandocWith :: ParserState -> Compiler Page Pandoc
-pageReadPandocWith state = constA state &&& id >>> pageReadPandocWithA
-
-
---------------------------------------------------------------------------------
--- | Read the resource using pandoc. This is a (rarely needed) variant, which
--- comes in very useful when the parser state is the result of some arrow.
-pageReadPandocWithA :: Compiler (ParserState, Page) Pandoc
-pageReadPandocWithA =
-    id *** id &&& getIdentifier &&& getFileType >>^ pageReadPandocWithA'
-  where
-    pageReadPandocWithA' (s, (p, (i, t))) = readPandocWith s t (Just i) p
+pageReadPandocWith :: ParserState -> Page -> Compiler Pandoc
+pageReadPandocWith state page = do
+    identifier <- getIdentifier
+    fileType'  <- getFileType
+    return $ readPandocWith state fileType' (Just identifier) page
 
 
 --------------------------------------------------------------------------------
 -- | Render the resource using pandoc
-pageRenderPandoc :: Compiler Page Page
+pageRenderPandoc :: Page -> Compiler Page
 pageRenderPandoc =
     pageRenderPandocWith defaultHakyllParserState defaultHakyllWriterOptions
 
 
 --------------------------------------------------------------------------------
 -- | Render the resource using pandoc
-pageRenderPandocWith :: ParserState -> WriterOptions -> Compiler Page Page
-pageRenderPandocWith state options =
-    pageReadPandocWith state >>^ writePandocWith options
+pageRenderPandocWith :: ParserState -> WriterOptions -> Page -> Compiler Page
+pageRenderPandocWith state options page =
+    writePandocWith options <$> pageReadPandocWith state page
 
 
 --------------------------------------------------------------------------------
