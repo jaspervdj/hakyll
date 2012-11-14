@@ -31,7 +31,7 @@ require :: (Binary a, Typeable a) => Identifier -> Compiler a
 require id' = do
     store <- compilerStore <$> compilerAsk
 
-    compilerTell [IdentifierDependency id']
+    compilerTellDependencies [IdentifierDependency id']
     compilerResult $ CompilerRequire id' $ do
         result <- compilerUnsafeIO $ Store.get store (key id')
         case result of
@@ -54,7 +54,7 @@ requireAll :: (Binary a, Typeable a) => Pattern -> Compiler [a]
 requireAll pattern = do
     universe <- compilerUniverse <$> compilerAsk
     let matching = filterMatches pattern universe
-    compilerTell [PatternDependency pattern matching]
+    compilerTellDependencies [PatternDependency pattern matching]
     mapM require matching
 
 

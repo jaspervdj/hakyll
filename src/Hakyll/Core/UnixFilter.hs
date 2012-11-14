@@ -75,9 +75,9 @@ unixFilterWith :: (Handle -> i -> IO ())  -- ^ Writer
                -> [String]                -- ^ Program args
                -> i                       -- ^ Program input
                -> Compiler o              -- ^ Program output
-unixFilterWith writer reader programName args input =
-    timedCompiler ("Executing external program " ++ programName) $
-        unsafeCompiler $ unixFilterIO writer reader programName args input
+unixFilterWith writer reader programName args input = do
+    debugCompiler ("Executing external program " ++ programName)
+    unsafeCompiler $ unixFilterIO writer reader programName args input
 
 
 --------------------------------------------------------------------------------

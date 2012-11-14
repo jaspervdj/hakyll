@@ -3,16 +3,24 @@
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.Compiler.Internal
-    ( CompilerRead (..)
+    ( -- * Types
+      CompilerRead (..)
+    , CompilerWrite (..)
     , CompilerResult (..)
     , Compiler (..)
     , runCompiler
+
+      -- * Core operations
     , compilerTell
     , compilerAsk
     , compilerThrow
     , compilerCatch
     , compilerResult
     , compilerUnsafeIO
+
+      -- * Utilities
+    , compilerTellDependencies
+    , compilerTellCacheHits
     ) where
 
 
@@ -20,7 +28,7 @@ module Hakyll.Core.Compiler.Internal
 import           Control.Applicative          (Alternative (..),
                                                Applicative (..))
 import           Control.Exception            (SomeException, handle)
-import           Data.Monoid                  (mappend, mempty)
+import           Data.Monoid                  (Monoid (..))
 
 
 --------------------------------------------------------------------------------
@@ -51,7 +59,17 @@ data CompilerRead = CompilerRead
 
 
 --------------------------------------------------------------------------------
-type CompilerWrite = [Dependency]
+data CompilerWrite = CompilerWrite
+    { compilerDependencies :: [Dependency]
+    , compilerCacheHits    :: Int
+    } deriving (Show)
+
+
+--------------------------------------------------------------------------------
+instance Monoid CompilerWrite where
+    mempty = CompilerWrite [] 0
+    mappend (CompilerWrite d1 h1) (CompilerWrite d2 h2) =
+        CompilerWrite (d1 ++ d2) (h1 + h2)
 
 
 --------------------------------------------------------------------------------
@@ -165,3 +183,15 @@ compilerUnsafeIO io = Compiler $ \_ -> do
     x <- io
     return $ CompilerDone x mempty
 {-# INLINE compilerUnsafeIO #-}
+
+
+--------------------------------------------------------------------------------
+compilerTellDependencies :: [Dependency] -> Compiler ()
+compilerTellDependencies ds = compilerTell mempty {compilerDependencies = ds}
+{-# INLINE compilerTellDependencies #-}
+
+
+--------------------------------------------------------------------------------
+compilerTellCacheHits :: Int -> Compiler ()
+compilerTellCacheHits ch = compilerTell mempty {compilerCacheHits = ch}
+{-# INLINE compilerTellCacheHits #-}

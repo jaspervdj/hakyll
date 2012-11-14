@@ -27,7 +27,8 @@ import           Hakyll.Core.Compiler.Require
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
-import           Hakyll.Core.Logger
+import           Hakyll.Core.Logger            (Logger)
+import qualified Hakyll.Core.Logger            as Logger
 import           Hakyll.Core.ResourceProvider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules.Internal
@@ -41,13 +42,15 @@ import           Hakyll.Core.Writable
 run :: Configuration -> Rules a -> IO RuleSet
 run configuration rules = do
     -- Initialization
-    logger <- makeLogger putStrLn
-    section logger "Initialising"
-    store    <- timed logger "Creating store" $
-        Store.new (inMemoryCache configuration) $ storeDirectory configuration
-    provider <- timed logger "Creating provider" $
-        newResourceProvider store (ignoreFile configuration) "."
-    ruleSet  <- timed logger "Running rules" $ runRules rules provider
+    logger <- Logger.new Logger.Debug putStrLn
+    Logger.header logger "Initialising"
+    Logger.item logger ["Creating store"]
+    store  <- Store.new (inMemoryCache configuration) $
+        storeDirectory configuration
+    Logger.item logger ["Creating provider"]
+    provider <- newResourceProvider store (ignoreFile configuration) "."
+    Logger.item logger ["Running rules"]
+    ruleSet  <- runRules rules provider
 
     -- Get old facts
     mOldFacts <- Store.get store factsKey
@@ -73,11 +76,11 @@ run configuration rules = do
     -- Run the program and fetch the resulting state
     result <- runErrorT $ runRWST build read' state
     case result of
-        Left e          -> thrown logger e
+        Left e          -> Logger.error logger e
         Right (_, s, _) -> Store.set store factsKey $ runtimeFacts s
 
     -- Flush and return
-    flushLogger logger
+    Logger.flush logger
     return ruleSet
   where
     factsKey = ["Hakyll.Core.Runtime.run", "facts"]
@@ -109,23 +112,25 @@ type Runtime a = RWST RuntimeRead () RuntimeState (ErrorT String IO) a
 --------------------------------------------------------------------------------
 build :: Runtime ()
 build = do
+    logger <- runtimeLogger <$> ask
+    Logger.header logger "Checking for out-of-date items"
     scheduleOutOfDate
+    Logger.header logger "Compiling"
     pickAndChase
+    Logger.header logger "Success"
 
 
 --------------------------------------------------------------------------------
 scheduleOutOfDate :: Runtime ()
 scheduleOutOfDate = do
-    logger   <- runtimeLogger   <$> ask
     provider <- runtimeProvider <$> ask
     universe <- runtimeUniverse <$> ask
     facts    <- runtimeFacts    <$> get
     todo     <- runtimeTodo     <$> get
 
     let identifiers = map fst universe
-    modified <- timed logger "Checking for modified items" $
-        fmap S.fromList $ flip filterM identifiers $
-            liftIO . resourceModified provider
+    modified <- fmap S.fromList $ flip filterM identifiers $
+        liftIO . resourceModified provider
     let (ood, facts', _) = outOfDate identifiers modified facts
         todo'            = M.fromList
             [(id', c) | (id', c) <- universe, id' `S.member` ood]
@@ -163,7 +168,6 @@ chase trail id'
         store    <- runtimeStore         <$> ask
         config   <- runtimeConfiguration <$> ask
 
-        section logger $ "Processing " ++ show id'
         let compiler = todo M.! id'
             read' = CompilerRead
                 { compilerIdentifier = id'
@@ -174,18 +178,25 @@ chase trail id'
                 , compilerLogger     = logger
                 }
 
-        result <- timed logger "Compiling" $ liftIO $ runCompiler compiler read'
+        result <- liftIO $ runCompiler compiler read'
         case result of
             -- Rethrow error
             CompilerError e -> throwError e
 
             -- Huge success
-            CompilerDone (CompiledItem compiled) facts -> do
+            CompilerDone (CompiledItem compiled) cwrite -> do
+                let facts     = compilerDependencies cwrite
+                    cacheHits
+                        | compilerCacheHits cwrite <= 0 = "modified"
+                        | otherwise                     = "cache hit"
+                Logger.item logger [show id', cacheHits]
+
                 -- Write if necessary
                 case runRoutes routes id' of
                     Nothing  -> return ()
-                    Just url -> timed logger ("Routing to " ++ url) $ do
+                    Just url -> do
                         let path = destinationDirectory config </> url
+                        Logger.subitem logger ["-> " ++ path]
                         liftIO $ makeDirectories path
                         liftIO $ write path compiled
 

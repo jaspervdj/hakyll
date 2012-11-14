@@ -16,8 +16,7 @@ module Hakyll.Core.Compiler
     , requireAll
     , cached
     , unsafeCompiler
-    , logCompiler
-    , timedCompiler
+    , debugCompiler
     ) where
 
 
@@ -35,7 +34,7 @@ import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Compiler.Require
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
-import           Hakyll.Core.Logger
+import           Hakyll.Core.Logger            as Logger
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.ResourceProvider
 import           Hakyll.Core.Routes
@@ -72,7 +71,7 @@ getMetadata = getIdentifier >>= getMetadataFor
 getMetadataFor :: Identifier -> Compiler Metadata
 getMetadataFor identifier = do
     provider <- compilerProvider <$> compilerAsk
-    compilerTell [IdentifierDependency identifier]
+    compilerTellDependencies [IdentifierDependency identifier]
     compilerUnsafeIO $ resourceMetadata provider identifier
 
 
@@ -116,19 +115,17 @@ cached :: (Binary a, Typeable a, Writable a)
        -> Compiler a
        -> Compiler a
 cached name compiler = do
-    logger   <- compilerLogger     <$> compilerAsk
     id'      <- compilerIdentifier <$> compilerAsk
     store    <- compilerStore      <$> compilerAsk
     provider <- compilerProvider   <$> compilerAsk
     modified <- compilerUnsafeIO $ resourceModified provider id'
-    compilerUnsafeIO $ report logger $
-        "Checking cache: " ++ if modified then "modified" else "OK"
     if modified
         then do
             x <- compiler
             compilerUnsafeIO $ Store.set store [name, show id'] x
             return x
         else do
+            compilerTellCacheHits 1
             x        <- compilerUnsafeIO $ Store.get store [name, show id']
             progName <- compilerUnsafeIO getProgName
             case x of Store.Found x' -> return x'
@@ -146,16 +143,7 @@ unsafeCompiler = compilerUnsafeIO
 
 --------------------------------------------------------------------------------
 -- | Compiler for debugging purposes
-logCompiler :: String -> Compiler ()
-logCompiler msg = do
+debugCompiler :: String -> Compiler ()
+debugCompiler msg = do
     logger <- compilerLogger <$> compilerAsk
-    compilerUnsafeIO $ report logger msg
-
-
---------------------------------------------------------------------------------
--- | Log and time a compiler
-timedCompiler :: String      -- ^ Message
-              -> Compiler a  -- ^ Compiler to time
-              -> Compiler a  -- ^ Resulting compiler
-timedCompiler msg compiler = Compiler $ \r ->
-    timed (compilerLogger r) msg $ unCompiler compiler r
+    compilerUnsafeIO $ Logger.debug logger msg
