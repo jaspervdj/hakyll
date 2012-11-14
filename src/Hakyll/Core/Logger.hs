@@ -7,8 +7,7 @@ module Hakyll.Core.Logger
     , flush
     , error
     , header
-    , item
-    , subitem
+    , message
     , debug
     ) where
 
@@ -20,14 +19,12 @@ import           Control.Concurrent.Chan (Chan, newChan, readChan, writeChan)
 import           Control.Concurrent.MVar (MVar, newEmptyMVar, putMVar, takeMVar)
 import           Control.Monad           (forever)
 import           Control.Monad.Trans     (MonadIO, liftIO)
-import           Data.List               (intercalate)
 import           Prelude                 hiding (error)
 
 
 --------------------------------------------------------------------------------
 data Verbosity
     = Error
-    | Header
     | Message
     | Debug
     deriving (Eq, Ord, Show)
@@ -40,7 +37,6 @@ data Logger = Logger
     , loggerSync      :: MVar ()              -- ^ Used for sync on quit
     , loggerSink      :: String -> IO ()      -- ^ Out sink
     , loggerVerbosity :: Verbosity            -- ^ Verbosity
-    , loggerColumns   :: Int                  -- ^ Preferred number of columns
     }
 
 
@@ -49,7 +45,7 @@ data Logger = Logger
 new :: Verbosity -> (String -> IO ()) -> IO Logger
 new vbty sink = do
     logger <- Logger <$>
-        newChan <*> newEmptyMVar <*> pure sink <*> pure vbty <*> pure 80
+        newChan <*> newEmptyMVar <*> pure sink <*> pure vbty
     _      <- forkIO $ loggerThread logger
     return logger
   where
@@ -84,35 +80,19 @@ string l v m
 
 --------------------------------------------------------------------------------
 error :: MonadIO m => Logger -> String -> m ()
-error l m = string l Error $ "ERROR: " ++ m
+error l m = string l Error $ "  [ERROR] " ++ m
 
 
 --------------------------------------------------------------------------------
 header :: MonadIO m => Logger -> String -> m ()
-header l = string l Header
+header l = string l Message
 
 
 --------------------------------------------------------------------------------
-item :: MonadIO m => Logger -> [String] -> m ()
-item = itemWith 2
-
-
---------------------------------------------------------------------------------
-subitem :: MonadIO m => Logger -> [String] -> m ()
-subitem = itemWith 4
-
-
---------------------------------------------------------------------------------
-itemWith :: MonadIO m => Int -> Logger -> [String] -> m ()
-itemWith _ _ []       = return ()
-itemWith i l [x]      = string l Message $ replicate i ' ' ++ x
-itemWith i l (x : ys) = string l Message $ indent ++ x ++ spaces ++ ys'
-  where
-    indent = replicate i ' '
-    spaces = replicate (max 1 $ loggerColumns l - i - length x - length ys') ' '
-    ys'    = intercalate ", " ys
+message :: MonadIO m => Logger -> String -> m ()
+message l m = string l Message $ "  " ++ m
 
 
 --------------------------------------------------------------------------------
 debug :: MonadIO m => Logger -> String -> m ()
-debug l m = string l Debug $ "  DEBUG: " ++ m
+debug l m = string l Debug $ "  [DEBUG] " ++ m

@@ -43,13 +43,13 @@ run :: Configuration -> Rules a -> IO RuleSet
 run configuration rules = do
     -- Initialization
     logger <- Logger.new Logger.Debug putStrLn
-    Logger.header logger "Initialising"
-    Logger.item logger ["Creating store"]
+    Logger.header logger "Initialising..."
+    Logger.message logger "Creating store..."
     store  <- Store.new (inMemoryCache configuration) $
         storeDirectory configuration
-    Logger.item logger ["Creating provider"]
+    Logger.message logger "Creating provider..."
     provider <- newResourceProvider store (ignoreFile configuration) "."
-    Logger.item logger ["Running rules"]
+    Logger.message logger "Running rules..."
     ruleSet  <- runRules rules provider
 
     -- Get old facts
@@ -123,6 +123,7 @@ build = do
 --------------------------------------------------------------------------------
 scheduleOutOfDate :: Runtime ()
 scheduleOutOfDate = do
+    logger   <- runtimeLogger   <$> ask
     provider <- runtimeProvider <$> ask
     universe <- runtimeUniverse <$> ask
     facts    <- runtimeFacts    <$> get
@@ -131,9 +132,12 @@ scheduleOutOfDate = do
     let identifiers = map fst universe
     modified <- fmap S.fromList $ flip filterM identifiers $
         liftIO . resourceModified provider
-    let (ood, facts', _) = outOfDate identifiers modified facts
-        todo'            = M.fromList
+    let (ood, facts', msgs) = outOfDate identifiers modified facts
+        todo'               = M.fromList
             [(id', c) | (id', c) <- universe, id' `S.member` ood]
+
+    -- Print messages
+    mapM_ (Logger.debug logger) msgs
 
     -- Update facts and todo items
     modify $ \s -> s
@@ -187,18 +191,20 @@ chase trail id'
             CompilerDone (CompiledItem compiled) cwrite -> do
                 let facts     = compilerDependencies cwrite
                     cacheHits
-                        | compilerCacheHits cwrite <= 0 = "modified"
-                        | otherwise                     = "cache hit"
-                Logger.item logger [show id', cacheHits]
+                        | compilerCacheHits cwrite <= 0 = "updated"
+                        | otherwise                     = "cached "
+
+                -- Print some info
+                Logger.message logger $ cacheHits ++ " " ++ show id'
 
                 -- Write if necessary
                 case runRoutes routes id' of
                     Nothing  -> return ()
                     Just url -> do
                         let path = destinationDirectory config </> url
-                        Logger.subitem logger ["-> " ++ path]
                         liftIO $ makeDirectories path
                         liftIO $ write path compiled
+                        Logger.debug logger $ "Routed to " ++ path
 
                 -- Save! (For require)
                 liftIO $ save store id' compiled
