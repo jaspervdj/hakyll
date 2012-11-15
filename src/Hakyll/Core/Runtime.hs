@@ -17,6 +17,7 @@ import qualified Data.Map                      as M
 import           Data.Monoid                   (mempty)
 import           Data.Set                      (Set)
 import qualified Data.Set                      as S
+import           System.Exit                   (ExitCode (..), exitWith)
 import           System.FilePath               ((</>))
 
 
@@ -76,12 +77,15 @@ run configuration rules = do
     -- Run the program and fetch the resulting state
     result <- runErrorT $ runRWST build read' state
     case result of
-        Left e          -> Logger.error logger e
-        Right (_, s, _) -> Store.set store factsKey $ runtimeFacts s
+        Left e          -> do
+            Logger.error logger e
+            Logger.flush logger
+            exitWith $ ExitFailure 1
 
-    -- Flush and return
-    Logger.flush logger
-    return ruleSet
+        Right (_, s, _) -> do
+            Store.set store factsKey $ runtimeFacts s
+            Logger.flush logger
+            return ruleSet
   where
     factsKey = ["Hakyll.Core.Runtime.run", "facts"]
 
