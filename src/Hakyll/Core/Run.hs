@@ -14,6 +14,7 @@ import Control.Monad.Trans (liftIO)
 import Data.Map (Map)
 import Data.Monoid (mempty, mappend)
 import Prelude hiding (reverse)
+import System.Exit (ExitCode (..), exitWith)
 import System.FilePath ((</>))
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -74,16 +75,16 @@ run configuration rules = do
         }
 
     case result of
-        Left e             ->
+        Left e             -> do
             thrown logger e
-        Right ((), state') ->
+            flushLogger logger
+            exitWith $ ExitFailure 1
+        Right ((), state') -> do
             -- We want to save the final dependency graph for the next run
             Store.set store ["Hakyll.Core.Run.run", "dependencies"] $
                 analyzerGraph $ hakyllAnalyzer state'
-
-    -- Flush and return
-    flushLogger logger
-    return ruleSet
+            flushLogger logger
+            return ruleSet
 
 data RuntimeEnvironment = RuntimeEnvironment
     { hakyllLogger           :: Logger
