@@ -6,6 +6,7 @@ module Hakyll.Web.Template.Context
 
     , defaultContext
     , bodyField
+    , metadataField
     , urlField
     , pathField
     , categoryField
@@ -66,6 +67,7 @@ field key value = Context $ \k i -> if k == key then value i else empty
 defaultContext :: Context String
 defaultContext =
     bodyField     "body"     `mappend`
+    metadataField            `mappend`
     urlField      "url"      `mappend`
     pathField     "path"     `mappend`
     categoryField "category" `mappend`
@@ -76,6 +78,13 @@ defaultContext =
 --------------------------------------------------------------------------------
 bodyField :: String -> Context String
 bodyField key = field key $ return . itemBody
+
+
+--------------------------------------------------------------------------------
+metadataField :: Context String
+metadataField = Context $ \k i -> do
+    metadata <- getMetadata $ itemIdentifier i
+    maybe empty return $ M.lookup k metadata
 
 
 --------------------------------------------------------------------------------
