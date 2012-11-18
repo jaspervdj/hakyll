@@ -110,7 +110,7 @@ Library
     Hakyll.Core.Writable.CopyFile
     Hakyll.Main
     Hakyll.Web.CompressCss
-    -- Hakyll.Web.Feed
+    Hakyll.Web.Feed
     Hakyll.Web.Page
     -- Hakyll.Web.Page.List
     Hakyll.Web.Page.Metadata

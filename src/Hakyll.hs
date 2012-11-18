@@ -20,7 +20,7 @@ module Hakyll
     , module Hakyll.Core.Writable.CopyFile
     , module Hakyll.Main
     , module Hakyll.Web.CompressCss
-    -- , module Hakyll.Web.Feed
+    , module Hakyll.Web.Feed
     , module Hakyll.Web.Page
     -- , module Hakyll.Web.Page.List
     , module Hakyll.Web.Pandoc
@@ -53,7 +53,7 @@ import Hakyll.Core.Writable
 import Hakyll.Core.Writable.CopyFile
 import Hakyll.Main
 import Hakyll.Web.CompressCss
--- import Hakyll.Web.Feed
+import Hakyll.Web.Feed
 import Hakyll.Web.Page
 -- import Hakyll.Web.Page.List
 import Hakyll.Web.Pandoc

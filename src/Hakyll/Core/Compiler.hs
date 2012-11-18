@@ -12,6 +12,7 @@ module Hakyll.Core.Compiler
     , getResourceLBS
     , getResourceWith
     , require
+    , requireBody
     , requireAll
     , cached
     , unsafeCompiler

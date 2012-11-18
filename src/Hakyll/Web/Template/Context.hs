@@ -3,6 +3,7 @@ module Hakyll.Web.Template.Context
     ( Context (..)
     , mapContext
     , field
+    , constField
 
     , defaultContext
     , bodyField
@@ -15,6 +16,7 @@ module Hakyll.Web.Template.Context
     , dateFieldWith
     , modificationTimeField
     , modificationTimeFieldWith
+    , missingField
     ) where
 
 
@@ -61,6 +63,11 @@ mapContext f (Context g) = Context $ \k i -> f <$> g k i
 --------------------------------------------------------------------------------
 field :: String -> (Item a -> Compiler String) -> Context a
 field key value = Context $ \k i -> if k == key then value i else empty
+
+
+--------------------------------------------------------------------------------
+constField :: String -> String -> Context a
+constField key = field key . const . return
 
 
 --------------------------------------------------------------------------------
@@ -194,4 +201,6 @@ modificationTimeFieldWith locale key fmt = field key $ \i -> do
 
 --------------------------------------------------------------------------------
 missingField :: Context a
-missingField = Context $ \k _ -> return $ "$" ++ k ++ "$"
+missingField = Context $ \k i -> compilerThrow $
+    "Missing field $" ++ k ++ "$ in context for item " ++
+    show (itemIdentifier i)

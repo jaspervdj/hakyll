@@ -2,6 +2,7 @@
 module Hakyll.Core.Compiler.Require
     ( save
     , require
+    , requireBody
     , requireAll
     ) where
 
@@ -17,6 +18,7 @@ import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
+import           Hakyll.Core.Item
 import           Hakyll.Core.Store              (Store)
 import qualified Hakyll.Core.Store              as Store
 
@@ -27,7 +29,7 @@ save store identifier x = Store.set store (key identifier) x
 
 
 --------------------------------------------------------------------------------
-require :: (Binary a, Typeable a) => Identifier -> Compiler a
+require :: (Binary a, Typeable a) => Identifier -> Compiler (Item a)
 require id' = do
     store <- compilerStore <$> compilerAsk
 
@@ -37,7 +39,7 @@ require id' = do
         case result of
             Store.NotFound      -> compilerThrow notFound
             Store.WrongType e r -> compilerThrow $ wrongType e r
-            Store.Found x       -> return x
+            Store.Found x       -> return $ Item id' x
   where
     notFound =
         "Hakyll.Core.Compiler.Require.require: " ++ show id' ++ " was " ++
@@ -50,7 +52,12 @@ require id' = do
 
 
 --------------------------------------------------------------------------------
-requireAll :: (Binary a, Typeable a) => Pattern -> Compiler [a]
+requireBody :: (Binary a, Typeable a) => Identifier -> Compiler a
+requireBody = fmap itemBody . require
+
+
+--------------------------------------------------------------------------------
+requireAll :: (Binary a, Typeable a) => Pattern -> Compiler [Item a]
 requireAll pattern = do
     universe <- compilerUniverse <$> compilerAsk
     let matching = filterMatches pattern universe

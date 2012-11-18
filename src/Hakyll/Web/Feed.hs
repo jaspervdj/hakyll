@@ -1,11 +1,11 @@
--- TODO: port
+--------------------------------------------------------------------------------
 -- | A Module that allows easy rendering of RSS feeds.
 --
 -- The main rendering functions (@renderRss@, @renderAtom@) all assume that
 -- you pass the list of items so that the most recent entry in the feed is the
 -- first item in the list.
 --
--- Also note that the pages should have (at least) the following fields to
+-- Also note that the context should have (at least) the following fields to
 -- produce a correct feed:
 --
 -- - @$title$@: Title of the item
@@ -15,29 +15,33 @@
 -- - @$url$@: URL to the item - this is usually set automatically.
 --
 -- In addition, the posts should be named according to the rules for
--- 'Hakyll.Page.Metadata.renderDateField'.
---
+-- 'Hakyll.Web.Template.Context.dateField'
 module Hakyll.Web.Feed
     ( FeedConfiguration (..)
     , renderRss
     , renderAtom
     ) where
 
-import Prelude hiding (id)
-import Control.Category (id)
-import Control.Arrow ((>>>), arr, (&&&))
-import Control.Monad ((<=<))
-import Data.Maybe (fromMaybe, listToMaybe)
 
-import Hakyll.Core.Compiler
-import Hakyll.Web.Page
-import Hakyll.Web.Page.Metadata
-import Hakyll.Web.Template
-import Hakyll.Web.Template.Read.Hakyll (readTemplate)
-import Hakyll.Web.Urls
+--------------------------------------------------------------------------------
+import           Control.Monad                   (forM, (<=<))
+import           Data.Monoid                     (mconcat)
 
-import Paths_hakyll
 
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler
+import           Hakyll.Core.Compiler.Internal
+import           Hakyll.Core.Item
+import           Hakyll.Web.Template
+import           Hakyll.Web.Template.Context
+import           Hakyll.Web.Template.Read.Hakyll (readTemplate)
+
+
+--------------------------------------------------------------------------------
+import           Paths_hakyll
+
+
+--------------------------------------------------------------------------------
 -- | This is a data structure to keep the configuration of a feed.
 data FeedConfiguration = FeedConfiguration
     { -- | Title of the feed.
@@ -52,83 +56,74 @@ data FeedConfiguration = FeedConfiguration
       feedRoot        :: String
     } deriving (Show, Eq)
 
--- | This is an auxiliary function to create a listing that is, in fact, a feed.
--- The items should be sorted on date. The @$updated@ field should be set for
--- each item.
---
-createFeed :: Template           -- ^ Feed template
-           -> Template           -- ^ Item template
-           -> String             -- ^ URL of the feed
-           -> FeedConfiguration  -- ^ Feed configuration
-           -> [Page String]      -- ^ Items to include
-           -> String             -- ^ Resulting feed
-createFeed feedTemplate itemTemplate url configuration items =
-    pageBody $ applyTemplateToPage feedTemplate
-             $ trySetField "updated"     updated
-             $ trySetField "title"       (feedTitle configuration)
-             $ trySetField "description" (feedDescription configuration)
-             $ trySetField "authorName"  (feedAuthorName configuration)
-             $ trySetField "authorEmail" (feedAuthorEmail configuration)
-             $ trySetField "root"        (feedRoot configuration)
-             $ trySetField "url"         url
-             $ fromBody body
-  where
-    -- Preprocess items
-    items' = flip map items $ applyTemplateToPage itemTemplate
-                            . trySetField "root" (feedRoot configuration)
 
-    -- Body: concatenated items
-    body = concat $ map pageBody items'
-
-    -- Take the first updated, which should be the most recent
-    updated = fromMaybe "Unknown" $ do
-        p <- listToMaybe items
-        return $ getField "updated" p
-
-
+--------------------------------------------------------------------------------
 -- | Abstract function to render any feed.
---
-renderFeed :: FilePath                       -- ^ Feed template
-           -> FilePath                       -- ^ Item template
-           -> FeedConfiguration              -- ^ Feed configuration
-           -> Compiler [Page String] String  -- ^ Feed compiler
-renderFeed feedTemplate itemTemplate configuration =
-    id &&& getRoute >>> renderFeed'
-  where
-    -- Arrow rendering the feed from the items and the URL
-    renderFeed' = unsafeCompiler $ \(items, url) -> do
-        feedTemplate' <- loadTemplate feedTemplate
-        itemTemplate' <- loadTemplate itemTemplate
-        let url' = toUrl $ fromMaybe noUrl url
-        return $ createFeed feedTemplate' itemTemplate' url' configuration items
+renderFeed :: FilePath                -- ^ Feed template
+           -> FilePath                -- ^ Item template
+           -> FeedConfiguration       -- ^ Feed configuration
+           -> Context String          -- ^ Context for the items
+           -> [Item String]           -- ^ Input items
+           -> Compiler (Item String)  -- ^ Resulting item
+renderFeed feedPath itemPath config itemContext items = do
+    feedTpl <- compilerUnsafeIO $ loadTemplate feedPath
+    itemTpl <- compilerUnsafeIO $ loadTemplate itemPath
 
+    items' <- forM items $ applyTemplate itemTpl itemContext'
+    body   <- makeItem $ concat $ map itemBody items'
+    applyTemplate feedTpl feedContext body
+  where
     -- Auxiliary: load a template from a datafile
     loadTemplate = fmap readTemplate . readFile <=< getDataFileName
 
-    -- URL is required to have a valid field
-    noUrl = error "Hakyll.Web.Feed.renderFeed: no route specified"
+    itemContext' = mconcat
+        [ constField "root" (feedRoot config)
+        , itemContext
+        ]
 
+    feedContext = mconcat
+         [ bodyField  "body"
+         , constField "title"       (feedTitle config)
+         , constField "description" (feedDescription config)
+         , constField "authorName"  (feedAuthorName config)
+         , constField "authorEmail" (feedAuthorEmail config)
+         , constField "root"        (feedRoot config)
+         , urlField   "url"
+         , updatedField
+         , missingField
+         ]
+
+    -- Take the first "updated" field from all items -- this should be the most
+    -- recent.
+    updatedField = field "updated" $ \_ -> case items of
+        []      -> return "Unknown"
+        (x : _) -> unContext itemContext' "updated" x
+
+
+--------------------------------------------------------------------------------
 -- | Render an RSS feed with a number of items.
---
-renderRss :: FeedConfiguration              -- ^ Feed configuration
-          -> Compiler [Page String] String  -- ^ Feed compiler
-renderRss configuration = arr (map (addUpdated . renderDate))
-    >>> renderFeed "templates/rss.xml" "templates/rss-item.xml" configuration
-  where
-    renderDate = renderDateField "published" "%a, %d %b %Y %H:%M:%S UT"
-                                 "No date found."
+renderRss :: FeedConfiguration       -- ^ Feed configuration
+          -> Context String          -- ^ Item context
+          -> [Item String]           -- ^ Feed items
+          -> Compiler (Item String)  -- ^ Resulting feed
+renderRss config context = renderFeed
+    "templates/rss.xml" "templates/rss-item.xml" config
+    (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
 
+
+--------------------------------------------------------------------------------
 -- | Render an Atom feed with a number of items.
---
-renderAtom :: FeedConfiguration              -- ^ Feed configuration
-           -> Compiler [Page String] String  -- ^ Feed compiler
-renderAtom configuration = arr (map (addUpdated . renderDate))
-    >>> renderFeed "templates/atom.xml" "templates/atom-item.xml" configuration
-  where
-    renderDate = renderDateField "published" "%Y-%m-%dT%H:%M:%SZ"
-                                 "No date found."
+renderAtom :: FeedConfiguration       -- ^ Feed configuration
+           -> Context String          -- ^ Item context
+           -> [Item String]           -- ^ Feed items
+           -> Compiler (Item String)  -- ^ Resulting feed
+renderAtom config context = renderFeed
+    "templates/atom.xml" "templates/atom-item.xml" config
+    (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
 
+
+--------------------------------------------------------------------------------
 -- | Copies @$updated$@ from @$published$@ if it is not already set.
---
-addUpdated :: Page a -> Page a
-addUpdated page = trySetField "updated" (getField "published" page) page
+makeItemContext :: String -> Context a -> Context a
+makeItemContext fmt context = mconcat
+    [dateField "published" fmt, context, dateField "updated" fmt]
