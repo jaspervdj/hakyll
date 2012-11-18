@@ -1,30 +1,30 @@
 --------------------------------------------------------------------------------
 -- | Internal module to parse metadata
-module Hakyll.Core.ResourceProvider.Metadata
+module Hakyll.Core.Provider.Metadata
     ( loadMetadata
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative
-import           Control.Arrow                         (second)
-import qualified Data.ByteString.Char8                 as BC
-import qualified Data.Map                              as M
-import           System.IO                             as IO
-import           Text.Parsec                           ((<?>))
-import qualified Text.Parsec                           as P
-import           Text.Parsec.String                    (Parser)
+import           Control.Arrow                 (second)
+import qualified Data.ByteString.Char8         as BC
+import qualified Data.Map                      as M
+import           System.IO                     as IO
+import           Text.Parsec                   ((<?>))
+import qualified Text.Parsec                   as P
+import           Text.Parsec.String            (Parser)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
-import           Hakyll.Core.ResourceProvider.Internal
+import           Hakyll.Core.Provider.Internal
 import           Hakyll.Core.Util.String
 
 
 --------------------------------------------------------------------------------
-loadMetadata :: ResourceProvider -> Identifier -> IO (Metadata, Maybe String)
+loadMetadata :: Provider -> Identifier -> IO (Metadata, Maybe String)
 loadMetadata rp identifier = do
     hasHeader  <- probablyHasMetadataHeader fp
     (md, body) <- if hasHeader

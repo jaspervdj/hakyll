@@ -96,9 +96,9 @@ Library
     Hakyll.Core.Dependencies
     Hakyll.Core.Identifier
     Hakyll.Core.Identifier.Pattern
+    Hakyll.Core.Item
     Hakyll.Core.Logger
     Hakyll.Core.Metadata
-    Hakyll.Core.ResourceProvider
     Hakyll.Core.Routes
     Hakyll.Core.Rules
     Hakyll.Core.Runtime
@@ -126,17 +126,17 @@ Library
     Hakyll.Web.Util.Html
 
   Other-Modules:
-    Hakyll.Core.CompiledItem
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.Compiler.Require
     Hakyll.Core.DirectedGraph
     Hakyll.Core.DirectedGraph.Dot
-    Hakyll.Core.ResourceProvider.Internal
-    Hakyll.Core.ResourceProvider.Metadata
-    Hakyll.Core.ResourceProvider.MetadataCache
-    Hakyll.Core.ResourceProvider.Modified
+    Hakyll.Core.Item.SomeItem
+    Hakyll.Core.Provider
+    Hakyll.Core.Provider.Internal
+    Hakyll.Core.Provider.Metadata
+    Hakyll.Core.Provider.MetadataCache
+    Hakyll.Core.Provider.Modified
     Hakyll.Core.Rules.Internal
-    Hakyll.Web.Page.Internal
     Hakyll.Web.Template.Internal
     Hakyll.Web.Template.Read.Hakyll
     Hakyll.Web.Template.Read.Hamlet

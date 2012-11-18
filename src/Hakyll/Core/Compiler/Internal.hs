@@ -35,7 +35,7 @@ import           Data.Monoid                  (Monoid (..))
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Logger
-import           Hakyll.Core.ResourceProvider
+import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Store
 
@@ -43,10 +43,10 @@ import           Hakyll.Core.Store
 --------------------------------------------------------------------------------
 -- | Environment in which a compiler runs
 data CompilerRead = CompilerRead
-    { -- | Target identifier
-      compilerIdentifier :: Identifier
+    { -- | Underlying identifier
+      compilerUnderlying :: Identifier
     , -- | Resource provider
-      compilerProvider   :: ResourceProvider
+      compilerProvider   :: Provider
     , -- | List of all known identifiers
       compilerUniverse   :: [Identifier]
     , -- | Site routes

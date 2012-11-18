@@ -15,7 +15,7 @@ module Hakyll.Web.Pandoc.Biblio
     , cslCompiler
     , Biblio (..)
     , biblioCompiler
-    , pageReadPandocBiblio
+    , readPandocBiblio
     ) where
 
 
@@ -31,19 +31,31 @@ import           Text.Pandoc.Biblio     (processBiblio)
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
 import           Hakyll.Core.Writable
-import           Hakyll.Web.Page
 import           Hakyll.Web.Pandoc
 
 
 --------------------------------------------------------------------------------
-newtype CSL = CSL FilePath
-    deriving (Binary, Show, Typeable, Writable)
+data CSL = CSL
+    deriving (Show, Typeable)
 
 
 --------------------------------------------------------------------------------
-cslCompiler :: Compiler CSL
-cslCompiler = CSL . toFilePath <$> getIdentifier
+instance Binary CSL where
+    put CSL = return ()
+    get     = return CSL
+
+
+--------------------------------------------------------------------------------
+instance Writable CSL where
+    -- Shouldn't be written.
+    write _ _ = return ()
+
+
+--------------------------------------------------------------------------------
+cslCompiler :: Compiler (Item CSL)
+cslCompiler = makeItem CSL
 
 
 --------------------------------------------------------------------------------
@@ -57,29 +69,34 @@ instance Binary Biblio where
     get             = Biblio . read <$> get
     put (Biblio rs) = put $ show rs
 
+
+--------------------------------------------------------------------------------
 instance Writable Biblio where
+    -- Shouldn't be written.
     write _ _ = return ()
 
 
 --------------------------------------------------------------------------------
-biblioCompiler :: Compiler Biblio
+biblioCompiler :: Compiler (Item Biblio)
 biblioCompiler = do
-    filePath <- toFilePath <$> getIdentifier
-    unsafeCompiler $ Biblio <$> CSL.readBiblioFile filePath
+    filePath <- toFilePath <$> getUnderlying
+    makeItem =<< unsafeCompiler (Biblio <$> CSL.readBiblioFile filePath)
 
 
 --------------------------------------------------------------------------------
-pageReadPandocBiblio :: ParserState
-                     -> CSL
-                     -> Biblio
-                     -> Page
-                     -> Compiler Pandoc
-pageReadPandocBiblio state (CSL csl) (Biblio refs) page = do
+readPandocBiblio :: ParserState
+                 -> Item CSL
+                 -> Item Biblio
+                 -> (Item String)
+                 -> Compiler (Item Pandoc)
+readPandocBiblio state csl biblio item = do
     -- We need to know the citation keys, add then *before* actually parsing the
     -- actual page. If we don't do this, pandoc won't even consider them
     -- citations!
-    let cits   = map CSL.refId refs
-        state' = state {stateCitations = stateCitations state ++ cits}
-    pandoc  <- pageReadPandocWith state' page
-    pandoc' <- unsafeCompiler $ processBiblio csl Nothing refs pandoc
-    return pandoc'
+    let Biblio refs = itemBody biblio
+        cits        = map CSL.refId refs
+        state'      = state {stateCitations = stateCitations state ++ cits}
+        pandoc      = itemBody $ readPandocWith state' item
+        cslPath     = toFilePath $ itemIdentifier csl
+    pandoc' <- unsafeCompiler $ processBiblio cslPath Nothing refs pandoc
+    return $ fmap (const pandoc') item

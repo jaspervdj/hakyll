@@ -15,13 +15,14 @@ import           Data.List               (isPrefixOf)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Item
 import           Hakyll.Core.Util.String
 
 
 --------------------------------------------------------------------------------
 -- | Compiler form of 'compressCss'
-compressCssCompiler :: Compiler String
-compressCssCompiler = compressCss <$> getResourceString
+compressCssCompiler :: Compiler (Item String)
+compressCssCompiler = fmap compressCss <$> getResourceString
 
 
 --------------------------------------------------------------------------------

@@ -60,10 +60,10 @@
 -- >         #{body}
 module Hakyll.Web.Template
     ( Template
-    , applyTemplate
     , templateCompiler
     , templateCompilerWith
-    , applyTemplateCompiler
+    , applyTemplate
+    , applyTemplateWith
     ) where
 
 
@@ -78,51 +78,51 @@ import           Text.Hamlet                  (HamletSettings,
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
-import           Hakyll.Web.Page.Internal
+import           Hakyll.Core.Item
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
 import           Hakyll.Web.Template.Read
 
 
 --------------------------------------------------------------------------------
-applyTemplate :: Monad m
-              => (String -> a -> m String)
-              -> Template -> a -> m String
-applyTemplate context tpl x = liftM concat $
-    forM (unTemplate tpl) $ \e -> case e of
-        Chunk c -> return c
-        Escaped -> return "$"
-        Key k   -> context k x
-
-
---------------------------------------------------------------------------------
 -- | Read a template. If the extension of the file we're compiling is
 -- @.hml@ or @.hamlet@, it will be considered as a Hamlet template, and parsed
 -- as such.
-templateCompiler :: Compiler Template
+templateCompiler :: Compiler (Item Template)
 templateCompiler = templateCompilerWith defaultHamletSettings
 
 
 --------------------------------------------------------------------------------
 -- | Version of 'templateCompiler' that enables custom settings.
-templateCompilerWith :: HamletSettings -> Compiler Template
+templateCompilerWith :: HamletSettings -> Compiler (Item Template)
 templateCompilerWith settings =
     cached "Hakyll.Web.Template.templateCompilerWith" $ do
-        identifier <- getIdentifier
-        string     <- getResourceString
+        identifier <- getUnderlying
+        item       <- getResourceString
         if takeExtension (toFilePath identifier) `elem` [".hml", ".hamlet"]
             -- Hamlet template
-            then return $ readHamletTemplateWith settings string
+            then return $ fmap (readHamletTemplateWith settings) item
             -- Hakyll template
-            else return $ readTemplate string
+            else return $ fmap readTemplate item
 
 
 --------------------------------------------------------------------------------
-applyTemplateCompiler :: Template       -- ^ Template
-                      -> Context Page   -- ^ Context
-                      -> Page           -- ^ Page
-                      -> Compiler Page  -- ^ Compiler
-applyTemplateCompiler tpl context page = do
-    identifier <- getIdentifier
-    let context' k x = unContext context k identifier x
-    applyTemplate context' tpl page
+applyTemplate :: Template                -- ^ Template
+              -> Context a               -- ^ Context
+              -> Item a                  -- ^ Page
+              -> Compiler (Item String)  -- ^ Resulting item
+applyTemplate tpl context item = do
+    let context' k x = unContext context k x
+    body <- applyTemplateWith context' tpl item
+    return $ itemSetBody body item
+
+
+--------------------------------------------------------------------------------
+applyTemplateWith :: Monad m
+                  => (String -> a -> m String)
+                  -> Template -> a -> m String
+applyTemplateWith context tpl x = liftM concat $
+    forM (unTemplate tpl) $ \e -> case e of
+        Chunk c -> return c
+        Escaped -> return "$"
+        Key k   -> context k x

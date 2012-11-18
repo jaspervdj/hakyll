@@ -3,11 +3,10 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 module Hakyll.Core.Compiler
     ( Compiler
-    , getIdentifier
+    , getUnderlying
+    , makeItem
     , getRoute
-    , getRouteFor
     , getMetadata
-    , getMetadataFor
     , getResourceBody
     , getResourceString
     , getResourceLBS
@@ -34,42 +33,39 @@ import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Compiler.Require
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
 import           Hakyll.Core.Logger            as Logger
 import           Hakyll.Core.Metadata
-import           Hakyll.Core.ResourceProvider
+import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 import qualified Hakyll.Core.Store             as Store
-import           Hakyll.Core.Writable
 
 
 --------------------------------------------------------------------------------
--- | Get the identifier of the item that is currently being compiled
-getIdentifier :: Compiler Identifier
-getIdentifier = compilerIdentifier <$> compilerAsk
+-- | Get the underlying identifier. Only use this if you know what you're doing.
+getUnderlying :: Compiler Identifier
+getUnderlying = compilerUnderlying <$> compilerAsk
 
 
 --------------------------------------------------------------------------------
--- | Get the route we are using for this item
-getRoute :: Compiler (Maybe FilePath)
-getRoute = getIdentifier >>= getRouteFor
+makeItem :: a -> Compiler (Item a)
+makeItem x = do
+    identifier <- getUnderlying
+    return $ Item identifier x
 
 
 --------------------------------------------------------------------------------
 -- | Get the route for a specified item
-getRouteFor :: Identifier -> Compiler (Maybe FilePath)
-getRouteFor identifier = do
+getRoute :: Identifier -> Compiler (Maybe FilePath)
+getRoute identifier = do
     routes <- compilerRoutes <$> compilerAsk
     return $ runRoutes routes identifier
 
 
---------------------------------------------------------------------------------
-getMetadata :: Compiler Metadata
-getMetadata = getIdentifier >>= getMetadataFor
-
 
 --------------------------------------------------------------------------------
-getMetadataFor :: Identifier -> Compiler Metadata
-getMetadataFor identifier = do
+getMetadata :: Identifier -> Compiler Metadata
+getMetadata identifier = do
     provider <- compilerProvider <$> compilerAsk
     compilerTellDependencies [IdentifierDependency identifier]
     compilerUnsafeIO $ resourceMetadata provider identifier
@@ -77,32 +73,31 @@ getMetadataFor identifier = do
 
 --------------------------------------------------------------------------------
 -- | Get the body of the underlying resource
-getResourceBody :: Compiler String
+getResourceBody :: Compiler (Item String)
 getResourceBody = getResourceWith resourceBody
 
 
 --------------------------------------------------------------------------------
 -- | Get the resource we are compiling as a string
-getResourceString :: Compiler String
+getResourceString :: Compiler (Item String)
 getResourceString = getResourceWith $ const resourceString
 
 
 --------------------------------------------------------------------------------
 -- | Get the resource we are compiling as a lazy bytestring
---
-getResourceLBS :: Compiler ByteString
+getResourceLBS :: Compiler (Item ByteString)
 getResourceLBS = getResourceWith $ const resourceLBS
 
 
 --------------------------------------------------------------------------------
 -- | Overloadable function for 'getResourceString' and 'getResourceLBS'
-getResourceWith :: (ResourceProvider -> Identifier -> IO a) -> Compiler a
+getResourceWith :: (Provider -> Identifier -> IO a) -> Compiler (Item a)
 getResourceWith reader = do
     provider <- compilerProvider   <$> compilerAsk
-    id'      <- compilerIdentifier <$> compilerAsk
+    id'      <- compilerUnderlying <$> compilerAsk
     let filePath = toFilePath id'
     if resourceExists provider id'
-        then compilerUnsafeIO $ reader provider id'
+        then compilerUnsafeIO $ Item id' <$> reader provider id'
         else compilerThrow $ error' filePath
   where
     error' fp = "Hakyll.Core.Compiler.getResourceWith: resource " ++
@@ -110,12 +105,12 @@ getResourceWith reader = do
 
 
 --------------------------------------------------------------------------------
-cached :: (Binary a, Typeable a, Writable a)
+cached :: (Binary a, Typeable a)
        => String
        -> Compiler a
        -> Compiler a
 cached name compiler = do
-    id'      <- compilerIdentifier <$> compilerAsk
+    id'      <- compilerUnderlying <$> compilerAsk
     store    <- compilerStore      <$> compilerAsk
     provider <- compilerProvider   <$> compilerAsk
     modified <- compilerUnsafeIO $ resourceModified provider id'

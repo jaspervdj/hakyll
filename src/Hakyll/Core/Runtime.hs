@@ -22,15 +22,16 @@ import           System.FilePath               ((</>))
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.CompiledItem
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Compiler.Require
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
+import           Hakyll.Core.Item.SomeItem
 import           Hakyll.Core.Logger            (Logger)
 import qualified Hakyll.Core.Logger            as Logger
-import           Hakyll.Core.ResourceProvider
+import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules.Internal
 import           Hakyll.Core.Store             (Store)
@@ -49,7 +50,7 @@ run configuration rules = do
     store  <- Store.new (inMemoryCache configuration) $
         storeDirectory configuration
     Logger.message logger "Creating provider..."
-    provider <- newResourceProvider store (ignoreFile configuration) "."
+    provider <- newProvider store (ignoreFile configuration) "."
     Logger.message logger "Running rules..."
     ruleSet  <- runRules rules provider
 
@@ -94,17 +95,17 @@ run configuration rules = do
 data RuntimeRead = RuntimeRead
     { runtimeConfiguration :: Configuration
     , runtimeLogger        :: Logger
-    , runtimeProvider      :: ResourceProvider
+    , runtimeProvider      :: Provider
     , runtimeStore         :: Store
     , runtimeRoutes        :: Routes
-    , runtimeUniverse      :: [(Identifier, Compiler CompiledItem)]
+    , runtimeUniverse      :: [(Identifier, Compiler SomeItem)]
     }
 
 
 --------------------------------------------------------------------------------
 data RuntimeState = RuntimeState
     { runtimeDone  :: Set Identifier
-    , runtimeTodo  :: Map Identifier (Compiler CompiledItem)
+    , runtimeTodo  :: Map Identifier (Compiler SomeItem)
     , runtimeFacts :: DependencyFacts
     }
 
@@ -178,7 +179,7 @@ chase trail id'
 
         let compiler = todo M.! id'
             read' = CompilerRead
-                { compilerIdentifier = id'
+                { compilerUnderlying = id'
                 , compilerProvider   = provider
                 , compilerUniverse   = map fst universe
                 , compilerRoutes     = routes
@@ -192,8 +193,10 @@ chase trail id'
             CompilerError e -> throwError e
 
             -- Huge success
-            CompilerDone (CompiledItem compiled) cwrite -> do
-                let facts     = compilerDependencies cwrite
+            CompilerDone (SomeItem item) cwrite -> do
+                -- TODO: Sanity check on itemIdentifier?
+                let body      = itemBody item
+                    facts     = compilerDependencies cwrite
                     cacheHits
                         | compilerCacheHits cwrite <= 0 = "updated"
                         | otherwise                     = "cached "
@@ -207,11 +210,11 @@ chase trail id'
                     Just url -> do
                         let path = destinationDirectory config </> url
                         liftIO $ makeDirectories path
-                        liftIO $ write path compiled
+                        liftIO $ write path item
                         Logger.debug logger $ "Routed to " ++ path
 
                 -- Save! (For require)
-                liftIO $ save store id' compiled
+                liftIO $ save store id' body
 
                 -- Update state
                 modify $ \s -> s

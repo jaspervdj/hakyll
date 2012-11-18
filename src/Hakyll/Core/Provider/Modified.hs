@@ -1,33 +1,33 @@
 --------------------------------------------------------------------------------
-module Hakyll.Core.ResourceProvider.Modified
+module Hakyll.Core.Provider.Modified
     ( resourceModified
     , resourceModificationTime
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative                        ((<$>), (<*>))
-import           Control.Monad                              (when)
-import qualified Crypto.Hash.MD5                            as MD5
-import qualified Data.ByteString                            as B
-import qualified Data.ByteString.Lazy                       as BL
+import           Control.Applicative                ((<$>), (<*>))
+import           Control.Monad                      (when)
+import qualified Crypto.Hash.MD5                    as MD5
+import qualified Data.ByteString                    as B
+import qualified Data.ByteString.Lazy               as BL
 import           Data.IORef
-import qualified Data.Map                                   as M
-import           Data.Time                                  (UTCTime)
-import           System.Directory                           (getModificationTime)
+import qualified Data.Map                           as M
+import           Data.Time                          (UTCTime)
+import           System.Directory                   (getModificationTime)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Identifier
-import           Hakyll.Core.ResourceProvider.Internal
-import           Hakyll.Core.ResourceProvider.MetadataCache
-import           Hakyll.Core.Store                          (Store)
-import qualified Hakyll.Core.Store                          as Store
+import           Hakyll.Core.Provider.Internal
+import           Hakyll.Core.Provider.MetadataCache
+import           Hakyll.Core.Store                  (Store)
+import qualified Hakyll.Core.Store                  as Store
 
 
 --------------------------------------------------------------------------------
 -- | A resource is modified if it or its metadata has changed
-resourceModified :: ResourceProvider -> Identifier -> IO Bool
+resourceModified :: Provider -> Identifier -> IO Bool
 resourceModified rp r
     | not exists = return False
     | otherwise  = do
@@ -49,8 +49,8 @@ resourceModified rp r
   where
     normalized = setVersion Nothing r
     exists     = resourceExists rp r
-    store      = resourceStore rp
-    cacheRef   = resourceModifiedCache rp
+    store      = providerStore rp
+    cacheRef   = providerModifiedCache rp
 
 
 --------------------------------------------------------------------------------

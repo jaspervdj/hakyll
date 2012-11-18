@@ -34,36 +34,36 @@ import           System.Locale                 (TimeLocale, defaultTimeLocale)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
-import           Hakyll.Core.ResourceProvider
+import           Hakyll.Core.Item
+import           Hakyll.Core.Provider
 import           Hakyll.Core.Util.String       (splitAll)
-import           Hakyll.Web.Page.Internal
 import           Hakyll.Web.Urls
 
 
 --------------------------------------------------------------------------------
 newtype Context a = Context
-    { unContext :: String -> Identifier -> a -> Compiler String
+    { unContext :: String -> Item a -> Compiler String
     }
 
 
 --------------------------------------------------------------------------------
 instance Monoid (Context a) where
-    mempty                          = Context $ \_ _ _ -> empty
-    mappend (Context f) (Context g) = Context $ \k i x -> f k i x <|> g k i x
+    mempty                          = Context $ \_ _ -> empty
+    mappend (Context f) (Context g) = Context $ \k i -> f k i <|> g k i
 
 
 --------------------------------------------------------------------------------
 mapContext :: (String -> String) -> Context a -> Context a
-mapContext f (Context g) = Context $ \k i x -> f <$> g k i x
+mapContext f (Context g) = Context $ \k i -> f <$> g k i
 
 
 --------------------------------------------------------------------------------
-field :: String -> (Identifier -> a -> Compiler String) -> Context a
-field key value = Context $ \k i x -> if k == key then value i x else empty
+field :: String -> (Item a -> Compiler String) -> Context a
+field key value = Context $ \k i -> if k == key then value i else empty
 
 
 --------------------------------------------------------------------------------
-defaultContext :: Context Page
+defaultContext :: Context String
 defaultContext =
     bodyField     "body"     `mappend`
     urlField      "url"      `mappend`
@@ -74,18 +74,19 @@ defaultContext =
 
 
 --------------------------------------------------------------------------------
-bodyField :: String -> Context Page
-bodyField key = field key $ \_ x -> return x
+bodyField :: String -> Context String
+bodyField key = field key $ return . itemBody
 
 
 --------------------------------------------------------------------------------
 urlField :: String -> Context a
-urlField key = field key $ \i _ -> maybe empty toUrl <$> getRouteFor i
+urlField key = field key $
+    fmap (maybe empty toUrl) . getRoute . itemIdentifier
 
 
 --------------------------------------------------------------------------------
 pathField :: String -> Context a
-pathField key = field key $ \i _ -> return $ toFilePath i
+pathField key = field key $ return . toFilePath . itemIdentifier
 
 
 --------------------------------------------------------------------------------
@@ -133,8 +134,8 @@ dateFieldWith :: TimeLocale  -- ^ Output time locale
               -> String      -- ^ Destination key
               -> String      -- ^ Format to use on the date
               -> Context a   -- ^ Resulting context
-dateFieldWith locale key format = field key $ \id' _ -> do
-    time <- getUTC locale id'
+dateFieldWith locale key format = field key $ \i -> do
+    time <- getUTC locale $ itemIdentifier i
     return $ formatTime locale format time
 
 
@@ -145,7 +146,7 @@ getUTC :: TimeLocale        -- ^ Output time locale
        -> Identifier        -- ^ Input page
        -> Compiler UTCTime  -- ^ Parsed UTCTime
 getUTC locale id' = do
-    metadata <- getMetadataFor id'
+    metadata <- getMetadata id'
     let tryField k fmt = M.lookup k metadata >>= parseTime' fmt
         fn             = takeFileName $ toFilePath id'
 
@@ -177,11 +178,11 @@ modificationTimeFieldWith :: TimeLocale  -- ^ Time output locale
                           -> String      -- ^ Key
                           -> String      -- ^ Format
                           -> Context a   -- ^ Resulting context
-modificationTimeFieldWith locale key fmt = field key $ \id' _ -> do
-    mtime <- compilerUnsafeIO $ resourceModificationTime id'
+modificationTimeFieldWith locale key fmt = field key $ \i -> do
+    mtime <- compilerUnsafeIO $ resourceModificationTime $ itemIdentifier i
     return $ formatTime locale fmt mtime
 
 
 --------------------------------------------------------------------------------
 missingField :: Context a
-missingField = Context $ \k _ _ -> return $ "$" ++ k ++ "$"
+missingField = Context $ \k _ -> return $ "$" ++ k ++ "$"

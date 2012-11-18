@@ -9,8 +9,7 @@ module Hakyll.Core.Writable.CopyFile
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative    ((<$>))
-import           Data.Binary            (Binary)
+import           Data.Binary            (Binary (..))
 import           Data.Typeable          (Typeable)
 import           System.Directory       (copyFile)
 
@@ -18,20 +17,27 @@ import           System.Directory       (copyFile)
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
 import           Hakyll.Core.Writable
 
 
 --------------------------------------------------------------------------------
--- | Newtype construct around 'FilePath' which will copy the file directly
-newtype CopyFile = CopyFile {unCopyFile :: FilePath}
-    deriving (Show, Eq, Ord, Binary, Typeable)
+-- | This will copy any file directly by using a system call
+data CopyFile = CopyFile
+    deriving (Show, Eq, Ord, Typeable)
+
+
+--------------------------------------------------------------------------------
+instance Binary CopyFile where
+    put CopyFile = return ()
+    get          = return CopyFile
 
 
 --------------------------------------------------------------------------------
 instance Writable CopyFile where
-    write dst (CopyFile src) = copyFile src dst
+    write dst item = copyFile (toFilePath $ itemIdentifier item) dst
 
 
 --------------------------------------------------------------------------------
-copyFileCompiler :: Compiler CopyFile
-copyFileCompiler = CopyFile . toFilePath <$> getIdentifier
+copyFileCompiler :: Compiler (Item CopyFile)
+copyFileCompiler = makeItem CopyFile

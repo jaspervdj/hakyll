@@ -3,18 +3,17 @@
 module Hakyll.Web.Pandoc.FileType
     ( FileType (..)
     , fileType
-    , getFileType
+    , itemFileType
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative    ((<$>))
 import           System.FilePath        (takeExtension)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
 
 
 --------------------------------------------------------------------------------
@@ -62,5 +61,5 @@ fileType = fileType' . takeExtension
 
 --------------------------------------------------------------------------------
 -- | Get the file type for the current file
-getFileType :: Compiler FileType
-getFileType = fileType . toFilePath <$> getIdentifier
+itemFileType :: Item a -> FileType
+itemFileType = fileType . toFilePath . itemIdentifier

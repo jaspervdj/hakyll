@@ -15,8 +15,8 @@
 --
 -- > <img src="../images/lolcat.png" alt="Funny zomgroflcopter" />
 module Hakyll.Web.Urls.Relativize
-    ( relativizeUrlsCompiler
-    , relativizeUrls
+    ( relativizeUrls
+    , relativizeUrlsWith
     ) where
 
 
@@ -26,27 +26,27 @@ import           Data.List            (isPrefixOf)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
-import           Hakyll.Web.Page
+import           Hakyll.Core.Item
 import           Hakyll.Web.Urls
 
 
 --------------------------------------------------------------------------------
 -- | Compiler form of 'relativizeUrls' which automatically picks the right root
 -- path
-relativizeUrlsCompiler :: Page -> Compiler Page
-relativizeUrlsCompiler page = do
-    route <- getRoute
+relativizeUrls :: Item String -> Compiler (Item String)
+relativizeUrls item = do
+    route <- getRoute $ itemIdentifier item
     return $ case route of
-        Nothing -> page
-        Just r  -> relativizeUrls (toSiteRoot r) page
+        Nothing -> item
+        Just r  -> fmap (relativizeUrlsWith $ toSiteRoot r) item
 
 
 --------------------------------------------------------------------------------
 -- | Relativize URL's in HTML
-relativizeUrls :: String  -- ^ Path to the site root
-               -> Page    -- ^ HTML to relativize
-               -> Page    -- ^ Resulting HTML
-relativizeUrls root = withUrls rel
+relativizeUrlsWith :: String  -- ^ Path to the site root
+                   -> String  -- ^ HTML to relativize
+                   -> String  -- ^ Resulting HTML
+relativizeUrlsWith root = withUrls rel
   where
     isRel x = "/" `isPrefixOf` x && not ("//" `isPrefixOf` x)
     rel x   = if isRel x then root ++ x else x

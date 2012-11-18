@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
-module Hakyll.Core.ResourceProvider.Internal
-    ( ResourceProvider (..)
-    , newResourceProvider
+module Hakyll.Core.Provider.Internal
+    ( Provider (..)
+    , newProvider
 
     , resourceList
     , resourceExists
@@ -31,39 +31,39 @@ import           Hakyll.Core.Identifier
 
 --------------------------------------------------------------------------------
 -- | Responsible for retrieving and listing resources
-data ResourceProvider = ResourceProvider
+data Provider = Provider
     { -- | A list of all files found
-      resourceSet           :: Set Identifier
+      providerSet           :: Set Identifier
     , -- | Cache keeping track of modified files
-      resourceModifiedCache :: IORef (Map Identifier Bool)
+      providerModifiedCache :: IORef (Map Identifier Bool)
     , -- | Underlying persistent store for caching
-      resourceStore         :: Store
+      providerStore         :: Store
     }
 
 
 --------------------------------------------------------------------------------
 -- | Create a resource provider
-newResourceProvider :: Store                -- ^ Store to use
-                    -> (FilePath -> Bool)   -- ^ Should we ignore this file?
-                    -> FilePath             -- ^ Search directory
-                    -> IO ResourceProvider  -- ^ Resulting provider
-newResourceProvider store ignore directory = do
+newProvider :: Store               -- ^ Store to use
+            -> (FilePath -> Bool)  -- ^ Should we ignore this file?
+            -> FilePath            -- ^ Search directory
+            -> IO Provider         -- ^ Resulting provider
+newProvider store ignore directory = do
     list  <- map fromFilePath . filter (not . ignore) <$>
         getRecursiveContents False directory
     cache <- newIORef M.empty
-    return $ ResourceProvider (S.fromList list) cache store
+    return $ Provider (S.fromList list) cache store
 
 
 --------------------------------------------------------------------------------
-resourceList :: ResourceProvider -> [Identifier]
-resourceList = S.toList . resourceSet
+resourceList :: Provider -> [Identifier]
+resourceList = S.toList . providerSet
 
 
 --------------------------------------------------------------------------------
 -- | Check if a given resource exists
-resourceExists :: ResourceProvider -> Identifier -> Bool
+resourceExists :: Provider -> Identifier -> Bool
 resourceExists provider =
-    (`S.member` resourceSet provider) . setVersion Nothing
+    (`S.member` providerSet provider) . setVersion Nothing
 
 
 --------------------------------------------------------------------------------

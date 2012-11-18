@@ -44,11 +44,12 @@ import           Data.Typeable                  (Typeable)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.CompiledItem
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
-import           Hakyll.Core.ResourceProvider
+import           Hakyll.Core.Item
+import           Hakyll.Core.Item.SomeItem
+import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules.Internal
 import           Hakyll.Core.Writable
@@ -63,11 +64,11 @@ tellRoute route' = Rules $ tell $ RuleSet route' mempty mempty
 --------------------------------------------------------------------------------
 -- | Add a number of compilers
 tellCompilers :: (Binary a, Typeable a, Writable a)
-             => [(Identifier, Compiler a)]
+             => [(Identifier, Compiler (Item a))]
              -> Rules ()
 tellCompilers compilers = Rules $ do
     -- We box the compilers so they have a more simple type
-    let compilers' = map (second $ fmap compiledItem) compilers
+    let compilers' = map (second $ fmap SomeItem) compilers
     tell $ RuleSet mempty compilers' mempty
 
 
@@ -132,7 +133,7 @@ group g = Rules . local setVersion' . unRules
 -- no resources match the current selection, nothing will happen. In this case,
 -- you might want to have a look at 'create'.
 compile :: (Binary a, Typeable a, Writable a)
-        => Compiler a -> Rules ()
+        => Compiler (Item a) -> Rules ()
 compile compiler = do
     ids <- resources
     tellCompilers [(id', compiler) | id' <- ids]
@@ -149,7 +150,7 @@ compile compiler = do
 -- replaced by the group set via 'group' (or 'Nothing', if 'group' has not been
 -- used).
 create :: (Binary a, Typeable a, Writable a)
-       => Identifier -> Compiler a -> Rules ()
+       => Identifier -> Compiler (Item a) -> Rules ()
 create id' compiler = Rules $ do
     version' <- rulesVersion <$> ask
     let id'' = setVersion version' id'
@@ -175,9 +176,9 @@ route route' = Rules $ do
 -- the correct group to the identifiers.
 resources :: Rules [Identifier]
 resources = Rules $ do
-    pattern  <- rulesPattern <$> ask
-    provider <- rulesResourceProvider <$> ask
-    g        <- rulesVersion <$> ask
+    pattern  <- rulesPattern  <$> ask
+    provider <- rulesProvider <$> ask
+    g        <- rulesVersion  <$> ask
     return $ filterMatches pattern $ map (setVersion g) $ resourceList provider
 
 

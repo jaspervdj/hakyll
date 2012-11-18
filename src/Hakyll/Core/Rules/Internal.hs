@@ -20,11 +20,11 @@ import           Data.Set                       (Set)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.CompiledItem
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
-import           Hakyll.Core.ResourceProvider
+import           Hakyll.Core.Item.SomeItem
+import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 
 
@@ -34,7 +34,7 @@ data RuleSet = RuleSet
     { -- | Routes used in the compilation structure
       rulesRoutes    :: Routes
     , -- | Compilation rules
-      rulesCompilers :: [(Identifier, Compiler CompiledItem)]
+      rulesCompilers :: [(Identifier, Compiler SomeItem)]
     , -- | A set of the actually used files
       rulesResources :: Set Identifier
     }
@@ -57,9 +57,9 @@ data RuleState = RuleState
 --------------------------------------------------------------------------------
 -- | Rule environment
 data RuleEnvironment = RuleEnvironment
-    { rulesResourceProvider :: ResourceProvider
-    , rulesPattern          :: Pattern
-    , rulesVersion          :: Maybe String
+    { rulesProvider :: Provider
+    , rulesPattern  :: Pattern
+    , rulesVersion  :: Maybe String
     }
 
 
@@ -72,16 +72,16 @@ newtype Rules a = Rules
 
 --------------------------------------------------------------------------------
 -- | Run a Rules monad, resulting in a 'RuleSet'
-runRules :: Rules a -> ResourceProvider -> IO RuleSet
+runRules :: Rules a -> Provider -> IO RuleSet
 runRules rules provider = do
     (_, _, ruleSet) <- runRWST (unRules rules) env state
     return $ nubCompilers ruleSet
   where
     state = RuleState {rulesNextIdentifier = 0}
     env   = RuleEnvironment
-        { rulesResourceProvider = provider
-        , rulesPattern          = mempty
-        , rulesVersion          = Nothing
+        { rulesProvider = provider
+        , rulesPattern  = mempty
+        , rulesVersion  = Nothing
         }
 
 
