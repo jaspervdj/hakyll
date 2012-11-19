@@ -134,8 +134,6 @@ Library
   Other-Modules:
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.Compiler.Require
-    Hakyll.Core.DirectedGraph
-    Hakyll.Core.DirectedGraph.Dot
     Hakyll.Core.Item.SomeItem
     Hakyll.Core.Provider
     Hakyll.Core.Provider.Internal

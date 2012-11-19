@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 module Hakyll.Core.Provider.Modified
     ( resourceModified
     , resourceModificationTime
@@ -15,7 +16,15 @@ import           Data.IORef
 import qualified Data.Map                           as M
 import           Data.Time                          (UTCTime)
 import           System.Directory                   (getModificationTime)
-import           System.FilePath                    ((</>))
+
+
+--------------------------------------------------------------------------------
+#if !MIN_VERSION_directory(1,2,0)
+import           Data.Time                          (readTime)
+import           System.Locale                      (defaultTimeLocale)
+import           System.Time                        (formatCalendarTime,
+                                                     toCalendarTime)
+#endif
 
 
 --------------------------------------------------------------------------------
@@ -82,5 +91,11 @@ fileDigest = fmap MD5.hashlazy . BL.readFile
 
 --------------------------------------------------------------------------------
 resourceModificationTime :: Provider -> Identifier -> IO UTCTime
-resourceModificationTime p i =
-    getModificationTime $ providerDirectory p </> toFilePath i
+resourceModificationTime p i = do
+#if MIN_VERSION_directory(1,2,0)
+    getModificationTime $ resourceFilePath p i
+#else
+    ct <- toCalendarTime =<< getModificationTime (resourceFilePath p i)
+    let str = formatCalendarTime defaultTimeLocale "%s" ct
+    return $ readTime defaultTimeLocale "%s" str
+#endif
