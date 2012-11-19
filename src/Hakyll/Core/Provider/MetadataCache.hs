@@ -29,7 +29,7 @@ resourceBody p r = do
     load p r
     Store.Found bd <- Store.get (providerStore p)
         [name, toFilePath r, "body"]
-    maybe (resourceString r) return bd
+    maybe (resourceString p r) return bd
 
 
 --------------------------------------------------------------------------------

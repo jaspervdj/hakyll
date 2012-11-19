@@ -1,28 +1,25 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-module Hakyll.Web.Template.Tests
+module Hakyll.Core.Provider.Tests
     ( tests
     ) where
 
 
 --------------------------------------------------------------------------------
+import qualified Data.Map                       as M
 import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
-import           Test.HUnit                     (Assertion, (@=?))
+import           Test.HUnit                     (Assertion, assert, (@=?))
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Item
 import           Hakyll.Core.Provider
-import           Hakyll.Web.Page
-import           Hakyll.Web.Template
-import           Hakyll.Web.Template.Context
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
 tests :: Test
-tests = testGroup "Hakyll.Core.Template.Tests"
+tests = testGroup "Hakyll.Core.Provider.Tests"
     [ testCase "case01" case01
     ]
 
@@ -31,10 +28,8 @@ tests = testGroup "Hakyll.Core.Template.Tests"
 case01 :: Assertion
 case01 = withTestStore $ \store -> do
     provider <- newTestProvider store
+    assert $ resourceExists provider "example.md"
 
-    out  <- resourceString provider "example.md.out"
-    tpl  <- testCompilerDone store provider "template.html" $ templateCompiler
-    item <- testCompilerDone store provider "example.md"    $
-        pageCompiler >>= applyTemplate (itemBody tpl) defaultContext
-
-    out @=? itemBody item
+    metadata <- resourceMetadata provider "example.md"
+    Just "An example"    @=? M.lookup "title"    metadata
+    Just "External data" @=? M.lookup "external" metadata

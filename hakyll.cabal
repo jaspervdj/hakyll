@@ -40,11 +40,18 @@ Category:     Web
 Cabal-Version: >= 1.8
 Build-Type:    Simple
 Data-Dir:      data
+
 Data-Files:
   templates/atom.xml
   templates/atom-item.xml
   templates/rss.xml
   templates/rss-item.xml
+
+Extra-source-files:
+  tests/data/example.md
+  tests/data/example.md.metadata
+  tests/data/example.md.out
+  tests/data/template.html
 
 Source-Repository head
   Type:     git
@@ -200,19 +207,7 @@ Test-suite hakyll-tests
     unix         >= 2.4    && < 2.7
 
   Other-modules:
-    Hakyll.Web.Util.Html.Tests
-    Hakyll.Web.Urls.Relativize.Tests
-    Hakyll.Web.Urls.Tests
+    Hakyll.Core.Dependencies.Tests
+    Hakyll.Core.Provider.Tests
     Hakyll.Web.Template.Tests
-    Hakyll.Web.Page.Metadata.Tests
-    Hakyll.Web.Page.Tests
-    Hakyll.Core.Compiler.Tests
-    Hakyll.Core.Identifier.Tests
-    Hakyll.Core.Util.Arrow.Tests
-    Hakyll.Core.Util.String.Tests
-    Hakyll.Core.UnixFilter.Tests
-    Hakyll.Core.Routes.Tests
-    Hakyll.Core.Store.Tests
-    Hakyll.Core.Rules.Tests
-    Hakyll.Core.DependencyAnalyzer.Tests
     TestSuite.Util

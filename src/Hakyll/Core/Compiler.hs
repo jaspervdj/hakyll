@@ -81,13 +81,13 @@ getResourceBody = getResourceWith resourceBody
 --------------------------------------------------------------------------------
 -- | Get the resource we are compiling as a string
 getResourceString :: Compiler (Item String)
-getResourceString = getResourceWith $ const resourceString
+getResourceString = getResourceWith resourceString
 
 
 --------------------------------------------------------------------------------
 -- | Get the resource we are compiling as a lazy bytestring
 getResourceLBS :: Compiler (Item ByteString)
-getResourceLBS = getResourceWith $ const resourceLBS
+getResourceLBS = getResourceWith resourceLBS
 
 
 --------------------------------------------------------------------------------

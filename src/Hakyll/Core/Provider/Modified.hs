@@ -15,6 +15,7 @@ import           Data.IORef
 import qualified Data.Map                           as M
 import           Data.Time                          (UTCTime)
 import           System.Directory                   (getModificationTime)
+import           System.FilePath                    ((</>))
 
 
 --------------------------------------------------------------------------------
@@ -28,7 +29,7 @@ import qualified Hakyll.Core.Store                  as Store
 --------------------------------------------------------------------------------
 -- | A resource is modified if it or its metadata has changed
 resourceModified :: Provider -> Identifier -> IO Bool
-resourceModified rp r
+resourceModified p r
     | not exists = return False
     | otherwise  = do
         cache <- readIORef cacheRef
@@ -38,19 +39,20 @@ resourceModified rp r
                 -- Check if the actual file was modified, and do a recursive
                 -- call to check if the metadata file was modified
                 m <- (||)
-                    <$> fileDigestModified store (toFilePath r)
-                    <*> resourceModified rp (resourceMetadataResource r)
+                    <$> fileDigestModified store filePath
+                    <*> resourceModified p (resourceMetadataResource r)
                 modifyIORef cacheRef (M.insert normalized m)
 
                 -- Important! (But ugly)
-                when m $ resourceInvalidateMetadataCache rp r
+                when m $ resourceInvalidateMetadataCache p r
 
                 return m
   where
     normalized = setVersion Nothing r
-    exists     = resourceExists rp r
-    store      = providerStore rp
-    cacheRef   = providerModifiedCache rp
+    exists     = resourceExists p r
+    store      = providerStore p
+    cacheRef   = providerModifiedCache p
+    filePath   = resourceFilePath p r
 
 
 --------------------------------------------------------------------------------
@@ -79,5 +81,6 @@ fileDigest = fmap MD5.hashlazy . BL.readFile
 
 
 --------------------------------------------------------------------------------
-resourceModificationTime :: Identifier -> IO UTCTime
-resourceModificationTime = getModificationTime . toFilePath
+resourceModificationTime :: Provider -> Identifier -> IO UTCTime
+resourceModificationTime p i =
+    getModificationTime $ providerDirectory p </> toFilePath i

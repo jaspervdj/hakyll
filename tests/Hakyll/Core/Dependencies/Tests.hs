@@ -41,9 +41,9 @@ oldFacts = M.fromList
     , ("posts/02.md",
         [])
     , ("index.md",
-        [ Pattern "posts/*" ["posts/01.md", "posts/02.md"]
-        , Identifier "posts/01.md"
-        , Identifier "posts/02.md"
+        [ PatternDependency "posts/*" ["posts/01.md", "posts/02.md"]
+        , IdentifierDependency "posts/01.md"
+        , IdentifierDependency "posts/02.md"
         ])
     ]
 

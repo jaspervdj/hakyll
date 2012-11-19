@@ -25,19 +25,19 @@ import           Hakyll.Core.Util.String
 
 --------------------------------------------------------------------------------
 loadMetadata :: Provider -> Identifier -> IO (Metadata, Maybe String)
-loadMetadata rp identifier = do
+loadMetadata p identifier = do
     hasHeader  <- probablyHasMetadataHeader fp
     (md, body) <- if hasHeader
         then second Just <$> loadMetadataHeader fp
         else return (M.empty, Nothing)
 
-    emd <- if resourceExists rp mi then loadMetadataFile mfp else return M.empty
+    emd <- if resourceExists p mi then loadMetadataFile mfp else return M.empty
 
     return (M.union md emd, body)
   where
-    fp  = toFilePath identifier
+    fp  = resourceFilePath p identifier
     mi  = resourceMetadataResource identifier
-    mfp = toFilePath mi
+    mfp = resourceFilePath p mi
 
 
 --------------------------------------------------------------------------------

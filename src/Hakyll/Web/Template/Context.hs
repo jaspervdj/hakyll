@@ -195,7 +195,9 @@ modificationTimeFieldWith :: TimeLocale  -- ^ Time output locale
                           -> String      -- ^ Format
                           -> Context a   -- ^ Resulting context
 modificationTimeFieldWith locale key fmt = field key $ \i -> do
-    mtime <- compilerUnsafeIO $ resourceModificationTime $ itemIdentifier i
+    provider <- compilerProvider <$> compilerAsk
+    mtime    <- compilerUnsafeIO $
+        resourceModificationTime provider $ itemIdentifier i
     return $ formatTime locale fmt mtime
 
 

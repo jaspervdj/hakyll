@@ -7,32 +7,35 @@ module Hakyll.Core.Provider.Internal
     , resourceExists
     , resourceMetadataResource
 
+    , resourceFilePath
     , resourceString
     , resourceLBS
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative   ((<$>))
-import qualified Data.ByteString.Lazy  as BL
+import           Control.Applicative    ((<$>))
+import qualified Data.ByteString.Lazy   as BL
 import           Data.IORef
-import           Data.Map              (Map)
-import qualified Data.Map              as M
-import           Data.Set              (Set)
-import qualified Data.Set              as S
-import           System.FilePath       (addExtension)
+import           Data.Map               (Map)
+import qualified Data.Map               as M
+import           Data.Set               (Set)
+import qualified Data.Set               as S
+import           System.FilePath        (addExtension, (</>))
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Core.Identifier
 import           Hakyll.Core.Store
 import           Hakyll.Core.Util.File
-import           Hakyll.Core.Identifier
 
 
 --------------------------------------------------------------------------------
 -- | Responsible for retrieving and listing resources
 data Provider = Provider
-    { -- | A list of all files found
+    { -- Top of the provided directory
+      providerDirectory     :: FilePath
+    , -- | A list of all files found
       providerSet           :: Set Identifier
     , -- | Cache keeping track of modified files
       providerModifiedCache :: IORef (Map Identifier Bool)
@@ -49,9 +52,9 @@ newProvider :: Store               -- ^ Store to use
             -> IO Provider         -- ^ Resulting provider
 newProvider store ignore directory = do
     list  <- map fromFilePath . filter (not . ignore) <$>
-        getRecursiveContents False directory
+        getRecursiveContents directory
     cache <- newIORef M.empty
-    return $ Provider (S.fromList list) cache store
+    return $ Provider directory (S.fromList list) cache store
 
 
 --------------------------------------------------------------------------------
@@ -75,12 +78,17 @@ resourceMetadataResource =
 
 
 --------------------------------------------------------------------------------
+resourceFilePath :: Provider -> Identifier -> FilePath
+resourceFilePath p i = providerDirectory p </> toFilePath i
+
+
+--------------------------------------------------------------------------------
 -- | Get the raw body of a resource as string
-resourceString :: Identifier -> IO String
-resourceString = readFile . toFilePath
+resourceString :: Provider -> Identifier -> IO String
+resourceString p i = readFile $ resourceFilePath p i
 
 
 --------------------------------------------------------------------------------
 -- | Get the raw body of a resource of a lazy bytestring
-resourceLBS :: Identifier -> IO BL.ByteString
-resourceLBS = BL.readFile . toFilePath
+resourceLBS :: Provider -> Identifier -> IO BL.ByteString
+resourceLBS p i = BL.readFile $ resourceFilePath p i
