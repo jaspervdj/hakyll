@@ -36,32 +36,9 @@
 --
 -- Because of it's simplicity, these templates can be used for more than HTML:
 -- you could make, for example, CSS or JS templates as well.
---
--- In addition to the native format, Hakyll also supports hamlet templates. For
--- more information on hamlet templates, please refer to:
--- <http://hackage.haskell.org/package/hamlet>. Internally, hamlet templates are
--- converted to hakyll templates -- which means that you can only use variable
--- insertion (and not all hamlet's features).
---
--- This is an example of a valid hamlet template. You should place them in
--- files with a @.hamlet@ extension:
---
--- > !!!
--- > <html>
--- >     <head>
--- >         <meta charset="UTF-8">
--- >         <title> MyAweSomeCompany - #{title}
--- >     <body>
--- >         <h1> MyAweSomeCompany - #{title}
--- >         <div id="navigation">
--- >             <a href="/index.html"> Home
--- >             <a href="/about.html"> About
--- >             <a href="/code.html"> Code
--- >         #{body}
 module Hakyll.Web.Template
     ( Template
     , templateCompiler
-    , templateCompilerWith
     , applyTemplate
     , applyTemplateWith
     ) where
@@ -70,14 +47,10 @@ module Hakyll.Web.Template
 --------------------------------------------------------------------------------
 import           Control.Monad                (forM, liftM)
 import           Prelude                      hiding (id)
-import           System.FilePath              (takeExtension)
-import           Text.Hamlet                  (HamletSettings,
-                                               defaultHamletSettings)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
-import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
@@ -85,25 +58,11 @@ import           Hakyll.Web.Template.Read
 
 
 --------------------------------------------------------------------------------
--- | Read a template. If the extension of the file we're compiling is
--- @.hml@ or @.hamlet@, it will be considered as a Hamlet template, and parsed
--- as such.
+-- | Read a template.
 templateCompiler :: Compiler (Item Template)
-templateCompiler = templateCompilerWith defaultHamletSettings
-
-
---------------------------------------------------------------------------------
--- | Version of 'templateCompiler' that enables custom settings.
-templateCompilerWith :: HamletSettings -> Compiler (Item Template)
-templateCompilerWith settings =
-    cached "Hakyll.Web.Template.templateCompilerWith" $ do
-        identifier <- getUnderlying
-        item       <- getResourceString
-        if takeExtension (toFilePath identifier) `elem` [".hml", ".hamlet"]
-            -- Hamlet template
-            then return $ fmap (readHamletTemplateWith settings) item
-            -- Hakyll template
-            else return $ fmap readTemplate item
+templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
+    item <- getResourceString
+    return $ fmap readTemplate item
 
 
 --------------------------------------------------------------------------------

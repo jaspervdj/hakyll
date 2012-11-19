@@ -50,8 +50,8 @@ Data-Files:
 Extra-source-files:
   tests/data/example.md
   tests/data/example.md.metadata
-  tests/data/example.md.out
   tests/data/template.html
+  tests/data/template.html.out
 
 Source-Repository head
   Type:     git
@@ -82,7 +82,6 @@ Library
     deepseq      >= 1.3    && < 1.4,
     directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
-    hamlet       >= 1.0    && < 1.2,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
     old-locale   >= 1.0    && < 1.1,
@@ -145,8 +144,6 @@ Library
     Hakyll.Core.Provider.Modified
     Hakyll.Core.Rules.Internal
     Hakyll.Web.Template.Internal
-    Hakyll.Web.Template.Read.Hakyll
-    Hakyll.Web.Template.Read.Hamlet
     Paths_hakyll
 
   If flag(previewServer)
@@ -191,7 +188,6 @@ Test-suite hakyll-tests
     deepseq      >= 1.3    && < 1.4,
     directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
-    hamlet       >= 1.0    && < 1.2,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
     old-locale   >= 1.0    && < 1.1,

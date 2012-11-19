@@ -4,6 +4,7 @@ module Hakyll.Web.Template.Context
     , mapContext
     , field
     , constField
+    , functionField
 
     , defaultContext
     , bodyField
@@ -68,6 +69,15 @@ field key value = Context $ \k i -> if k == key then value i else empty
 --------------------------------------------------------------------------------
 constField :: String -> String -> Context a
 constField key = field key . const . return
+
+
+--------------------------------------------------------------------------------
+functionField :: String -> ([String] -> Item a -> Compiler String) -> Context a
+functionField name value = Context $ \k i -> case words k of
+    []              -> empty
+    (n : args)
+        | n == name -> value args i
+        | otherwise -> empty
 
 
 --------------------------------------------------------------------------------

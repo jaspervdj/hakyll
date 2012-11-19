@@ -6,6 +6,7 @@ module Hakyll.Web.Template.Tests
 
 
 --------------------------------------------------------------------------------
+import           Data.Monoid                    (mconcat)
 import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
 import           Test.HUnit                     (Assertion, (@=?))
@@ -32,9 +33,17 @@ case01 :: Assertion
 case01 = withTestStore $ \store -> do
     provider <- newTestProvider store
 
-    out  <- resourceString provider "example.md.out"
+    out  <- resourceString provider "template.html.out"
     tpl  <- testCompilerDone store provider "template.html" $ templateCompiler
     item <- testCompilerDone store provider "example.md"    $
-        pageCompiler >>= applyTemplate (itemBody tpl) defaultContext
+        pageCompiler >>= applyTemplate (itemBody tpl) testContext
 
     out @=? itemBody item
+
+
+--------------------------------------------------------------------------------
+testContext :: Context String
+testContext = mconcat
+    [ functionField "echo" (\args _ -> return $ unwords args)
+    , defaultContext
+    ]

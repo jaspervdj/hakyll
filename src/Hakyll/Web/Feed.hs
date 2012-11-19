@@ -24,8 +24,8 @@ module Hakyll.Web.Feed
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                   (forM, (<=<))
-import           Data.Monoid                     (mconcat)
+import           Control.Monad                 (forM, (<=<))
+import           Data.Monoid                   (mconcat)
 
 
 --------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
-import           Hakyll.Web.Template.Read.Hakyll (readTemplate)
+import           Hakyll.Web.Template.Read
 
 
 --------------------------------------------------------------------------------
