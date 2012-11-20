@@ -7,6 +7,10 @@ module Hakyll.Core.Provider.MetadataCache
 
 
 --------------------------------------------------------------------------------
+import qualified Data.Map                      as M
+
+
+--------------------------------------------------------------------------------
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
@@ -16,11 +20,13 @@ import qualified Hakyll.Core.Store             as Store
 
 --------------------------------------------------------------------------------
 resourceMetadata :: Provider -> Identifier -> IO Metadata
-resourceMetadata p r = do
-    load p r
-    Store.Found md <- Store.get (providerStore p)
-        [name, toFilePath r, "metadata"]
-    return md
+resourceMetadata p r
+    | not (resourceExists p r) = return M.empty
+    | otherwise                = do
+        load p r
+        Store.Found md <- Store.get (providerStore p)
+            [name, toFilePath r, "metadata"]
+        return md
 
 
 --------------------------------------------------------------------------------

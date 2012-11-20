@@ -33,3 +33,6 @@ case01 = withTestStore $ \store -> do
     metadata <- resourceMetadata provider "example.md"
     Just "An example"    @=? M.lookup "title"    metadata
     Just "External data" @=? M.lookup "external" metadata
+
+    doesntExist <- resourceMetadata provider "doesntexist.md"
+    M.empty @=? doesntExist

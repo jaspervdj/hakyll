@@ -117,14 +117,13 @@ Library
     Hakyll.Web.CompressCss
     Hakyll.Web.Feed
     Hakyll.Web.Page
-    -- Hakyll.Web.Page.List
-    Hakyll.Web.Page.Metadata
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.Biblio
     Hakyll.Web.Pandoc.FileType
     -- Hakyll.Web.Tags
     Hakyll.Web.Template
     Hakyll.Web.Template.Context
+    Hakyll.Web.Template.List
     Hakyll.Web.Template.Read
     Hakyll.Web.Urls
     Hakyll.Web.Urls.Relativize
