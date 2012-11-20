@@ -24,7 +24,7 @@ module Hakyll.Web.Feed
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                 (forM, (<=<))
+import           Control.Monad                 ((<=<))
 import           Data.Monoid                   (mconcat)
 
 
@@ -34,6 +34,7 @@ import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
+import           Hakyll.Web.Template.List
 import           Hakyll.Web.Template.Read
 
 
@@ -69,8 +70,7 @@ renderFeed feedPath itemPath config itemContext items = do
     feedTpl <- compilerUnsafeIO $ loadTemplate feedPath
     itemTpl <- compilerUnsafeIO $ loadTemplate itemPath
 
-    items' <- forM items $ applyTemplate itemTpl itemContext'
-    body   <- makeItem $ concat $ map itemBody items'
+    body <- makeItem =<< applyTemplateList itemTpl itemContext' items
     applyTemplate feedTpl feedContext body
   where
     -- Auxiliary: load a template from a datafile
