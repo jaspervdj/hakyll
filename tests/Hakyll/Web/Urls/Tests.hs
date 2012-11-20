@@ -1,17 +1,23 @@
+--------------------------------------------------------------------------------
 module Hakyll.Web.Urls.Tests
     ( tests
     ) where
 
-import Data.Char (toUpper)
 
-import Test.Framework
-import Test.HUnit hiding (Test)
+--------------------------------------------------------------------------------
+import           Data.Char       (toUpper)
+import           Test.Framework  (Test, testGroup)
+import           Test.HUnit      (assert, (@=?))
 
-import Hakyll.Web.Urls
-import TestSuite.Util
 
-tests :: [Test]
-tests = concat
+--------------------------------------------------------------------------------
+import           Hakyll.Web.Urls
+import           TestSuite.Util
+
+
+--------------------------------------------------------------------------------
+tests :: Test
+tests = testGroup "Hakyll.Web.Urls.Tests" $ concat
     [ fromAssertions "withUrls"
         [ "<a href=\"FOO\">bar</a>" @=?
             withUrls (map toUpper) "<a href=\"foo\">bar</a>"
@@ -26,17 +32,20 @@ tests = concat
         , "<style>body > p { line-height: 1.3 }</style>" @=?
             withUrls id "<style>body > p { line-height: 1.3 }</style>"
         ]
+
     , fromAssertions "toUrl"
         [ "/foo/bar.html"    @=? toUrl "foo/bar.html"
         , "/"                @=? toUrl "/"
         , "/funny-pics.html" @=? toUrl "/funny-pics.html"
         ]
+
     , fromAssertions "toSiteRoot"
         [ ".."    @=? toSiteRoot "/foo/bar.html"
         , "."     @=? toSiteRoot "index.html"
         , "."     @=? toSiteRoot "/index.html"
         , "../.." @=? toSiteRoot "foo/bar/qux"
         ]
+
     , fromAssertions "isExternal"
         [ assert (isExternal "http://reddit.com")
         , assert (isExternal "https://mail.google.com")

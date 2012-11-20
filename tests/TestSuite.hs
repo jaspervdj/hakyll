@@ -15,6 +15,8 @@ import qualified Hakyll.Core.Provider.Tests
 import qualified Hakyll.Core.Store.Tests
 import qualified Hakyll.Core.UnixFilter.Tests
 import qualified Hakyll.Web.Template.Tests
+import qualified Hakyll.Web.Urls.Tests
+import qualified Hakyll.Web.Urls.Relativize.Tests
 
 
 --------------------------------------------------------------------------------
@@ -26,4 +28,6 @@ main = defaultMain
     , Hakyll.Core.Store.Tests.tests
     , Hakyll.Core.UnixFilter.Tests.tests
     , Hakyll.Web.Template.Tests.tests
+    , Hakyll.Web.Urls.Tests.tests
+    , Hakyll.Web.Urls.Relativize.Tests.tests
     ]

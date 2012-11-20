@@ -17,6 +17,7 @@ import           System.Directory               (removeDirectoryRecursive)
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit                     hiding (Test)
+import           Text.Printf                    (printf)
 
 
 --------------------------------------------------------------------------------
@@ -32,9 +33,8 @@ import qualified Hakyll.Core.Store              as Store
 fromAssertions :: String       -- ^ Name
                -> [Assertion]  -- ^ Cases
                -> [Test]       -- ^ Result tests
-fromAssertions name = zipWith testCase names
-  where
-    names = map (\n -> name ++ " [" ++ show n ++ "]") [1 :: Int ..]
+fromAssertions name =
+    zipWith testCase [printf "%s [%3d]" name n | n <- [1 :: Int ..]]
 
 
 --------------------------------------------------------------------------------

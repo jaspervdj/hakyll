@@ -6,26 +6,23 @@ module Hakyll.Core.Dependencies.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.List                      (delete)
-import qualified Data.Map                       as M
-import qualified Data.Set                       as S
-import           Test.Framework                 (Test, testGroup)
-import           Test.Framework.Providers.HUnit (testCase)
-import           Test.HUnit                     (Assertion, (@=?))
+import           Data.List                (delete)
+import qualified Data.Map                 as M
+import qualified Data.Set                 as S
+import           Test.Framework           (Test, testGroup)
+import           Test.HUnit               (Assertion, (@=?))
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
+import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
 tests :: Test
-tests = testGroup "Hakyll.Core.Dependencies.Tests"
-    [ testCase "case01" case01
-    , testCase "case02" case02
-    , testCase "case03" case03
-    ]
+tests = testGroup "Hakyll.Core.Dependencies.Tests" $
+    fromAssertions "analyze" [case01, case02, case03]
 
 
 --------------------------------------------------------------------------------

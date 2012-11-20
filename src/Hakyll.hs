@@ -13,7 +13,6 @@ module Hakyll
 #ifdef UNIX_FILTER
     , module Hakyll.Core.UnixFilter
 #endif
-    , module Hakyll.Core.Util.Arrow
     , module Hakyll.Core.Util.File
     , module Hakyll.Core.Util.String
     , module Hakyll.Core.Writable
@@ -46,7 +45,6 @@ import Hakyll.Core.Rules
 #ifdef UNIX_FILTER
 import Hakyll.Core.UnixFilter
 #endif
-import Hakyll.Core.Util.Arrow
 import Hakyll.Core.Util.File
 import Hakyll.Core.Util.String
 import Hakyll.Core.Writable

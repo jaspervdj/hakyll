@@ -109,7 +109,6 @@ Library
     Hakyll.Core.Rules
     Hakyll.Core.Runtime
     Hakyll.Core.Store
-    Hakyll.Core.Util.Arrow
     Hakyll.Core.Util.File
     Hakyll.Core.Util.String
     Hakyll.Core.Writable
