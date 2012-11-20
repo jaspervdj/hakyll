@@ -5,6 +5,7 @@
 module Hakyll.Core.Item
     ( Item (..)
     , itemSetBody
+    , itemM
     ) where
 
 
@@ -39,3 +40,8 @@ instance Binary a => Binary (Item a) where
 --------------------------------------------------------------------------------
 itemSetBody :: a -> Item b -> Item a
 itemSetBody x (Item i _) = Item i x
+
+
+--------------------------------------------------------------------------------
+itemM :: Monad m => (a -> m b) -> Item a -> m (Item b)
+itemM f (Item i b) = f b >>= \b' -> return (Item i b')

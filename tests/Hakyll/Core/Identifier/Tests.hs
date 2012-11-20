@@ -1,21 +1,30 @@
+--------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 module Hakyll.Core.Identifier.Tests
     ( tests
     ) where
 
-import Test.Framework
-import Test.HUnit hiding (Test)
 
-import Hakyll.Core.Identifier
-import Hakyll.Core.Identifier.Pattern
-import TestSuite.Util
+--------------------------------------------------------------------------------
+import           Test.Framework                 (Test, testGroup)
+import           Test.HUnit                     ((@=?))
 
-tests :: [Test]
-tests = concat
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Identifier.Pattern
+import           TestSuite.Util
+
+
+--------------------------------------------------------------------------------
+tests :: Test
+tests = testGroup "Hakyll.Core.Identifier.Tests" $ concat
     [ captureTests
     , matchesTests
     ]
 
+
+--------------------------------------------------------------------------------
 captureTests :: [Test]
 captureTests = fromAssertions "capture"
     [ Just ["bar"]              @=? capture "foo/**" "foo/bar"
@@ -35,12 +44,15 @@ captureTests = fromAssertions "capture"
     , Nothing                   @=? capture "\\*.jpg" "foo.jpg"
     ]
 
+
+--------------------------------------------------------------------------------
 matchesTests :: [Test]
 matchesTests = fromAssertions "matches"
-    [ True  @=? matches (list ["foo.markdown"]) "foo.markdown"
-    , False @=? matches (list ["foo"]) (Identifier (Just "foo") "foo")
-    , True  @=? matches (regex "^foo/[^x]*$") "foo/bar"
-    , False @=? matches (regex "^foo/[^x]*$") "foo/barx"
+    [ True  @=? matches (fromList ["foo.markdown"]) "foo.markdown"
+    , False @=? matches (fromList ["foo"]) (setVersion (Just "x") "foo")
+    , True  @=? matches (fromVersion (Just "xz")) (setVersion (Just "xz") "bar")
+    , True  @=? matches (fromRegex "^foo/[^x]*$") "foo/bar"
+    , False @=? matches (fromRegex "^foo/[^x]*$") "foo/barx"
     , True  @=? matches (complement "foo.markdown") "bar.markdown"
     , False @=? matches (complement "foo.markdown") "foo.markdown"
     ]

@@ -2,6 +2,8 @@
 -- | Test utilities
 module TestSuite.Util
     ( fromAssertions
+    , newTestStore
+    , cleanTestStore
     , withTestStore
     , newTestProvider
     , testCompiler
@@ -36,11 +38,21 @@ fromAssertions name = zipWith testCase names
 
 
 --------------------------------------------------------------------------------
+newTestStore :: IO Store
+newTestStore = Store.new True "_teststore"
+
+
+--------------------------------------------------------------------------------
+cleanTestStore :: IO ()
+cleanTestStore = removeDirectoryRecursive "_teststore"
+
+
+--------------------------------------------------------------------------------
 withTestStore :: (Store -> IO a) -> IO a
 withTestStore f = do
-    store  <- Store.new True "_teststore"
+    store  <- newTestStore
     result <- f store
-    removeDirectoryRecursive "_teststore"
+    cleanTestStore
     return result
 
 
