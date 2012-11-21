@@ -18,6 +18,9 @@ data Configuration = Configuration
       destinationDirectory :: FilePath
     , -- | Directory where hakyll's internal store is kept
       storeDirectory       :: FilePath
+    , -- | Directory where hakyll finds the files to compile. This is @.@ by
+      -- default.
+      providerDirectory    :: FilePath
     , -- | Function to determine ignored files
       --
       -- In 'defaultHakyllConfiguration', the following files are ignored:
@@ -58,6 +61,7 @@ defaultConfiguration :: Configuration
 defaultConfiguration = Configuration
     { destinationDirectory = "_site"
     , storeDirectory       = "_cache"
+    , providerDirectory    = "."
     , ignoreFile           = ignoreFile'
     , deployCommand        = "echo 'No deploy command specified'"
     , inMemoryCache        = True

@@ -200,6 +200,12 @@ Test-suite hakyll-tests
 
   Other-modules:
     Hakyll.Core.Dependencies.Tests
+    Hakyll.Core.Identifier.Tests
     Hakyll.Core.Provider.Tests
+    Hakyll.Core.Runtime.Tests
+    Hakyll.Core.Store.Tests
+    Hakyll.Core.UnixFilter.Tests
     Hakyll.Web.Template.Tests
+    Hakyll.Web.Urls.Tests
+    Hakyll.Web.Urls.Relativize.Tests
     TestSuite.Util

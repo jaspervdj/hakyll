@@ -42,15 +42,14 @@ import           Hakyll.Core.Writable
 
 --------------------------------------------------------------------------------
 run :: Configuration -> Rules a -> IO RuleSet
-run configuration rules = do
+run config rules = do
     -- Initialization
     logger <- Logger.new Logger.Debug putStrLn
     Logger.header logger "Initialising..."
     Logger.message logger "Creating store..."
-    store  <- Store.new (inMemoryCache configuration) $
-        storeDirectory configuration
+    store <- Store.new (inMemoryCache config) $ storeDirectory config
     Logger.message logger "Creating provider..."
-    provider <- newProvider store (ignoreFile configuration) "."
+    provider <- newProvider store (ignoreFile config) $ providerDirectory config
     Logger.message logger "Running rules..."
     ruleSet  <- runRules rules provider
 
@@ -62,7 +61,7 @@ run configuration rules = do
     -- Build runtime read/state
     let compilers = rulesCompilers ruleSet
         read'     = RuntimeRead
-            { runtimeConfiguration = configuration
+            { runtimeConfiguration = config
             , runtimeLogger        = logger
             , runtimeProvider      = provider
             , runtimeStore         = store

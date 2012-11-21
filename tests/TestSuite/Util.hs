@@ -8,6 +8,7 @@ module TestSuite.Util
     , newTestProvider
     , testCompiler
     , testCompilerDone
+    , withTestConfiguration
     ) where
 
 
@@ -22,6 +23,7 @@ import           Text.Printf                    (printf)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler.Internal
+import           Hakyll.Core.Configuration
 import           Hakyll.Core.Identifier
 import qualified Hakyll.Core.Logger             as Logger
 import           Hakyll.Core.Provider
@@ -92,3 +94,19 @@ testCompilerDone store provider underlying compiler = do
         CompilerRequire i _ -> error $
             "TestSuite.Util.testCompilerDone: compiler " ++ show underlying ++
             " requires: " ++ show i
+
+
+
+--------------------------------------------------------------------------------
+withTestConfiguration :: (Configuration -> IO a) -> IO a
+withTestConfiguration f = do
+    x <- f config
+    removeDirectoryRecursive $ destinationDirectory config
+    removeDirectoryRecursive $ storeDirectory config
+    return x
+  where
+    config = defaultConfiguration
+        { destinationDirectory = "_testsite"
+        , storeDirectory       = "_teststore"
+        , providerDirectory    = "tests/data"
+        }
