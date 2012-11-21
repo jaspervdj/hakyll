@@ -8,8 +8,12 @@ module Hakyll.Core.Configuration
 
 
 --------------------------------------------------------------------------------
-import           Data.List       (isPrefixOf, isSuffixOf)
-import           System.FilePath (takeFileName)
+import           Data.List          (isPrefixOf, isSuffixOf)
+import           System.FilePath    (takeFileName)
+
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Logger
 
 
 --------------------------------------------------------------------------------
@@ -52,6 +56,8 @@ data Configuration = Configuration
     , -- | Use an in-memory cache for items. This is faster but uses more
       -- memory.
       inMemoryCache        :: Bool
+      -- | Verbosity for the logger
+    , verbosity            :: Verbosity
     }
 
 
@@ -65,6 +71,7 @@ defaultConfiguration = Configuration
     , ignoreFile           = ignoreFile'
     , deployCommand        = "echo 'No deploy command specified'"
     , inMemoryCache        = True
+    , verbosity            = Message
     }
   where
     ignoreFile' path
