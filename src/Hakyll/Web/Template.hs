@@ -40,6 +40,8 @@ module Hakyll.Web.Template
     ( Template
     , templateCompiler
     , applyTemplate
+    , requireApplyTemplate
+    , applySelf
     , applyTemplateWith
     ) where
 
@@ -51,6 +53,7 @@ import           Prelude                      hiding (id)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
@@ -77,6 +80,39 @@ applyTemplate tpl context item = do
 
 
 --------------------------------------------------------------------------------
+-- | The following pattern is so common:
+--
+-- > tpl <- requireBody "templates/foo.html"
+-- > someCompiler
+-- >     >>= applyTemplate tpl context
+--
+-- That we have a single function which does this:
+--
+-- > someCompiler
+-- >     >>= requireApplyTemplate "templates/foo.html" context
+requireApplyTemplate :: Identifier              -- ^ Template identifier
+                     -> Context a               -- ^ Context
+                     -> Item a                  -- ^ Page
+                     -> Compiler (Item String)  -- ^ Resulting item
+requireApplyTemplate identifier context item = do
+    tpl <- requireBody identifier
+    applyTemplate tpl context item
+
+
+--------------------------------------------------------------------------------
+-- | It is also possible that you want to substitute @$key$@s within the body of
+-- an item. This function does that by interpreting the item body as a template,
+-- and then applying it to itself.
+applySelf :: Context String          -- ^ Context
+          -> Item String             -- ^ Item and template
+          -> Compiler (Item String)  -- ^ Resulting item
+applySelf context item =
+    let tpl = readTemplate $ itemBody item
+    in applyTemplate tpl context item
+
+
+--------------------------------------------------------------------------------
+-- | Overloaded apply template function to work in an arbitrary Monad.
 applyTemplateWith :: Monad m
                   => (String -> a -> m String)
                   -> Template -> a -> m String
