@@ -1,4 +1,4 @@
--- TODO: port
+--------------------------------------------------------------------------------
 -- | Module containing some specialized functions to deal with tags.
 -- This Module follows certain conventions. My advice is to stick with them if
 -- possible.
@@ -20,117 +20,131 @@
 -- is to place pages in subdirectories.
 --
 -- An example, the page @posts\/coding\/2010-01-28-hakyll-categories.markdown@
--- Tags or categories are read using the @readTags@ and @readCategory@
+-- Tags or categories are read using the @buildTags@ and @buildCategory@
 -- functions. This module only provides functions to work with tags:
 -- categories are represented as tags. This is perfectly possible: categories
 -- only have an additional restriction that a page can only have one category
 -- (instead of multiple tags).
---
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, Arrows #-}
+{-# LANGUAGE Arrows                     #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
 module Hakyll.Web.Tags
     ( Tags (..)
     , getTags
-    , readTagsWith
-    , readTags
-    , readCategory
+    , buildTagsWith
+    , buildTags
+    , buildCategory
     , renderTagCloud
     , renderTagList
-    , renderTagsField
-    , renderTagsFieldWith
-    , renderCategoryField
+    , tagsField
+    , categoryField
     , sortTagsBy
     , caseInsensitiveTags
     ) where
 
-import Prelude hiding (id)
-import Control.Category (id)
-import Control.Applicative ((<$>))
-import Data.Char (toLower)
-import Data.Ord (comparing)
-import qualified Data.Map as M
-import Data.List (intersperse, intercalate, sortBy)
-import Control.Arrow (arr, (&&&), (>>>), (***), (<<^), returnA)
-import Data.Maybe (catMaybes, fromMaybe)
-import Data.Monoid (mconcat)
 
-import Data.Typeable (Typeable)
-import Data.Binary (Binary, get, put)
-import Text.Blaze.Html.Renderer.String (renderHtml)
-import Text.Blaze.Html ((!), toHtml, toValue)
-import qualified Text.Blaze.Html5 as H
-import qualified Text.Blaze.Html5.Attributes as A
+--------------------------------------------------------------------------------
+import           Control.Arrow                   ((&&&))
+import           Control.Monad                   (foldM, forM)
+import           Data.Binary                     (Binary)
+import           Data.Char                       (toLower)
+import           Data.List                       (intercalate, intersperse,
+                                                  sortBy)
+import qualified Data.Map                        as M
+import           Data.Maybe                      (catMaybes, fromMaybe)
+import           Data.Monoid                     (mconcat)
+import           Data.Ord                        (comparing)
+import           Data.Typeable                   (Typeable)
+import           System.FilePath                 (takeBaseName, takeDirectory)
+import           Text.Blaze.Html                 (toHtml, toValue, (!))
+import           Text.Blaze.Html.Renderer.String (renderHtml)
+import qualified Text.Blaze.Html5                as H
+import qualified Text.Blaze.Html5.Attributes     as A
 
-import Hakyll.Web.Page
-import Hakyll.Web.Page.Metadata
-import Hakyll.Web.Urls
-import Hakyll.Core.Writable
-import Hakyll.Core.Identifier
-import Hakyll.Core.Compiler
-import Hakyll.Core.Util.Arrow
-import Hakyll.Core.Util.String
 
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
+import           Hakyll.Core.Metadata
+import           Hakyll.Core.Util.String
+import           Hakyll.Core.Writable
+import           Hakyll.Web.Template.Context
+import           Hakyll.Web.Urls
+
+
+--------------------------------------------------------------------------------
 -- | Data about tags
---
-data Tags a = Tags
-    { tagsMap :: [(String, [Page a])]
-    } deriving (Show, Typeable)
+-- TODO Make this a map instead of a list?
+newtype Tags = Tags
+    { unTags :: [(String, [Identifier])]
+    } deriving (Binary, Show, Typeable)
 
-instance Binary a => Binary (Tags a) where
-    get = Tags <$> get
-    put (Tags m) = put m
 
-instance Writable (Tags a) where
+--------------------------------------------------------------------------------
+instance Writable Tags where
     write _ _ = return ()
 
+
+--------------------------------------------------------------------------------
 -- | Obtain tags from a page in the default way: parse them from the @tags@
 -- metadata field.
---
-getTags :: Page a -> [String]
-getTags = map trim . splitAll "," . getField "tags"
+getTags :: MonadMetadata m => Identifier -> m [String]
+getTags identifier = do
+    metadata <- getMetadata identifier
+    return $ maybe [] (map trim . splitAll ",") $ M.lookup "tags" metadata
 
--- | Obtain categories from a page
---
-getCategory :: Page a -> [String]
-getCategory = return . getField "category"
+--------------------------------------------------------------------------------
+-- | Obtain categories from a page.
+getCategory :: MonadMetadata m => Identifier -> m [String]
+getCategory = return . return . takeBaseName . takeDirectory . toFilePath
 
+
+--------------------------------------------------------------------------------
 -- | Higher-level function to read tags
---
-readTagsWith :: (Page a -> [String])  -- ^ Function extracting tags from a page
-             -> [Page a]              -- ^ Pages
-             -> Tags a                -- ^ Resulting tags
-readTagsWith f pages = Tags
-    { tagsMap = M.toList $
-        foldl (M.unionWith (++)) M.empty (map readTagsWith' pages)
-    }
+buildTagsWith :: MonadMetadata m
+              => (Identifier -> m [String]) -> [Identifier] -> m Tags
+buildTagsWith f ids = do
+    tagMap <- foldM addTags M.empty ids
+    return $ Tags $ M.toList tagMap
   where
     -- Create a tag map for one page
-    readTagsWith' page =
-        let tags = f page
-        in M.fromList $ zip tags $ repeat [page]
+    addTags tagMap id' = do
+        tags <- f id'
+        let tagMap' = M.fromList $ zip tags $ repeat [id']
+        return $ M.unionWith (++) tagMap tagMap'
 
+--------------------------------------------------------------------------------
 -- | Read a tagmap using the @tags@ metadata field
---
-readTags :: [Page a] -> Tags a
-readTags = readTagsWith getTags
+-- TODO: Should use pattern
+buildTags :: MonadMetadata m => [Identifier] -> m Tags
+buildTags = buildTagsWith getTags
 
+
+--------------------------------------------------------------------------------
 -- | Read a tagmap using the @category@ metadata field
---
-readCategory :: [Page a] -> Tags a
-readCategory = readTagsWith getCategory
+-- TODO: Should use pattern
+buildCategory :: MonadMetadata m => [Identifier] -> m Tags
+buildCategory = buildTagsWith getCategory
 
+
+--------------------------------------------------------------------------------
 -- | Render tags in HTML
---
-renderTags :: (String -> Identifier (Page a))
-           -- ^ Produce a link
+renderTags :: (String -> Identifier)
+           -- ^ Produce a tag page id
            -> (String -> String -> Int -> Int -> Int -> String)
            -- ^ Produce a tag item: tag, url, count, min count, max count
            -> ([String] -> String)
            -- ^ Join items
-           -> Compiler (Tags a) String
+           -> Tags
            -- ^ Tag cloud renderer
-renderTags makeUrl makeItem concatItems = proc (Tags tags) -> do
+           -> Compiler String
+renderTags makeTagId makeHtml concatHtml (Tags tags) = do
     -- In tags' we create a list: [((tag, route), count)]
-    tags' <- mapA ((id &&& (getRouteFor <<^ makeUrl)) *** arr length) -< tags
+    tags' <- forM tags $ \(tag, ids) -> do
+        route <- getRoute $ makeTagId tag
+        return ((tag, route), length ids)
 
     let -- Absolute frequencies of the pages
         freqs = map snd tags'
@@ -138,27 +152,31 @@ renderTags makeUrl makeItem concatItems = proc (Tags tags) -> do
         -- The minimum and maximum count found
         (min', max')
             | null freqs = (0, 1)
-            | otherwise = (minimum &&& maximum) freqs
+            | otherwise  = (minimum &&& maximum) freqs
 
         -- Create a link for one item
-        makeItem' ((tag, url), count) =
-            makeItem tag (toUrl $ fromMaybe "/" url) count min' max'
+        makeHtml' ((tag, url), count) =
+            makeHtml tag (toUrl $ fromMaybe "/" url) count min' max'
 
     -- Render and return the HTML
-    returnA -< concatItems $ map makeItem' tags'
+    return $ concatHtml $ map makeHtml' tags'
 
+
+--------------------------------------------------------------------------------
 -- | Render a tag cloud in HTML
---
-renderTagCloud :: (String -> Identifier (Page a))
+-- TODO: Maybe produce a Context here
+renderTagCloud :: (String -> Identifier)
                -- ^ Produce a link for a tag
                -> Double
                -- ^ Smallest font size, in percent
                -> Double
                -- ^ Biggest font size, in percent
-               -> Compiler (Tags a) String
-               -- ^ Tag cloud renderer
-renderTagCloud makeUrl minSize maxSize =
-    renderTags makeUrl makeLink (intercalate " ")
+               -> Tags
+               -- ^ Input tags
+               -> Compiler String
+               -- ^ Rendered cloud
+renderTagCloud makeTagId minSize maxSize =
+    renderTags makeTagId makeLink (intercalate " ")
   where
     makeLink tag url count min' max' = renderHtml $
         H.a ! A.style (toValue $ "font-size: " ++ size count min' max')
@@ -172,61 +190,67 @@ renderTagCloud makeUrl minSize maxSize =
             size' = floor $ minSize + relative * (maxSize - minSize)
         in show (size' :: Int) ++ "%"
 
+
+--------------------------------------------------------------------------------
 -- | Render a simple tag list in HTML, with the tag count next to the item
---
-renderTagList :: (String -> Identifier (Page a)) -> Compiler (Tags a) (String)
-renderTagList makeUrl = renderTags makeUrl makeLink (intercalate ", ")
+-- TODO: Maybe produce a Context here
+renderTagList :: (String -> Identifier) -> Tags -> Compiler (String)
+renderTagList makeTagId = renderTags makeTagId makeLink (intercalate ", ")
   where
     makeLink tag url count _ _ = renderHtml $
         H.a ! A.href (toValue url) $ toHtml (tag ++ " (" ++ show count ++ ")")
 
+
+--------------------------------------------------------------------------------
 -- | Render tags with links with custom function to get tags. It is typically
 -- together with 'getTags' like this:
--- 
+--
 -- > renderTagsFieldWith (customFunction . getTags)
 -- >     "tags" (fromCapture "tags/*")
---
-renderTagsFieldWith :: (Page a -> [String])        -- ^ Function to get the tags
-                    -> String                      -- ^ Destination key
-                    -> (String -> Identifier a)    -- ^ Create a link for a tag
-                    -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
-renderTagsFieldWith tags destination makeUrl =
-    id &&& arr tags >>> setFieldA destination renderTags'
-  where
-    -- Compiler creating a comma-separated HTML string for a list of tags
-    renderTags' :: Compiler [String] String
-    renderTags' =   arr (map $ id &&& makeUrl)
-                >>> mapA (id *** getRouteFor)
-                >>> arr (map $ uncurry renderLink)
-                >>> arr (renderHtml . mconcat . intersperse ", " . catMaybes)
+tagsFieldWith :: (Identifier -> Compiler [String])  -- ^ Get the tags
+              -> String                             -- ^ Destination key
+              -> (String -> Identifier)             -- ^ Create a link for a tag
+              -> Context a                          -- ^ Resulting context
+tagsFieldWith getTags' key makeTagId = field key $ \item -> do
+    tags  <- getTags' $ itemIdentifier item
+    links <- forM tags $ \tag -> do
+        route <- getRoute $ makeTagId tag
+        return $ renderLink tag route
 
+    return $ renderHtml $ mconcat $ intersperse ", " $ catMaybes $ links
+  where
     -- Render one tag link
     renderLink _   Nothing         = Nothing
     renderLink tag (Just filePath) = Just $
         H.a ! A.href (toValue $ toUrl filePath) $ toHtml tag
 
+
+--------------------------------------------------------------------------------
 -- | Render tags with links
---
-renderTagsField :: String                      -- ^ Destination key
-                -> (String -> Identifier a)    -- ^ Create a link for a tag
-                -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
-renderTagsField = renderTagsFieldWith getTags
+tagsField :: String                  -- ^ Destination key
+          -> (String -> Identifier)  -- ^ Create a link for a tag
+          -> Context a               -- ^ Context
+tagsField = tagsFieldWith getTags
 
+
+--------------------------------------------------------------------------------
 -- | Render the category in a link
---
-renderCategoryField :: String                      -- ^ Destination key
-                    -> (String -> Identifier a)    -- ^ Create a category link
-                    -> Compiler (Page a) (Page a)  -- ^ Resulting compiler
-renderCategoryField = renderTagsFieldWith getCategory
+categoryField :: String                  -- ^ Destination key
+              -> (String -> Identifier)  -- ^ Create a category link
+              -> Context a               -- ^ Context
+categoryField = tagsFieldWith getCategory
 
+
+--------------------------------------------------------------------------------
 -- | Sort tags using supplied function. First element of the tuple passed to
 -- the comparing function is the actual tag name.
---
-sortTagsBy :: ((String, [Page a]) -> (String, [Page a]) -> Ordering)
-           -> Compiler (Tags a) (Tags a)
-sortTagsBy f = arr $ Tags . sortBy f . tagsMap
+sortTagsBy :: ((String, [Identifier]) -> (String, [Identifier]) -> Ordering)
+           -> Tags -> Tags
+sortTagsBy f = Tags . sortBy f . unTags
 
+
+--------------------------------------------------------------------------------
 -- | Sample sorting function that compares tags case insensitively.
---
-caseInsensitiveTags :: (String, [Page a]) -> (String, [Page a]) -> Ordering
+caseInsensitiveTags :: (String, [Identifier]) -> (String, [Identifier])
+                    -> Ordering
 caseInsensitiveTags = comparing $ map toLower . fst

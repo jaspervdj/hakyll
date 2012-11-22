@@ -11,7 +11,6 @@ module Hakyll.Web.Template.Context
     , metadataField
     , urlField
     , pathField
-    , categoryField
     , titleField
     , dateField
     , dateFieldWith
@@ -88,7 +87,6 @@ defaultContext =
     metadataField            `mappend`
     urlField      "url"      `mappend`
     pathField     "path"     `mappend`
-    categoryField "category" `mappend`
     titleField    "title"    `mappend`
     missingField
 
@@ -114,11 +112,6 @@ urlField key = field key $
 --------------------------------------------------------------------------------
 pathField :: String -> Context a
 pathField key = field key $ return . toFilePath . itemIdentifier
-
-
---------------------------------------------------------------------------------
-categoryField :: String -> Context a
-categoryField key = mapContext (takeBaseName . takeDirectory) $ pathField key
 
 
 --------------------------------------------------------------------------------
