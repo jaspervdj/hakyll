@@ -25,16 +25,18 @@ module Hakyll.Core.Compiler.Internal
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative          (Alternative (..),
-                                               Applicative (..))
-import           Control.Exception            (SomeException, handle)
-import           Data.Monoid                  (Monoid (..))
+import           Control.Applicative            (Alternative (..),
+                                                 Applicative (..), (<$>))
+import           Control.Exception              (SomeException, handle)
+import           Data.Monoid                    (Monoid (..))
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Logger
+import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Store
@@ -128,6 +130,12 @@ instance Applicative Compiler where
 
 
 --------------------------------------------------------------------------------
+instance MonadMetadata Compiler where
+    getMetadata = compilerGetMetadata
+    getMatches  = compilerGetMatches
+
+
+--------------------------------------------------------------------------------
 runCompiler :: Compiler a -> CompilerRead -> IO (CompilerResult a)
 runCompiler compiler read' = handle handler $ unCompiler compiler read'
   where
@@ -195,3 +203,20 @@ compilerTellDependencies ds = compilerTell mempty {compilerDependencies = ds}
 compilerTellCacheHits :: Int -> Compiler ()
 compilerTellCacheHits ch = compilerTell mempty {compilerCacheHits = ch}
 {-# INLINE compilerTellCacheHits #-}
+
+
+--------------------------------------------------------------------------------
+compilerGetMetadata :: Identifier -> Compiler Metadata
+compilerGetMetadata identifier = do
+    provider <- compilerProvider <$> compilerAsk
+    compilerTellDependencies [IdentifierDependency identifier]
+    compilerUnsafeIO $ resourceMetadata provider identifier
+
+
+--------------------------------------------------------------------------------
+compilerGetMatches :: Pattern -> Compiler [Identifier]
+compilerGetMatches pattern = do
+    universe <- compilerUniverse <$> compilerAsk
+    let matching = filterMatches pattern universe
+    compilerTellDependencies [PatternDependency pattern matching]
+    return matching

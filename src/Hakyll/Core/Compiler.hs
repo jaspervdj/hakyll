@@ -6,7 +6,6 @@ module Hakyll.Core.Compiler
     , getUnderlying
     , makeItem
     , getRoute
-    , getMetadata
     , getResourceBody
     , getResourceString
     , getResourceLBS
@@ -32,11 +31,9 @@ import           System.Environment            (getProgName)
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Compiler.Require
-import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Logger            as Logger
-import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 import qualified Hakyll.Core.Store             as Store
@@ -61,15 +58,6 @@ getRoute :: Identifier -> Compiler (Maybe FilePath)
 getRoute identifier = do
     routes <- compilerRoutes <$> compilerAsk
     return $ runRoutes routes identifier
-
-
-
---------------------------------------------------------------------------------
-getMetadata :: Identifier -> Compiler Metadata
-getMetadata identifier = do
-    provider <- compilerProvider <$> compilerAsk
-    compilerTellDependencies [IdentifierDependency identifier]
-    compilerUnsafeIO $ resourceMetadata provider identifier
 
 
 --------------------------------------------------------------------------------

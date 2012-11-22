@@ -19,6 +19,7 @@ import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item
+import           Hakyll.Core.Metadata
 import           Hakyll.Core.Store              (Store)
 import qualified Hakyll.Core.Store              as Store
 
@@ -59,9 +60,7 @@ requireBody = fmap itemBody . require
 --------------------------------------------------------------------------------
 requireAll :: (Binary a, Typeable a) => Pattern -> Compiler [Item a]
 requireAll pattern = do
-    universe <- compilerUniverse <$> compilerAsk
-    let matching = filterMatches pattern universe
-    compilerTellDependencies [PatternDependency pattern matching]
+    matching <- getMatches pattern
     mapM require matching
 
 

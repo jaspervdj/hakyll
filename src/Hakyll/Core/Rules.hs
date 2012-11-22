@@ -174,6 +174,7 @@ route route' = Rules $ do
 --------------------------------------------------------------------------------
 -- | Get a list of resources matching the current pattern. This will also set
 -- the correct group to the identifiers.
+-- TODO: Make this private?
 resources :: Rules [Identifier]
 resources = Rules $ do
     pattern  <- rulesPattern  <$> ask

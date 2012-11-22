@@ -12,8 +12,10 @@ module Hakyll.Core.Rules.Internal
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative            (Applicative)
+import           Control.Applicative            (Applicative, (<$>))
+import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
+import           Control.Monad.Trans            (liftIO)
 import qualified Data.Map                       as M
 import           Data.Monoid                    (Monoid, mappend, mempty)
 import           Data.Set                       (Set)
@@ -24,6 +26,7 @@ import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item.SomeItem
+import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 
@@ -68,6 +71,17 @@ data RuleEnvironment = RuleEnvironment
 newtype Rules a = Rules
     { unRules :: RWST RuleEnvironment RuleSet RuleState IO a
     } deriving (Monad, Functor, Applicative)
+
+
+--------------------------------------------------------------------------------
+instance MonadMetadata Rules where
+    getMetadata identifier = Rules $ do
+        provider <- rulesProvider <$> ask
+        liftIO $ resourceMetadata provider identifier
+
+    getMatches pattern = Rules $ do
+        provider <- rulesProvider <$> ask
+        return $ filterMatches pattern $ resourceList provider
 
 
 --------------------------------------------------------------------------------
