@@ -66,6 +66,7 @@ import qualified Text.Blaze.Html5.Attributes     as A
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Util.String
@@ -102,10 +103,11 @@ getCategory = return . return . takeBaseName . takeDirectory . toFilePath
 
 
 --------------------------------------------------------------------------------
--- | Higher-level function to read tags
+-- | Higher-order function to read tags
 buildTagsWith :: MonadMetadata m
-              => (Identifier -> m [String]) -> [Identifier] -> m Tags
-buildTagsWith f ids = do
+              => (Identifier -> m [String]) -> Pattern -> m Tags
+buildTagsWith f pattern = do
+    ids    <- getMatches pattern
     tagMap <- foldM addTags M.empty ids
     return $ Tags $ M.toList tagMap
   where
@@ -117,15 +119,13 @@ buildTagsWith f ids = do
 
 --------------------------------------------------------------------------------
 -- | Read a tagmap using the @tags@ metadata field
--- TODO: Should use pattern
-buildTags :: MonadMetadata m => [Identifier] -> m Tags
+buildTags :: MonadMetadata m => Pattern -> m Tags
 buildTags = buildTagsWith getTags
 
 
 --------------------------------------------------------------------------------
 -- | Read a tagmap using the @category@ metadata field
--- TODO: Should use pattern
-buildCategory :: MonadMetadata m => [Identifier] -> m Tags
+buildCategory :: MonadMetadata m => Pattern -> m Tags
 buildCategory = buildTagsWith getCategory
 
 

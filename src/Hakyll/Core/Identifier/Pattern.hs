@@ -68,6 +68,8 @@ import           Data.Binary            (Binary (..), getWord8, putWord8)
 import           Data.List              (inits, isPrefixOf, tails)
 import           Data.Maybe             (isJust)
 import           Data.Monoid            (Monoid, mappend, mempty)
+import           Data.Set               (Set)
+import qualified Data.Set               as S
 
 
 --------------------------------------------------------------------------------
@@ -108,7 +110,7 @@ data Pattern
     | Complement Pattern
     | And Pattern Pattern
     | Glob [GlobComponent]
-    | List [Identifier]  -- TODO Maybe use a set here
+    | List (Set Identifier)
     | Regex String
     | Version (Maybe String)
     deriving (Show)
@@ -162,7 +164,7 @@ fromGlob = Glob . parse'
 --------------------------------------------------------------------------------
 -- | Create a 'Pattern' from a list of 'Identifier's it should match
 fromList :: [Identifier] -> Pattern
-fromList = List
+fromList = List . S.fromList
 
 
 --------------------------------------------------------------------------------
@@ -205,7 +207,7 @@ matches Everything     _ = True
 matches (Complement p) i = not $ matches p i
 matches (And x y)      i = matches x i && matches y i
 matches (Glob p)       i = isJust $ capture (Glob p) i
-matches (List l)       i = i `elem` l
+matches (List l)       i = i `S.member` l
 matches (Regex r)      i = toFilePath i =~ r
 matches (Version v)    i = identifierVersion i == v
 

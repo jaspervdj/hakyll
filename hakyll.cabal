@@ -120,7 +120,7 @@ Library
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.Biblio
     Hakyll.Web.Pandoc.FileType
-    -- Hakyll.Web.Tags
+    Hakyll.Web.Tags
     Hakyll.Web.Template
     Hakyll.Web.Template.Context
     Hakyll.Web.Template.List

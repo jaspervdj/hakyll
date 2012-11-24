@@ -28,8 +28,7 @@ import qualified Data.Map                      as M
 import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime, parseTime)
-import           System.FilePath               (takeBaseName, takeDirectory,
-                                                takeFileName)
+import           System.FilePath               (takeBaseName, takeFileName)
 import           System.Locale                 (TimeLocale, defaultTimeLocale)
 
 
