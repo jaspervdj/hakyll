@@ -4,7 +4,6 @@
 {-# LANGUAGE Rank2Types                 #-}
 module Hakyll.Core.Rules.Internal
     ( RuleSet (..)
-    , RuleState (..)
     , RuleEnvironment (..)
     , Rules (..)
     , runRules
@@ -51,13 +50,6 @@ instance Monoid RuleSet where
 
 
 --------------------------------------------------------------------------------
--- | Rule state
-data RuleState = RuleState
-    { rulesNextIdentifier :: Int
-    } deriving (Show)
-
-
---------------------------------------------------------------------------------
 -- | Rule environment
 data RuleEnvironment = RuleEnvironment
     { rulesProvider :: Provider
@@ -69,7 +61,7 @@ data RuleEnvironment = RuleEnvironment
 --------------------------------------------------------------------------------
 -- | The monad used to compose rules
 newtype Rules a = Rules
-    { unRules :: RWST RuleEnvironment RuleSet RuleState IO a
+    { unRules :: RWST RuleEnvironment RuleSet () IO a
     } deriving (Monad, Functor, Applicative)
 
 
@@ -88,11 +80,10 @@ instance MonadMetadata Rules where
 -- | Run a Rules monad, resulting in a 'RuleSet'
 runRules :: Rules a -> Provider -> IO RuleSet
 runRules rules provider = do
-    (_, _, ruleSet) <- runRWST (unRules rules) env state
+    (_, _, ruleSet) <- runRWST (unRules rules) env ()
     return $ nubCompilers ruleSet
   where
-    state = RuleState {rulesNextIdentifier = 0}
-    env   = RuleEnvironment
+    env = RuleEnvironment
         { rulesProvider = provider
         , rulesPattern  = mempty
         , rulesVersion  = Nothing
@@ -103,6 +94,6 @@ runRules rules provider = do
 -- | Remove duplicate compilers from the 'RuleSet'. When two compilers match an
 -- item, we prefer the first one
 nubCompilers :: RuleSet -> RuleSet
-nubCompilers set = set { rulesCompilers = nubCompilers' (rulesCompilers set) }
+nubCompilers set = set {rulesCompilers = nubCompilers' (rulesCompilers set)}
   where
     nubCompilers' = M.toList . M.fromListWith (flip const)

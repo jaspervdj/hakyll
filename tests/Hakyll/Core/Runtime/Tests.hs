@@ -33,10 +33,11 @@ case01 = withTestConfiguration $ \config -> do
                 saveSnapshot "raw" body
                 return $ renderPandoc body
 
-        match "bodies.txt" $ route idRoute
-        create "bodies.txt" $ do
-            items <- requireAllSnapshots "*.md" "raw" :: Compiler [Item String]
-            makeItem $ concat $ map itemBody items
+        match "bodies.txt" $ do
+            route idRoute
+            compile $ do
+                items <- requireAllSnapshots "*.md" "raw"
+                makeItem $ concat $ map itemBody (items :: [Item String])
 
     example <- readFile $ destinationDirectory config </> "example.html"
     lines example @?=  ["<p>This is an example.</p>"]

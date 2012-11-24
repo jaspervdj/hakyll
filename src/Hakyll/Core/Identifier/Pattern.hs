@@ -48,6 +48,7 @@ module Hakyll.Core.Identifier.Pattern
       -- * Manipulating patterns
     , complement
     , withVersion
+    , fromLiteral
 
       -- * Applying patterns
     , matches
@@ -143,8 +144,18 @@ instance IsString Pattern where
 
 --------------------------------------------------------------------------------
 instance Monoid Pattern where
-    mempty  = Everything
-    mappend = And
+    mempty      = Everything
+    mappend x y = optimize $ And x y
+
+
+--------------------------------------------------------------------------------
+-- | THis is necessary for good 'isLiteral' results
+optimize :: Pattern -> Pattern
+optimize (Complement x)     = Complement (optimize x)
+optimize (And x Everything) = x
+optimize (And Everything y) = y
+optimize (And x y)          = And (optimize x) (optimize y)
+optimize p                  = p
 
 
 --------------------------------------------------------------------------------
@@ -197,7 +208,20 @@ complement = Complement
 --
 -- > "foo/*.markdown" `withVersion` "pdf"
 withVersion :: Pattern -> String -> Pattern
-withVersion p v = And p $ fromVersion $ Just v
+withVersion p v = optimize $ And p $ fromVersion $ Just v
+
+
+--------------------------------------------------------------------------------
+-- | Check if a pattern is a literal. @"*.markdown"@ is not a literal but
+-- @"posts.markdown"@ is.
+fromLiteral :: Pattern -> Maybe Identifier
+fromLiteral pattern = case pattern of
+    Glob p -> fmap fromFilePath $ foldr fromLiteral' (Just "") p
+    _      -> Nothing
+  where
+    fromLiteral' (Literal x) (Just y) = Just $ x ++ y
+    fromLiteral' _           _        = Nothing
+
 
 
 --------------------------------------------------------------------------------

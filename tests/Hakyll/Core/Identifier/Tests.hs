@@ -6,6 +6,7 @@ module Hakyll.Core.Identifier.Tests
 
 
 --------------------------------------------------------------------------------
+import           Data.Monoid                    (mappend, mempty)
 import           Test.Framework                 (Test, testGroup)
 import           Test.HUnit                     ((@=?))
 
@@ -19,8 +20,18 @@ import           TestSuite.Util
 --------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Hakyll.Core.Identifier.Tests" $ concat
-    [ captureTests
+    [ isLiteralTests
+    , captureTests
     , matchesTests
+    ]
+
+
+--------------------------------------------------------------------------------
+isLiteralTests :: [Test]
+isLiteralTests = fromAssertions "isLiteral"
+    [ Just "index.html" @=? fromLiteral "index.html"
+    , Nothing           @=? fromLiteral "posts/*.markdown"
+    , Just "test.txt"   @=? fromLiteral ("test.txt" `mappend` mempty)
     ]
 
 
