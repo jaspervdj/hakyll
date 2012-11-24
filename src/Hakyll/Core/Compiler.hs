@@ -10,9 +10,16 @@ module Hakyll.Core.Compiler
     , getResourceString
     , getResourceLBS
     , getResourceWith
-    , require
-    , requireBody
-    , requireAll
+
+    , Internal.Snapshot
+    , saveSnapshot
+    , Internal.require
+    , Internal.requireSnapshot
+    , Internal.requireBody
+    , Internal.requireSnapshotBody
+    , Internal.requireAll
+    , Internal.requireAllSnapshots
+
     , cached
     , unsafeCompiler
     , debugCompiler
@@ -30,7 +37,7 @@ import           System.Environment            (getProgName)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler.Internal
-import           Hakyll.Core.Compiler.Require
+import qualified Hakyll.Core.Compiler.Require  as Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Logger            as Logger
@@ -91,6 +98,14 @@ getResourceWith reader = do
   where
     error' fp = "Hakyll.Core.Compiler.getResourceWith: resource " ++
         show fp ++ " not found"
+
+
+--------------------------------------------------------------------------------
+saveSnapshot :: (Binary a, Typeable a)
+             => Internal.Snapshot -> Item a -> Compiler ()
+saveSnapshot snapshot item = do
+    store <- compilerStore <$> compilerAsk
+    compilerUnsafeIO $ Internal.saveSnapshot store snapshot item
 
 
 --------------------------------------------------------------------------------

@@ -6,17 +6,14 @@ module Hakyll.Core.Runtime.Tests
 
 
 --------------------------------------------------------------------------------
-import           System.FilePath           ((</>))
-import           Test.Framework            (Test, testGroup)
-import           Test.HUnit                (Assertion, (@?=))
+import           System.FilePath     ((</>))
+import           Test.Framework      (Test, testGroup)
+import           Test.HUnit          (Assertion, (@?=))
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Configuration
-import           Hakyll.Core.Routes
-import           Hakyll.Core.Rules
+import           Hakyll
 import           Hakyll.Core.Runtime
-import           Hakyll.Web.Page
 import           TestSuite.Util
 
 
@@ -31,7 +28,18 @@ case01 = withTestConfiguration $ \config -> do
     _ <- run config $ do
         match "*.md" $ do
             route   $ setExtension "html"
-            compile $ pageCompiler
+            compile $ do
+                body <- getResourceBody
+                saveSnapshot "raw" body
+                return $ renderPandoc body
 
-    out <- readFile $ destinationDirectory config </> "example.html"
-    lines out @?=  ["<p>This is an example.</p>"]
+        match "bodies.txt" $ route idRoute
+        create "bodies.txt" $ do
+            items <- requireAllSnapshots "*.md" "raw" :: Compiler [Item String]
+            makeItem $ concat $ map itemBody items
+
+    example <- readFile $ destinationDirectory config </> "example.html"
+    lines example @?=  ["<p>This is an example.</p>"]
+
+    bodies <- readFile $ destinationDirectory config </> "bodies.txt"
+    head (lines bodies) @?=  "This is an example."

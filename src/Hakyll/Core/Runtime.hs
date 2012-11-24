@@ -27,7 +27,6 @@ import           Hakyll.Core.Compiler.Require
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
-import           Hakyll.Core.Item
 import           Hakyll.Core.Item.SomeItem
 import           Hakyll.Core.Logger            (Logger)
 import qualified Hakyll.Core.Logger            as Logger
@@ -194,8 +193,7 @@ chase trail id'
             -- Huge success
             CompilerDone (SomeItem item) cwrite -> do
                 -- TODO: Sanity check on itemIdentifier?
-                let body      = itemBody item
-                    facts     = compilerDependencies cwrite
+                let facts     = compilerDependencies cwrite
                     cacheHits
                         | compilerCacheHits cwrite <= 0 = "updated"
                         | otherwise                     = "cached "
@@ -213,7 +211,7 @@ chase trail id'
                         Logger.debug logger $ "Routed to " ++ path
 
                 -- Save! (For require)
-                liftIO $ save store id' body
+                liftIO $ save store item
 
                 -- Update state
                 modify $ \s -> s

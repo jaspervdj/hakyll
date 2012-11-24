@@ -1,39 +1,47 @@
+--------------------------------------------------------------------------------
 -- | Module providing the main hakyll function and command-line argument parsing
---
 {-# LANGUAGE CPP #-}
 module Hakyll.Main
     ( hakyll
     , hakyllWith
     ) where
 
-import Control.Monad (when)
-import System.Directory (doesDirectoryExist, removeDirectoryRecursive)
-import System.Environment (getProgName, getArgs)
-import System.Process (system)
 
-import Hakyll.Core.Configuration
-import Hakyll.Core.Identifier
-import Hakyll.Core.Runtime
-import Hakyll.Core.Rules
+--------------------------------------------------------------------------------
+import           Control.Monad              (when)
+import           System.Directory           (doesDirectoryExist,
+                                             removeDirectoryRecursive)
+import           System.Environment         (getArgs, getProgName)
+import           System.Process             (system)
 
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Configuration
+import           Hakyll.Core.Rules
+import           Hakyll.Core.Runtime
+
+
+--------------------------------------------------------------------------------
 #ifdef PREVIEW_SERVER
-import Control.Applicative ((<$>))
-import Control.Concurrent (forkIO)
-import qualified Data.Set as S
-
-import Hakyll.Core.Rules.Internal
-import Hakyll.Web.Preview.Poll
-import Hakyll.Web.Preview.Server
+import           Control.Applicative        ((<$>))
+import           Control.Concurrent         (forkIO)
+import qualified Data.Set                   as S
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Rules.Internal
+import           Hakyll.Web.Preview.Poll
+import           Hakyll.Web.Preview.Server
 #endif
 
+
+--------------------------------------------------------------------------------
 -- | This usualy is the function with which the user runs the hakyll compiler
---
 hakyll :: Rules a -> IO ()
 hakyll = hakyllWith defaultConfiguration
 
+
+--------------------------------------------------------------------------------
 -- | A variant of 'hakyll' which allows the user to specify a custom
 -- configuration
---
 hakyllWith :: Configuration -> Rules a -> IO ()
 hakyllWith conf rules = do
     args <- getArgs
@@ -49,15 +57,17 @@ hakyllWith conf rules = do
         ["deploy"]     -> deploy conf
         _              -> help
 
+
+--------------------------------------------------------------------------------
 -- | Build the site
---
 build :: Configuration -> Rules a -> IO ()
 build conf rules = do
     _ <- run conf rules
     return ()
 
+
+--------------------------------------------------------------------------------
 -- | Remove the output directories
---
 clean :: Configuration -> IO ()
 clean conf = do
     remove $ destinationDirectory conf
@@ -68,8 +78,9 @@ clean conf = do
         exists <- doesDirectoryExist dir
         when exists $ removeDirectoryRecursive dir
 
+
+--------------------------------------------------------------------------------
 -- | Show usage information.
---
 help :: IO ()
 help = do
     name <- getProgName
@@ -95,8 +106,9 @@ help = do
     previewServerDisabled
 #endif
 
+
+--------------------------------------------------------------------------------
 -- | Preview the site
---
 preview :: Configuration -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 preview conf rules port = do
@@ -111,15 +123,17 @@ preview conf rules port = do
 preview _ _ _ = previewServerDisabled
 #endif
 
+
+--------------------------------------------------------------------------------
 -- | Rebuild the site
---
 rebuild :: Configuration -> Rules a -> IO ()
 rebuild conf rules = do
     clean conf
     build conf rules
 
+
+--------------------------------------------------------------------------------
 -- | Start a server
---
 server :: Configuration -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 server conf port = do
@@ -131,15 +145,17 @@ server conf port = do
 server _ _ = previewServerDisabled
 #endif
 
+
+--------------------------------------------------------------------------------
 -- | Upload the site
---
 deploy :: Configuration -> IO ()
 deploy conf = do
     _ <- system $ deployCommand conf
     return ()
 
+
+--------------------------------------------------------------------------------
 -- | Print a warning message about the preview serving not being enabled
---
 #ifndef PREVIEW_SERVER
 previewServerDisabled :: IO ()
 previewServerDisabled =

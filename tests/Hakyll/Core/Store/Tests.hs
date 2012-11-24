@@ -61,7 +61,6 @@ wrongType = withTestStore $ \store -> do
     -- Store a string and try to fetch an int
     Store.set store ["foo", "bar"] ("qux" :: String)
     value <- Store.get store ["foo", "bar"] :: IO (Store.Result Int)
-    print value
     H.assert $ case value of
         Store.WrongType e t ->
             e == typeOf (undefined :: Int) &&
