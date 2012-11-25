@@ -48,7 +48,8 @@ run config rules = do
     Logger.message logger "Creating store..."
     store <- Store.new (inMemoryCache config) $ storeDirectory config
     Logger.message logger "Creating provider..."
-    provider <- newProvider store (ignoreFile config) $ providerDirectory config
+    provider <- newProvider store (shouldIgnoreFile config) $
+        providerDirectory config
     Logger.message logger "Running rules..."
     ruleSet  <- runRules rules provider
 

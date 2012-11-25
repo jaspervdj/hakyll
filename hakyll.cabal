@@ -103,13 +103,9 @@ Library
     Hakyll.Core.Identifier
     Hakyll.Core.Identifier.Pattern
     Hakyll.Core.Item
-    Hakyll.Core.Logger
     Hakyll.Core.Metadata
     Hakyll.Core.Routes
     Hakyll.Core.Rules
-    Hakyll.Core.Runtime
-    Hakyll.Core.Store
-    Hakyll.Core.Util.File
     Hakyll.Core.Util.String
     Hakyll.Core.Writable
     Hakyll.Core.Writable.CopyFile
@@ -133,12 +129,16 @@ Library
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.Compiler.Require
     Hakyll.Core.Item.SomeItem
+    Hakyll.Core.Logger
     Hakyll.Core.Provider
     Hakyll.Core.Provider.Internal
     Hakyll.Core.Provider.Metadata
     Hakyll.Core.Provider.MetadataCache
     Hakyll.Core.Provider.Modified
     Hakyll.Core.Rules.Internal
+    Hakyll.Core.Runtime
+    Hakyll.Core.Store
+    Hakyll.Core.Util.File
     Hakyll.Web.Template.Internal
     Paths_hakyll
 
@@ -157,7 +157,7 @@ Library
       unix >= 2.4 && < 2.7
     Cpp-options:
       -DUNIX_FILTER
-    Other-modules:
+    Exposed-modules:
       Hakyll.Core.UnixFilter
 
 Test-suite hakyll-tests

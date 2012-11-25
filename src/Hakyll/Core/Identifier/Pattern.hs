@@ -149,7 +149,7 @@ instance Monoid Pattern where
 
 
 --------------------------------------------------------------------------------
--- | THis is necessary for good 'isLiteral' results
+-- | This is necessary for good 'isLiteral' results
 optimize :: Pattern -> Pattern
 optimize (Complement x)     = Complement (optimize x)
 optimize (And x Everything) = x
@@ -189,6 +189,7 @@ fromRegex = Regex
 
 
 --------------------------------------------------------------------------------
+-- | Create a pattern which matches all items with the given version.
 fromVersion :: Maybe String -> Pattern
 fromVersion = Version
 

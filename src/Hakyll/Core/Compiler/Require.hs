@@ -30,6 +30,8 @@ import qualified Hakyll.Core.Store              as Store
 
 
 --------------------------------------------------------------------------------
+-- | Whilst compiling an item, it possible to save multiple snapshots of it, and
+-- not just the final result.
 type Snapshot = String
 
 
@@ -39,6 +41,8 @@ save store item = saveSnapshot store final item
 
 
 --------------------------------------------------------------------------------
+-- | Save a specific snapshot of an item, so you can load it later using
+-- 'requireSnapshot'.
 saveSnapshot :: (Binary a, Typeable a)
              => Store -> Snapshot -> Item a -> IO ()
 saveSnapshot store snapshot item =
@@ -46,11 +50,14 @@ saveSnapshot store snapshot item =
 
 
 --------------------------------------------------------------------------------
+-- | Load an item compiled elsewhere. If the required item is not yet compiled,
+-- the build system will take care of that automatically.
 require :: (Binary a, Typeable a) => Identifier -> Compiler (Item a)
 require id' = requireSnapshot id' final
 
 
 --------------------------------------------------------------------------------
+-- | Require a specific snapshot of an item.
 requireSnapshot :: (Binary a, Typeable a)
                 => Identifier -> Snapshot -> Compiler (Item a)
 requireSnapshot id' snapshot = do
@@ -77,6 +84,9 @@ requireSnapshot id' snapshot = do
 
 
 --------------------------------------------------------------------------------
+-- | A shortcut for only requiring the body of an item.
+--
+-- > requireBody = fmap itemBody . require
 requireBody :: (Binary a, Typeable a) => Identifier -> Compiler a
 requireBody id' = requireSnapshotBody id' final
 
@@ -88,6 +98,7 @@ requireSnapshotBody id' snapshot = fmap itemBody $ requireSnapshot id' snapshot
 
 
 --------------------------------------------------------------------------------
+-- | This function allows you to 'require' a dynamic list of items
 requireAll :: (Binary a, Typeable a) => Pattern -> Compiler [Item a]
 requireAll pattern = requireAllSnapshots pattern final
 
@@ -108,4 +119,4 @@ key identifier snapshot =
 
 --------------------------------------------------------------------------------
 final :: Snapshot
-final = "final"
+final = "_final"

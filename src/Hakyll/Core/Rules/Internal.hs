@@ -1,10 +1,9 @@
 --------------------------------------------------------------------------------
--- | Internal rules module for types which are not exposed to the user
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Rank2Types                 #-}
 module Hakyll.Core.Rules.Internal
     ( RuleSet (..)
-    , RuleEnvironment (..)
+    , RulesRead (..)
     , Rules (..)
     , runRules
     ) where
@@ -31,11 +30,10 @@ import           Hakyll.Core.Routes
 
 
 --------------------------------------------------------------------------------
--- | A collection of rules for the compilation process
 data RuleSet = RuleSet
-    { -- | Routes used in the compilation structure
+    { -- | Accumulated routes
       rulesRoutes    :: Routes
-    , -- | Compilation rules
+    , -- | Accumulated compilers
       rulesCompilers :: [(Identifier, Compiler SomeItem)]
     , -- | A set of the actually used files
       rulesResources :: Set Identifier
@@ -50,8 +48,7 @@ instance Monoid RuleSet where
 
 
 --------------------------------------------------------------------------------
--- | Rule environment
-data RuleEnvironment = RuleEnvironment
+data RulesRead = RulesRead
     { rulesProvider :: Provider
     , rulesPattern  :: Pattern
     , rulesVersion  :: Maybe String
@@ -61,7 +58,7 @@ data RuleEnvironment = RuleEnvironment
 --------------------------------------------------------------------------------
 -- | The monad used to compose rules
 newtype Rules a = Rules
-    { unRules :: RWST RuleEnvironment RuleSet () IO a
+    { unRules :: RWST RulesRead RuleSet () IO a
     } deriving (Monad, Functor, Applicative)
 
 
@@ -83,7 +80,7 @@ runRules rules provider = do
     (_, _, ruleSet) <- runRWST (unRules rules) env ()
     return $ nubCompilers ruleSet
   where
-    env = RuleEnvironment
+    env = RulesRead
         { rulesProvider = provider
         , rulesPattern  = mempty
         , rulesVersion  = Nothing

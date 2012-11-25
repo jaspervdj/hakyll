@@ -9,7 +9,7 @@ module Hakyll.Core.Configuration
 
 --------------------------------------------------------------------------------
 import           Data.List          (isPrefixOf, isSuffixOf)
-import           System.FilePath    (takeFileName)
+import           System.FilePath    (normalise, takeFileName)
 
 
 --------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ defaultConfiguration = Configuration
         | "#"    `isPrefixOf` fileName = True
         | "~"    `isSuffixOf` fileName = True
         | ".swp" `isSuffixOf` fileName = True
-        | otherwise = False
+        | otherwise                    = False
       where
         fileName = takeFileName path
 
@@ -88,6 +88,8 @@ defaultConfiguration = Configuration
 -- | Check if a file should be ignored
 shouldIgnoreFile :: Configuration -> FilePath -> Bool
 shouldIgnoreFile conf path =
-    destinationDirectory conf `isPrefixOf` path ||
-    storeDirectory conf `isPrefixOf` path ||
-    ignoreFile conf path
+    destinationDirectory conf `isPrefixOf` path' ||
+    storeDirectory conf `isPrefixOf` path' ||
+    ignoreFile conf path'
+  where
+    path' = normalise path

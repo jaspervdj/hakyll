@@ -82,6 +82,8 @@ data CompilerResult a where
 
 
 --------------------------------------------------------------------------------
+-- | A monad which lets you compile items and takes care of dependency tracking
+-- for you.
 newtype Compiler a = Compiler
     { unCompiler :: CompilerRead -> IO (CompilerResult a)
     }
