@@ -1,17 +1,24 @@
+--------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 module Hakyll.Core.Routes.Tests
     ( tests
     ) where
 
-import Test.Framework
-import Test.HUnit hiding (Test)
 
-import Hakyll.Core.Identifier
-import Hakyll.Core.Routes
-import TestSuite.Util
+--------------------------------------------------------------------------------
+import           Test.Framework         (Test, testGroup)
+import           Test.HUnit             ((@=?))
 
-tests :: [Test]
-tests = fromAssertions "runRoutes"
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Routes
+import           TestSuite.Util
+
+
+--------------------------------------------------------------------------------
+tests :: Test
+tests = testGroup "Hakyll.Core.Routes.Tests" $ fromAssertions "runRoutes"
     [ Just "foo.html" @=? runRoutes (setExtension "html") "foo"
     , Just "foo.html" @=? runRoutes (setExtension ".html") "foo"
     , Just "foo.html" @=? runRoutes (setExtension "html") "foo.markdown"

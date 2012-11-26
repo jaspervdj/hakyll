@@ -202,10 +202,14 @@ Test-suite hakyll-tests
     Hakyll.Core.Dependencies.Tests
     Hakyll.Core.Identifier.Tests
     Hakyll.Core.Provider.Tests
+    Hakyll.Core.Routes.Tests
+    Hakyll.Core.Rules.Tests
     Hakyll.Core.Runtime.Tests
     Hakyll.Core.Store.Tests
     Hakyll.Core.UnixFilter.Tests
+    Hakyll.Core.Util.String.Tests
     Hakyll.Web.Template.Tests
     Hakyll.Web.Urls.Tests
     Hakyll.Web.Urls.Relativize.Tests
+    Hakyll.Web.Util.Html.Tests
     TestSuite.Util

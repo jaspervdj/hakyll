@@ -1,67 +1,65 @@
+--------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Hakyll.Core.Rules.Tests
     ( tests
     ) where
 
-import qualified Data.Map as M
-import qualified Data.Set as S
 
-import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.HUnit hiding (Test)
+--------------------------------------------------------------------------------
+import qualified Data.Set                       as S
+import           Test.Framework                 (Test, testGroup)
+import           Test.Framework.Providers.HUnit (testCase)
+import           Test.HUnit                     (Assertion, assert, (@=?))
 
-import Hakyll.Core.Rules
-import Hakyll.Core.Rules.Internal
-import Hakyll.Core.Identifier
-import Hakyll.Core.Routes
-import Hakyll.Core.Compiler
-import Hakyll.Core.Resource.Provider
-import Hakyll.Core.Resource.Provider.Dummy
-import Hakyll.Web.Page
 
-tests :: [Test]
-tests =
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Routes
+import           Hakyll.Core.Rules
+import           Hakyll.Core.Rules.Internal
+import           Hakyll.Web.Page
+import           TestSuite.Util
+
+
+--------------------------------------------------------------------------------
+tests :: Test
+tests = testGroup "Hakyll.Core.Rules.Tests"
     [ testCase "runRules" rulesTest
     ]
 
--- | Main test
---
+
+--------------------------------------------------------------------------------
 rulesTest :: Assertion
-rulesTest = do
-    p <- provider
-    let ruleSet = runRules rules p
-    assert $ expected == S.fromList (map fst (rulesCompilers ruleSet))
+rulesTest = withTestStore $ \store -> do
+    provider <- newTestProvider store
+    ruleSet  <- runRules rules provider
+    let identifiers = S.fromList $ map fst $ rulesCompilers ruleSet
+        routes      = rulesRoutes ruleSet
+
+    -- Test that we have some identifiers and that the routes work out
+    assert $ all (`S.member` identifiers) expected
+    Just "example.html" @=? runRoutes routes "example.md"
+    Just "example.md"   @=? runRoutes routes (raw "example.md")
   where
-    expected = S.fromList
-        [ Identifier Nothing "posts/a-post.markdown"
-        , Identifier Nothing "posts/some-other-post.markdown"
-        , Identifier (Just "raw") "posts/a-post.markdown"
-        , Identifier (Just "raw") "posts/some-other-post.markdown"
+    raw      = setVersion (Just "raw")
+    expected =
+        [ "example.md"
+        , "russian.md"
+        , raw "example.md"
+        , raw "russian.md"
         ]
 
--- | Dummy resource provider
---
-provider :: IO ResourceProvider
-provider = dummyResourceProvider $ M.fromList $ map (flip (,) "No content")
-    [ "posts/a-post.markdown"
-    , "posts/some-other-post.markdown"
-    ]
 
--- | Example rules
---
-rules :: Rules
+--------------------------------------------------------------------------------
+rules :: Rules ()
 rules = do
     -- Compile some posts
-    match "posts/*" $ do
+    match "*.md" $ do
         route $ setExtension "html"
         compile pageCompiler
 
     -- Compile them, raw
-    group "raw" $ do
+    match "*.md" $ version "raw" $ do
         route idRoute
-        match "posts/*" $ do
-            route $ setExtension "html"
-            compile getResourceString
-
-    return ()
+        compile getResourceString

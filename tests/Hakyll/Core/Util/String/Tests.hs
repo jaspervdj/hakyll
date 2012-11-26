@@ -1,15 +1,22 @@
+--------------------------------------------------------------------------------
 module Hakyll.Core.Util.String.Tests
     ( tests
     ) where
 
-import Test.Framework (Test)
-import Test.HUnit ((@=?))
 
-import Hakyll.Core.Util.String
-import TestSuite.Util
+--------------------------------------------------------------------------------
+import           Test.Framework          (Test, testGroup)
+import           Test.HUnit              ((@=?))
 
-tests :: [Test]
-tests = concat
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Util.String
+import           TestSuite.Util
+
+
+--------------------------------------------------------------------------------
+tests :: Test
+tests = testGroup "Hakyll.Core.Util.String.Tests" $ concat
     [ fromAssertions "trim"
         [ "foo" @=? trim " foo\n\t "
         ]
