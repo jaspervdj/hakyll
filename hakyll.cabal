@@ -208,6 +208,7 @@ Test-suite hakyll-tests
     Hakyll.Core.Store.Tests
     Hakyll.Core.UnixFilter.Tests
     Hakyll.Core.Util.String.Tests
+    Hakyll.Web.Template.Context.Tests
     Hakyll.Web.Template.Tests
     Hakyll.Web.Urls.Tests
     Hakyll.Web.Urls.Relativize.Tests

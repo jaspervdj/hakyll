@@ -6,12 +6,11 @@ module Hakyll.Web.Template.Read
 
 
 --------------------------------------------------------------------------------
-import Data.List (isPrefixOf)
-import Data.Char (isAlphaNum)
+import           Data.List                    (isPrefixOf)
 
 
 --------------------------------------------------------------------------------
-import Hakyll.Web.Template.Internal
+import           Hakyll.Web.Template.Internal
 
 
 --------------------------------------------------------------------------------
@@ -39,4 +38,4 @@ readTemplate = Template . readTemplate'
             then Just (key, drop 1 rest)
             else Nothing
 
-    validKeyChar x = isAlphaNum x || x == ' '
+    validKeyChar x = x `notElem` ['$', '\n', '\r']
