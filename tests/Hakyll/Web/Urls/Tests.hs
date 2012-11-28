@@ -21,8 +21,8 @@ tests = testGroup "Hakyll.Web.Urls.Tests" $ concat
     [ fromAssertions "withUrls"
         [ "<a href=\"FOO\">bar</a>" @=?
             withUrls (map toUpper) "<a href=\"foo\">bar</a>"
-        , "<img src=\"OH BAR\">" @=?
-            withUrls (map toUpper) "<img src=\"oh bar\">"
+        , "<img src=\"OH BAR\" />" @=?
+            withUrls (map toUpper) "<img src=\"oh bar\" />"
 
         -- Test escaping
         , "<script>\"sup\"</script>" @=?

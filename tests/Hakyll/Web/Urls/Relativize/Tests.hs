@@ -9,7 +9,6 @@ module Hakyll.Web.Urls.Relativize.Tests
 import           Test.Framework             (Test, testGroup)
 import           Test.HUnit                 ((@=?))
 
-
 --------------------------------------------------------------------------------
 import           Hakyll.Web.Urls.Relativize
 import           TestSuite.Util
@@ -21,7 +20,7 @@ tests = testGroup "Hakyll.Web.Urls.Relativize.Tests" $
     fromAssertions "relativizeUrls"
         [ "<a href=\"../foo\">bar</a>" @=?
             relativizeUrlsWith ".." "<a href=\"/foo\">bar</a>"
-        , "<img src=\"../../images/lolcat.png\"></img>" @=?
+        , "<img src=\"../../images/lolcat.png\" />" @=?
             relativizeUrlsWith "../.." "<img src=\"/images/lolcat.png\" />"
         , "<a href=\"http://haskell.org\">Haskell</a>" @=?
             relativizeUrlsWith "../.."
