@@ -13,7 +13,7 @@ tests :: [Test]
 tests = fromAssertions "relativizeUrls"
     [ "<a href=\"../foo\">bar</a>" @=?
         relativizeUrls ".." "<a href=\"/foo\">bar</a>"
-    , "<img src=\"../../images/lolcat.png\"></img>" @=?
+    , "<img src=\"../../images/lolcat.png\" />" @=?
         relativizeUrls "../.." "<img src=\"/images/lolcat.png\" />"
     , "<a href=\"http://haskell.org\">Haskell</a>" @=?
         relativizeUrls "../.." "<a href=\"http://haskell.org\">Haskell</a>"

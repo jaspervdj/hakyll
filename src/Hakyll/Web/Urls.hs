@@ -29,7 +29,8 @@ withUrls f = renderTags' . map tag . TS.parseTags
 --
 renderTags' :: [TS.Tag String] -> String
 renderTags' = TS.renderTagsOptions TS.renderOptions
-    { TS.optRawTag = (`elem` ["script", "style"]) . map toLower
+    { TS.optRawTag   = (`elem` ["script", "style"]) . map toLower
+    , TS.optMinimize = (`elem` ["br", "img"])
     }
 
 -- | Convert a filepath to an URL starting from the site root
