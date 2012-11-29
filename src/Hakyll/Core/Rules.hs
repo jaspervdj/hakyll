@@ -22,6 +22,9 @@ module Hakyll.Core.Rules
     , version
     , compile
     , route
+
+      -- * Advanced usage
+    , rulesExtraDependencies
     ) where
 
 
@@ -29,7 +32,7 @@ module Hakyll.Core.Rules
 import           Control.Applicative            ((<$>))
 import           Control.Arrow                  (second)
 import           Control.Monad.Reader           (ask, local)
-import           Control.Monad.Writer           (tell)
+import           Control.Monad.Writer           (censor, tell)
 import           Data.Monoid                    (mappend, mempty)
 import qualified Data.Set                       as S
 
@@ -41,6 +44,7 @@ import           Data.Typeable                  (Typeable)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler.Internal
+import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item
@@ -125,3 +129,19 @@ route route' = Rules $ do
     version' <- rulesVersion <$> ask
     unRules $ tellRoute $ matchRoute
         (pattern `mappend` fromVersion version') route'
+
+
+--------------------------------------------------------------------------------
+-- | Advanced usage: add extra dependencies to compilers. Basically this is
+-- needed when you're doing unsafe tricky stuff in the rules monad, but you
+-- still want correct builds.
+rulesExtraDependencies :: [Dependency] -> Rules a -> Rules a
+rulesExtraDependencies deps = Rules . censor addDependencies . unRules
+  where
+    -- Adds the dependencies to the compilers in the ruleset
+    addDependencies ruleSet = ruleSet
+        { rulesCompilers =
+            [ (i, compilerTellDependencies deps >> c)
+            | (i, c) <- rulesCompilers ruleSet
+            ]
+        }

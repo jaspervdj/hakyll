@@ -75,6 +75,7 @@ import qualified Text.Blaze.Html5.Attributes     as A
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item
@@ -88,8 +89,9 @@ import           Hakyll.Web.Urls
 --------------------------------------------------------------------------------
 -- | Data about tags
 data Tags = Tags
-    { tagsMap    :: [(String, [Identifier])]
-    , tagsMakeId :: String -> Identifier
+    { tagsMap        :: [(String, [Identifier])]
+    , tagsMakeId     :: String -> Identifier
+    , tagsDependency :: Dependency
     } deriving (Show)
 
 
@@ -117,7 +119,7 @@ buildTagsWith :: MonadMetadata m
 buildTagsWith f pattern makeId = do
     ids    <- getMatches pattern
     tagMap <- foldM addTags M.empty ids
-    return $ Tags (M.toList tagMap) makeId
+    return $ Tags (M.toList tagMap) makeId (PatternDependency pattern ids)
   where
     -- Create a tag map for one page
     addTags tagMap id' = do
@@ -142,7 +144,8 @@ tagsRules :: Tags -> (String -> Pattern -> Rules ()) -> Rules ()
 tagsRules tags rules =
     forM_ (tagsMap tags) $ \(tag, identifiers) ->
         match (fromGlob $ toFilePath $ tagsMakeId tags tag) $
-            rules tag $ fromList identifiers
+            rulesExtraDependencies [tagsDependency tags] $
+                rules tag $ fromList identifiers
 
 
 --------------------------------------------------------------------------------
@@ -154,10 +157,10 @@ renderTags :: (String -> String -> Int -> Int -> Int -> String)
            -> Tags
            -- ^ Tag cloud renderer
            -> Compiler String
-renderTags makeHtml concatHtml (Tags tags makeTagId) = do
+renderTags makeHtml concatHtml tags = do
     -- In tags' we create a list: [((tag, route), count)]
-    tags' <- forM tags $ \(tag, ids) -> do
-        route' <- getRoute $ makeTagId tag
+    tags' <- forM (tagsMap tags) $ \(tag, ids) -> do
+        route' <- getRoute $ tagsMakeId tags tag
         return ((tag, route'), length ids)
 
     -- TODO: We actually need to tell a dependency here!

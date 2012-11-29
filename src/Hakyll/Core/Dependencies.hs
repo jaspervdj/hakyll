@@ -88,8 +88,10 @@ markOod id' = State.modify $ \s ->
 dependenciesFor :: Identifier -> DependencyM [Identifier]
 dependenciesFor id' = do
     facts <- dependencyFacts <$> State.get
-    let relevant = fromMaybe [] $ M.lookup id' facts
-    return [i | IdentifierDependency i <- relevant]
+    return $ concatMap dependenciesFor' $ fromMaybe [] $ M.lookup id' facts
+  where
+    dependenciesFor' (IdentifierDependency i) = [i]
+    dependenciesFor' (PatternDependency _ is) = is
 
 
 --------------------------------------------------------------------------------
