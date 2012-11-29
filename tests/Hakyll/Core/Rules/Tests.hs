@@ -15,9 +15,11 @@ import           Test.HUnit                     (Assertion, assert, (@=?))
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
+import           Hakyll.Core.Writable.CopyFile
 import           Hakyll.Web.Page
 import           TestSuite.Util
 
@@ -48,6 +50,7 @@ rulesTest = withTestStore $ \store -> do
         , "russian.md"
         , raw "example.md"
         , raw "russian.md"
+        , setVersion (Just "nav") "example.md"
         ]
 
 
@@ -63,3 +66,8 @@ rules = do
     match "*.md" $ version "raw" $ do
         route idRoute
         compile getResourceString
+
+    -- Regression test
+    version "nav" $ match (fromList ["example.md"]) $ do
+        route idRoute
+        compile copyFileCompiler
