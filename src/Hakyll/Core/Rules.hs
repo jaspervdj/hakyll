@@ -172,9 +172,9 @@ resources = RulesM $ do
     pattern <- rulesPattern <$> ask
     provider <- rulesResourceProvider <$> ask
     group' <- rulesGroup <$> ask
-    return $ filterMatches pattern $ map (toId group') $ resourceList provider
-  where
-    toId g = setGroup g . toIdentifier
+    -- Important: filter with pattern *before* setting the group
+    return $ map (setGroup group') $ filterMatches pattern $
+        map toIdentifier $ resourceList provider
 
 -- | Apart from regular compilers, one is also able to specify metacompilers.
 -- Metacompilers are a special class of compilers: they are compilers which
