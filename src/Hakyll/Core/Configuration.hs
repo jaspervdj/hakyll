@@ -1,7 +1,8 @@
 --------------------------------------------------------------------------------
 -- | Exports a datastructure for the top-level hakyll configuration
 module Hakyll.Core.Configuration
-    ( Configuration (..)
+    ( Verbosity (..)
+    , Configuration (..)
     , shouldIgnoreFile
     , defaultConfiguration
     ) where

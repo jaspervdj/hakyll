@@ -175,6 +175,7 @@ chase trail id'
         routes   <- runtimeRoutes        <$> ask
         store    <- runtimeStore         <$> ask
         config   <- runtimeConfiguration <$> ask
+        Logger.debug logger $ "Processing " ++ show id'
 
         let compiler = todo M.! id'
             read' = CompilerRead
