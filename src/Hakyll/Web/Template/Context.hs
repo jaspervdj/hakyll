@@ -51,7 +51,7 @@ newtype Context a = Context
 
 --------------------------------------------------------------------------------
 instance Monoid (Context a) where
-    mempty                          = Context $ \_ _ -> empty
+    mempty                          = missingField
     mappend (Context f) (Context g) = Context $ \k i -> f k i <|> g k i
 
 
