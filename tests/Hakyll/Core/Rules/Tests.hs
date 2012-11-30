@@ -42,15 +42,16 @@ rulesTest = withTestStore $ \store -> do
     -- Test that we have some identifiers and that the routes work out
     assert $ all (`S.member` identifiers) expected
     Just "example.html" @=? runRoutes routes "example.md"
-    Just "example.md"   @=? runRoutes routes (raw "example.md")
+    Just "example.md"   @=? runRoutes routes (sv "raw" "example.md")
+    Just "example.md"   @=? runRoutes routes (sv "nav" "example.md")
   where
-    raw      = setVersion (Just "raw")
+    sv g     = setVersion (Just g)
     expected =
         [ "example.md"
         , "russian.md"
-        , raw "example.md"
-        , raw "russian.md"
-        , setVersion (Just "nav") "example.md"
+        , sv "raw" "example.md"
+        , sv "raw" "russian.md"
+        , sv "nav" "example.md"
         ]
 
 
