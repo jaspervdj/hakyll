@@ -38,8 +38,12 @@ provider = dummyResourceProvider $ M.fromList $ map (flip (,) "No content")
 case01 :: Assertion
 case01 = do
     p <- provider
-    let ruleSet = runRules rules p
-    expected @=? S.fromList (map fst (rulesCompilers ruleSet))
+    let ruleSet     = runRules rules p
+        identifiers = map fst $ rulesCompilers ruleSet
+        routes      = rulesRoutes ruleSet
+    expected @=? S.fromList identifiers
+    Just "posts/a-post.markdown" @=?
+        runRoutes routes (Identifier (Just "nav") "posts/a-post.markdown")
   where
     expected = S.fromList
         [ Identifier Nothing "posts/a-post.markdown"
