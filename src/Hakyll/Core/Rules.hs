@@ -82,11 +82,20 @@ tellResources resources' = Rules $ tell $
 
 --------------------------------------------------------------------------------
 match :: Pattern -> Rules b -> Rules b
-match pattern = Rules . local addPattern . unRules
+match pattern = Rules . censor matchRoutes . local addPattern . unRules
   where
     addPattern env = env
         { rulesPattern = rulesPattern env `mappend` pattern
         }
+
+    -- Create a fast pattern for routing that matches exactly the compilers
+    -- created in the block given to match
+    matchRoutes ruleSet = ruleSet
+        { rulesRoutes = matchRoute fastPattern (rulesRoutes ruleSet)
+        }
+      where
+        fastPattern = fromList [id' | (id', _) <- rulesCompilers ruleSet]
+
 
 
 --------------------------------------------------------------------------------
@@ -122,13 +131,7 @@ compile compiler = do
 --
 -- This adds a route for all items matching the current pattern.
 route :: Routes -> Rules ()
-route route' = Rules $ do
-    -- We want the route only to be applied if we match the current pattern and
-    -- version
-    pattern  <- rulesPattern <$> ask
-    version' <- rulesVersion <$> ask
-    unRules $ tellRoute $ matchRoute
-        (pattern `mappend` fromVersion version') route'
+route = tellRoute
 
 
 --------------------------------------------------------------------------------
