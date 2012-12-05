@@ -14,6 +14,7 @@ module TestSuite.Util
 
 --------------------------------------------------------------------------------
 import           Data.Monoid                    (mempty)
+import qualified Data.Set                       as S
 import           System.Directory               (removeDirectoryRecursive)
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
@@ -71,7 +72,7 @@ testCompiler store provider underlying compiler = do
     let read' = CompilerRead
             { compilerUnderlying = underlying
             , compilerProvider   = provider
-            , compilerUniverse   = []
+            , compilerUniverse   = S.empty
             , compilerRoutes     = mempty
             , compilerStore      = store
             , compilerLogger     = logger

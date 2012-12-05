@@ -66,7 +66,7 @@ run config rules = do
             , runtimeProvider      = provider
             , runtimeStore         = store
             , runtimeRoutes        = rulesRoutes ruleSet
-            , runtimeUniverse      = compilers
+            , runtimeUniverse      = M.fromList compilers
             }
         state     = RuntimeState
             { runtimeDone  = S.empty
@@ -97,7 +97,7 @@ data RuntimeRead = RuntimeRead
     , runtimeProvider      :: Provider
     , runtimeStore         :: Store
     , runtimeRoutes        :: Routes
-    , runtimeUniverse      :: [(Identifier, Compiler SomeItem)]
+    , runtimeUniverse      :: Map Identifier (Compiler SomeItem)
     }
 
 
@@ -133,12 +133,12 @@ scheduleOutOfDate = do
     facts    <- runtimeFacts    <$> get
     todo     <- runtimeTodo     <$> get
 
-    let identifiers = map fst universe
+    let identifiers = M.keys universe
     modified <- fmap S.fromList $ flip filterM identifiers $
         liftIO . resourceModified provider
     let (ood, facts', msgs) = outOfDate identifiers modified facts
-        todo'               = M.fromList
-            [(id', c) | (id', c) <- universe, id' `S.member` ood]
+        todo'               = M.filterWithKey
+            (\id' _ -> id' `S.member` ood) universe
 
     -- Print messages
     mapM_ (Logger.debug logger) msgs
@@ -181,7 +181,7 @@ chase trail id'
             read' = CompilerRead
                 { compilerUnderlying = id'
                 , compilerProvider   = provider
-                , compilerUniverse   = map fst universe
+                , compilerUniverse   = M.keysSet universe
                 , compilerRoutes     = routes
                 , compilerStore      = store
                 , compilerLogger     = logger

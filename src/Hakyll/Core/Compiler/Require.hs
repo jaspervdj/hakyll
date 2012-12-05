@@ -14,7 +14,9 @@ module Hakyll.Core.Compiler.Require
 
 --------------------------------------------------------------------------------
 import           Control.Applicative            ((<$>))
+import           Control.Monad                  (when)
 import           Data.Binary                    (Binary)
+import qualified Data.Set                       as S
 import           Data.Typeable
 
 
@@ -61,7 +63,11 @@ require id' = requireSnapshot id' final
 requireSnapshot :: (Binary a, Typeable a)
                 => Identifier -> Snapshot -> Compiler (Item a)
 requireSnapshot id' snapshot = do
-    store <- compilerStore <$> compilerAsk
+    store    <- compilerStore <$> compilerAsk
+    universe <- compilerUniverse <$> compilerAsk
+
+    -- Quick check for better error messages
+    when (id' `S.notMember` universe) $ compilerThrow notFound
 
     compilerTellDependencies [IdentifierDependency id']
     compilerResult $ CompilerRequire id' $ do

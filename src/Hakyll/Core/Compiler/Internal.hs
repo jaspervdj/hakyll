@@ -29,6 +29,8 @@ import           Control.Applicative            (Alternative (..),
                                                  Applicative (..), (<$>))
 import           Control.Exception              (SomeException, handle)
 import           Data.Monoid                    (Monoid (..))
+import           Data.Set                       (Set)
+import qualified Data.Set                       as S
 
 
 --------------------------------------------------------------------------------
@@ -50,7 +52,7 @@ data CompilerRead = CompilerRead
     , -- | Resource provider
       compilerProvider   :: Provider
     , -- | List of all known identifiers
-      compilerUniverse   :: [Identifier]
+      compilerUniverse   :: Set Identifier
     , -- | Site routes
       compilerRoutes     :: Routes
     , -- | Compiler store
@@ -219,6 +221,6 @@ compilerGetMetadata identifier = do
 compilerGetMatches :: Pattern -> Compiler [Identifier]
 compilerGetMatches pattern = do
     universe <- compilerUniverse <$> compilerAsk
-    let matching = filterMatches pattern universe
+    let matching = filterMatches pattern $ S.toList universe
     compilerTellDependencies [PatternDependency pattern matching]
     return matching
