@@ -45,3 +45,8 @@ different distributions.
     cabal install hakyll
 
 [cabal]: http://www.haskell.org/cabal/
+
+Linux distro packages:
+
+- [Archlinux (AUR)](https://aur.archlinux.org/packages/haskell-hakyll/)
+- [Debian unstable](http://packages.debian.org/source/sid/haskell-hakyll)
