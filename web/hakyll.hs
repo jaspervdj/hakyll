@@ -1,10 +1,12 @@
+--------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import Hakyll
-import Control.Monad (forM_)
-import Control.Arrow ((>>>), arr)
-import Data.Monoid (mempty)
-import Text.Pandoc
+import           Control.Monad (forM_)
+import           Data.Monoid   (mappend)
+import           Hakyll
+import           Text.Pandoc
 
+
+--------------------------------------------------------------------------------
 main :: IO ()
 main = hakyllWith config $ do
     match "css/*" $ do
@@ -17,35 +19,38 @@ main = hakyllWith config $ do
         compile copyFileCompiler
 
     -- Pages
-    forM_ pages $ \p -> match p $ do
+    match "*.markdown" $ do
         route   $ setExtension "html"
         compile $ pageCompiler
-            >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
-            >>> applyTemplateCompiler "templates/default.html"
-            >>> relativizeUrlsCompiler
+            >>= requireApplyTemplate "templates/default.html" defaultContext
+            >>= relativizeUrls
 
     -- Tutorials
     match "tutorials/*" $ do
         route   $ setExtension "html"
         compile $ pageCompilerWith defaultHakyllParserState withToc
-            >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
-            >>> applyTemplateCompiler "templates/tutorial.html"
-            >>> applyTemplateCompiler "templates/default.html"
-            >>> relativizeUrlsCompiler
+            >>= requireApplyTemplate "templates/tutorial.html" defaultContext
+            >>= requireApplyTemplate "templates/default.html" defaultContext
+            >>= relativizeUrls
 
     -- Tutorial list
-    match "tutorials.html" $ route idRoute
-    create "tutorials.html" $ constA mempty
-        >>> arr (setField "title" "Tutorials")
-        >>> setFieldPageList chronological
-                "templates/tutorial-item.html" "tutorials" "tutorials/*"
-        >>> requireA "sidebar.markdown" (setFieldA "sidebar" $ arr pageBody)
-        >>> applyTemplateCompiler "templates/tutorials.html"
-        >>> applyTemplateCompiler "templates/default.html"
-        >>> relativizeUrlsCompiler
+    match "tutorials.html" $ do
+        route idRoute
+        compile $ do
+            tutorials <- requireAll "tutorials/*"
+            itemTpl   <- requireBody "templates/tutorial-item.html"
+            list      <- applyTemplateList itemTpl defaultContext $
+                chronological tutorials
 
-    -- Sidebar
-    match "sidebar.markdown" $ compile pageCompiler
+            let tutorialsCtx =
+                    constField "title" "Tutorials" `mappend`
+                    constField "tutorials" list    `mappend`
+                    defaultContext
+
+            makeItem ""
+                >>= requireApplyTemplate "templates/tutorials.html" tutorialsCtx
+                >>= requireApplyTemplate "templates/default.html" tutorialsCtx
+                >>= relativizeUrls
 
     -- Templates
     match "templates/*" $ compile templateCompiler
@@ -56,16 +61,11 @@ main = hakyllWith config $ do
         , writerStandalone = True
         }
 
-    pages = [ "about.markdown"
-            , "changelog.markdown"
-            , "examples.markdown"
-            , "index.markdown"
-            , "philosophy.markdown"
-            , "reference.markdown"
-            ]
 
-config :: HakyllConfiguration
-config = defaultHakyllConfiguration
-    { deployCommand = "rsync --checksum -ave 'ssh -p 2222' \
+--------------------------------------------------------------------------------
+config :: Configuration
+config = defaultConfiguration
+    { verbosity     = Debug
+    , deployCommand = "rsync --checksum -ave 'ssh -p 2222' \
                       \_site/* jaspervdj@jaspervdj.be:jaspervdj.be/hakyll"
     }
