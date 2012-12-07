@@ -1,19 +1,44 @@
 body {
-    width: 600px;
+    color: black;
+    font-size: 16px;
     margin: 0px auto 0px auto;
+    width: 600px;
 }
 
-div#navigation {
-    text-align: center;
-    border-bottom: 4px solid black;
+div#header {
+    border-bottom: 2px solid black;
+    margin-bottom: 30px;
+    padding: 12px 0px 12px 0px;
 }
 
-div#navigation a {
-    color: white;
+div#logo a {
+    color: black;
+    float: left;
+    font-size: 18px;
+    font-weight: bold;
     text-decoration: none;
-    background-color: black;
-    padding: 3px 10px 3px 10px;
-    margin: 0px 10px 0px 10px;
+}
+
+div#header #navigation {
+    text-align: right;
+}
+
+div#header #navigation a {
+    color: black;
+    font-size: 18px;
+    font-weight: bold;
+    margin-left: 12px;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+div#footer {
+    border-top: solid 2px black;
+    color: #555;
+    font-size: 12px;
+    margin-top: 30px;
+    padding: 12px 0px 12px 0px;
+    text-align: right;
 }
 
 div.figure {
