@@ -3,12 +3,12 @@ module Hakyll.Core.Compiler.Require
     ( Snapshot
     , save
     , saveSnapshot
-    , require
-    , requireSnapshot
-    , requireBody
-    , requireSnapshotBody
-    , requireAll
-    , requireAllSnapshots
+    , load
+    , loadSnapshot
+    , loadBody
+    , loadSnapshotBody
+    , loadAll
+    , loadAllSnapshots
     ) where
 
 
@@ -44,7 +44,7 @@ save store item = saveSnapshot store final item
 
 --------------------------------------------------------------------------------
 -- | Save a specific snapshot of an item, so you can load it later using
--- 'requireSnapshot'.
+-- 'loadSnapshot'.
 saveSnapshot :: (Binary a, Typeable a)
              => Store -> Snapshot -> Item a -> IO ()
 saveSnapshot store snapshot item =
@@ -54,15 +54,15 @@ saveSnapshot store snapshot item =
 --------------------------------------------------------------------------------
 -- | Load an item compiled elsewhere. If the required item is not yet compiled,
 -- the build system will take care of that automatically.
-require :: (Binary a, Typeable a) => Identifier -> Compiler (Item a)
-require id' = requireSnapshot id' final
+load :: (Binary a, Typeable a) => Identifier -> Compiler (Item a)
+load id' = loadSnapshot id' final
 
 
 --------------------------------------------------------------------------------
 -- | Require a specific snapshot of an item.
-requireSnapshot :: (Binary a, Typeable a)
-                => Identifier -> Snapshot -> Compiler (Item a)
-requireSnapshot id' snapshot = do
+loadSnapshot :: (Binary a, Typeable a)
+             => Identifier -> Snapshot -> Compiler (Item a)
+loadSnapshot id' snapshot = do
     store    <- compilerStore <$> compilerAsk
     universe <- compilerUniverse <$> compilerAsk
 
@@ -78,12 +78,12 @@ requireSnapshot id' snapshot = do
             Store.Found x       -> return $ Item id' x
   where
     notFound =
-        "Hakyll.Core.Compiler.Require.require: " ++ show id' ++
+        "Hakyll.Core.Compiler.Require.load: " ++ show id' ++
         " (snapshot " ++ snapshot ++ ") was not found in the cache, " ++
         "the cache might be corrupted or " ++
         "the item you are referring to might not exist"
     wrongType e r =
-        "Hakyll.Core.Compiler.Require.require: " ++ show id' ++
+        "Hakyll.Core.Compiler.Require.load: " ++ show id' ++
         " (snapshot " ++ snapshot ++ ") was found in the cache, " ++
         "but does not have the right type: expected " ++ show e ++
         " but got " ++ show r
@@ -92,29 +92,29 @@ requireSnapshot id' snapshot = do
 --------------------------------------------------------------------------------
 -- | A shortcut for only requiring the body of an item.
 --
--- > requireBody = fmap itemBody . require
-requireBody :: (Binary a, Typeable a) => Identifier -> Compiler a
-requireBody id' = requireSnapshotBody id' final
+-- > loadBody = fmap itemBody . load
+loadBody :: (Binary a, Typeable a) => Identifier -> Compiler a
+loadBody id' = loadSnapshotBody id' final
 
 
 --------------------------------------------------------------------------------
-requireSnapshotBody :: (Binary a, Typeable a)
-                    => Identifier -> Snapshot -> Compiler a
-requireSnapshotBody id' snapshot = fmap itemBody $ requireSnapshot id' snapshot
+loadSnapshotBody :: (Binary a, Typeable a)
+                 => Identifier -> Snapshot -> Compiler a
+loadSnapshotBody id' snapshot = fmap itemBody $ loadSnapshot id' snapshot
 
 
 --------------------------------------------------------------------------------
--- | This function allows you to 'require' a dynamic list of items
-requireAll :: (Binary a, Typeable a) => Pattern -> Compiler [Item a]
-requireAll pattern = requireAllSnapshots pattern final
+-- | This function allows you to 'load' a dynamic list of items
+loadAll :: (Binary a, Typeable a) => Pattern -> Compiler [Item a]
+loadAll pattern = loadAllSnapshots pattern final
 
 
 --------------------------------------------------------------------------------
-requireAllSnapshots :: (Binary a, Typeable a)
-                    => Pattern -> Snapshot -> Compiler [Item a]
-requireAllSnapshots pattern snapshot = do
+loadAllSnapshots :: (Binary a, Typeable a)
+                 => Pattern -> Snapshot -> Compiler [Item a]
+loadAllSnapshots pattern snapshot = do
     matching <- getMatches pattern
-    mapM (\i -> requireSnapshot i snapshot) matching
+    mapM (\i -> loadSnapshot i snapshot) matching
 
 
 --------------------------------------------------------------------------------

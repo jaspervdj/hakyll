@@ -13,12 +13,12 @@ module Hakyll.Core.Compiler
 
     , Internal.Snapshot
     , saveSnapshot
-    , Internal.require
-    , Internal.requireSnapshot
-    , Internal.requireBody
-    , Internal.requireSnapshotBody
-    , Internal.requireAll
-    , Internal.requireAllSnapshots
+    , Internal.load
+    , Internal.loadSnapshot
+    , Internal.loadBody
+    , Internal.loadSnapshotBody
+    , Internal.loadAll
+    , Internal.loadAllSnapshots
 
     , cached
     , unsafeCompiler

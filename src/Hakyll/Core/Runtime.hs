@@ -212,7 +212,7 @@ chase trail id'
                         liftIO $ write path item
                         Logger.debug logger $ "Routed to " ++ path
 
-                -- Save! (For require)
+                -- Save! (For load)
                 liftIO $ save store item
 
                 -- Update state

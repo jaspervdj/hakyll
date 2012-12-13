@@ -18,9 +18,17 @@ main = hakyll $ do
 
     match (fromList ["about.rst", "contact.markdown"]) $ do
         route   $ setExtension "html"
+        compile $ do
+
+            defaultTpl <- loadBody "templates/default.html"
+            pageCompiler
+                >>= applyTemplate defaultTpl defaultContext
+                >>= relativizeUrls
+        {-
         compile $ pageCompiler
-            >>= requireApplyTemplate "templates/default.html" defaultContext
+            >>= loadAndApplyTemplate "templates/default.html" defaultContext
             >>= relativizeUrls
+        -}
 
     match "posts/*" $ do
         route $ setExtension "html"
@@ -28,8 +36,8 @@ main = hakyll $ do
             post <- pageCompiler
             saveSnapshot "content" post
             return post
-                >>= requireApplyTemplate "templates/post.html" postCtx
-                >>= requireApplyTemplate "templates/default.html" postCtx
+                >>= loadAndApplyTemplate "templates/post.html"    postCtx
+                >>= loadAndApplyTemplate "templates/default.html" postCtx
                 >>= relativizeUrls
 
     match "archive.html" $ do
@@ -41,8 +49,8 @@ main = hakyll $ do
                     defaultContext
 
             makeItem ""
-                >>= requireApplyTemplate "templates/archive.html" archiveCtx
-                >>= requireApplyTemplate "templates/default.html" archiveCtx
+                >>= loadAndApplyTemplate "templates/archive.html" archiveCtx
+                >>= loadAndApplyTemplate "templates/default.html" archiveCtx
                 >>= relativizeUrls
 
 
@@ -52,8 +60,8 @@ main = hakyll $ do
             let indexCtx = field "posts" $ \_ -> postList (take 3 . recentFirst)
 
             getResourceBody
-                >>= applySelf indexCtx
-                >>= requireApplyTemplate "templates/default.html" postCtx
+                >>= applyAsTemplate indexCtx
+                >>= loadAndApplyTemplate "templates/default.html" postCtx
                 >>= relativizeUrls
 
     match "templates/*" $ compile templateCompiler
@@ -69,7 +77,7 @@ postCtx =
 --------------------------------------------------------------------------------
 postList :: ([Item String] -> [Item String]) -> Compiler String
 postList preprocess = do
-    posts   <- preprocess <$> requireAll "posts/*"
-    itemTpl <- requireBody "templates/post-item.html"
+    posts   <- preprocess <$> loadAll "posts/*"
+    itemTpl <- loadBody "templates/post-item.html"
     list    <- applyTemplateList itemTpl postCtx posts
     return list

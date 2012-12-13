@@ -36,7 +36,7 @@ case01 = withTestConfiguration $ \config -> do
         match "bodies.txt" $ do
             route idRoute
             compile $ do
-                items <- requireAllSnapshots "*.md" "raw"
+                items <- loadAllSnapshots "*.md" "raw"
                 makeItem $ concat $ map itemBody (items :: [Item String])
 
     example <- readFile $ destinationDirectory config </> "example.html"

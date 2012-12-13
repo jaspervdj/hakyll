@@ -40,7 +40,7 @@ module Hakyll.Web.Template
     ( Template
     , templateCompiler
     , applyTemplate
-    , requireApplyTemplate
+    , loadAndApplyTemplate
     , applyAsTemplate
     , applyTemplateWith
     ) where
@@ -82,20 +82,20 @@ applyTemplate tpl context item = do
 --------------------------------------------------------------------------------
 -- | The following pattern is so common:
 --
--- > tpl <- requireBody "templates/foo.html"
+-- > tpl <- loadBody "templates/foo.html"
 -- > someCompiler
 -- >     >>= applyTemplate tpl context
 --
 -- That we have a single function which does this:
 --
 -- > someCompiler
--- >     >>= requireApplyTemplate "templates/foo.html" context
-requireApplyTemplate :: Identifier              -- ^ Template identifier
+-- >     >>= loadAndApplyTemplate "templates/foo.html" context
+loadAndApplyTemplate :: Identifier              -- ^ Template identifier
                      -> Context a               -- ^ Context
                      -> Item a                  -- ^ Page
                      -> Compiler (Item String)  -- ^ Resulting item
-requireApplyTemplate identifier context item = do
-    tpl <- requireBody identifier
+loadAndApplyTemplate identifier context item = do
+    tpl <- loadBody identifier
     applyTemplate tpl context item
 
 
