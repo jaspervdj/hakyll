@@ -41,12 +41,16 @@ div#footer {
     text-align: right;
 }
 
-div.figure {
-    float: right;
-    margin: 20px 0px 20px 20px;
+h1 {
+    font-size: 24px;
 }
 
-div.figure p.caption {
-    text-align: center;
+h2 {
+    font-size: 20px;
+}
+
+div.info {
+    color: #555;
+    font-size: 14px;
     font-style: italic;
 }
