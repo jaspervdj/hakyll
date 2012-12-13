@@ -225,12 +225,12 @@ renderTagList = renderTags makeLink (intercalate ", ")
 -- >     "tags" (fromCapture "tags/*")
 tagsFieldWith :: (Identifier -> Compiler [String])  -- ^ Get the tags
               -> String                             -- ^ Destination key
-              -> (String -> Identifier)             -- ^ Create a link for a tag
+              -> Tags                               -- ^ Tags structure
               -> Context a                          -- ^ Resulting context
-tagsFieldWith getTags' key makeTagId = field key $ \item -> do
-    tags  <- getTags' $ itemIdentifier item
-    links <- forM tags $ \tag -> do
-        route' <- getRoute $ makeTagId tag
+tagsFieldWith getTags' key tags = field key $ \item -> do
+    tags' <- getTags' $ itemIdentifier item
+    links <- forM tags' $ \tag -> do
+        route' <- getRoute $ tagsMakeId tags tag
         return $ renderLink tag route'
 
     return $ renderHtml $ mconcat $ intersperse ", " $ catMaybes $ links
@@ -243,17 +243,17 @@ tagsFieldWith getTags' key makeTagId = field key $ \item -> do
 
 --------------------------------------------------------------------------------
 -- | Render tags with links
-tagsField :: String                  -- ^ Destination key
-          -> (String -> Identifier)  -- ^ Create a link for a tag
-          -> Context a               -- ^ Context
+tagsField :: String     -- ^ Destination key
+          -> Tags       -- ^ Tags
+          -> Context a  -- ^ Context
 tagsField = tagsFieldWith getTags
 
 
 --------------------------------------------------------------------------------
 -- | Render the category in a link
-categoryField :: String                  -- ^ Destination key
-              -> (String -> Identifier)  -- ^ Create a category link
-              -> Context a               -- ^ Context
+categoryField :: String     -- ^ Destination key
+              -> Tags       -- ^ Tags
+              -> Context a  -- ^ Context
 categoryField = tagsFieldWith getCategory
 
 
