@@ -41,7 +41,7 @@ module Hakyll.Web.Template
     , templateCompiler
     , applyTemplate
     , requireApplyTemplate
-    , applySelf
+    , applyAsTemplate
     , applyTemplateWith
     ) where
 
@@ -103,10 +103,10 @@ requireApplyTemplate identifier context item = do
 -- | It is also possible that you want to substitute @$key$@s within the body of
 -- an item. This function does that by interpreting the item body as a template,
 -- and then applying it to itself.
-applySelf :: Context String          -- ^ Context
-          -> Item String             -- ^ Item and template
-          -> Compiler (Item String)  -- ^ Resulting item
-applySelf context item =
+applyAsTemplate :: Context String          -- ^ Context
+                -> Item String             -- ^ Item and template
+                -> Compiler (Item String)  -- ^ Resulting item
+applyAsTemplate context item =
     let tpl = readTemplate $ itemBody item
     in applyTemplate tpl context item
 
