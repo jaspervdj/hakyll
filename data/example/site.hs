@@ -18,17 +18,9 @@ main = hakyll $ do
 
     match (fromList ["about.rst", "contact.markdown"]) $ do
         route   $ setExtension "html"
-        compile $ do
-
-            defaultTpl <- loadBody "templates/default.html"
-            pageCompiler
-                >>= applyTemplate defaultTpl defaultContext
-                >>= relativizeUrls
-        {-
         compile $ pageCompiler
             >>= loadAndApplyTemplate "templates/default.html" defaultContext
             >>= relativizeUrls
-        -}
 
     match "posts/*" $ do
         route $ setExtension "html"

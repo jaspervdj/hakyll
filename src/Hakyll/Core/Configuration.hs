@@ -28,7 +28,7 @@ data Configuration = Configuration
       providerDirectory    :: FilePath
     , -- | Function to determine ignored files
       --
-      -- In 'defaultHakyllConfiguration', the following files are ignored:
+      -- In 'defaultConfiguration', the following files are ignored:
       --
       -- * files starting with a @.@
       --
@@ -38,9 +38,9 @@ data Configuration = Configuration
       --
       -- * files ending with @.swp@
       --
-      -- Note that the files in @destinationDirectory@ and @storeDirectory@ will
+      -- Note that the files in 'destinationDirectory' and 'storeDirectory' will
       -- also be ignored. Note that this is the configuration parameter, if you
-      -- want to use the test, you should use @shouldIgnoreFile@.
+          -- want to use the test, you should use 'shouldIgnoreFile'.
       --
       ignoreFile           :: FilePath -> Bool
     , -- | Here, you can plug in a system command to upload/deploy your site.
@@ -51,7 +51,7 @@ data Configuration = Configuration
       --
       -- You can execute this by using
       --
-      -- > ./hakyll deploy
+      -- > ./site deploy
       --
       deployCommand        :: String
     , -- | Use an in-memory cache for items. This is faster but uses more

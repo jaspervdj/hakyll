@@ -22,7 +22,73 @@ In general, it's only necessary to use `rebuild` when you made changes to your
 Basic rules
 -----------
 
-TODO
+Let's take a look at the `site.hs` file.
+
+```haskell
+main :: IO ()
+main = hakyll $ do
+    ...
+```
+
+Hakyll configurations are in the `Rules` monad. In order to run them, the
+`hakyll` function is used, so your main function usually starts this way.
+`hakyllWith` is also available, this function allows you specify a custom
+[Configuration].
+
+[Configuration]: /reference/Hakyll-Core-Configuration.html
+
+Some actual rules look like this:
+
+```haskell
+match "images/*" $ do
+    route   idRoute
+    compile copyFileCompiler
+
+match "css/*" $ do
+    route   idRoute
+    compile compressCssCompiler
+
+```
+
+This is a declarative DSL: the order in which you write the rules make little
+difference: Hakyll will use dependency tracking to determine the correct order.
+
+We group the different rules using `match`. The first argument for `match` is a
+[Pattern]. The `OverloadedStrings` extension allows us to just write `String`s
+here, which are interpreted as globs --- all files in the `images/` directory,
+and all files in the `css/` directory.
+
+[Pattern]: /reference/Hakyll-Core-Identifier-Pattern.html
+
+Basic routes
+------------
+
+The `route` function is used for determining the output file. For example, you
+probably want to write the processed contents of `contact.markdown` to
+`_site/contact.html` and not `_site/contact.markdown`.
+
+`idRoute` is a commonly used and just keeps the filename. We use this for e.g.
+the images and CSS files.
+
+`setExtension` is another common route which takes a single argument: the
+extension of the resulting file. In order to route `contact.markdown` to
+`_site/contact.html`, use:
+
+```haskell
+route $ setExtension "html"
+```
+
+`customRoute` is a more advanced higher-order function which allows for even
+more customization. You want to route `contact.markdown` to
+`_site/nwodkram.tcatnoc`? No problem, just use:
+
+```haskell
+customRoute $ reverse . toFilePath
+```
+
+More information can be found in the [Routes] module.
+
+[Routes]: /reference/Hakyll-Core-Routes.html
 
 ## Images
 

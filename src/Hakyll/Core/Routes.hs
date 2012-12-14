@@ -138,8 +138,8 @@ gsubRoute pattern replacement = customRoute $
 
 
 --------------------------------------------------------------------------------
--- | Compose routes so that @f `composeRoutes` g@ is more or less equivalent
--- with @f >>> g@.
+-- | Compose routes so that @f \`composeRoutes\` g@ is more or less equivalent
+-- with @g . f@.
 --
 -- Example:
 --
