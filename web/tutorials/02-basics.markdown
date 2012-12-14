@@ -3,52 +3,26 @@ title: The basics
 author: Jasper Van der Jeugt
 ---
 
-## Let's get started!
+Building and cleaning
+---------------------
 
-We're going to discuss a small brochure site to start with. You can find all
-code and files necessary to build this site
-[right here](http://github.com/jaspervdj/hakyll-examples/tree/master/brochure)
--- feel free to look at them as we go trough the tutorial. To fetch all examples
-in order to play with them locally, use:
+If you followed along with the previous tutorial, you should now have the
+example site up and running. By running `./site build`, you created two
+directories:
 
-    git clone git://github.com/jaspervdj/hakyll-examples.git
+- `_site`, with your site as HTML files, ready to be deployed;
+- `_cache`, which Hakyll uses internally.
 
-or navigate to the download menu on GitHub.
+`./site clean` removes these directories, and `./site rebuild` performs a
+`clean` and then a `build`.
 
-Now, for this first tutorial, there's a number of files we will use:
+In general, it's only necessary to use `rebuild` when you made changes to your
+`site.hs`, and not when you just made changes to the contents of your website.
 
-    about.rst            A simple page written in RST format
-    code.lhs             Another page with some code (which can be highlighted)
-    css                  Directory for CSS files
-    |- default.css       The main CSS file
-    \- syntax.css        CSS file for code syntax highlighting
-    hakyll.hs            Our code to generate the site
-    images               Directory for images
-    \- haskell-logo.png  The logo of my favorite programming language
-    index.markdown       A simple page in markdown format
-    templates            Directory for templates
-    \- default.html      The main template for the site
+Basic rules
+-----------
 
-By default, hakyll will compile everything to the `_site` directory. We can try
-this like this:
-
-    [jasper@phoenix] ghc --make hakyll.hs
-    [jasper@phoenix] ./hakyll build
-
-Instead of using `build`, we can also use `preview`, which will fire up a
-webserver serving the `_site` directory, so have a look!
-
-All files have been compiled, and their output has been placed in the `_site`
-directory as illustrated in this diagram:
-
-![Brochure files](/images/brochure-files.png)
-
-No magic is involved at all -- we will precisely study how and why our items are
-compiled like that. All of this is specified in the `hakyll.hs` file. You can
-view the full `hakyll.hs` file online [here][brochure-hakyll.hs], or you can
-look in the directory you cloned or downloaded.
-
-[brochure-hakyll.hs]: http://github.com/jaspervdj/hakyll-examples/blob/master/brochure/hakyll.hs
+TODO
 
 ## Images
 

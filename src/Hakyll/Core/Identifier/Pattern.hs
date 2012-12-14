@@ -1,40 +1,33 @@
 --------------------------------------------------------------------------------
--- | Module providing pattern matching and capturing on 'Identifier's.
--- 'Pattern's come in two kinds:
+-- | As 'Identifier' is used to specify a single item, a 'Pattern' is used to
+-- specify a list of items.
 --
--- * Simple glob patterns, like @foo\/*@;
+-- In most cases, globs are used for patterns.
 --
--- * Custom, arbitrary predicates of the type @Identifier -> Bool@.
---
--- They both have advantages and disadvantages. By default, globs are used,
--- unless you construct your 'Pattern' using the 'predicate' function.
---
--- A very simple pattern could be, for example, @foo\/bar@. This pattern will
+-- A very simple pattern of such a pattern is @\"foo\/bar\"@. This pattern will
 -- only match the exact @foo\/bar@ identifier.
 --
 -- To match more than one identifier, there are different captures that one can
 -- use:
 --
--- * @*@: matches at most one element of an identifier;
+-- * @\"*\"@: matches at most one element of an identifier;
 --
--- * @**@: matches one or more elements of an identifier.
+-- * @\"**\"@: matches one or more elements of an identifier.
 --
 -- Some examples:
 --
--- * @foo\/*@ will match @foo\/bar@ and @foo\/foo@, but not @foo\/bar\/qux@;
+-- * @\"foo\/*\"@ will match @\"foo\/bar\"@ and @\"foo\/foo\"@, but not
+--   @\"foo\/bar\/qux\"@;
 --
--- * @**@ will match any identifier;
+-- * @\"**\"@ will match any identifier;
 --
--- * @foo\/**@ will match @foo\/bar@ and @foo\/bar\/qux@, but not @bar\/foo@;
+-- * @\"foo\/**\"@ will match @\"foo\/bar\"@ and @\"foo\/bar\/qux\"@, but not
+--   @\"bar\/foo\"@;
 --
--- * @foo\/*.html@ will match all HTML files in the @foo\/@ directory.
+-- * @\"foo\/*.html\"@ will match all HTML files in the @\"foo\/\"@ directory.
 --
 -- The 'capture' function allows the user to get access to the elements captured
 -- by the capture elements in the pattern.
---
--- Like an 'Identifier', a 'Pattern' also has a type parameter. This is simply
--- an extra layer of safety, and can be discarded using the 'castPattern'
--- function.
 module Hakyll.Core.Identifier.Pattern
     ( -- * The pattern type
       Pattern
@@ -213,8 +206,8 @@ withVersion p v = optimize $ And p $ fromVersion $ Just v
 
 
 --------------------------------------------------------------------------------
--- | Check if a pattern is a literal. @"*.markdown"@ is not a literal but
--- @"posts.markdown"@ is.
+-- | Check if a pattern is a literal. @\"*.markdown\"@ is not a literal but
+-- @\"posts.markdown\"@ is.
 fromLiteral :: Pattern -> Maybe Identifier
 fromLiteral pattern = case pattern of
     Glob p -> fmap fromFilePath $ foldr fromLiteral' (Just "") p
