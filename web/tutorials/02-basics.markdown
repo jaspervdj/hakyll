@@ -99,6 +99,8 @@ some common examples:
 
 - `copyFileCompiler` is self-explanatory, the output is exactly the same as the
   input;
+- `getResourceBody` just gets you the content as a `String`, so you can perform
+  other manipulations afterwards;
 - `compressCssCompiler` performs some simple build-in compression
   transformations for CSS;
 - `pandocCompiler` reads markdown, reStructuredText, or another input format and
