@@ -31,3 +31,8 @@ Sometimes you just want the *contents* and not the `Item`:
 ```haskell
 loadBody "posts/foo.markdown" :: Compiler String
 ```
+
+This is all useful if we want to use Hakyll's templating system.
+
+Basic templates
+---------------
