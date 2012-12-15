@@ -18,14 +18,14 @@ main = hakyll $ do
 
     match (fromList ["about.rst", "contact.markdown"]) $ do
         route   $ setExtension "html"
-        compile $ pageCompiler
+        compile $ pandocCompiler
             >>= loadAndApplyTemplate "templates/default.html" defaultContext
             >>= relativizeUrls
 
     match "posts/*" $ do
         route $ setExtension "html"
         compile $ do
-            post <- pageCompiler
+            post <- pandocCompiler
             saveSnapshot "content" post
             return post
                 >>= loadAndApplyTemplate "templates/post.html"    postCtx

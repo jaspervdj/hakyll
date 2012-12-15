@@ -15,7 +15,7 @@ import           Test.HUnit                     (Assertion, (@=?))
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Item
 import           Hakyll.Core.Provider
-import           Hakyll.Web.Page
+import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           TestSuite.Util
@@ -36,7 +36,7 @@ case01 = withTestStore $ \store -> do
     out  <- resourceString provider "template.html.out"
     tpl  <- testCompilerDone store provider "template.html" $ templateCompiler
     item <- testCompilerDone store provider "example.md"    $
-        pageCompiler >>= applyTemplate (itemBody tpl) testContext
+        pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 
     out @=? itemBody item
 

@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- | Module exporting convenientpandoc bindings
+-- | Module exporting convenient pandoc bindings
 module Hakyll.Web.Pandoc
     ( -- * The basic building blocks
       readPandoc
@@ -9,6 +9,11 @@ module Hakyll.Web.Pandoc
     , renderPandoc
     , renderPandocWith
 
+      -- * Derived compilers
+    , pandocCompiler
+    , pandocCompilerWith
+    , pandocCompilerWithTransform
+
       -- * Default options
     , defaultHakyllParserState
     , defaultHakyllWriterOptions
@@ -16,10 +21,12 @@ module Hakyll.Web.Pandoc
 
 
 --------------------------------------------------------------------------------
+import           Control.Applicative        ((<$>))
 import           Text.Pandoc
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler
 import           Hakyll.Core.Item
 import           Hakyll.Web.Pandoc.FileType
 
@@ -76,6 +83,32 @@ renderPandoc =
 -- | Render the resource using pandoc
 renderPandocWith :: ParserState -> WriterOptions -> Item String -> Item String
 renderPandocWith state options = writePandocWith options . readPandocWith state
+
+
+--------------------------------------------------------------------------------
+-- | Read a page render using pandoc
+pandocCompiler :: Compiler (Item String)
+pandocCompiler =
+    pandocCompilerWith defaultHakyllParserState defaultHakyllWriterOptions
+
+
+--------------------------------------------------------------------------------
+-- | A version of 'pandocCompiler' which allows you to specify your own pandoc
+-- options
+pandocCompilerWith :: ParserState -> WriterOptions -> Compiler (Item String)
+pandocCompilerWith state options = pandocCompilerWithTransform state options id
+
+
+--------------------------------------------------------------------------------
+-- | An extension of 'pandocCompilerWith' which allows you to specify a custom
+-- pandoc transformation for the content
+pandocCompilerWithTransform :: ParserState -> WriterOptions
+                            -> (Pandoc -> Pandoc)
+                            -> Compiler (Item String)
+pandocCompilerWithTransform state options f = cached cacheName $
+    writePandocWith options . fmap f . readPandocWith state <$> getResourceBody
+  where
+    cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"
 
 
 --------------------------------------------------------------------------------

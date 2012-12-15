@@ -20,7 +20,7 @@ import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
 import           Hakyll.Core.Writable.CopyFile
-import           Hakyll.Web.Page
+import           Hakyll.Web.Pandoc
 import           TestSuite.Util
 
 
@@ -61,7 +61,7 @@ rules = do
     -- Compile some posts
     match "*.md" $ do
         route $ setExtension "html"
-        compile pageCompiler
+        compile pandocCompiler
 
     -- Compile them, raw
     match "*.md" $ version "raw" $ do

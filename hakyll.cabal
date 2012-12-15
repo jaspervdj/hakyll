@@ -126,7 +126,6 @@ Library
     Hakyll.Main
     Hakyll.Web.CompressCss
     Hakyll.Web.Feed
-    Hakyll.Web.Page
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.Biblio
     Hakyll.Web.Pandoc.FileType
