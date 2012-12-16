@@ -37,7 +37,7 @@ match "css/*" $ do
 ```
 
 This is a declarative DSL: the order in which you write the rules make little
-difference: Hakyll will use dependency tracking to determine the correct order.
+difference, Hakyll will use dependency tracking to determine the correct order.
 
 We group the different rules using `match`. The first argument for `match` is a
 [Pattern]. The `OverloadedStrings` extension allows us to just write `String`s
@@ -53,11 +53,11 @@ The `route` function is used for determining the output file. For example, you
 probably want to write the processed contents of `contact.markdown` to
 `_site/contact.html` and not `_site/contact.markdown`.
 
-`idRoute` is a commonly used and just keeps the filename. We use this for e.g.
-the images and CSS files.
+`idRoute` is a commonly used route and just keeps the filename. We use this for
+e.g.  the images and CSS files.
 
 `setExtension` is another common route which takes a single argument: the
-extension of the resulting file. In order to route `contact.markdown` to
+desired extension of the resulting file. In order to route `contact.markdown` to
 `_site/contact.html`, use:
 
 ```haskell

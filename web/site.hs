@@ -21,14 +21,14 @@ main = hakyllWith config $ do
     -- Pages
     match "*.markdown" $ do
         route   $ setExtension "html"
-        compile $ pageCompiler
+        compile $ pandocCompiler
             >>= loadAndApplyTemplate "templates/default.html" defaultContext
             >>= relativizeUrls
 
     -- Tutorials
     match "tutorials/*" $ do
         route   $ setExtension "html"
-        compile $ pageCompilerWith defaultHakyllParserState withToc
+        compile $ pandocCompilerWith defaultHakyllParserState withToc
             >>= loadAndApplyTemplate "templates/tutorial.html" defaultContext
             >>= loadAndApplyTemplate "templates/default.html" defaultContext
             >>= relativizeUrls
