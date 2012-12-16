@@ -96,6 +96,7 @@ bodyField key = field key $ return . itemBody
 
 
 --------------------------------------------------------------------------------
+-- | Map any field to its metadata value, if present
 metadataField :: Context String
 metadataField = Context $ \k i -> do
     metadata <- getMetadata $ itemIdentifier i
@@ -103,17 +104,20 @@ metadataField = Context $ \k i -> do
 
 
 --------------------------------------------------------------------------------
+-- | Absolute url to the resulting item
 urlField :: String -> Context a
 urlField key = field key $
     fmap (maybe empty toUrl) . getRoute . itemIdentifier
 
 
 --------------------------------------------------------------------------------
+-- | Filepath of the underlying file of the item
 pathField :: String -> Context a
 pathField key = field key $ return . toFilePath . itemIdentifier
 
 
 --------------------------------------------------------------------------------
+-- | This title field takes the basename of the underlying file by default
 titleField :: String -> Context a
 titleField key = mapContext takeBaseName $ pathField key
 
