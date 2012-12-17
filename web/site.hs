@@ -67,5 +67,5 @@ config :: Configuration
 config = defaultConfiguration
     { verbosity     = Debug
     , deployCommand = "rsync --checksum -ave 'ssh -p 2222' \
-                      \_site/* jaspervdj@jaspervdj.be:jaspervdj.be/hakyll"
+                      \_site/* jaspervdj@jaspervdj.be:jaspervdj.be/tmp/hakyll4"
     }
