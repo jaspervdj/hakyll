@@ -34,8 +34,10 @@ loadBody "posts/foo.markdown" :: Compiler String
 
 This is all useful if we want to use Hakyll's templating system.
 
-Basic templates
----------------
+Templates
+---------
+
+### Basic templates
 
 Let's have a look at a simple template:
 
@@ -47,6 +49,16 @@ As you can probably guess, template files just contain text and only the `$`
 character has special meaning: text between dollar signs ("fields") is replaced
 when the template is applied. If you want an actual dollar sign in the output,
 use `$$`.
+
+You usually compile the templates from disk using the aptly named
+`templateCompiler`:
+
+    match "templates/*" $ compile templateCompiler
+
+Notice the lack of `route` here: this is because we don't need to write the
+templates to your `_site` folder, we just want to use them elsewhere.
+
+### Templates: Context
 
 We can easily guess the meaning of `$title$`, `$date$`, and `$body$`, but these
 are not hard-coded fields: they belong to a certain [Context]. A `Context`
@@ -89,18 +101,72 @@ context = mconcat
     ]
 ```
 
-TODO: Write about defaultContext. Extend it with dateField.
+Obviously, it would be tedious to implement things like `titleContext` over and
+over again for different websites and different fields. This is why hakyll
+provides `defaultContext`. `defaultContext` is a composed `Context` and allows
+you to use:
 
-You usually compile the templates from disk using the aptly named
-`templateCompiler`:
+- `$body$` for the body of the page;
+- `$url$` for the destination URL of the page;
+- `$path$` for the original filepath of the page;
+- `$foo$` where foo is specified in the metadata.
 
-    match "templates/*" $ compile templateCompiler
+`$date$` is not provided by default, you can see how we add it in the definition
+of `postCtx` in `site.hs`:
 
-Notice the lack of `route` here: this is because we don't need to write the
-templates to your `_site` folder, we just want to use them elsewhere.
+```haskell
+postCtx :: Context String
+postCtx =
+    dateField "date" "%B %e, %Y" `mappend`
+    defaultContext
+```
 
-Using them elsewhere is easy: we just use `load`!
+### Loading and applying templates
 
-TODO: Full example: load template, apply. Then `loadAndApplyTemplate`.
+Now we know about templates, context and how to load arbitrary items. This gives
+us enough background information in order to understand you can apply a
+template:
 
-TODO: Load a list of posts, demonstrate `applyTemplateList`.
+```haskell
+compile $ do
+    tpl <- loadBody "templates/post.html"
+    pandocCompiler >>= applyTemplate tpl postCtx
+```
+
+Loading and then immediately applying a template is so common there's a
+shorthand function:
+
+```haskell
+compile $
+    pandocCompiler >>= loadAndApplyTemplate "templates/post.html" postCtx
+```
+
+## Producing a list of items
+
+At this point, everything in the example site we generated should be clear to
+you, except for how we produce the list of posts in `archive.html` and
+`index.html`.
+
+However, this really isn't hard and just uses the things we saw before: loading
+other items and applying templates.
+
+We can reproduce a list of items in the archive using the following code:
+
+```haskell
+compile $ do
+    posts   <- recentFirst <$> loadAll "posts/*"
+    itemTpl <- loadBody "templates/post-item.html"
+    applyTemplateList itemTpl postCtx posts
+```
+
+`recentFirst` sorts items by date. This relies on the convention that posts are
+always named `YYYY-MM-DD-title.extension` in Hakyll -- if you use some other
+format, you'll have to write some other sorting method.
+
+```haskell
+recentFirst :: [Item a] -> [Item a]
+```
+
+After loading and sorting the items, we load a template for the posts.
+`applyTemplateList` applies this template to every post and concatenates the
+result, which is a simple `String`.
