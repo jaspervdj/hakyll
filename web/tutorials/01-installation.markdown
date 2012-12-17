@@ -13,6 +13,11 @@ different distributions.
 
 [cabal]: http://www.haskell.org/cabal/
 
+If you have a recent installation of `cabal` and your time is somewhat valuable,
+use:
+
+    $ cabal install -j hakyll
+
 Linux distro packages:
 
 - [Archlinux (AUR)](https://aur.archlinux.org/packages/haskell-hakyll/)
