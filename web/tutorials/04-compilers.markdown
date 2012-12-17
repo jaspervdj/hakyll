@@ -12,7 +12,7 @@ the Hakyll library.
 Suppose that you're generating `index.html` which shows your latest brilliant
 blogpost. This requires `posts/foo.markdown` to be generated *before*
 `index.html` (so we don't have to generate it twice). But you don't have to care
-about all of that: Hakyll will sort this out this out for you automatically!
+about any of that: Hakyll will sort this out for you automatically!
 
 Let's see some quick examples. We can load a specific item:
 
