@@ -81,13 +81,10 @@ tellResources resources' = Rules $ tell $
 
 
 --------------------------------------------------------------------------------
-match :: Pattern -> Rules b -> Rules b
-match pattern = Rules . censor matchRoutes . local addPattern . unRules
+-- | Make sure routes are consistent with the compilers in this section
+fixRoutes :: Rules b -> Rules b
+fixRoutes = Rules . censor matchRoutes . unRules
   where
-    addPattern env = env
-        { rulesPattern = rulesPattern env `mappend` pattern
-        }
-
     -- Create a fast pattern for routing that matches exactly the compilers
     -- created in the block given to match
     matchRoutes ruleSet = ruleSet
@@ -97,10 +94,18 @@ match pattern = Rules . censor matchRoutes . local addPattern . unRules
         fastPattern = fromList [id' | (id', _) <- rulesCompilers ruleSet]
 
 
+--------------------------------------------------------------------------------
+match :: Pattern -> Rules b -> Rules b
+match pattern = fixRoutes . Rules . local addPattern . unRules
+  where
+    addPattern env = env
+        { rulesPattern = rulesPattern env `mappend` pattern
+        }
+
 
 --------------------------------------------------------------------------------
 version :: String -> Rules a -> Rules a
-version v = Rules . local setVersion' . unRules
+version v = fixRoutes . Rules . local setVersion' . unRules
   where
     setVersion' env = env {rulesVersion = Just v}
 
