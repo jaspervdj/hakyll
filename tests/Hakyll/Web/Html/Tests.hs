@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
-module Hakyll.Web.Urls.Tests
+module Hakyll.Web.Html.Tests
     ( tests
     ) where
 
@@ -11,14 +11,19 @@ import           Test.HUnit      (assert, (@=?))
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Web.Urls
+import           Hakyll.Web.Html
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
 tests :: Test
-tests = testGroup "Hakyll.Web.Urls.Tests" $ concat
-    [ fromAssertions "withUrls"
+tests = testGroup "Hakyll.Web.Html.Tests" $ concat
+    [ fromAssertions "demoteHeaders"
+        [ "<h2>A h1 title</h2>" @=?
+            demoteHeaders "<h1>A h1 title</h1>"
+        ]
+
+    , fromAssertions "withUrls"
         [ "<a href=\"FOO\">bar</a>" @=?
             withUrls (map toUpper) "<a href=\"foo\">bar</a>"
         , "<img src=\"OH BAR\" />" @=?
@@ -51,5 +56,16 @@ tests = testGroup "Hakyll.Web.Urls.Tests" $ concat
         , assert (isExternal "https://mail.google.com")
         , assert (not (isExternal "../header.png"))
         , assert (not (isExternal "/foo/index.html"))
+        ]
+
+    , fromAssertions "stripTags"
+        [ "foo"     @=? stripTags "<p>foo</p>"
+        , "foo bar" @=? stripTags "<p>foo</p> bar"
+        , "foo"     @=? stripTags "<p>foo</p"
+        ]
+
+    , fromAssertions "escapeHtml"
+        [ "Me &amp; Dean" @=? escapeHtml "Me & Dean"
+        , "&lt;img&gt;"   @=? escapeHtml "<img>"
         ]
     ]

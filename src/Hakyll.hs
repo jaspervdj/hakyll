@@ -1,5 +1,5 @@
+--------------------------------------------------------------------------------
 -- | Top-level module exporting all modules that are interesting for the user
---
 {-# LANGUAGE CPP #-}
 module Hakyll
     ( module Hakyll.Core.Compiler
@@ -20,45 +20,45 @@ module Hakyll
     , module Hakyll.Main
     , module Hakyll.Web.CompressCss
     , module Hakyll.Web.Feed
+    , module Hakyll.Web.Html
+    , module Hakyll.Web.Html.RelativizeUrls
     , module Hakyll.Web.Pandoc
     , module Hakyll.Web.Pandoc.Biblio
     , module Hakyll.Web.Pandoc.FileType
-    , module Hakyll.Web.Urls
-    , module Hakyll.Web.Urls.Relativize
     , module Hakyll.Web.Tags
     , module Hakyll.Web.Template
     , module Hakyll.Web.Template.Context
     , module Hakyll.Web.Template.List
     , module Hakyll.Web.Template.Read
-    , module Hakyll.Web.Util.Html
     ) where
 
-import Hakyll.Core.Compiler
-import Hakyll.Core.Configuration
-import Hakyll.Core.Identifier
-import Hakyll.Core.Identifier.Pattern
-import Hakyll.Core.Item
-import Hakyll.Core.Metadata
-import Hakyll.Core.Routes
-import Hakyll.Core.Rules
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler
+import           Hakyll.Core.Configuration
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Identifier.Pattern
+import           Hakyll.Core.Item
+import           Hakyll.Core.Metadata
+import           Hakyll.Core.Routes
+import           Hakyll.Core.Rules
 #ifdef UNIX_FILTER
-import Hakyll.Core.UnixFilter
+import           Hakyll.Core.UnixFilter
 #endif
-import Hakyll.Core.Util.File
-import Hakyll.Core.Util.String
-import Hakyll.Core.Writable
-import Hakyll.Core.Writable.CopyFile
-import Hakyll.Main
-import Hakyll.Web.CompressCss
-import Hakyll.Web.Feed
-import Hakyll.Web.Pandoc
-import Hakyll.Web.Pandoc.Biblio
-import Hakyll.Web.Pandoc.FileType
-import Hakyll.Web.Urls
-import Hakyll.Web.Urls.Relativize
-import Hakyll.Web.Tags
-import Hakyll.Web.Template
-import Hakyll.Web.Template.Context
-import Hakyll.Web.Template.List
-import Hakyll.Web.Template.Read
-import Hakyll.Web.Util.Html
+import           Hakyll.Core.Util.File
+import           Hakyll.Core.Util.String
+import           Hakyll.Core.Writable
+import           Hakyll.Core.Writable.CopyFile
+import           Hakyll.Main
+import           Hakyll.Web.CompressCss
+import           Hakyll.Web.Feed
+import           Hakyll.Web.Html
+import           Hakyll.Web.Html.RelativizeUrls
+import           Hakyll.Web.Pandoc
+import           Hakyll.Web.Pandoc.Biblio
+import           Hakyll.Web.Pandoc.FileType
+import           Hakyll.Web.Tags
+import           Hakyll.Web.Template
+import           Hakyll.Web.Template.Context
+import           Hakyll.Web.Template.List
+import           Hakyll.Web.Template.Read

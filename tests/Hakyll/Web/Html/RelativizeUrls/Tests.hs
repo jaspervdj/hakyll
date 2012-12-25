@@ -1,22 +1,22 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-module Hakyll.Web.Urls.Relativize.Tests
+module Hakyll.Web.Html.RelativizeUrls.Tests
     ( tests
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework             (Test, testGroup)
-import           Test.HUnit                 ((@=?))
+import           Test.Framework                 (Test, testGroup)
+import           Test.HUnit                     ((@=?))
 
 --------------------------------------------------------------------------------
-import           Hakyll.Web.Urls.Relativize
+import           Hakyll.Web.Html.RelativizeUrls
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
 tests :: Test
-tests = testGroup "Hakyll.Web.Urls.Relativize.Tests" $
+tests = testGroup "Hakyll.Web.Html.RelativizeUrls.Tests" $
     fromAssertions "relativizeUrls"
         [ "<a href=\"../foo\">bar</a>" @=?
             relativizeUrlsWith ".." "<a href=\"/foo\">bar</a>"

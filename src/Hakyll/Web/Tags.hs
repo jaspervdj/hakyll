@@ -83,7 +83,7 @@ import           Hakyll.Core.Metadata
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Util.String
 import           Hakyll.Web.Template.Context
-import           Hakyll.Web.Urls
+import           Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------

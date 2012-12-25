@@ -1,0 +1,147 @@
+--------------------------------------------------------------------------------
+-- | Provides utilities to manipulate HTML pages
+module Hakyll.Web.Html
+    ( -- * Generic
+      withTags
+
+      -- * Headers
+    , demoteHeaders
+
+      -- * Url manipulation
+    , withUrls
+    , toUrl
+    , toSiteRoot
+    , isExternal
+
+      -- * Stripping/escaping
+    , stripTags
+    , escapeHtml
+    ) where
+
+
+--------------------------------------------------------------------------------
+import           Data.Char         (digitToInt, intToDigit, isDigit, toLower)
+import           Data.List         (isPrefixOf)
+import qualified Data.Set          as S
+import           System.FilePath   (joinPath, splitPath, takeDirectory)
+import Text.Blaze.Html (toHtml)
+import Text.Blaze.Html.Renderer.String (renderHtml)
+
+
+--------------------------------------------------------------------------------
+import qualified Text.HTML.TagSoup as TS
+
+
+--------------------------------------------------------------------------------
+-- | Map over all tags in the document
+withTags :: (TS.Tag String -> TS.Tag String) -> String -> String
+withTags f = renderTags' . map f . TS.parseTags
+
+
+--------------------------------------------------------------------------------
+-- | Map every @h1@ to an @h2@, @h2@ to @h3@, etc.
+demoteHeaders :: String -> String
+demoteHeaders = withTags $ \tag -> case tag of
+    TS.TagOpen t a -> TS.TagOpen (demote t) a
+    TS.TagClose t  -> TS.TagClose (demote t)
+    t              -> t
+  where
+    demote t@['h', n]
+        | isDigit n = ['h', intToDigit (min 6 $ digitToInt n + 1)]
+        | otherwise = t
+    demote t        = t
+
+
+--------------------------------------------------------------------------------
+-- | Apply a function to each URL on a webpage
+withUrls :: (String -> String) -> String -> String
+withUrls f = withTags tag
+  where
+    tag (TS.TagOpen s a) = TS.TagOpen s $ map attr a
+    tag x                = x
+    attr (k, v)          = (k, if k `S.member` refs then f v else v)
+    refs                 = S.fromList ["src", "href"]
+
+
+-- | Customized TagSoup renderer. (The default TagSoup renderer escape CSS
+-- within style tags.)
+renderTags' :: [TS.Tag String] -> String
+renderTags' = TS.renderTagsOptions TS.renderOptions
+    { TS.optRawTag   = (`elem` ["script", "style"]) . map toLower
+    , TS.optMinimize = (`elem` ["br", "img"])
+    }
+
+
+--------------------------------------------------------------------------------
+-- | Convert a filepath to an URL starting from the site root
+--
+-- Example:
+--
+-- > toUrl "foo/bar.html"
+--
+-- Result:
+--
+-- > "/foo/bar.html"
+toUrl :: FilePath -> String
+toUrl ('/' : xs) = '/' : xs
+toUrl url        = '/' : url
+
+
+--------------------------------------------------------------------------------
+-- | Get the relative url to the site root, for a given (absolute) url
+toSiteRoot :: String -> String
+toSiteRoot = emptyException . joinPath . map parent
+           . filter relevant . splitPath . takeDirectory
+  where
+    parent            = const ".."
+    emptyException [] = "."
+    emptyException x  = x
+    relevant "."      = False
+    relevant "/"      = False
+    relevant _        = True
+
+
+--------------------------------------------------------------------------------
+-- | Check if an URL links to an external HTTP(S) source
+isExternal :: String -> Bool
+isExternal url = any (flip isPrefixOf url) ["http://", "https://"]
+
+
+--------------------------------------------------------------------------------
+-- | Strip all HTML tags from a string
+--
+-- Example:
+--
+-- > stripTags "<p>foo</p>"
+--
+-- Result:
+--
+-- > "foo"
+--
+-- This also works for incomplete tags
+--
+-- Example:
+--
+-- > stripTags "<p>foo</p"
+--
+-- Result:
+--
+-- > "foo"
+stripTags :: String -> String
+stripTags []         = []
+stripTags ('<' : xs) = stripTags $ drop 1 $ dropWhile (/= '>') xs
+stripTags (x : xs)   = x : stripTags xs
+
+
+--------------------------------------------------------------------------------
+-- | HTML-escape a string
+--
+-- Example:
+--
+-- > escapeHtml "Me & Dean"
+--
+-- Result:
+--
+-- > "Me &amp; Dean"
+escapeHtml :: String -> String
+escapeHtml = renderHtml . toHtml

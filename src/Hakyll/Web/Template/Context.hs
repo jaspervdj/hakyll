@@ -40,7 +40,7 @@ import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Util.String       (splitAll)
-import           Hakyll.Web.Urls
+import           Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------

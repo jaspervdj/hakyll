@@ -126,6 +126,8 @@ Library
     Hakyll.Main
     Hakyll.Web.CompressCss
     Hakyll.Web.Feed
+    Hakyll.Web.Html
+    Hakyll.Web.Html.RelativizeUrls
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.Biblio
     Hakyll.Web.Pandoc.FileType
@@ -134,9 +136,6 @@ Library
     Hakyll.Web.Template.Context
     Hakyll.Web.Template.List
     Hakyll.Web.Template.Read
-    Hakyll.Web.Urls
-    Hakyll.Web.Urls.Relativize
-    Hakyll.Web.Util.Html
 
   Other-Modules:
     Hakyll.Core.Compiler.Internal
@@ -223,9 +222,8 @@ Test-suite hakyll-tests
     Hakyll.Core.Util.String.Tests
     Hakyll.Web.Template.Context.Tests
     Hakyll.Web.Template.Tests
-    Hakyll.Web.Urls.Tests
-    Hakyll.Web.Urls.Relativize.Tests
-    Hakyll.Web.Util.Html.Tests
+    Hakyll.Web.Html.Tests
+    Hakyll.Web.Html.RelativizeUrls.Tests
     TestSuite.Util
 
 Executable hakyll-init

@@ -14,7 +14,7 @@
 -- will result in (suppose your blogpost is located at @\/posts\/foo.html@:
 --
 -- > <img src="../images/lolcat.png" alt="Funny zomgroflcopter" />
-module Hakyll.Web.Urls.Relativize
+module Hakyll.Web.Html.RelativizeUrls
     ( relativizeUrls
     , relativizeUrlsWith
     ) where
@@ -27,7 +27,7 @@ import           Data.List            (isPrefixOf)
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Item
-import           Hakyll.Web.Urls
+import           Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------
