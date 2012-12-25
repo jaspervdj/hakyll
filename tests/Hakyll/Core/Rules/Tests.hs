@@ -44,6 +44,8 @@ rulesTest = withTestStore $ \store -> do
     Just "example.html" @=? runRoutes routes "example.md"
     Just "example.md"   @=? runRoutes routes (sv "raw" "example.md")
     Just "example.md"   @=? runRoutes routes (sv "nav" "example.md")
+    Just "example.mv1"  @=? runRoutes routes (sv "mv1" "example.md")
+    Just "example.mv2"  @=? runRoutes routes (sv "mv2" "example.md")
   where
     sv g     = setVersion (Just g)
     expected =
@@ -72,3 +74,12 @@ rules = do
     version "nav" $ match (fromList ["example.md"]) $ do
         route idRoute
         compile copyFileCompiler
+
+    -- Another edge case: different versions in one match
+    match "*.md" $ do
+        version "mv1" $ do
+            route $ setExtension "mv1"
+            compile getResourceString
+        version "mv2" $ do
+            route $ setExtension "mv2"
+            compile getResourceString
