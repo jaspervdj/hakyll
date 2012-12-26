@@ -5,17 +5,21 @@
 module Hakyll.Core.Item
     ( Item (..)
     , itemSetBody
-    , itemM
+    , withItemBody
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative    ((<$>), (<*>))
-import           Data.Binary            (Binary (..))
-import           Data.Typeable          (Typeable)
+import           Control.Applicative           (Applicative, (<$>), (<*>))
+import           Data.Binary                   (Binary (..))
+import           Data.Foldable                 (Foldable (..))
+import           Data.Traversable              (Traversable (..))
+import           Data.Typeable                 (Typeable)
+import           Prelude                       hiding (foldr)
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 
 
@@ -32,6 +36,16 @@ instance Functor Item where
 
 
 --------------------------------------------------------------------------------
+instance Foldable Item where
+    foldr f z (Item _ x) = f x z
+
+
+--------------------------------------------------------------------------------
+instance Traversable Item where
+    traverse f (Item i x) = Item i <$> f x
+
+
+--------------------------------------------------------------------------------
 instance Binary a => Binary (Item a) where
     put (Item i x) = put i >> put x
     get            = Item <$> get <*> get
@@ -43,5 +57,9 @@ itemSetBody x (Item i _) = Item i x
 
 
 --------------------------------------------------------------------------------
-itemM :: Monad m => (a -> m b) -> Item a -> m (Item b)
-itemM f (Item i b) = f b >>= \b' -> return (Item i b')
+-- | Perform a compiler action on the item body. This is the same as 'traverse',
+-- but looks less intimidating.
+--
+-- > withItemBody = traverse
+withItemBody :: (a -> Compiler b) -> Item a -> Compiler (Item b)
+withItemBody = traverse

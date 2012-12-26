@@ -26,7 +26,7 @@ import           Hakyll.Core.Compiler
 -- as a compiler.
 --
 -- > rev :: Compiler String
--- > rev = getResourceString >>= itemM (unixFilter "rev" [])
+-- > rev = getResourceString >>= withItemBody (unixFilter "rev" [])
 --
 -- A more realistic example: one can use this to call, for example, the sass
 -- compiler on CSS files. More information about sass can be found here:
@@ -38,7 +38,7 @@ import           Hakyll.Core.Compiler
 -- > match "style.scss" $ do
 -- >     route   $ setExtension "css"
 -- >     compile $ getResourceString >>=
--- >         itemM (unixFilter "sass" ["-s", "--scss"]) >>=
+-- >         withItemBody (unixFilter "sass" ["-s", "--scss"]) >>=
 -- >         compressCssCompiler
 unixFilter :: String           -- ^ Program name
            -> [String]         -- ^ Program args
@@ -59,7 +59,7 @@ unixFilter = unixFilterWith writer reader
 --
 -- > match "music.wav" $ do
 -- >     route   $ setExtension "ogg"
--- >     compile $ getResourceLBS >>= unixFilter "oggenc" ["-"]
+-- >     compile $ getResourceLBS >>= withItemBody (unixFilter "oggenc" ["-"])
 unixFilterLBS :: String               -- ^ Program name
               -> [String]             -- ^ Program args
               -> ByteString           -- ^ Program input

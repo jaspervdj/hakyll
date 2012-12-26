@@ -33,5 +33,5 @@ unixFilterRev = withTestStore $ \store -> do
     expected <- testCompilerDone store provider "russian.md" getResourceString
     H.assert $ rev (itemBody expected) == lines (itemBody output)
   where
-    compiler = getResourceString >>= itemM (unixFilter "rev" [])
+    compiler = getResourceString >>= withItemBody (unixFilter "rev" [])
     rev      = map reverse . lines
