@@ -30,9 +30,10 @@ module Hakyll.Core.Rules
 
 --------------------------------------------------------------------------------
 import           Control.Applicative            ((<$>))
-import           Control.Arrow                  (second)
 import           Control.Monad.Reader           (ask, local)
+import           Control.Monad.State            (get, modify, put)
 import           Control.Monad.Writer           (censor, tell)
+import           Data.Maybe                     (fromMaybe)
 import           Data.Monoid                    (mappend, mempty)
 import qualified Data.Set                       as S
 
@@ -63,40 +64,50 @@ tellRoute route' = Rules $ tell $ RuleSet route' mempty mempty
 
 --------------------------------------------------------------------------------
 -- | Add a number of compilers
-tellCompilers :: (Binary a, Typeable a, Writable a)
-             => [(Identifier, Compiler (Item a))]
-             -> Rules ()
-tellCompilers compilers = Rules $ do
-    -- We box the compilers so they have a more simple type
-    let compilers' = map (second $ fmap SomeItem) compilers
-    tell $ RuleSet mempty compilers' mempty
+tellCompilers :: [(Identifier, Compiler SomeItem)] -> Rules ()
+tellCompilers compilers = Rules $ tell $ RuleSet mempty compilers mempty
 
 
 --------------------------------------------------------------------------------
 -- | Add resources
-tellResources :: [Identifier]
-              -> Rules ()
+tellResources :: [Identifier] -> Rules ()
 tellResources resources' = Rules $ tell $
     RuleSet mempty mempty $ S.fromList resources'
 
 
 --------------------------------------------------------------------------------
--- | Make sure routes are consistent with the compilers in this section
-fixRoutes :: Rules b -> Rules b
-fixRoutes = Rules . censor matchRoutes . unRules
-  where
-    -- Create a fast pattern for routing that matches exactly the compilers
-    -- created in the block given to match
-    matchRoutes ruleSet = ruleSet
-        { rulesRoutes = matchRoute fastPattern (rulesRoutes ruleSet)
-        }
-      where
-        fastPattern = fromList [id' | (id', _) <- rulesCompilers ruleSet]
+flush :: Rules ()
+flush = Rules $ do
+    mcompiler <- rulesCompiler <$> get
+    case mcompiler of
+        Nothing       -> return ()
+        Just compiler -> do
+            pattern  <- rulesPattern                  <$> ask
+            version' <- rulesVersion                  <$> ask
+            route'   <- fromMaybe mempty . rulesRoute <$> get
+            ids      <- case fromLiteral pattern of
+                Just id' -> return [setVersion version' id']
+                Nothing  -> do
+                    ids <- unRules $ getMatches pattern
+                    unRules $ tellResources ids
+                    return $ map (setVersion version') ids
+
+            -- Create a fast pattern for routing that matches exactly the
+            -- compilers created in the block given to match
+            let fastPattern = fromList ids
+
+            -- Write out the compilers and routes
+            unRules $ tellRoute $ matchRoute fastPattern route'
+            unRules $ tellCompilers $ [(id', compiler) | id' <- ids]
+
+    put $ emptyRulesState
 
 
 --------------------------------------------------------------------------------
-match :: Pattern -> Rules b -> Rules b
-match pattern = fixRoutes . Rules . local addPattern . unRules
+match :: Pattern -> Rules () -> Rules ()
+match pattern rules = do
+    flush
+    Rules $ local addPattern $ unRules $ rules >> flush
   where
     addPattern env = env
         { rulesPattern = rulesPattern env `mappend` pattern
@@ -104,8 +115,10 @@ match pattern = fixRoutes . Rules . local addPattern . unRules
 
 
 --------------------------------------------------------------------------------
-version :: String -> Rules a -> Rules a
-version v = fixRoutes . Rules . local setVersion' . unRules
+version :: String -> Rules () -> Rules ()
+version v rules = do
+    flush
+    Rules $ local setVersion' $ unRules $ rules >> flush
   where
     setVersion' env = env {rulesVersion = Just v}
 
@@ -116,19 +129,9 @@ version v = fixRoutes . Rules . local setVersion' . unRules
 -- This instructs all resources to be compiled using the given compiler. When
 -- no resources match the current selection, nothing will happen. In this case,
 -- you might want to have a look at 'create'.
-compile :: (Binary a, Typeable a, Writable a)
-        => Compiler (Item a) -> Rules ()
-compile compiler = do
-    pattern  <- Rules $ rulesPattern <$> ask
-    version' <- Rules $ rulesVersion <$> ask
-    ids      <- case fromLiteral pattern of
-        Just id' -> return [id']
-        Nothing  -> do
-            ids <- getMatches pattern
-            tellResources ids
-            return ids
-
-    tellCompilers [(setVersion version' id', compiler) | id' <- ids]
+compile :: (Binary a, Typeable a, Writable a) => Compiler (Item a) -> Rules ()
+compile compiler = Rules $ modify $ \s ->
+    s {rulesCompiler = Just (fmap SomeItem compiler)}
 
 
 --------------------------------------------------------------------------------
@@ -136,7 +139,7 @@ compile compiler = do
 --
 -- This adds a route for all items matching the current pattern.
 route :: Routes -> Rules ()
-route = tellRoute
+route route' = Rules $ modify $ \s -> s {rulesRoute = Just route'}
 
 
 --------------------------------------------------------------------------------

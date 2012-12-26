@@ -2,8 +2,10 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Rank2Types                 #-}
 module Hakyll.Core.Rules.Internal
-    ( RuleSet (..)
-    , RulesRead (..)
+    ( RulesRead (..)
+    , RuleSet (..)
+    , RulesState (..)
+    , emptyRulesState
     , Rules (..)
     , runRules
     ) where
@@ -30,6 +32,14 @@ import           Hakyll.Core.Routes
 
 
 --------------------------------------------------------------------------------
+data RulesRead = RulesRead
+    { rulesProvider :: Provider
+    , rulesPattern  :: Pattern
+    , rulesVersion  :: Maybe String
+    }
+
+
+--------------------------------------------------------------------------------
 data RuleSet = RuleSet
     { -- | Accumulated routes
       rulesRoutes    :: Routes
@@ -48,17 +58,21 @@ instance Monoid RuleSet where
 
 
 --------------------------------------------------------------------------------
-data RulesRead = RulesRead
-    { rulesProvider :: Provider
-    , rulesPattern  :: Pattern
-    , rulesVersion  :: Maybe String
+data RulesState = RulesState
+    { rulesRoute    :: Maybe Routes
+    , rulesCompiler :: Maybe (Compiler SomeItem)
     }
+
+
+--------------------------------------------------------------------------------
+emptyRulesState :: RulesState
+emptyRulesState = RulesState Nothing Nothing
 
 
 --------------------------------------------------------------------------------
 -- | The monad used to compose rules
 newtype Rules a = Rules
-    { unRules :: RWST RulesRead RuleSet () IO a
+    { unRules :: RWST RulesRead RuleSet RulesState IO a
     } deriving (Monad, Functor, Applicative)
 
 
@@ -77,7 +91,7 @@ instance MonadMetadata Rules where
 -- | Run a Rules monad, resulting in a 'RuleSet'
 runRules :: Rules a -> Provider -> IO RuleSet
 runRules rules provider = do
-    (_, _, ruleSet) <- runRWST (unRules rules) env ()
+    (_, _, ruleSet) <- runRWST (unRules rules) env emptyRulesState
     return $ nubCompilers ruleSet
   where
     env = RulesRead
