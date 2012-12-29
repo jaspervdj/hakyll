@@ -6,12 +6,15 @@ module Hakyll.Check
 
 --------------------------------------------------------------------------------
 import           Control.Applicative       ((<$>))
+import           Control.Exception         (SomeException, handle)
 import           Control.Monad             (forM_)
 import           Control.Monad.Reader      (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans       (liftIO)
 import           Control.Monad.Writer      (WriterT, runWriterT, tell)
 import           Data.List                 (isPrefixOf)
 import           Data.Monoid               (Monoid (..))
+import qualified Network.HTTP.Conduit      as Http
+import qualified Network.HTTP.Types        as Http
 import           System.Directory          (doesDirectoryExist, doesFileExist)
 import           System.FilePath           (takeDirectory, takeExtension, (</>))
 import qualified Text.HTML.TagSoup         as TS
@@ -90,13 +93,24 @@ checkFile filePath = do
 
 
 --------------------------------------------------------------------------------
+ok :: String -> Checker ()
+ok _ = tell $ mempty {checkerOk = 1}
+
+
+--------------------------------------------------------------------------------
+faulty :: String -> Checker ()
+faulty url = do
+    logger <- checkerLogger <$> ask
+    Logger.error logger $ "Broken link to " ++ show url
+    tell $ mempty {checkerFaulty = 1}
+
+
+--------------------------------------------------------------------------------
 checkInternalUrl :: FilePath -> String -> Checker ()
 checkInternalUrl base url = case url' of
-    "" -> tell $ mempty {checkerOk = 1}
+    "" -> ok url
     _  -> do
-        logger <- checkerLogger <$> ask
         config <- checkerConfig <$> ask
-
         let dest = destinationDirectory config
             dir  = takeDirectory base
             filePath
@@ -104,11 +118,7 @@ checkInternalUrl base url = case url' of
                 | otherwise             = dir </> url'
 
         exists <- checkFileExists filePath
-        if exists
-            then tell $ mempty {checkerOk = 1}
-            else do
-                tell $ mempty {checkerFaulty = 1}
-                Logger.error logger $ base ++ ": broken link to " ++ show url
+        if exists then ok url else faulty url
   where
     url' = stripFragments url
 
@@ -118,7 +128,22 @@ checkExternalUrl :: String -> Checker ()
 checkExternalUrl url = do
     logger <- checkerLogger <$> ask
     Logger.message logger $ "Not checking external url " ++ url
-    -- TODO: use http-conduit and a cache?
+
+    isOk <- liftIO $ handle failure $ Http.withManager $ \manager -> do
+        request  <- Http.parseUrl url
+        response <- Http.http (settings request) manager
+        let code = Http.statusCode (Http.responseStatus response)
+        return $ code >= 200 && code < 300
+
+    if isOk then ok url else faulty url
+  where
+    settings r = r
+        { Http.redirectCount   = 10
+        , Http.responseTimeout = Just 10
+        }
+
+    failure :: SomeException -> IO Bool
+    failure e = print e >> return False
 
 
 --------------------------------------------------------------------------------
