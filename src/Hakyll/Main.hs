@@ -28,8 +28,8 @@ import           Control.Concurrent         (forkIO)
 import qualified Data.Set                   as S
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Rules.Internal
-import           Hakyll.Web.Preview.Poll
-import           Hakyll.Web.Preview.Server
+import           Hakyll.Preview.Poll
+import           Hakyll.Preview.Server
 #endif
 
 

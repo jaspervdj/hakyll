@@ -1,24 +1,29 @@
+--------------------------------------------------------------------------------
 -- | Interval-based implementation of preview polling
---
 {-# LANGUAGE CPP #-}
-module Hakyll.Web.Preview.Poll
+module Hakyll.Preview.Poll
     ( previewPoll
     ) where
 
-import Control.Applicative ((<$>))
-import Control.Concurrent (threadDelay)
-import Control.Monad (filterM)
+
+--------------------------------------------------------------------------------
+import           Control.Applicative       ((<$>))
+import           Control.Concurrent        (threadDelay)
+import           Control.Monad             (filterM)
 #if MIN_VERSION_directory(1,2,0)
-import Data.Time (getCurrentTime)
+import           Data.Time                 (getCurrentTime)
 #else
-import System.Time (getClockTime)
+import           System.Time               (getClockTime)
 #endif
-import System.Directory (getModificationTime, doesFileExist)
+import           System.Directory          (doesFileExist, getModificationTime)
 
-import Hakyll.Core.Configuration
 
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Configuration
+
+
+--------------------------------------------------------------------------------
 -- | A preview thread that periodically recompiles the site.
---
 previewPoll :: Configuration  -- ^ Configuration
             -> IO [FilePath]  -- ^ Updating action
             -> IO ()          -- ^ Can block forever

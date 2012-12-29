@@ -161,8 +161,8 @@ Library
     Cpp-options:
       -DPREVIEW_SERVER
     Other-modules:
-      Hakyll.Web.Preview.Poll
-      Hakyll.Web.Preview.Server
+      Hakyll.Preview.Poll
+      Hakyll.Preview.Server
 
   If flag(unixFilter)
     Build-depends:
