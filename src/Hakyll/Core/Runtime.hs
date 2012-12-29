@@ -40,6 +40,7 @@ import           Hakyll.Core.Writable
 
 
 --------------------------------------------------------------------------------
+-- | TODO Make this return exit code?
 run :: Configuration -> Rules a -> IO RuleSet
 run config rules = do
     -- Initialization

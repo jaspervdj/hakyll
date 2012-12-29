@@ -1,21 +1,29 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings #-}
 module Hakyll.Check
-    ( runCheck
+    ( check
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative       ((<$>))
-import           Control.Exception         (SomeException, handle)
+import           Control.Exception         (AsyncException (..),
+                                            SomeException (..), handle, throw)
 import           Control.Monad             (forM_)
-import           Control.Monad.Reader      (ReaderT, ask, runReaderT)
+import           Control.Monad.Reader      (ask)
+import           Control.Monad.RWS         (RWST, runRWST)
+import           Control.Monad.State       (get, modify)
 import           Control.Monad.Trans       (liftIO)
-import           Control.Monad.Writer      (WriterT, runWriterT, tell)
+import           Control.Monad.Writer      (tell)
 import           Data.List                 (isPrefixOf)
 import           Data.Monoid               (Monoid (..))
+import           Data.Set                  (Set)
+import qualified Data.Set                  as S
+import           Data.Typeable             (cast)
 import qualified Network.HTTP.Conduit      as Http
 import qualified Network.HTTP.Types        as Http
 import           System.Directory          (doesDirectoryExist, doesFileExist)
+import           System.Exit               (ExitCode (..))
 import           System.FilePath           (takeDirectory, takeExtension, (</>))
 import qualified Text.HTML.TagSoup         as TS
 
@@ -26,6 +34,13 @@ import           Hakyll.Core.Logger        (Logger)
 import qualified Hakyll.Core.Logger        as Logger
 import           Hakyll.Core.Util.File
 import           Hakyll.Web.Html
+
+
+--------------------------------------------------------------------------------
+check :: Configuration -> IO ExitCode
+check config = do
+    ((), write) <- runChecker checkDestination config
+    return $ if checkerFaulty write >= 0 then ExitFailure 1 else ExitSuccess
 
 
 --------------------------------------------------------------------------------
@@ -50,22 +65,26 @@ instance Monoid CheckerWrite where
 
 
 --------------------------------------------------------------------------------
-type Checker a = ReaderT CheckerRead (WriterT CheckerWrite IO) a
+type CheckerState = Set String
 
 
 --------------------------------------------------------------------------------
-runCheck :: Configuration -> IO ()
-runCheck config = do
+type Checker a = RWST CheckerRead CheckerWrite CheckerState IO a
+
+
+--------------------------------------------------------------------------------
+runChecker :: Checker a -> Configuration -> IO (a, CheckerWrite)
+runChecker checker config = do
     logger <- Logger.new (verbosity config)
     let read' = CheckerRead config logger
-    ((), write) <- runWriterT $ runReaderT check read'
-    Logger.header logger $ show write
+    (x, _, write) <- runRWST checker read' S.empty
     Logger.flush logger
+    return (x, write)
 
 
 --------------------------------------------------------------------------------
-check :: Checker ()
-check = do
+checkDestination :: Checker ()
+checkDestination = do
     config <- checkerConfig <$> ask
     files  <- liftIO $ getRecursiveContents (destinationDirectory config)
 
@@ -83,10 +102,11 @@ checkFile :: FilePath -> Checker ()
 checkFile filePath = do
     logger   <- checkerLogger <$> ask
     contents <- liftIO $ readFile filePath
-    Logger.header logger $ "Checking " ++ filePath
+    Logger.header logger $ "Checking file " ++ filePath
 
     let urls = getUrls $ TS.parseTags contents
-    forM_ urls $ \url ->
+    forM_ urls $ \url -> do
+        Logger.debug logger $ "Checking link " ++ url
         if isExternal url
             then checkExternalUrl url
             else checkInternalUrl filePath url
@@ -126,24 +146,31 @@ checkInternalUrl base url = case url' of
 --------------------------------------------------------------------------------
 checkExternalUrl :: String -> Checker ()
 checkExternalUrl url = do
-    logger <- checkerLogger <$> ask
-    Logger.message logger $ "Not checking external url " ++ url
+    logger  <- checkerLogger    <$> ask
+    checked <- (url `S.member`) <$> get
 
-    isOk <- liftIO $ handle failure $ Http.withManager $ \manager -> do
-        request  <- Http.parseUrl url
-        response <- Http.http (settings request) manager
-        let code = Http.statusCode (Http.responseStatus response)
-        return $ code >= 200 && code < 300
+    if checked
+        then Logger.debug logger "Already checked, skipping"
+        else do
+            isOk <- liftIO $ handle (failure logger) $
+                Http.withManager $ \mgr -> do
+                    request  <- Http.parseUrl url
+                    response <- Http.http (settings request) mgr
+                    let code = Http.statusCode (Http.responseStatus response)
+                    return $ code >= 200 && code < 300
 
-    if isOk then ok url else faulty url
+            modify $ S.insert url
+            if isOk then ok url else faulty url
   where
     settings r = r
-        { Http.redirectCount   = 10
-        , Http.responseTimeout = Just 10
+        { Http.method        = "HEAD"
+        , Http.redirectCount = 10
         }
 
-    failure :: SomeException -> IO Bool
-    failure e = print e >> return False
+    -- Catch all the things except UserInterrupt
+    failure logger (SomeException e) = case cast e of
+        Just UserInterrupt -> throw UserInterrupt
+        _                  -> Logger.error logger (show e) >> return False
 
 
 --------------------------------------------------------------------------------

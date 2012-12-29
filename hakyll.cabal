@@ -96,6 +96,8 @@ Library
     deepseq      >= 1.3    && < 1.4,
     directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
+    http-conduit >= 1.8    && < 1.9,
+    http-types   >= 0.7    && < 0.8,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
     old-locale   >= 1.0    && < 1.1,
@@ -197,6 +199,8 @@ Test-suite hakyll-tests
     deepseq      >= 1.3    && < 1.4,
     directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
+    http-conduit >= 1.8    && < 1.9,
+    http-types   >= 0.7    && < 0.8,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
     old-locale   >= 1.0    && < 1.1,
@@ -208,8 +212,7 @@ Test-suite hakyll-tests
     regex-tdfa   >= 1.1    && < 1.2,
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
-    time         >= 1.1    && < 1.5,
-    unix         >= 2.4    && < 2.7
+    time         >= 1.1    && < 1.5
 
   Other-modules:
     Hakyll.Core.Dependencies.Tests

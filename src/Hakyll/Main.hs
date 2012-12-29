@@ -12,11 +12,12 @@ import           Control.Monad              (when)
 import           System.Directory           (doesDirectoryExist,
                                              removeDirectoryRecursive)
 import           System.Environment         (getArgs, getProgName)
+import           System.Exit                (exitWith)
 import           System.Process             (system)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Check
+import qualified Hakyll.Check               as Check
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Runtime
@@ -69,9 +70,9 @@ build conf rules = do
 
 
 --------------------------------------------------------------------------------
--- | Run the checker
+-- | Run the checker and exit
 check :: Configuration -> IO ()
-check = runCheck
+check config = Check.check config >>= exitWith
 
 
 --------------------------------------------------------------------------------
