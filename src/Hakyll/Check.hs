@@ -12,7 +12,7 @@ import           Control.Monad.Trans       (liftIO)
 import           Control.Monad.Writer      (WriterT, runWriterT, tell)
 import           Data.List                 (isPrefixOf)
 import           Data.Monoid               (Monoid (..))
-import           System.Directory          (doesFileExist)
+import           System.Directory          (doesDirectoryExist, doesFileExist)
 import           System.FilePath           (takeDirectory, takeExtension, (</>))
 import qualified Text.HTML.TagSoup         as TS
 
@@ -36,7 +36,7 @@ data CheckerRead = CheckerRead
 data CheckerWrite = CheckerWrite
     { checkerFaulty :: Int
     , checkerOk     :: Int
-    }
+    } deriving (Show)
 
 
 --------------------------------------------------------------------------------
@@ -55,7 +55,8 @@ runCheck :: Configuration -> IO ()
 runCheck config = do
     logger <- Logger.new (verbosity config)
     let read' = CheckerRead config logger
-    ((), _write) <- runWriterT $ runReaderT check read'
+    ((), write) <- runWriterT $ runReaderT check read'
+    Logger.header logger $ show write
     Logger.flush logger
 
 
@@ -79,10 +80,15 @@ checkFile :: FilePath -> Checker ()
 checkFile filePath = do
     logger   <- checkerLogger <$> ask
     contents <- liftIO $ readFile filePath
-
     Logger.header logger $ "Checking " ++ filePath
+
     let tags = TS.parseTags contents
-        urls = filter (not . isExternal) $ getUrls tags
+        -- Lots of logic here...
+        urls = filter (not . null) $
+                map stripFragments $
+                filter (not . isExternal) $
+                getUrls tags
+
     mapM_ (checkUrl filePath) urls
 
 
@@ -98,9 +104,26 @@ checkUrl base url = do
             | "/" `isPrefixOf` url = dest ++ url
             | otherwise            = dir </> url
 
-    exists <- liftIO $ doesFileExist filePath
+    exists <- checkFileExists filePath
     if exists
         then tell $ mempty {checkerOk = 1}
         else do
             tell $ mempty {checkerFaulty = 1}
-            Logger.error logger $ base ++ ": broken reference to " ++ url
+            Logger.error logger $ base ++ ": broken reference to " ++ show url
+
+
+--------------------------------------------------------------------------------
+-- | Wraps doesFileExist, also checks for index.html
+checkFileExists :: FilePath -> Checker Bool
+checkFileExists filePath = liftIO $ do
+    file <- doesFileExist filePath
+    dir  <- doesDirectoryExist filePath
+    case (file, dir) of
+        (True, _) -> return True
+        (_, True) -> doesFileExist $ filePath </> "index.html"
+        _         -> return False
+
+
+--------------------------------------------------------------------------------
+stripFragments :: String -> String
+stripFragments = takeWhile (not . flip elem ['?', '#'])
