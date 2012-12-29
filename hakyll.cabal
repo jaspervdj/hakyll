@@ -138,6 +138,7 @@ Library
     Hakyll.Web.Template.Read
 
   Other-Modules:
+    Hakyll.Check
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.Compiler.Require
     Hakyll.Core.Item.SomeItem

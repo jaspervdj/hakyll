@@ -42,10 +42,10 @@ data Logger = Logger
 
 --------------------------------------------------------------------------------
 -- | Create a new logger
-new :: Verbosity -> (String -> IO ()) -> IO Logger
-new vbty sink = do
+new :: Verbosity -> IO Logger
+new vbty = do
     logger <- Logger <$>
-        newChan <*> newEmptyMVar <*> pure sink <*> pure vbty
+        newChan <*> newEmptyMVar <*> pure putStrLn <*> pure vbty
     _      <- forkIO $ loggerThread logger
     return logger
   where

@@ -8,6 +8,7 @@ module Hakyll.Web.Html
     , demoteHeaders
 
       -- * Url manipulation
+    , getUrls
     , withUrls
     , toUrl
     , toSiteRoot
@@ -20,16 +21,14 @@ module Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------
-import           Data.Char         (digitToInt, intToDigit, isDigit, toLower)
-import           Data.List         (isPrefixOf)
-import qualified Data.Set          as S
-import           System.FilePath   (joinPath, splitPath, takeDirectory)
-import Text.Blaze.Html (toHtml)
-import Text.Blaze.Html.Renderer.String (renderHtml)
-
-
---------------------------------------------------------------------------------
-import qualified Text.HTML.TagSoup as TS
+import           Data.Char                       (digitToInt, intToDigit,
+                                                  isDigit, toLower)
+import           Data.List                       (isPrefixOf)
+import           System.FilePath                 (joinPath, splitPath,
+                                                  takeDirectory)
+import           Text.Blaze.Html                 (toHtml)
+import           Text.Blaze.Html.Renderer.String (renderHtml)
+import qualified Text.HTML.TagSoup               as TS
 
 
 --------------------------------------------------------------------------------
@@ -53,14 +52,23 @@ demoteHeaders = withTags $ \tag -> case tag of
 
 
 --------------------------------------------------------------------------------
+isUrlAttribute :: String -> Bool
+isUrlAttribute = (`elem` ["src", "href"])
+
+
+--------------------------------------------------------------------------------
+getUrls :: [TS.Tag String] -> [String]
+getUrls tags = [v | TS.TagOpen _ as <- tags, (k, v) <- as, isUrlAttribute k]
+
+
+--------------------------------------------------------------------------------
 -- | Apply a function to each URL on a webpage
 withUrls :: (String -> String) -> String -> String
 withUrls f = withTags tag
   where
     tag (TS.TagOpen s a) = TS.TagOpen s $ map attr a
     tag x                = x
-    attr (k, v)          = (k, if k `S.member` refs then f v else v)
-    refs                 = S.fromList ["src", "href"]
+    attr (k, v)          = (k, if isUrlAttribute k then f v else v)
 
 
 -- | Customized TagSoup renderer. (The default TagSoup renderer escape CSS

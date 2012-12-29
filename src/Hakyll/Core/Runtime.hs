@@ -43,7 +43,7 @@ import           Hakyll.Core.Writable
 run :: Configuration -> Rules a -> IO RuleSet
 run config rules = do
     -- Initialization
-    logger <- Logger.new (verbosity config) putStrLn
+    logger <- Logger.new (verbosity config)
     Logger.header logger "Initialising..."
     Logger.message logger "Creating store..."
     store <- Store.new (inMemoryCache config) $ storeDirectory config

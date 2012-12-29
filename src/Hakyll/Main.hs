@@ -16,6 +16,7 @@ import           System.Process             (system)
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Check
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Runtime
@@ -47,6 +48,7 @@ hakyllWith conf rules = do
     args <- getArgs
     case args of
         ["build"]      -> build conf rules
+        ["check"]      -> check conf
         ["clean"]      -> clean conf
         ["help"]       -> help
         ["preview"]    -> preview conf rules 8000
@@ -64,6 +66,12 @@ build :: Configuration -> Rules a -> IO ()
 build conf rules = do
     _ <- run conf rules
     return ()
+
+
+--------------------------------------------------------------------------------
+-- | Run the checker
+check :: Configuration -> IO ()
+check = runCheck
 
 
 --------------------------------------------------------------------------------

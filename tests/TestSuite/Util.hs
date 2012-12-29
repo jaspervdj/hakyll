@@ -68,7 +68,7 @@ newTestProvider store = newProvider store (const False) "tests/data"
 testCompiler :: Store -> Provider -> Identifier -> Compiler a
              -> IO (CompilerResult a)
 testCompiler store provider underlying compiler = do
-    logger <- Logger.new Logger.Debug (\_ -> return ())
+    logger <- Logger.new Logger.Error
     let read' = CompilerRead
             { compilerUnderlying = underlying
             , compilerProvider   = provider
