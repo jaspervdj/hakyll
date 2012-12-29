@@ -4,6 +4,7 @@
 module Hakyll.Core.Compiler
     ( Compiler
     , getUnderlying
+    , getUnderlyingExtension
     , makeItem
     , getRoute
     , getResourceBody
@@ -31,8 +32,8 @@ import           Control.Applicative           ((<$>))
 import           Data.Binary                   (Binary)
 import           Data.ByteString.Lazy          (ByteString)
 import           Data.Typeable                 (Typeable)
-import           Prelude                       hiding (id, (.))
 import           System.Environment            (getProgName)
+import           System.FilePath               (takeExtension)
 
 
 --------------------------------------------------------------------------------
@@ -50,6 +51,13 @@ import qualified Hakyll.Core.Store             as Store
 -- | Get the underlying identifier. Only use this if you know what you're doing.
 getUnderlying :: Compiler Identifier
 getUnderlying = compilerUnderlying <$> compilerAsk
+
+
+--------------------------------------------------------------------------------
+-- | Get the extension of the underlying identifier. Returns something like
+-- @".html"@
+getUnderlyingExtension :: Compiler String
+getUnderlyingExtension = takeExtension . toFilePath <$> getUnderlying
 
 
 --------------------------------------------------------------------------------
