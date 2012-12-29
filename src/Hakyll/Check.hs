@@ -82,34 +82,43 @@ checkFile filePath = do
     contents <- liftIO $ readFile filePath
     Logger.header logger $ "Checking " ++ filePath
 
-    let tags = TS.parseTags contents
-        -- Lots of logic here...
-        urls = filter (not . null) $
-                map stripFragments $
-                filter (not . isExternal) $
-                getUrls tags
-
-    mapM_ (checkUrl filePath) urls
+    let urls = getUrls $ TS.parseTags contents
+    forM_ urls $ \url ->
+        if isExternal url
+            then checkExternalUrl url
+            else checkInternalUrl filePath url
 
 
 --------------------------------------------------------------------------------
-checkUrl :: FilePath -> String -> Checker ()
-checkUrl base url = do
+checkInternalUrl :: FilePath -> String -> Checker ()
+checkInternalUrl base url = case url' of
+    "" -> tell $ mempty {checkerOk = 1}
+    _  -> do
+        logger <- checkerLogger <$> ask
+        config <- checkerConfig <$> ask
+
+        let dest = destinationDirectory config
+            dir  = takeDirectory base
+            filePath
+                | "/" `isPrefixOf` url' = dest ++ url'
+                | otherwise             = dir </> url'
+
+        exists <- checkFileExists filePath
+        if exists
+            then tell $ mempty {checkerOk = 1}
+            else do
+                tell $ mempty {checkerFaulty = 1}
+                Logger.error logger $ base ++ ": broken link to " ++ show url
+  where
+    url' = stripFragments url
+
+
+--------------------------------------------------------------------------------
+checkExternalUrl :: String -> Checker ()
+checkExternalUrl url = do
     logger <- checkerLogger <$> ask
-    config <- checkerConfig <$> ask
-
-    let dest = destinationDirectory config
-        dir  = takeDirectory base
-        filePath
-            | "/" `isPrefixOf` url = dest ++ url
-            | otherwise            = dir </> url
-
-    exists <- checkFileExists filePath
-    if exists
-        then tell $ mempty {checkerOk = 1}
-        else do
-            tell $ mempty {checkerFaulty = 1}
-            Logger.error logger $ base ++ ": broken reference to " ++ show url
+    Logger.message logger $ "Not checking external url " ++ url
+    -- TODO: use http-conduit and a cache?
 
 
 --------------------------------------------------------------------------------
