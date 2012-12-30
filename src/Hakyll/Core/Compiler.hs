@@ -109,11 +109,14 @@ getResourceWith reader = do
 
 
 --------------------------------------------------------------------------------
+-- | Save a snapshot of the item. This function returns the same item, which
+-- convenient for building '>>=' chains.
 saveSnapshot :: (Binary a, Typeable a)
-             => Internal.Snapshot -> Item a -> Compiler ()
+             => Internal.Snapshot -> Item a -> Compiler (Item a)
 saveSnapshot snapshot item = do
     store <- compilerStore <$> compilerAsk
     compilerUnsafeIO $ Internal.saveSnapshot store snapshot item
+    return item
 
 
 --------------------------------------------------------------------------------

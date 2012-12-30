@@ -29,9 +29,9 @@ case01 = withTestConfiguration $ \config -> do
         match "*.md" $ do
             route   $ setExtension "html"
             compile $ do
-                body <- getResourceBody
-                saveSnapshot "raw" body
-                return $ renderPandoc body
+                getResourceBody
+                    >>= saveSnapshot "raw"
+                    >>= return . renderPandoc
 
         match "bodies.txt" $ do
             route idRoute
