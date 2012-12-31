@@ -35,21 +35,16 @@ hakyllWith :: Config.Configuration -> Rules a -> IO ()
 hakyllWith conf rules = do
     args' <- cmdArgs hakyllArgs
 
-    -- Overwrite conf based on args
-    let conf' = conf
-            { Config.verbosity =
-                if verbose args' then Logger.Debug else Config.verbosity conf
-            }
-
+    let verbosity' = if verbose args' then Logger.Debug else Logger.Message
     case args' of
-        Build   _   -> Commands.build conf' rules
-        Check   _   -> Commands.check conf'
-        Clean   _   -> Commands.clean conf'
-        Deploy  _   -> Commands.deploy conf'
+        Build   _   -> Commands.build conf verbosity' rules
+        Check   _   -> Commands.check conf verbosity'
+        Clean   _   -> Commands.clean conf
+        Deploy  _   -> Commands.deploy conf
         Help    _   -> showHelp
-        Preview _ p -> Commands.preview conf' rules p
-        Rebuild _   -> Commands.rebuild conf' rules
-        Server  _ _ -> Commands.server conf' (port args')
+        Preview _ p -> Commands.preview conf verbosity' rules p
+        Rebuild _   -> Commands.rebuild conf verbosity' rules
+        Server  _ _ -> Commands.server conf (port args')
 
 
 --------------------------------------------------------------------------------

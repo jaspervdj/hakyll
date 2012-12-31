@@ -13,6 +13,7 @@ import           Test.HUnit          (Assertion, (@?=))
 
 --------------------------------------------------------------------------------
 import           Hakyll
+import qualified Hakyll.Core.Logger  as Logger
 import           Hakyll.Core.Runtime
 import           TestSuite.Util
 
@@ -25,7 +26,7 @@ tests = testGroup "Hakyll.Core.Runtime.Tests" $ fromAssertions "run" [case01]
 --------------------------------------------------------------------------------
 case01 :: Assertion
 case01 = withTestConfiguration $ \config -> do
-    _ <- run config $ do
+    _ <- run config Logger.Error $ do
         match "*.md" $ do
             route   $ setExtension "html"
             compile $ do

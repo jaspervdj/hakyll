@@ -110,5 +110,4 @@ withTestConfiguration f = do
         { destinationDirectory = "_testsite"
         , storeDirectory       = "_teststore"
         , providerDirectory    = "tests/data"
-        , verbosity            = Logger.Error
         }

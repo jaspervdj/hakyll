@@ -1,8 +1,7 @@
 --------------------------------------------------------------------------------
 -- | Exports a datastructure for the top-level hakyll configuration
 module Hakyll.Core.Configuration
-    ( Verbosity (..)
-    , Configuration (..)
+    ( Configuration (..)
     , shouldIgnoreFile
     , defaultConfiguration
     ) where
@@ -11,10 +10,6 @@ module Hakyll.Core.Configuration
 --------------------------------------------------------------------------------
 import           Data.List          (isPrefixOf, isSuffixOf)
 import           System.FilePath    (normalise, takeFileName)
-
-
---------------------------------------------------------------------------------
-import           Hakyll.Core.Logger
 
 
 --------------------------------------------------------------------------------
@@ -57,8 +52,6 @@ data Configuration = Configuration
     , -- | Use an in-memory cache for items. This is faster but uses more
       -- memory.
       inMemoryCache        :: Bool
-      -- | Verbosity for the logger. Can be overwritten by the command-line.
-    , verbosity            :: Verbosity
     }
 
 
@@ -72,7 +65,6 @@ defaultConfiguration = Configuration
     , ignoreFile           = ignoreFile'
     , deployCommand        = "echo 'No deploy command specified'"
     , inMemoryCache        = True
-    , verbosity            = Message
     }
   where
     ignoreFile' path

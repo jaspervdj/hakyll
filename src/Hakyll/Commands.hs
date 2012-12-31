@@ -23,13 +23,13 @@ import           System.Process             (system)
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check               as Check
 import           Hakyll.Core.Configuration
+import           Hakyll.Core.Logger         (Verbosity)
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
 #ifdef PREVIEW_SERVER
-import           Control.Applicative        ((<$>))
 import           Control.Concurrent         (forkIO)
 import qualified Data.Set                   as S
 import           Hakyll.Core.Identifier
@@ -41,16 +41,16 @@ import           Hakyll.Preview.Server
 
 --------------------------------------------------------------------------------
 -- | Build the site
-build :: Configuration -> Rules a -> IO ()
-build conf rules = do
-    _ <- run conf rules
+build :: Configuration -> Verbosity -> Rules a -> IO ()
+build conf verbosity rules = do
+    _ <- run conf verbosity rules
     return ()
 
 
 --------------------------------------------------------------------------------
 -- | Run the checker and exit
-check :: Configuration -> IO ()
-check config = Check.check config >>= exitWith
+check :: Configuration -> Verbosity -> IO ()
+check config verbosity = Check.check config verbosity >>= exitWith
 
 
 --------------------------------------------------------------------------------
@@ -68,27 +68,29 @@ clean conf = do
 
 --------------------------------------------------------------------------------
 -- | Preview the site
-preview :: Configuration -> Rules a -> Int -> IO ()
+preview :: Configuration -> Verbosity -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
-preview conf rules port = do
+preview conf verbosity rules port = do
     -- Fork a thread polling for changes
     _ <- forkIO $ previewPoll conf update
 
     -- Run the server in the main thread
     server conf port
   where
-    update = map toFilePath . S.toList . rulesResources <$> run conf rules
+    update = do
+        ruleSet <- run conf verbosity rules
+        return $ map toFilePath $ S.toList $ rulesResources ruleSet
 #else
-preview _ _ _ = previewServerDisabled
+preview _ _ _ _ = previewServerDisabled
 #endif
 
 
 --------------------------------------------------------------------------------
 -- | Rebuild the site
-rebuild :: Configuration -> Rules a -> IO ()
-rebuild conf rules = do
+rebuild :: Configuration -> Verbosity -> Rules a -> IO ()
+rebuild conf verbosity rules = do
     clean conf
-    build conf rules
+    build conf verbosity rules
 
 
 --------------------------------------------------------------------------------

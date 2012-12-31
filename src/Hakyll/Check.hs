@@ -30,16 +30,16 @@ import qualified Text.HTML.TagSoup         as TS
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Configuration
-import           Hakyll.Core.Logger        (Logger)
+import           Hakyll.Core.Logger        (Logger, Verbosity)
 import qualified Hakyll.Core.Logger        as Logger
 import           Hakyll.Core.Util.File
 import           Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------
-check :: Configuration -> IO ExitCode
-check config = do
-    ((), write) <- runChecker checkDestination config
+check :: Configuration -> Verbosity -> IO ExitCode
+check config verbosity = do
+    ((), write) <- runChecker checkDestination config verbosity
     return $ if checkerFaulty write >= 0 then ExitFailure 1 else ExitSuccess
 
 
@@ -73,9 +73,9 @@ type Checker a = RWST CheckerRead CheckerWrite CheckerState IO a
 
 
 --------------------------------------------------------------------------------
-runChecker :: Checker a -> Configuration -> IO (a, CheckerWrite)
-runChecker checker config = do
-    logger <- Logger.new (verbosity config)
+runChecker :: Checker a -> Configuration -> Verbosity -> IO (a, CheckerWrite)
+runChecker checker config verbosity = do
+    logger <- Logger.new verbosity
     let read' = CheckerRead config logger
     (x, _, write) <- runRWST checker read' S.empty
     Logger.flush logger

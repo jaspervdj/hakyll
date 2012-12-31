@@ -28,7 +28,7 @@ import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item.SomeItem
-import           Hakyll.Core.Logger            (Logger)
+import           Hakyll.Core.Logger            (Logger, Verbosity)
 import qualified Hakyll.Core.Logger            as Logger
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
@@ -41,10 +41,10 @@ import           Hakyll.Core.Writable
 
 --------------------------------------------------------------------------------
 -- | TODO Make this return exit code?
-run :: Configuration -> Rules a -> IO RuleSet
-run config rules = do
+run :: Configuration -> Verbosity -> Rules a -> IO RuleSet
+run config verbosity rules = do
     -- Initialization
-    logger <- Logger.new (verbosity config)
+    logger <- Logger.new verbosity
     Logger.header logger "Initialising..."
     Logger.message logger "Creating store..."
     store <- Store.new (inMemoryCache config) $ storeDirectory config
