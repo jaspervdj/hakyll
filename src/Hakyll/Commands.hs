@@ -49,8 +49,8 @@ build conf verbosity rules = do
 
 --------------------------------------------------------------------------------
 -- | Run the checker and exit
-check :: Configuration -> Verbosity -> IO ()
-check config verbosity = Check.check config verbosity >>= exitWith
+check :: Configuration -> Verbosity -> Check.Check -> IO ()
+check config verbosity check' = Check.check config verbosity check' >>= exitWith
 
 
 --------------------------------------------------------------------------------

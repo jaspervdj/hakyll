@@ -16,7 +16,8 @@ import           System.IO.Unsafe                (unsafePerformIO)
 
 
 --------------------------------------------------------------------------------
-import qualified          Hakyll.Commands as Commands
+import qualified Hakyll.Check                    as Check
+import qualified Hakyll.Commands                 as Commands
 import qualified Hakyll.Core.Configuration       as Config
 import qualified Hakyll.Core.Logger              as Logger
 import           Hakyll.Core.Rules
@@ -36,9 +37,12 @@ hakyllWith conf rules = do
     args' <- cmdArgs hakyllArgs
 
     let verbosity' = if verbose args' then Logger.Debug else Logger.Message
+        check'     =
+            if internal_links args' then Check.InternalLinks else Check.All
+
     case args' of
         Build   _   -> Commands.build conf verbosity' rules
-        Check   _   -> Commands.check conf verbosity'
+        Check   _ _ -> Commands.check conf verbosity' check'
         Clean   _   -> Commands.clean conf
         Deploy  _   -> Commands.deploy conf
         Help    _   -> showHelp
@@ -56,7 +60,7 @@ showHelp = print $ CA.helpText [] CA.HelpFormatOne $ cmdArgsMode hakyllArgs
 --------------------------------------------------------------------------------
 data HakyllArgs
     = Build   {verbose :: Bool}
-    | Check   {verbose :: Bool}
+    | Check   {verbose :: Bool, internal_links :: Bool}
     | Clean   {verbose :: Bool}
     | Deploy  {verbose :: Bool}
     | Help    {verbose :: Bool}
@@ -70,7 +74,8 @@ data HakyllArgs
 hakyllArgs :: HakyllArgs
 hakyllArgs = modes
     [ (Build $ verboseFlag def) &= help "Generate the site"
-    , (Check $ verboseFlag def) &= help "Validate the site output"
+    , (Check (verboseFlag def) (False &= help "Check internal links only")) &=
+        help "Validate the site output"
     , (Clean $ verboseFlag def) &= help "Clean up and remove cache"
     , (Deploy $ verboseFlag def) &= help "Upload/deploy your site"
     , (Help $ verboseFlag def) &= help "Show this message" &= auto

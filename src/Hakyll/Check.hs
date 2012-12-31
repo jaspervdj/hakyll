@@ -1,7 +1,8 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 module Hakyll.Check
-    ( check
+    ( Check (..)
+    , check
     ) where
 
 
@@ -37,9 +38,14 @@ import           Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------
-check :: Configuration -> Verbosity -> IO ExitCode
-check config verbosity = do
-    ((), write) <- runChecker checkDestination config verbosity
+data Check = All | InternalLinks
+    deriving (Eq, Ord, Show)
+
+
+--------------------------------------------------------------------------------
+check :: Configuration -> Verbosity -> Check -> IO ExitCode
+check config verbosity check' = do
+    ((), write) <- runChecker checkDestination config verbosity check'
     return $ if checkerFaulty write >= 0 then ExitFailure 1 else ExitSuccess
 
 
@@ -47,6 +53,7 @@ check config verbosity = do
 data CheckerRead = CheckerRead
     { checkerConfig :: Configuration
     , checkerLogger :: Logger
+    , checkerCheck  :: Check
     }
 
 
@@ -73,10 +80,11 @@ type Checker a = RWST CheckerRead CheckerWrite CheckerState IO a
 
 
 --------------------------------------------------------------------------------
-runChecker :: Checker a -> Configuration -> Verbosity -> IO (a, CheckerWrite)
-runChecker checker config verbosity = do
+runChecker :: Checker a -> Configuration -> Verbosity -> Check
+           -> IO (a, CheckerWrite)
+runChecker checker config verbosity check' = do
     logger <- Logger.new verbosity
-    let read' = CheckerRead config logger
+    let read' = CheckerRead config logger check'
     (x, _, write) <- runRWST checker read' S.empty
     Logger.flush logger
     return (x, write)
@@ -146,10 +154,11 @@ checkInternalUrl base url = case url' of
 --------------------------------------------------------------------------------
 checkExternalUrl :: String -> Checker ()
 checkExternalUrl url = do
-    logger  <- checkerLogger    <$> ask
-    checked <- (url `S.member`) <$> get
+    logger     <- checkerLogger           <$> ask
+    needsCheck <- (== All) . checkerCheck <$> ask
+    checked    <- (url `S.member`)        <$> get
 
-    if checked
+    if not needsCheck || checked
         then Logger.debug logger "Already checked, skipping"
         else do
             isOk <- liftIO $ handle (failure logger) $
