@@ -57,7 +57,7 @@ data Configuration = Configuration
     , -- | Use an in-memory cache for items. This is faster but uses more
       -- memory.
       inMemoryCache        :: Bool
-      -- | Verbosity for the logger
+      -- | Verbosity for the logger. Can be overwritten by the command-line.
     , verbosity            :: Verbosity
     }
 
