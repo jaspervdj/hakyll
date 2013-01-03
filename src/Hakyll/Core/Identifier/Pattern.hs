@@ -39,6 +39,8 @@ module Hakyll.Core.Identifier.Pattern
     , fromVersion
 
       -- * Manipulating patterns
+    , (.&&.)
+    , (.||.)
     , complement
     , withVersion
     , fromLiteral
@@ -103,6 +105,7 @@ data Pattern
     = Everything
     | Complement Pattern
     | And Pattern Pattern
+    | Or Pattern Pattern
     | Glob [GlobComponent]
     | List (Set Identifier)
     | Regex String
@@ -115,18 +118,20 @@ instance Binary Pattern where
     put Everything     = putWord8 0
     put (Complement p) = putWord8 1 >> put p
     put (And x y)      = putWord8 2 >> put x >> put y
-    put (Glob g)       = putWord8 3 >> put g
-    put (List is)      = putWord8 4 >> put is
-    put (Regex r)      = putWord8 5 >> put r
-    put (Version v)    = putWord8 6 >> put v
+    put (Or x y)       = putWord8 3 >> put x >> put y
+    put (Glob g)       = putWord8 4 >> put g
+    put (List is)      = putWord8 5 >> put is
+    put (Regex r)      = putWord8 6 >> put r
+    put (Version v)    = putWord8 7 >> put v
 
     get = getWord8 >>= \t -> case t of
         0 -> pure Everything
         1 -> Complement <$> get
         2 -> And <$> get <*> get
-        3 -> Glob <$> get
-        4 -> List <$> get
-        5 -> Regex <$> get
+        3 -> Or <$> get <*> get
+        4 -> Glob <$> get
+        5 -> List <$> get
+        6 -> Regex <$> get
         _ -> Version <$> get
 
 
@@ -137,8 +142,8 @@ instance IsString Pattern where
 
 --------------------------------------------------------------------------------
 instance Monoid Pattern where
-    mempty      = Everything
-    mappend x y = optimize $ And x y
+    mempty  = Everything
+    mappend = (.&&.)
 
 
 --------------------------------------------------------------------------------
@@ -148,6 +153,9 @@ optimize (Complement x)     = Complement (optimize x)
 optimize (And x Everything) = x
 optimize (And Everything y) = y
 optimize (And x y)          = And (optimize x) (optimize y)
+optimize (Or _ Everything)  = Everything
+optimize (Or Everything _)  = Everything
+optimize (Or x y)           = Or (optimize x) (optimize y)
 optimize p                  = p
 
 
@@ -188,6 +196,20 @@ fromVersion = Version
 
 
 --------------------------------------------------------------------------------
+-- | '&&' for patterns: the given identifier must match both subterms
+(.&&.) :: Pattern -> Pattern -> Pattern
+x .&&. y = optimize (And x y)
+infixr 3 .&&.
+
+
+--------------------------------------------------------------------------------
+-- | '||' for patterns: the given identifier must match any subterm
+(.||.) :: Pattern -> Pattern -> Pattern
+x .||. y = optimize (Or x y)
+infixr 2 .||.
+
+
+--------------------------------------------------------------------------------
 -- | Inverts a pattern, e.g.
 --
 -- > complement "foo/bar.html"
@@ -224,6 +246,7 @@ matches :: Pattern -> Identifier -> Bool
 matches Everything     _ = True
 matches (Complement p) i = not $ matches p i
 matches (And x y)      i = matches x i && matches y i
+matches (Or x y)       i = matches x i || matches y i
 matches (Glob p)       i = isJust $ capture (Glob p) i
 matches (List l)       i = i `S.member` l
 matches (Regex r)      i = toFilePath i =~ r

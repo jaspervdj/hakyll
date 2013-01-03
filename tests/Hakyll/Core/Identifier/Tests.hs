@@ -66,4 +66,5 @@ matchesTests = fromAssertions "matches"
     , False @=? matches (fromRegex "^foo/[^x]*$") "foo/barx"
     , True  @=? matches (complement "foo.markdown") "bar.markdown"
     , False @=? matches (complement "foo.markdown") "foo.markdown"
+    , True  @=? matches ("foo" .||. "bar") "bar"
     ]
