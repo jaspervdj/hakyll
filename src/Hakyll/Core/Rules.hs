@@ -126,9 +126,7 @@ version v rules = do
 --------------------------------------------------------------------------------
 -- | Add a compilation rule to the rules.
 --
--- This instructs all resources to be compiled using the given compiler. When
--- no resources match the current selection, nothing will happen. In this case,
--- you might want to have a look at 'create'.
+-- This instructs all resources to be compiled using the given compiler.
 compile :: (Binary a, Typeable a, Writable a) => Compiler (Item a) -> Rules ()
 compile compiler = Rules $ modify $ \s ->
     s {rulesCompiler = Just (fmap SomeItem compiler)}
