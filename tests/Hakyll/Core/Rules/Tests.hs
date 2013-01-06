@@ -14,12 +14,12 @@ import           Test.HUnit                     (Assertion, assert, (@=?))
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.File
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
-import           Hakyll.Core.Writable.CopyFile
 import           Hakyll.Web.Pandoc
 import           TestSuite.Util
 
@@ -33,7 +33,8 @@ tests = testGroup "Hakyll.Core.Rules.Tests"
 
 --------------------------------------------------------------------------------
 rulesTest :: Assertion
-rulesTest = withTestStore $ \store -> do
+rulesTest = do
+    store    <- newTestStore
     provider <- newTestProvider store
     ruleSet  <- runRules rules provider
     let identifiers = S.fromList $ map fst $ rulesCompilers ruleSet

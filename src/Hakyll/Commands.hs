@@ -13,9 +13,6 @@ module Hakyll.Commands
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad              (when)
-import           System.Directory           (doesDirectoryExist,
-                                             removeDirectoryRecursive)
 import           System.Exit                (exitWith)
 import           System.Process             (system)
 
@@ -26,6 +23,7 @@ import           Hakyll.Core.Configuration
 import           Hakyll.Core.Logger         (Verbosity)
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Runtime
+import           Hakyll.Core.Util.File
 
 
 --------------------------------------------------------------------------------
@@ -59,11 +57,11 @@ clean :: Configuration -> IO ()
 clean conf = do
     remove $ destinationDirectory conf
     remove $ storeDirectory conf
+    remove $ tmpDirectory conf
   where
     remove dir = do
         putStrLn $ "Removing " ++ dir ++ "..."
-        exists <- doesDirectoryExist dir
-        when exists $ removeDirectoryRecursive dir
+        removeDirectory dir
 
 
 --------------------------------------------------------------------------------

@@ -25,8 +25,8 @@ tests = testGroup "Hakyll.Core.Runtime.Tests" $ fromAssertions "run" [case01]
 
 --------------------------------------------------------------------------------
 case01 :: Assertion
-case01 = withTestConfiguration $ \config -> do
-    _ <- run config Logger.Error $ do
+case01 = do
+    _ <- run testConfiguration Logger.Error $ do
         match "*.md" $ do
             route   $ setExtension "html"
             compile $ do
@@ -40,8 +40,11 @@ case01 = withTestConfiguration $ \config -> do
                 items <- loadAllSnapshots "*.md" "raw"
                 makeItem $ concat $ map itemBody (items :: [Item String])
 
-    example <- readFile $ destinationDirectory config </> "example.html"
+    example <- readFile $
+        destinationDirectory testConfiguration </> "example.html"
     lines example @?=  ["<p>This is an example.</p>"]
 
-    bodies <- readFile $ destinationDirectory config </> "bodies.txt"
+    bodies <- readFile $ destinationDirectory testConfiguration </> "bodies.txt"
     head (lines bodies) @?=  "This is an example."
+
+    cleanTestEnv

@@ -3,19 +3,17 @@
 module TestSuite.Util
     ( fromAssertions
     , newTestStore
-    , cleanTestStore
-    , withTestStore
     , newTestProvider
     , testCompiler
     , testCompilerDone
-    , withTestConfiguration
+    , testConfiguration
+    , cleanTestEnv
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Data.Monoid                    (mempty)
 import qualified Data.Set                       as S
-import           System.Directory               (removeDirectoryRecursive)
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit                     hiding (Test)
@@ -30,6 +28,7 @@ import qualified Hakyll.Core.Logger             as Logger
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Store              (Store)
 import qualified Hakyll.Core.Store              as Store
+import           Hakyll.Core.Util.File
 
 
 --------------------------------------------------------------------------------
@@ -42,26 +41,13 @@ fromAssertions name =
 
 --------------------------------------------------------------------------------
 newTestStore :: IO Store
-newTestStore = Store.new True "_teststore"
-
-
---------------------------------------------------------------------------------
-cleanTestStore :: IO ()
-cleanTestStore = removeDirectoryRecursive "_teststore"
-
-
---------------------------------------------------------------------------------
-withTestStore :: (Store -> IO a) -> IO a
-withTestStore f = do
-    store  <- newTestStore
-    result <- f store
-    cleanTestStore
-    return result
+newTestStore = Store.new True $ storeDirectory testConfiguration
 
 
 --------------------------------------------------------------------------------
 newTestProvider :: Store -> IO Provider
-newTestProvider store = newProvider store (const False) "tests/data"
+newTestProvider store = newProvider store (const False) $
+    providerDirectory testConfiguration
 
 
 --------------------------------------------------------------------------------
@@ -70,7 +56,8 @@ testCompiler :: Store -> Provider -> Identifier -> Compiler a
 testCompiler store provider underlying compiler = do
     logger <- Logger.new Logger.Error
     let read' = CompilerRead
-            { compilerUnderlying = underlying
+            { compilerConfig     = testConfiguration
+            , compilerUnderlying = underlying
             , compilerProvider   = provider
             , compilerUniverse   = S.empty
             , compilerRoutes     = mempty
@@ -99,15 +86,18 @@ testCompilerDone store provider underlying compiler = do
 
 
 --------------------------------------------------------------------------------
-withTestConfiguration :: (Configuration -> IO a) -> IO a
-withTestConfiguration f = do
-    x <- f config
-    removeDirectoryRecursive $ destinationDirectory config
-    removeDirectoryRecursive $ storeDirectory config
-    return x
-  where
-    config = defaultConfiguration
-        { destinationDirectory = "_testsite"
-        , storeDirectory       = "_teststore"
-        , providerDirectory    = "tests/data"
-        }
+testConfiguration :: Configuration
+testConfiguration = defaultConfiguration
+    { destinationDirectory = "_testsite"
+    , storeDirectory       = "_teststore"
+    , tmpDirectory         = "_testtmp"
+    , providerDirectory    = "tests/data"
+    }
+
+
+--------------------------------------------------------------------------------
+cleanTestEnv :: IO ()
+cleanTestEnv = do
+    removeDirectory $ destinationDirectory testConfiguration
+    removeDirectory $ storeDirectory testConfiguration
+    removeDirectory $ tmpDirectory testConfiguration

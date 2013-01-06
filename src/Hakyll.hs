@@ -4,6 +4,7 @@
 module Hakyll
     ( module Hakyll.Core.Compiler
     , module Hakyll.Core.Configuration
+    , module Hakyll.Core.File
     , module Hakyll.Core.Identifier
     , module Hakyll.Core.Identifier.Pattern
     , module Hakyll.Core.Item
@@ -16,7 +17,6 @@ module Hakyll
     , module Hakyll.Core.Util.File
     , module Hakyll.Core.Util.String
     , module Hakyll.Core.Writable
-    , module Hakyll.Core.Writable.CopyFile
     , module Hakyll.Main
     , module Hakyll.Web.CompressCss
     , module Hakyll.Web.Feed
@@ -36,6 +36,7 @@ module Hakyll
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Configuration
+import           Hakyll.Core.File
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item
@@ -48,7 +49,6 @@ import           Hakyll.Core.UnixFilter
 import           Hakyll.Core.Util.File
 import           Hakyll.Core.Util.String
 import           Hakyll.Core.Writable
-import           Hakyll.Core.Writable.CopyFile
 import           Hakyll.Main
 import           Hakyll.Web.CompressCss
 import           Hakyll.Web.Feed

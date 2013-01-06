@@ -18,6 +18,8 @@ data Configuration = Configuration
       destinationDirectory :: FilePath
     , -- | Directory where hakyll's internal store is kept
       storeDirectory       :: FilePath
+    , -- | Directory in which some temporary files will be kept
+      tmpDirectory         :: FilePath
     , -- | Directory where hakyll finds the files to compile. This is @.@ by
       -- default.
       providerDirectory    :: FilePath
@@ -61,6 +63,7 @@ defaultConfiguration :: Configuration
 defaultConfiguration = Configuration
     { destinationDirectory = "_site"
     , storeDirectory       = "_cache"
+    , tmpDirectory         = "_cache/tmp"
     , providerDirectory    = "."
     , ignoreFile           = ignoreFile'
     , deployCommand        = "echo 'No deploy command specified'"
@@ -83,6 +86,7 @@ shouldIgnoreFile :: Configuration -> FilePath -> Bool
 shouldIgnoreFile conf path =
     destinationDirectory conf `isPrefixOf` path' ||
     storeDirectory conf `isPrefixOf` path' ||
+    tmpDirectory conf `isPrefixOf` path' ||
     ignoreFile conf path'
   where
     path' = normalise path

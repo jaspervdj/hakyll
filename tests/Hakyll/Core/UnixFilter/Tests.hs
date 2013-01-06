@@ -27,11 +27,13 @@ tests = testGroup "Hakyll.Core.UnixFilter.Tests"
 
 --------------------------------------------------------------------------------
 unixFilterRev :: H.Assertion
-unixFilterRev = withTestStore $ \store -> do
+unixFilterRev = do
+    store    <- newTestStore
     provider <- newTestProvider store
     output   <- testCompilerDone store provider "russian.md" compiler
     expected <- testCompilerDone store provider "russian.md" getResourceString
     H.assert $ rev (itemBody expected) == lines (itemBody output)
+    cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "rev" [])
     rev      = map reverse . lines

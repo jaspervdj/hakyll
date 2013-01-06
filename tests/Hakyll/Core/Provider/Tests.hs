@@ -26,7 +26,8 @@ tests = testGroup "Hakyll.Core.Provider.Tests"
 
 --------------------------------------------------------------------------------
 case01 :: Assertion
-case01 = withTestStore $ \store -> do
+case01 = do
+    store    <- newTestStore
     provider <- newTestProvider store
     assert $ resourceExists provider "example.md"
 

@@ -3,14 +3,16 @@
 module Hakyll.Core.Util.File
     ( makeDirectories
     , getRecursiveContents
+    , removeDirectory
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative ((<$>))
-import           Control.Monad       (forM)
+import           Control.Monad       (forM, when)
 import           System.Directory    (createDirectoryIfMissing,
-                                      doesDirectoryExist, getDirectoryContents)
+                                      doesDirectoryExist, getDirectoryContents,
+                                      removeDirectoryRecursive)
 import           System.FilePath     (takeDirectory, (</>))
 
 
@@ -42,3 +44,10 @@ getRecursiveContents top = go ""
                         else return [rel]
 
                 return $ concat paths
+
+
+--------------------------------------------------------------------------------
+removeDirectory :: FilePath -> IO ()
+removeDirectory fp = do
+    e <- doesDirectoryExist fp
+    when e $ removeDirectoryRecursive fp

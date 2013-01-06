@@ -29,7 +29,8 @@ tests = testGroup "Hakyll.Core.Template.Context.Tests"
 
 --------------------------------------------------------------------------------
 testDateField :: Assertion
-testDateField = withTestStore $ \store -> do
+testDateField = do
+    store    <- newTestStore
     provider <- newTestProvider store
 
     date1 <- testContextDone store provider "example.md" "date" $
@@ -40,6 +41,8 @@ testDateField = withTestStore $ \store -> do
         "posts/2010-08-26-birthday.md" "date" $
             dateField "date" "%B %e, %Y"
     date2 @=? "August 26, 2010"
+
+    cleanTestEnv
 
 
 --------------------------------------------------------------------------------

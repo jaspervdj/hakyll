@@ -34,6 +34,7 @@ import qualified Data.Set                       as S
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
@@ -47,7 +48,9 @@ import           Hakyll.Core.Store
 --------------------------------------------------------------------------------
 -- | Environment in which a compiler runs
 data CompilerRead = CompilerRead
-    { -- | Underlying identifier
+    { -- | Main configuration
+      compilerConfig     :: Configuration
+    , -- | Underlying identifier
       compilerUnderlying :: Identifier
     , -- | Resource provider
       compilerProvider   :: Provider

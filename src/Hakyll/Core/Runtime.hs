@@ -85,6 +85,10 @@ run config verbosity rules = do
 
         Right (_, s, _) -> do
             Store.set store factsKey $ runtimeFacts s
+
+            Logger.debug logger "Removing tmp directory..."
+            removeDirectory $ tmpDirectory config
+
             Logger.flush logger
             return ruleSet
   where
@@ -180,7 +184,8 @@ chase trail id'
 
         let compiler = todo M.! id'
             read' = CompilerRead
-                { compilerUnderlying = id'
+                { compilerConfig     = config
+                , compilerUnderlying = id'
                 , compilerProvider   = provider
                 , compilerUniverse   = M.keysSet universe
                 , compilerRoutes     = routes

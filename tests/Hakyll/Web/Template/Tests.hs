@@ -30,11 +30,13 @@ tests = testGroup "Hakyll.Core.Template.Tests"
 
 --------------------------------------------------------------------------------
 case01 :: Assertion
-case01 = withTestStore $ \store -> do
+case01 = do
+    store    <- newTestStore
     provider <- newTestProvider store
 
     out  <- resourceString provider "template.html.out"
-    tpl  <- testCompilerDone store provider "template.html" $ templateCompiler
+    tpl  <- testCompilerDone store provider "template.html" $
+        templateCompiler
     item <- testCompilerDone store provider "example.md"    $
         pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 

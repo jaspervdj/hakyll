@@ -38,7 +38,7 @@ simpleSetGet = Q.monadicIO $ do
     Q.run $ Store.set store key (value :: String)
     value' <- Q.run $ Store.get store key
     Q.assert $ Store.Found value == value'
-    Q.run cleanTestStore
+    Q.run cleanTestEnv
 
 
 --------------------------------------------------------------------------------
@@ -52,12 +52,13 @@ persistentSetGet = Q.monadicIO $ do
     store2 <- Q.run newTestStore
     value' <- Q.run $ Store.get store2 key
     Q.assert $ Store.Found value == value'
-    Q.run cleanTestStore
+    Q.run cleanTestEnv
 
 
 --------------------------------------------------------------------------------
 wrongType :: H.Assertion
-wrongType = withTestStore $ \store -> do
+wrongType = do
+    store <- newTestStore
     -- Store a string and try to fetch an int
     Store.set store ["foo", "bar"] ("qux" :: String)
     value <- Store.get store ["foo", "bar"] :: IO (Store.Result Int)

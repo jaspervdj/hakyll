@@ -9,6 +9,7 @@ module Hakyll.Core.Store
     , set
     , get
     , delete
+    , hash
     ) where
 
 
@@ -144,12 +145,13 @@ delete store identifier = do
 
 
 --------------------------------------------------------------------------------
-hash :: [String] -> String
-hash = concatMap (printf "%02x") . B.unpack .
-    MD5.hash . T.encodeUtf8 . T.pack . intercalate "/"
-
-
---------------------------------------------------------------------------------
 -- | Delete a file unless it doesn't exist...
 deleteFile :: FilePath -> IO ()
 deleteFile = handle (\(_ :: IOException) -> return ()) . removeFile
+
+
+--------------------------------------------------------------------------------
+-- | Mostly meant for internal usage
+hash :: [String] -> String
+hash = concatMap (printf "%02x") . B.unpack .
+    MD5.hash . T.encodeUtf8 . T.pack . intercalate "/"
