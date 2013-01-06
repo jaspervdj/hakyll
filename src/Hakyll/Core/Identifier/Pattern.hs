@@ -43,6 +43,7 @@ module Hakyll.Core.Identifier.Pattern
     , (.||.)
     , complement
     , withVersion
+    , noVersion
     , fromLiteral
 
       -- * Applying patterns
@@ -225,6 +226,12 @@ complement = Complement
 -- > "foo/*.markdown" `withVersion` "pdf"
 withVersion :: Pattern -> String -> Pattern
 withVersion p v = optimize $ And p $ fromVersion $ Just v
+
+
+--------------------------------------------------------------------------------
+-- | Match only if the identifier has no version set
+noVersion :: Pattern -> Pattern
+noVersion p = optimize $ And p $ fromVersion Nothing
 
 
 --------------------------------------------------------------------------------
