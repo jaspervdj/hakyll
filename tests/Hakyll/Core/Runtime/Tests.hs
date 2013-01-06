@@ -34,7 +34,7 @@ case01 = withTestConfiguration $ \config -> do
                     >>= saveSnapshot "raw"
                     >>= return . renderPandoc
 
-        match "bodies.txt" $ do
+        create ["bodies.txt"] $ do
             route idRoute
             compile $ do
                 items <- loadAllSnapshots "*.md" "raw"

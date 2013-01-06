@@ -19,6 +19,7 @@
 module Hakyll.Core.Rules
     ( Rules
     , match
+    , create
     , version
     , compile
     , route
@@ -34,7 +35,7 @@ import           Control.Monad.Reader           (ask, local)
 import           Control.Monad.State            (get, modify, put)
 import           Control.Monad.Writer           (censor, tell)
 import           Data.Maybe                     (fromMaybe)
-import           Data.Monoid                    (mappend, mempty)
+import           Data.Monoid                    (mempty)
 import qualified Data.Set                       as S
 
 
@@ -82,15 +83,21 @@ flush = Rules $ do
     case mcompiler of
         Nothing       -> return ()
         Just compiler -> do
-            pattern  <- rulesPattern                  <$> ask
+            matches' <- rulesMatches                  <$> ask
             version' <- rulesVersion                  <$> ask
             route'   <- fromMaybe mempty . rulesRoute <$> get
+
+            -- The version is possibly not set correctly at this point (yet)
+            let ids = map (setVersion version') matches'
+
+            {-
             ids      <- case fromLiteral pattern of
                 Just id' -> return [setVersion version' id']
                 Nothing  -> do
                     ids <- unRules $ getMatches pattern
                     unRules $ tellResources ids
                     return $ map (setVersion version') ids
+            -}
 
             -- Create a fast pattern for routing that matches exactly the
             -- compilers created in the block given to match
@@ -107,11 +114,21 @@ flush = Rules $ do
 match :: Pattern -> Rules () -> Rules ()
 match pattern rules = do
     flush
-    Rules $ local addPattern $ unRules $ rules >> flush
+    ids <- getMatches pattern
+    tellResources ids
+    Rules $ local (setMatches ids) $ unRules $ rules >> flush
   where
-    addPattern env = env
-        { rulesPattern = rulesPattern env `mappend` pattern
-        }
+    setMatches ids env = env {rulesMatches = ids}
+
+
+--------------------------------------------------------------------------------
+create :: [Identifier] -> Rules () -> Rules ()
+create ids rules = do
+    flush
+    -- TODO Maybe check if the resources exist and call tellResources on that
+    Rules $ local setMatches $ unRules $ rules >> flush
+  where
+    setMatches env = env {rulesMatches = ids}
 
 
 --------------------------------------------------------------------------------

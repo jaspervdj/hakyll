@@ -143,7 +143,7 @@ buildCategories = buildTagsWith getCategory
 tagsRules :: Tags -> (String -> Pattern -> Rules ()) -> Rules ()
 tagsRules tags rules =
     forM_ (tagsMap tags) $ \(tag, identifiers) ->
-        match (fromGlob $ toFilePath $ tagsMakeId tags tag) $
+        create [tagsMakeId tags tag] $
             rulesExtraDependencies [tagsDependency tags] $
                 rules tag $ fromList identifiers
 

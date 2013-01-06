@@ -34,7 +34,7 @@ import           Hakyll.Core.Routes
 --------------------------------------------------------------------------------
 data RulesRead = RulesRead
     { rulesProvider :: Provider
-    , rulesPattern  :: Pattern
+    , rulesMatches  :: [Identifier]
     , rulesVersion  :: Maybe String
     }
 
@@ -96,7 +96,7 @@ runRules rules provider = do
   where
     env = RulesRead
         { rulesProvider = provider
-        , rulesPattern  = mempty
+        , rulesMatches  = []
         , rulesVersion  = Nothing
         }
 

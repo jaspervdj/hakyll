@@ -44,7 +44,6 @@ module Hakyll.Core.Identifier.Pattern
     , complement
     , withVersion
     , noVersion
-    , fromLiteral
 
       -- * Applying patterns
     , matches
@@ -232,19 +231,6 @@ withVersion p v = optimize $ And p $ fromVersion $ Just v
 -- | Match only if the identifier has no version set
 noVersion :: Pattern -> Pattern
 noVersion p = optimize $ And p $ fromVersion Nothing
-
-
---------------------------------------------------------------------------------
--- | Check if a pattern is a literal. @\"*.markdown\"@ is not a literal but
--- @\"posts.markdown\"@ is.
-fromLiteral :: Pattern -> Maybe Identifier
-fromLiteral pattern = case pattern of
-    Glob p -> fmap fromFilePath $ foldr fromLiteral' (Just "") p
-    _      -> Nothing
-  where
-    fromLiteral' (Literal x) (Just y) = Just $ x ++ y
-    fromLiteral' _           _        = Nothing
-
 
 
 --------------------------------------------------------------------------------

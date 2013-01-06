@@ -48,7 +48,7 @@ main = hakyllWith config $ do
             >>= relativizeUrls
 
     -- Tutorial list
-    match "tutorials.html" $ do
+    create ["tutorials.html"] $ do
         route idRoute
         compile $ do
             tutorials <- loadAll "tutorials/*"
@@ -79,8 +79,7 @@ main = hakyllWith config $ do
 --------------------------------------------------------------------------------
 config :: Configuration
 config = defaultConfiguration
-    { verbosity     = Debug
-    , deployCommand = "rsync --checksum -ave 'ssh -p 2222' \
+    { deployCommand = "rsync --checksum -ave 'ssh -p 2222' \
                       \_site/* jaspervdj@jaspervdj.be:jaspervdj.be/tmp/hakyll4"
     }
 
