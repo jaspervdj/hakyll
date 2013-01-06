@@ -29,7 +29,7 @@ main = hakyll $ do
             >>= loadAndApplyTemplate "templates/default.html" postCtx
             >>= relativizeUrls
 
-    match "archive.html" $ do
+    create ["archive.html"] $ do
         route idRoute
         compile $ do
             let archiveCtx =

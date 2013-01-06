@@ -46,6 +46,25 @@ and all files in the `css/` directory.
 
 [Pattern]: /reference/Hakyll-Core-Identifier-Pattern.html
 
+However, we can see that one item makes no use of `match`, but uses `create`
+instead.
+
+```haskell
+create ["archive.html"] $ do
+    route idRoute
+    compile $ do
+        ...
+```
+
+Don't pay attention to the somewhat complicated-looking stuff in `compile` --
+this will become clear soon. The real question here is why we use `create`
+instead of `match`.
+
+The answer is simple: there is no `archive.html` file in our project directory!
+So if we were to use `match`, no a file would be matched, and hence, nothing
+would appear in the output directory. `create`, however, ensures the items
+listed are always produced.
+
 Basic routes
 ------------
 
