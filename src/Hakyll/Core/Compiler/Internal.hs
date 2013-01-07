@@ -126,6 +126,9 @@ instance Monad Compiler where
             CompilerRequire i c' -> return $ CompilerRequire i $ c' >>= f
     {-# INLINE (>>=) #-}
 
+    fail = compilerThrow
+    {-# INLINE fail #-}
+
 
 --------------------------------------------------------------------------------
 instance Applicative Compiler where
