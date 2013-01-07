@@ -6,7 +6,7 @@ module Hakyll.Core.Runtime
 
 --------------------------------------------------------------------------------
 import           Control.Applicative           ((<$>))
-import           Control.Monad                 (filterM)
+import           Control.Monad                 (filterM, unless)
 import           Control.Monad.Error           (ErrorT, runErrorT, throwError)
 import           Control.Monad.Reader          (ask)
 import           Control.Monad.RWS             (RWST, runRWST)
@@ -27,6 +27,7 @@ import           Hakyll.Core.Compiler.Require
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
 import           Hakyll.Core.Item.SomeItem
 import           Hakyll.Core.Logger            (Logger, Verbosity)
 import qualified Hakyll.Core.Logger            as Logger
@@ -200,14 +201,19 @@ chase trail id'
 
             -- Huge success
             CompilerDone (SomeItem item) cwrite -> do
-                -- TODO: Sanity check on itemIdentifier?
-                let facts     = compilerDependencies cwrite
+                -- Print some info
+                let facts = compilerDependencies cwrite
                     cacheHits
                         | compilerCacheHits cwrite <= 0 = "updated"
                         | otherwise                     = "cached "
-
-                -- Print some info
                 Logger.message logger $ cacheHits ++ " " ++ show id'
+
+                -- Sanity check
+                unless (itemIdentifier item == id') $ throwError $
+                    "The compiler yielded an Item with Identifier " ++
+                    show (itemIdentifier item) ++ ", but we were expecting " ++
+                    "an Item with Identifier " ++ show id' ++ " " ++
+                    "(you probably want to call makeItem to solve this problem)"
 
                 -- Write if necessary
                 case runRoutes routes id' of
