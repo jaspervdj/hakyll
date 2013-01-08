@@ -6,6 +6,8 @@ module Hakyll.Core.Rules.Tests
 
 
 --------------------------------------------------------------------------------
+import           Data.IORef                     (IORef, newIORef, readIORef,
+                                                 writeIORef)
 import qualified Data.Set                       as S
 import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
@@ -34,9 +36,10 @@ tests = testGroup "Hakyll.Core.Rules.Tests"
 --------------------------------------------------------------------------------
 rulesTest :: Assertion
 rulesTest = do
+    ioref    <- newIORef False
     store    <- newTestStore
     provider <- newTestProvider store
-    ruleSet  <- runRules rules provider
+    ruleSet  <- runRules (rules ioref) provider
     let identifiers = S.fromList $ map fst $ rulesCompilers ruleSet
         routes      = rulesRoutes ruleSet
 
@@ -47,6 +50,7 @@ rulesTest = do
     Just "example.md"   @=? runRoutes routes (sv "nav" "example.md")
     Just "example.mv1"  @=? runRoutes routes (sv "mv1" "example.md")
     Just "example.mv2"  @=? runRoutes routes (sv "mv2" "example.md")
+    readIORef ioref >>= assert
   where
     sv g     = setVersion (Just g)
     expected =
@@ -59,12 +63,15 @@ rulesTest = do
 
 
 --------------------------------------------------------------------------------
-rules :: Rules ()
-rules = do
+rules :: IORef Bool -> Rules ()
+rules ioref = do
     -- Compile some posts
     match "*.md" $ do
         route $ setExtension "html"
         compile pandocCompiler
+
+    -- Yeah. I don't know how else to test this stuff?
+    preprocess $ writeIORef ioref True
 
     -- Compile them, raw
     match "*.md" $ version "raw" $ do

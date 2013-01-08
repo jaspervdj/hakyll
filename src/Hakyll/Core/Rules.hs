@@ -25,6 +25,8 @@ module Hakyll.Core.Rules
     , route
 
       -- * Advanced usage
+    , preprocess
+    , Dependency (..)
     , rulesExtraDependencies
     ) where
 
@@ -33,6 +35,7 @@ module Hakyll.Core.Rules
 import           Control.Applicative            ((<$>))
 import           Control.Monad.Reader           (ask, local)
 import           Control.Monad.State            (get, modify, put)
+import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer           (censor, tell)
 import           Data.Maybe                     (fromMaybe)
 import           Data.Monoid                    (mempty)
@@ -155,6 +158,13 @@ compile compiler = Rules $ modify $ \s ->
 -- This adds a route for all items matching the current pattern.
 route :: Routes -> Rules ()
 route route' = Rules $ modify $ \s -> s {rulesRoute = Just route'}
+
+
+--------------------------------------------------------------------------------
+-- | Execute an 'IO' action immediately while the rules are being evaluated.
+-- This should be avoided if possible, but occasionally comes in useful.
+preprocess :: IO a -> Rules a
+preprocess = Rules . liftIO
 
 
 --------------------------------------------------------------------------------
