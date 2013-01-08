@@ -65,8 +65,8 @@ postCtx =
 
 --------------------------------------------------------------------------------
 postList :: ([Item String] -> [Item String]) -> Compiler String
-postList preprocess = do
-    posts   <- preprocess <$> loadAll "posts/*"
+postList sortFilter = do
+    posts   <- sortFilter <$> loadAll "posts/*"
     itemTpl <- loadBody "templates/post-item.html"
     list    <- applyTemplateList itemTpl postCtx posts
     return list
