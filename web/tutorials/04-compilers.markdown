@@ -156,7 +156,8 @@ We can reproduce a list of items in the archive using the following code:
 compile $ do
     posts   <- recentFirst <$> loadAll "posts/*"
     itemTpl <- loadBody "templates/post-item.html"
-    applyTemplateList itemTpl postCtx posts
+    list    <- applyTemplateList itemTpl postCtx posts
+    makeItem list
 ```
 
 `recentFirst` sorts items by date. This relies on the convention that posts are
@@ -169,4 +170,5 @@ recentFirst :: [Item a] -> [Item a]
 
 After loading and sorting the items, we load a template for the posts.
 `applyTemplateList` applies this template to every post and concatenates the
-result, which is a simple `String`.
+result, which is a simple `String`. After that, we need `makeItem` to wrap the
+returned `String` to `Item String`.
