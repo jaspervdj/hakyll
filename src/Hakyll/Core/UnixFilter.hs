@@ -39,7 +39,7 @@ import           Hakyll.Core.Compiler
 -- >     route   $ setExtension "css"
 -- >     compile $ getResourceString >>=
 -- >         withItemBody (unixFilter "sass" ["-s", "--scss"]) >>=
--- >         compressCssCompiler
+-- >         return . fmap compressCss
 unixFilter :: String           -- ^ Program name
            -> [String]         -- ^ Program args
            -> String           -- ^ Program input
