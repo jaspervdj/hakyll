@@ -13,16 +13,21 @@ body {
 }
 
 div#header {
-    height: 32px;
-    margin: 20px 0px 20px 60px;
-    text-transform: uppercase;
-    font-weight: bold;
     font-size: 28px;
+    font-weight: bold;
+    height: 32px;
+    line-height: 32px;
+    margin: 24px 0px 12px 128px;
+    text-transform: uppercase;
 }
 
 div#header img {
-    display: inline;
-    margin: 0px 0px 0px 0px;
+    float: left;
+    margin: 0px 30px 0px 0px;
+}
+
+div#header a {
+    text-decoration: none;
 }
 
 div#main {
@@ -77,12 +82,12 @@ a {
 
 h1 {
     font-size: 20px;
-    margin: 24px 0px 16px 0px;
+    margin: 12px 0px 12px 0px;
 }
 
 h2 {
     font-size: 18px;
-    margin: 24px 0px 16px 0px;
+    margin: 12px 0px 12px 0px;
 }
 
 h3 {
@@ -91,6 +96,7 @@ h3 {
 
 h1, h2, h3 {
     text-transform: uppercase;
+    font-weight: bold;
 }
 
 h1 a, h2 a, h3 a {
