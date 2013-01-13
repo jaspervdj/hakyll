@@ -3,7 +3,7 @@
 import           Control.Applicative ((<$>))
 import           Control.Arrow       (second)
 import           Control.Monad       (forM_)
-import           Data.List           (isPrefixOf)
+import           Data.List           (isPrefixOf, partition)
 import           Data.Monoid         (mappend)
 import           Hakyll
 import           System.FilePath     (dropTrailingPathSeparator, splitPath)
@@ -53,12 +53,16 @@ main = hakyllWith config $ do
         compile $ do
             tutorials <- loadAll "tutorials/*"
             itemTpl   <- loadBody "templates/tutorial-item.html"
-            list      <- applyTemplateList itemTpl defaultContext $
-                chronological tutorials
+            let (series, articles) = partitionTutorials $
+                    chronological tutorials
+
+            series'   <- applyTemplateList itemTpl defaultContext series
+            articles' <- applyTemplateList itemTpl defaultContext articles
 
             let tutorialsCtx =
-                    constField "title" "Tutorials" `mappend`
-                    constField "tutorials" list    `mappend`
+                    constField "title" "Tutorials"  `mappend`
+                    constField "series" series'     `mappend`
+                    constField "articles" articles' `mappend`
                     defaultContext
 
             makeItem ""
@@ -102,3 +106,9 @@ hackage url
     (packageName, version')  = second (drop 1) $ break (== '-') package
     (baseName : package : _) = map dropTrailingPathSeparator $
         reverse $ splitPath url
+
+
+--------------------------------------------------------------------------------
+-- | Partition tutorials into tutorial series & other articles
+partitionTutorials :: [Item a] -> ([Item a], [Item a])
+partitionTutorials = partition $ matches (fromRegex "\\d*-.*") . itemIdentifier
