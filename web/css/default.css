@@ -125,3 +125,9 @@ pre code {
 p.caption {
     display: none;
 }
+
+.warning {
+    background-color: #fffd9c;
+    border: 1px solid black;
+    padding: 10px;
+}
