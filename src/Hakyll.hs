@@ -10,9 +10,7 @@ module Hakyll
     , module Hakyll.Core.Resource.Provider
     , module Hakyll.Core.Routes
     , module Hakyll.Core.Rules
-#ifdef UNIX_FILTER
     , module Hakyll.Core.UnixFilter
-#endif
     , module Hakyll.Core.Util.Arrow
     , module Hakyll.Core.Util.File
     , module Hakyll.Core.Util.String
@@ -46,9 +44,7 @@ import Hakyll.Core.Resource
 import Hakyll.Core.Resource.Provider
 import Hakyll.Core.Routes
 import Hakyll.Core.Rules
-#ifdef UNIX_FILTER
 import Hakyll.Core.UnixFilter
-#endif
 import Hakyll.Core.Util.Arrow
 import Hakyll.Core.Util.File
 import Hakyll.Core.Util.String

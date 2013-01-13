@@ -6,10 +6,7 @@ module Hakyll.Core.UnixFilter
     ) where
 
 import Control.Concurrent (forkIO)
-import System.Posix.Process (executeFile, forkProcess)
-import System.Posix.IO ( dupTo, createPipe, stdInput
-                       , stdOutput, closeFd, fdToHandle
-                       )
+import System.Process
 import System.IO ( Handle, hPutStr, hClose, hGetContents
                  , hSetEncoding, localeEncoding
                  )
@@ -80,32 +77,18 @@ unixFilterIO :: (Handle -> i -> IO ())
              -> i
              -> IO o
 unixFilterIO writer reader programName args input = do
-    -- Create pipes
-    (stdinRead, stdinWrite) <- createPipe
-    (stdoutRead, stdoutWrite) <- createPipe
-    
-    -- Fork the child
-    _ <- forkProcess $ do
-        -- Copy our pipes over the regular stdin/stdout
-        _ <- dupTo stdinRead stdInput
-        _ <- dupTo stdoutWrite stdOutput
-
-        -- Close the now unneeded file descriptors in the child
-        mapM_ closeFd [stdinWrite, stdoutRead, stdinRead, stdoutWrite]
-
-        -- Execute the program
-        _ <- executeFile programName True args Nothing
-        return ()
-
-    -- On the parent side, close the client-side FDs.
-    mapM_ closeFd [stdinRead, stdoutWrite]
+    let process = (proc programName args)
+                    { std_in = CreatePipe
+                    , std_out = CreatePipe
+                    , close_fds = True
+                    }
+    (Just stdinWriteHandle, Just stdoutReadHandle, _, _) <-
+        createProcess process
 
     -- Write the input to the child pipe
     _ <- forkIO $ do
-        stdinWriteHandle <- fdToHandle stdinWrite
         writer stdinWriteHandle input
         hClose stdinWriteHandle
 
     -- Receive the output from the child
-    stdoutReadHandle <- fdToHandle stdoutRead
     reader stdoutReadHandle
