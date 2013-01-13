@@ -37,3 +37,4 @@ who still maintains the package. Contributors:
 - [sargon](https://github.com/sargon)
 - [seschwar](https://github.com/seschwar)
 - [favonia](https://github.com/favonia)
+- [Robin Windels](https://github.com/rwindelz)
