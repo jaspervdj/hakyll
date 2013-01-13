@@ -12,9 +12,7 @@ import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as LB
 import           System.IO            (Handle, hClose, hGetContents, hPutStr,
                                        hSetEncoding, localeEncoding)
-import           System.Posix.IO      (closeFd, createPipe, dupTo, fdToHandle,
-                                       stdInput, stdOutput)
-import           System.Posix.Process (executeFile, forkProcess)
+import           System.Process
 
 
 --------------------------------------------------------------------------------
@@ -89,32 +87,19 @@ unixFilterIO :: (Handle -> i -> IO ())
              -> i
              -> IO o
 unixFilterIO writer reader programName args input = do
-    -- Create pipes
-    (stdinRead, stdinWrite) <- createPipe
-    (stdoutRead, stdoutWrite) <- createPipe
+    let process = (proc programName args)
+            { std_in    = CreatePipe
+            , std_out   = CreatePipe
+            , close_fds = True
+            }
 
-    -- Fork the child
-    _ <- forkProcess $ do
-        -- Copy our pipes over the regular stdin/stdout
-        _ <- dupTo stdinRead stdInput
-        _ <- dupTo stdoutWrite stdOutput
-
-        -- Close the now unneeded file descriptors in the child
-        mapM_ closeFd [stdinWrite, stdoutRead, stdinRead, stdoutWrite]
-
-        -- Execute the program
-        _ <- executeFile programName True args Nothing
-        return ()
-
-    -- On the parent side, close the client-side FDs.
-    mapM_ closeFd [stdinRead, stdoutWrite]
+    (Just stdinWriteHandle, Just stdoutReadHandle, _, _) <-
+        createProcess process
 
     -- Write the input to the child pipe
     _ <- forkIO $ do
-        stdinWriteHandle <- fdToHandle stdinWrite
         writer stdinWriteHandle input
         hClose stdinWriteHandle
 
     -- Receive the output from the child
-    stdoutReadHandle <- fdToHandle stdoutRead
     reader stdoutReadHandle

@@ -11,9 +11,7 @@ module Hakyll
     , module Hakyll.Core.Metadata
     , module Hakyll.Core.Routes
     , module Hakyll.Core.Rules
-#ifdef UNIX_FILTER
     , module Hakyll.Core.UnixFilter
-#endif
     , module Hakyll.Core.Util.File
     , module Hakyll.Core.Util.String
     , module Hakyll.Core.Writable
@@ -43,9 +41,7 @@ import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules
-#ifdef UNIX_FILTER
 import           Hakyll.Core.UnixFilter
-#endif
 import           Hakyll.Core.Util.File
 import           Hakyll.Core.Util.String
 import           Hakyll.Core.Writable
