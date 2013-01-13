@@ -114,9 +114,12 @@ getResourceWith reader = do
 saveSnapshot :: (Binary a, Typeable a)
              => Internal.Snapshot -> Item a -> Compiler (Item a)
 saveSnapshot snapshot item = do
-    store <- compilerStore <$> compilerAsk
-    compilerUnsafeIO $ Internal.saveSnapshot store snapshot item
-    return item
+    store  <- compilerStore <$> compilerAsk
+    logger <- compilerLogger <$> compilerAsk
+    compilerUnsafeIO $ do
+        Logger.debug logger $ "Storing snapshot: " ++ snapshot
+        Internal.saveSnapshot store snapshot item
+        return item
 
 
 --------------------------------------------------------------------------------

@@ -246,4 +246,6 @@ chase trail id'
 
                 -- If the required item is already compiled, continue, or, start
                 -- chasing that
+                Logger.debug logger $ "Require " ++ show dep ++ ": " ++
+                    (if depDone then "OK" else "chasing")
                 if depDone then chase trail id' else chase (id' : trail) dep
