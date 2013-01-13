@@ -3,6 +3,7 @@
 import           Control.Applicative ((<$>))
 import           Control.Arrow       (second)
 import           Control.Monad       (forM_)
+import           Data.Char           (isDigit)
 import           Data.List           (isPrefixOf, partition)
 import           Data.Monoid         (mappend)
 import           Hakyll
@@ -111,4 +112,7 @@ hackage url
 --------------------------------------------------------------------------------
 -- | Partition tutorials into tutorial series & other articles
 partitionTutorials :: [Item a] -> ([Item a], [Item a])
-partitionTutorials = partition $ matches (fromRegex "\\d*-.*") . itemIdentifier
+partitionTutorials = partition $ \i ->
+    case splitPath (toFilePath $ itemIdentifier i) of
+        [_, (x : _)] -> isDigit x
+        _            -> False
