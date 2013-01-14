@@ -48,7 +48,7 @@ import qualified Hakyll.Core.Store             as Store
 
 
 --------------------------------------------------------------------------------
--- | Get the underlying identifier. Only use this if you know what you're doing.
+-- | Get the underlying identifier.
 getUnderlying :: Compiler Identifier
 getUnderlying = compilerUnderlying <$> compilerAsk
 

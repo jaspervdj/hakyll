@@ -1,7 +1,7 @@
 -- | This module provides means for reading and applying 'Template's.
 --
--- Templates are tools to convert data (pages) into a string. They are
--- perfectly suited for laying out your site.
+-- Templates are tools to convert items into a string. They are perfectly suited
+-- for laying out your site.
 --
 -- Let's look at an example template:
 --
@@ -21,9 +21,6 @@
 -- >         </div>
 -- >     </body>
 -- > </html>
---
--- We can use this template to render a 'Page' which has a body and a @$title$@
--- metadata field.
 --
 -- As you can see, the format is very simple -- @$key$@ is used to render the
 -- @$key$@ field from the page, everything else is literally copied. If you want
@@ -48,6 +45,7 @@ module Hakyll.Web.Template
 
 --------------------------------------------------------------------------------
 import           Control.Monad                (forM, liftM)
+import           Data.Monoid                  (mappend)
 import           Prelude                      hiding (id)
 
 
@@ -74,7 +72,8 @@ applyTemplate :: Template                -- ^ Template
               -> Item a                  -- ^ Page
               -> Compiler (Item String)  -- ^ Resulting item
 applyTemplate tpl context item = do
-    let context' k x = unContext context k x
+    -- Appending missingField gives better error messages
+    let context' k x = unContext (context `mappend` missingField) k x
     body <- applyTemplateWith context' tpl item
     return $ itemSetBody body item
 
