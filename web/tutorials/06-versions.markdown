@@ -55,13 +55,13 @@ is valid code, but **probably not** what you want to do: this will select all
 to fix this, use any of the following:
 
 ```haskell
-loadAll (noVersion "posts/*") :: Compiler [Item String]
+loadAll ("posts/*" .&&. hasNoVersion) :: Compiler [Item String]
 ```
 
 for the default versions, i.e. the HTML pages, and:
 
 ```haskell
-loadAll ("posts/*" `withVersion` "raw") :: Compiler [Item String]
+loadAll ("posts/*" .&&. hasVersion "raw") :: Compiler [Item String]
 ```
 
 for the raw versions.

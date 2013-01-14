@@ -56,4 +56,5 @@ matchesTests = fromAssertions "matches"
     , True  @=? matches (complement "foo.markdown") "bar.markdown"
     , False @=? matches (complement "foo.markdown") "foo.markdown"
     , True  @=? matches ("foo" .||. "bar") "bar"
+    , False @=? matches ("bar" .&&. hasNoVersion) (setVersion (Just "xz") "bar")
     ]

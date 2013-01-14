@@ -37,13 +37,13 @@ module Hakyll.Core.Identifier.Pattern
     , fromList
     , fromRegex
     , fromVersion
+    , hasVersion
+    , hasNoVersion
 
-      -- * Manipulating patterns
+      -- * Composing patterns
     , (.&&.)
     , (.||.)
     , complement
-    , withVersion
-    , noVersion
 
       -- * Applying patterns
     , matches
@@ -105,7 +105,6 @@ data Pattern
     = Everything
     | Complement Pattern
     | And Pattern Pattern
-    | Or Pattern Pattern
     | Glob [GlobComponent]
     | List (Set Identifier)
     | Regex String
@@ -118,20 +117,18 @@ instance Binary Pattern where
     put Everything     = putWord8 0
     put (Complement p) = putWord8 1 >> put p
     put (And x y)      = putWord8 2 >> put x >> put y
-    put (Or x y)       = putWord8 3 >> put x >> put y
-    put (Glob g)       = putWord8 4 >> put g
-    put (List is)      = putWord8 5 >> put is
-    put (Regex r)      = putWord8 6 >> put r
-    put (Version v)    = putWord8 7 >> put v
+    put (Glob g)       = putWord8 3 >> put g
+    put (List is)      = putWord8 4 >> put is
+    put (Regex r)      = putWord8 5 >> put r
+    put (Version v)    = putWord8 6 >> put v
 
     get = getWord8 >>= \t -> case t of
         0 -> pure Everything
         1 -> Complement <$> get
         2 -> And <$> get <*> get
-        3 -> Or <$> get <*> get
-        4 -> Glob <$> get
-        5 -> List <$> get
-        6 -> Regex <$> get
+        3 -> Glob <$> get
+        4 -> List <$> get
+        5 -> Regex <$> get
         _ -> Version <$> get
 
 
@@ -144,19 +141,6 @@ instance IsString Pattern where
 instance Monoid Pattern where
     mempty  = Everything
     mappend = (.&&.)
-
-
---------------------------------------------------------------------------------
--- | This is necessary for good 'isLiteral' results
-optimize :: Pattern -> Pattern
-optimize (Complement x)     = Complement (optimize x)
-optimize (And x Everything) = x
-optimize (And Everything y) = y
-optimize (And x y)          = And (optimize x) (optimize y)
-optimize (Or _ Everything)  = Everything
-optimize (Or Everything _)  = Everything
-optimize (Or x y)           = Or (optimize x) (optimize y)
-optimize p                  = p
 
 
 --------------------------------------------------------------------------------
@@ -174,7 +158,24 @@ fromGlob = Glob . parse'
 
 
 --------------------------------------------------------------------------------
--- | Create a 'Pattern' from a list of 'Identifier's it should match
+-- | Create a 'Pattern' from a list of 'Identifier's it should match.
+--
+-- /Warning/: use this carefully with 'hasNoVersion' and 'hasVersion'. The
+-- 'Identifier's in the list /already/ have versions assigned, and the pattern
+-- will then only match the intersection of both versions.
+--
+-- A more concrete example,
+--
+-- > fromList ["foo.markdown"] .&&. hasVersion "pdf"
+--
+-- will not match anything! The @"foo.markdown"@ 'Identifier' has no version
+-- assigned, so the LHS of '.&&.' will only match this 'Identifier' with no
+-- version. The RHS only matches 'Identifier's with version set to @"pdf"@ --
+-- hence, this pattern matches nothing.
+--
+-- The correct way to use this is:
+--
+-- > fromList (map (setVersion "pdf") ["foo.markdown"])
 fromList :: [Identifier] -> Pattern
 fromList = List . S.fromList
 
@@ -196,16 +197,32 @@ fromVersion = Version
 
 
 --------------------------------------------------------------------------------
+-- | Specify a version, e.g.
+--
+-- > "foo/*.markdown" .&&. hasVersion "pdf"
+hasVersion :: String -> Pattern
+hasVersion = fromVersion . Just
+
+
+--------------------------------------------------------------------------------
+-- | Match only if the identifier has no version set, e.g.
+--
+-- > "foo/*.markdown" .&&. hasNoVersion
+hasNoVersion :: Pattern
+hasNoVersion = fromVersion Nothing
+
+
+--------------------------------------------------------------------------------
 -- | '&&' for patterns: the given identifier must match both subterms
 (.&&.) :: Pattern -> Pattern -> Pattern
-x .&&. y = optimize (And x y)
+x .&&. y = And x y
 infixr 3 .&&.
 
 
 --------------------------------------------------------------------------------
 -- | '||' for patterns: the given identifier must match any subterm
 (.||.) :: Pattern -> Pattern -> Pattern
-x .||. y = optimize (Or x y)
+x .||. y = complement (complement x `And` complement y)  -- De Morgan's law
 infixr 2 .||.
 
 
@@ -220,26 +237,11 @@ complement = Complement
 
 
 --------------------------------------------------------------------------------
--- | Specify a version, e.g.
---
--- > "foo/*.markdown" `withVersion` "pdf"
-withVersion :: Pattern -> String -> Pattern
-withVersion p v = optimize $ And p $ fromVersion $ Just v
-
-
---------------------------------------------------------------------------------
--- | Match only if the identifier has no version set
-noVersion :: Pattern -> Pattern
-noVersion p = optimize $ And p $ fromVersion Nothing
-
-
---------------------------------------------------------------------------------
 -- | Check if an identifier matches a pattern
 matches :: Pattern -> Identifier -> Bool
 matches Everything     _ = True
 matches (Complement p) i = not $ matches p i
 matches (And x y)      i = matches x i && matches y i
-matches (Or x y)       i = matches x i || matches y i
 matches (Glob p)       i = isJust $ capture (Glob p) i
 matches (List l)       i = i `S.member` l
 matches (Regex r)      i = toFilePath i =~ r
