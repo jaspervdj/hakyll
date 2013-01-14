@@ -175,7 +175,7 @@ fromGlob = Glob . parse'
 --
 -- The correct way to use this is:
 --
--- > fromList (map (setVersion "pdf") ["foo.markdown"])
+-- > fromList $ map (setVersion $ Just "pdf") ["foo.markdown"]
 fromList :: [Identifier] -> Pattern
 fromList = List . S.fromList
 
