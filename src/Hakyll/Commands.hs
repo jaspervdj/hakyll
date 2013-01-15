@@ -13,7 +13,7 @@ module Hakyll.Commands
 
 
 --------------------------------------------------------------------------------
-import           System.Exit                (exitWith)
+import           System.Exit                (ExitCode (ExitSuccess), exitWith)
 import           System.Process             (system)
 
 
@@ -69,15 +69,16 @@ clean conf = do
 preview :: Configuration -> Verbosity -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 preview conf verbosity rules port = do
-    -- Fork a thread polling for changes
-    _ <- forkIO $ previewPoll conf update
-
-    -- Run the server in the main thread
-    server conf port
+    -- Run the server in a separate thread
+    _ <- forkIO $ server conf port
+    previewPoll conf update
   where
     update = do
-        ruleSet <- run conf verbosity rules
-        return $ map toFilePath $ S.toList $ rulesResources ruleSet
+        (exitCode, ruleSet) <- run conf verbosity rules
+        case exitCode of
+            ExitSuccess -> return $ map toFilePath $ S.toList $
+                rulesResources ruleSet
+            _           -> exitWith exitCode
 #else
 preview _ _ _ _ = previewServerDisabled
 #endif

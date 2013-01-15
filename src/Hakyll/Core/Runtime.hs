@@ -17,7 +17,7 @@ import qualified Data.Map                      as M
 import           Data.Monoid                   (mempty)
 import           Data.Set                      (Set)
 import qualified Data.Set                      as S
-import           System.Exit                   (ExitCode (..), exitWith)
+import           System.Exit                   (ExitCode (..))
 import           System.FilePath               ((</>))
 
 
@@ -41,8 +41,7 @@ import           Hakyll.Core.Writable
 
 
 --------------------------------------------------------------------------------
--- | TODO Make this return exit code?
-run :: Configuration -> Verbosity -> Rules a -> IO RuleSet
+run :: Configuration -> Verbosity -> Rules a -> IO (ExitCode, RuleSet)
 run config verbosity rules = do
     -- Initialization
     logger <- Logger.new verbosity
@@ -82,7 +81,7 @@ run config verbosity rules = do
         Left e          -> do
             Logger.error logger e
             Logger.flush logger
-            exitWith $ ExitFailure 1
+            return (ExitFailure 1, ruleSet)
 
         Right (_, s, _) -> do
             Store.set store factsKey $ runtimeFacts s
@@ -91,7 +90,7 @@ run config verbosity rules = do
             removeDirectory $ tmpDirectory config
 
             Logger.flush logger
-            return ruleSet
+            return (ExitSuccess, ruleSet)
   where
     factsKey = ["Hakyll.Core.Runtime.run", "facts"]
 
