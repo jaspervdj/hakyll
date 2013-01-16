@@ -9,7 +9,7 @@ module Hakyll.Web.Template.Tests
 import           Data.Monoid                    (mconcat)
 import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
-import           Test.HUnit                     (Assertion, (@=?))
+import           Test.HUnit                     (Assertion, (@=?), (@?=))
 
 
 --------------------------------------------------------------------------------
@@ -18,13 +18,16 @@ import           Hakyll.Core.Provider
 import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
+import           Hakyll.Web.Template.Internal
+import           Hakyll.Web.Template.List
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Hakyll.Core.Template.Tests"
-    [ testCase "case01" case01
+    [ testCase "case01"                case01
+    , testCase "applyJoinTemplateList" testApplyJoinTemplateList
     ]
 
 
@@ -49,3 +52,18 @@ testContext = mconcat
     [ functionField "echo" (\args _ -> return $ unwords args)
     , defaultContext
     ]
+
+
+--------------------------------------------------------------------------------
+testApplyJoinTemplateList :: Assertion
+testApplyJoinTemplateList = do
+    store    <- newTestStore
+    provider <- newTestProvider store
+    str      <- testCompilerDone store provider "item3" $
+        applyJoinTemplateList ", " tpl defaultContext [i1, i2]
+
+    str @?= "<b>Hello</b>, <b>World</b>"
+  where
+    i1  = Item "item1" "Hello"
+    i2  = Item "item2" "World"
+    tpl = Template [Chunk "<b>", Key "body", Chunk "</b>"]

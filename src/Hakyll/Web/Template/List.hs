@@ -9,13 +9,14 @@
 -- * A sitemap
 module Hakyll.Web.Template.List
     ( applyTemplateList
+    , applyJoinTemplateList
     , chronological
     , recentFirst
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Data.List                   (sortBy)
+import           Data.List                   (intersperse, sortBy)
 import           Data.Ord                    (comparing)
 import           System.FilePath             (takeBaseName)
 
@@ -29,14 +30,26 @@ import           Hakyll.Web.Template.Context
 
 
 --------------------------------------------------------------------------------
--- | Set a field of a page to a listing of pages
+-- | Generate a string of a listing of pages, after applying a template to each
+-- page.
 applyTemplateList :: Template
                   -> Context a
                   -> [Item a]
                   -> Compiler String
-applyTemplateList tpl context items = do
+applyTemplateList = applyJoinTemplateList ""
+
+
+--------------------------------------------------------------------------------
+-- | Join a listing of pages with a string in between, after applying a template
+-- to each page.
+applyJoinTemplateList :: String
+                      -> Template
+                      -> Context a
+                      -> [Item a]
+                      -> Compiler String
+applyJoinTemplateList delimiter tpl context items = do
     items' <- mapM (applyTemplate tpl context) items
-    return $ concat $ map itemBody items'
+    return $ concat $ intersperse delimiter $ map itemBody items'
 
 
 --------------------------------------------------------------------------------
