@@ -14,6 +14,7 @@ module Hakyll.Web.Template.Context
     , titleField
     , dateField
     , dateFieldWith
+    , getItemUTC
     , modificationTimeField
     , modificationTimeFieldWith
     , missingField
@@ -158,26 +159,29 @@ dateFieldWith :: TimeLocale  -- ^ Output time locale
               -> String      -- ^ Format to use on the date
               -> Context a   -- ^ Resulting context
 dateFieldWith locale key format = field key $ \i -> do
-    time <- getUTC locale $ itemIdentifier i
+    time <- getItemUTC locale $ itemIdentifier i
     return $ formatTime locale format time
 
 
 --------------------------------------------------------------------------------
 -- | Parser to try to extract and parse the time from the @published@
 -- field or from the filename. See 'renderDateField' for more information.
-getUTC :: TimeLocale        -- ^ Output time locale
-       -> Identifier        -- ^ Input page
-       -> Compiler UTCTime  -- ^ Parsed UTCTime
-getUTC locale id' = do
+-- Exported for user convenience.
+getItemUTC :: TimeLocale        -- ^ Output time locale
+           -> Identifier        -- ^ Input page
+           -> Compiler UTCTime  -- ^ Parsed UTCTime
+getItemUTC locale id' = do
     metadata <- getMetadata id'
     let tryField k fmt = M.lookup k metadata >>= parseTime' fmt
         fn             = takeFileName $ toFilePath id'
 
-    maybe empty return $ msum $
+    maybe empty' return $ msum $
         [tryField "published" fmt | fmt <- formats] ++
         [tryField "date"      fmt | fmt <- formats] ++
         [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fn]
   where
+    empty'     = compilerThrow $ "Hakyll.Web.Template.Context.getItemUTC: " ++
+        "could not parse time for " ++ show id'
     parseTime' = parseTime locale
     formats    =
         [ "%a, %d %b %Y %H:%M:%S UT"
