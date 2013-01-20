@@ -2,6 +2,13 @@
 title: Releases
 ---
 
+## Hakyll 4.1.2.0
+
+*January 20, 2013*
+
+- Fix an issue where a dependency cycle would lead to infinite recursion/stack
+  overflow
+
 ## Hakyll 4.1.1.0
 
 *January 20, 2013*

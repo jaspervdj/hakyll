@@ -12,6 +12,7 @@ import           Control.Monad.Reader          (ask)
 import           Control.Monad.RWS             (RWST, runRWST)
 import           Control.Monad.State           (get, modify)
 import           Control.Monad.Trans           (liftIO)
+import           Data.List                     (intercalate)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as M
 import           Data.Monoid                   (mempty)
@@ -171,7 +172,9 @@ pickAndChase = do
 --------------------------------------------------------------------------------
 chase :: [Identifier] -> Identifier -> Runtime ()
 chase trail id'
-    | id' `elem` trail = return ()  -- Cycle detected!
+    | id' `elem` trail = throwError $ "Hakyll.Core.Runtime.chase: " ++
+        "Dependency cycle detected: " ++ intercalate " depends on "
+            (map show $ dropWhile (/= id') (reverse trail) ++ [id'])
     | otherwise        = do
         logger   <- runtimeLogger        <$> ask
         todo     <- runtimeTodo          <$> get
