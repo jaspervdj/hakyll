@@ -43,7 +43,7 @@ main = hakyllWith config $ do
     -- Tutorials
     match "tutorials/*" $ do
         route   $ setExtension "html"
-        compile $ pandocCompilerWith defaultHakyllParserState withToc
+        compile $ pandocCompilerWith def withToc
             >>= loadAndApplyTemplate "templates/tutorial.html" defaultContext
             >>= loadAndApplyTemplate "templates/default.html" defaultContext
             >>= relativizeUrls

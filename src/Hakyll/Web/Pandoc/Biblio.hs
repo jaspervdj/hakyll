@@ -5,8 +5,8 @@
 -- @.bib@) and a CSL file (@.csl@). Both need to be compiled with their
 -- respective compilers ('biblioCompiler' and 'cslCompiler'). Then, you can
 -- refer to these files when you use 'pageReadPandocBiblio'. This function also
--- takes a parser state for completeness -- you can use
--- 'defaultHakyllParserState' if you're unsure.
+-- takes the reader options for completeness -- you can use
+-- 'defaultHakyllReaderOptions' if you're unsure.
 {-# LANGUAGE Arrows                     #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -22,9 +22,10 @@ module Hakyll.Web.Pandoc.Biblio
 --------------------------------------------------------------------------------
 import           Control.Applicative    ((<$>))
 import           Data.Binary            (Binary (..))
+import           Data.Traversable       (traverse)
 import           Data.Typeable          (Typeable)
 import qualified Text.CSL               as CSL
-import           Text.Pandoc            (Pandoc, ParserState (..))
+import           Text.Pandoc            (Pandoc, ReaderOptions (..))
 import           Text.Pandoc.Biblio     (processBiblio)
 
 
@@ -84,19 +85,22 @@ biblioCompiler = do
 
 
 --------------------------------------------------------------------------------
-readPandocBiblio :: ParserState
-                 -> Item CSL
+readPandocBiblio :: ReaderOptions
+                 -> Maybe (Item CSL)
                  -> Item Biblio
                  -> (Item String)
                  -> Compiler (Item Pandoc)
-readPandocBiblio state csl biblio item = do
+readPandocBiblio ropt csl biblio item = do
+    -- Parse CSL file, if given
+    style <- unsafeCompiler $
+        traverse (CSL.readCSLFile . toFilePath . itemIdentifier) csl
+
     -- We need to know the citation keys, add then *before* actually parsing the
     -- actual page. If we don't do this, pandoc won't even consider them
     -- citations!
     let Biblio refs = itemBody biblio
-        cits        = map CSL.refId refs
-        state'      = state {stateCitations = stateCitations state ++ cits}
-        pandoc      = itemBody $ readPandocWith state' item
-        cslPath     = toFilePath $ itemIdentifier csl
-    pandoc' <- unsafeCompiler $ processBiblio cslPath Nothing refs pandoc
+        ropt'       = ropt {readerReferences = readerReferences ropt ++ refs}
+        pandoc      = itemBody $ readPandocWith ropt' item
+        pandoc'     = processBiblio style refs pandoc
+
     return $ fmap (const pandoc') item

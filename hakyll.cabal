@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.0.0.0
+Version: 4.1.0.0
 
 Synopsis: A static website compiler library
 Description:
@@ -99,7 +99,7 @@ Library
     old-locale   >= 1.0    && < 1.1,
     old-time     >= 1.0    && < 1.2,
     cmdargs      >= 0.10   && < 0.11,
-    pandoc       >= 1.9.3  && < 1.10,
+    pandoc       >= 1.10   && < 1.11,
     parsec       >= 3.0    && < 3.2,
     process      >= 1.0    && < 1.2,
     random       >= 1.0    && < 1.1,
@@ -198,7 +198,7 @@ Test-suite hakyll-tests
     old-locale   >= 1.0    && < 1.1,
     old-time     >= 1.0    && < 1.2,
     cmdargs      >= 0.10   && < 0.11,
-    pandoc       >= 1.9.3  && < 1.10,
+    pandoc       >= 1.0    && < 1.11,
     parsec       >= 3.0    && < 3.2,
     process      >= 1.0    && < 1.2,
     random       >= 1.0    && < 1.1,

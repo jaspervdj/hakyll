@@ -15,13 +15,14 @@ module Hakyll.Web.Pandoc
     , pandocCompilerWithTransform
 
       -- * Default options
-    , defaultHakyllParserState
+    , defaultHakyllReaderOptions
     , defaultHakyllWriterOptions
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative        ((<$>))
+import qualified Data.Set                   as S
 import           Text.Pandoc
 
 
@@ -35,26 +36,28 @@ import           Hakyll.Web.Pandoc.FileType
 -- | Read a string using pandoc, with the default options
 readPandoc :: Item String  -- ^ String to read
            -> Item Pandoc  -- ^ Resulting document
-readPandoc = readPandocWith defaultHakyllParserState
+readPandoc = readPandocWith defaultHakyllReaderOptions
 
 
 --------------------------------------------------------------------------------
 -- | Read a string using pandoc, with the supplied options
-readPandocWith :: ParserState  -- ^ Parser options
-               -> Item String  -- ^ String to read
-               -> Item Pandoc  -- ^ Resulting document
-readPandocWith state item = fmap (reader state (itemFileType item)) item
+readPandocWith :: ReaderOptions  -- ^ Parser options
+               -> Item String    -- ^ String to read
+               -> Item Pandoc    -- ^ Resulting document
+readPandocWith ropt item = fmap (reader ropt (itemFileType item)) item
   where
-    reader s t = case t of
-        Html               -> readHtml s
-        LaTeX              -> readLaTeX s
-        LiterateHaskell t' -> reader s {stateLiterateHaskell = True} t'
-        Markdown           -> readMarkdown s
-        Rst                -> readRST s
-        Textile            -> readTextile s
+    reader ro t = case t of
+        Html               -> readHtml ro
+        LaTeX              -> readLaTeX ro
+        LiterateHaskell t' -> reader (addExt ro Ext_literate_haskell) t'
+        Markdown           -> readMarkdown ro
+        Rst                -> readRST ro
+        Textile            -> readTextile ro
         _                  -> error $
-            "Hakyll.Web.readPandocWith: I don't know how to read a file of the " ++
-            "type " ++ show t ++ " for: " ++ show (itemIdentifier item)
+            "Hakyll.Web.readPandocWith: I don't know how to read a file of " ++
+            "the type " ++ show t ++ " for: " ++ show (itemIdentifier item)
+
+    addExt ro e = ro {readerExtensions = S.insert e $ readerExtensions ro}
 
 
 --------------------------------------------------------------------------------
@@ -69,63 +72,63 @@ writePandoc = writePandocWith defaultHakyllWriterOptions
 writePandocWith :: WriterOptions  -- ^ Writer options for pandoc
                 -> Item Pandoc    -- ^ Document to write
                 -> Item String    -- ^ Resulting HTML
-writePandocWith options = fmap $ writeHtmlString options
+writePandocWith wopt = fmap $ writeHtmlString wopt
 
 
 --------------------------------------------------------------------------------
 -- | Render the resource using pandoc
 renderPandoc :: Item String -> Item String
 renderPandoc =
-    renderPandocWith defaultHakyllParserState defaultHakyllWriterOptions
+    renderPandocWith defaultHakyllReaderOptions defaultHakyllWriterOptions
 
 
 --------------------------------------------------------------------------------
 -- | Render the resource using pandoc
-renderPandocWith :: ParserState -> WriterOptions -> Item String -> Item String
-renderPandocWith state options = writePandocWith options . readPandocWith state
+renderPandocWith :: ReaderOptions -> WriterOptions -> Item String -> Item String
+renderPandocWith ropt wopt = writePandocWith wopt . readPandocWith ropt
 
 
 --------------------------------------------------------------------------------
 -- | Read a page render using pandoc
 pandocCompiler :: Compiler (Item String)
 pandocCompiler =
-    pandocCompilerWith defaultHakyllParserState defaultHakyllWriterOptions
+    pandocCompilerWith defaultHakyllReaderOptions defaultHakyllWriterOptions
 
 
 --------------------------------------------------------------------------------
 -- | A version of 'pandocCompiler' which allows you to specify your own pandoc
 -- options
-pandocCompilerWith :: ParserState -> WriterOptions -> Compiler (Item String)
-pandocCompilerWith state options = pandocCompilerWithTransform state options id
+pandocCompilerWith :: ReaderOptions -> WriterOptions -> Compiler (Item String)
+pandocCompilerWith ropt wopt = pandocCompilerWithTransform ropt wopt id
 
 
 --------------------------------------------------------------------------------
 -- | An extension of 'pandocCompilerWith' which allows you to specify a custom
 -- pandoc transformation for the content
-pandocCompilerWithTransform :: ParserState -> WriterOptions
+pandocCompilerWithTransform :: ReaderOptions -> WriterOptions
                             -> (Pandoc -> Pandoc)
                             -> Compiler (Item String)
-pandocCompilerWithTransform state options f = cached cacheName $
-    writePandocWith options . fmap f . readPandocWith state <$> getResourceBody
+pandocCompilerWithTransform ropt wopt f = cached cacheName $
+    writePandocWith wopt . fmap f . readPandocWith ropt <$> getResourceBody
   where
     cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"
 
 
 --------------------------------------------------------------------------------
 -- | The default reader options for pandoc parsing in hakyll
-defaultHakyllParserState :: ParserState
-defaultHakyllParserState = defaultParserState
+defaultHakyllReaderOptions :: ReaderOptions
+defaultHakyllReaderOptions = def
     { -- The following option causes pandoc to read smart typography, a nice
       -- and free bonus.
-      stateSmart = True
+      readerSmart = True
     }
 
 
 --------------------------------------------------------------------------------
 -- | The default writer options for pandoc rendering in hakyll
 defaultHakyllWriterOptions :: WriterOptions
-defaultHakyllWriterOptions = defaultWriterOptions
+defaultHakyllWriterOptions = def
     { -- This option causes literate haskell to be written using '>' marks in
       -- html, which I think is a good default.
-      writerLiterateHaskell = True
+      writerExtensions = S.insert Ext_literate_haskell (writerExtensions def)
     }
