@@ -24,6 +24,7 @@ module Hakyll.Web.Html
 import           Data.Char                       (digitToInt, intToDigit,
                                                   isDigit, toLower)
 import           Data.List                       (isPrefixOf)
+import qualified Data.Set                        as S
 import           System.FilePath                 (joinPath, splitPath,
                                                   takeDirectory)
 import           Text.Blaze.Html                 (toHtml)
@@ -71,13 +72,20 @@ withUrls f = withTags tag
     attr (k, v)          = (k, if isUrlAttribute k then f v else v)
 
 
--- | Customized TagSoup renderer. (The default TagSoup renderer escape CSS
--- within style tags.)
+--------------------------------------------------------------------------------
+-- | Customized TagSoup renderer. The default TagSoup renderer escape CSS
+-- within style tags, and doesn't properly minimize.
 renderTags' :: [TS.Tag String] -> String
 renderTags' = TS.renderTagsOptions TS.renderOptions
     { TS.optRawTag   = (`elem` ["script", "style"]) . map toLower
-    , TS.optMinimize = (`elem` ["br", "img"])
+    , TS.optMinimize = (`S.member` minimize) . map toLower
     }
+  where
+    -- A list of elements which must be minimized
+    minimize = S.fromList
+        [ "area", "br", "col", "embed", "hr", "img", "input", "meta", "link"
+        , "param"
+        ]
 
 
 --------------------------------------------------------------------------------

@@ -2,6 +2,13 @@
 title: Releases
 ---
 
+## Hakyll 4.1.1.0
+
+*January 20, 2013*
+
+- Fix an issue regarding `relativizeUrls` expanding `<meta />` to
+  `<meta></meta>`
+
 ## Hakyll 4.1.0.0
 
 *January 20, 2013*

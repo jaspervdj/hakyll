@@ -36,6 +36,10 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
             withUrls id "<code>&lt;stdio&gt;</code>"
         , "<style>body > p { line-height: 1.3 }</style>" @=?
             withUrls id "<style>body > p { line-height: 1.3 }</style>"
+
+        -- Test minimizing elements
+        , "<meta bar=\"foo\" />" @=?
+            withUrls id "<meta bar=\"foo\" />"
         ]
 
     , fromAssertions "toUrl"
