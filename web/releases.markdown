@@ -2,6 +2,8 @@
 title: Releases
 ---
 
+# Releases
+
 ## Hakyll 4.1.2.0
 
 *January 20, 2013*
