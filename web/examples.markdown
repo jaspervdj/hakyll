@@ -15,6 +15,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/jaspervdj/jaspervdj)
 - <http://www.imagination-land.org/>,
   [source](https://github.com/Keruspe/blog/)
+- <http://blog.clement.delafargue.name/>,
+  [source](https://github.com/divarvel/blog)
 
 ## Hakyll 3.X
 
