@@ -40,16 +40,18 @@ rulesTest = do
     store    <- newTestStore
     provider <- newTestProvider store
     ruleSet  <- runRules (rules ioref) provider
-    let identifiers = S.fromList $ map fst $ rulesCompilers ruleSet
-        routes      = rulesRoutes ruleSet
+    let identifiers     = S.fromList $ map fst $ rulesCompilers ruleSet
+        routes          = rulesRoutes ruleSet
+        checkRoute ex i =
+            runRoutes routes provider i >>= \r -> Just ex @=? r
 
     -- Test that we have some identifiers and that the routes work out
     assert $ all (`S.member` identifiers) expected
-    Just "example.html" @=? runRoutes routes "example.md"
-    Just "example.md"   @=? runRoutes routes (sv "raw" "example.md")
-    Just "example.md"   @=? runRoutes routes (sv "nav" "example.md")
-    Just "example.mv1"  @=? runRoutes routes (sv "mv1" "example.md")
-    Just "example.mv2"  @=? runRoutes routes (sv "mv2" "example.md")
+    checkRoute "example.html" "example.md"
+    checkRoute "example.md"   (sv "raw" "example.md")
+    checkRoute "example.md"   (sv "nav" "example.md")
+    checkRoute "example.mv1"  (sv "mv1" "example.md")
+    checkRoute "example.mv2"  (sv "mv2" "example.md")
     readIORef ioref >>= assert
   where
     sv g     = setVersion (Just g)

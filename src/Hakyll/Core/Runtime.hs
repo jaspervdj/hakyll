@@ -218,10 +218,11 @@ chase trail id'
                     "(you probably want to call makeItem to solve this problem)"
 
                 -- Write if necessary
-                case runRoutes routes id' of
-                    Nothing  -> return ()
-                    Just url -> do
-                        let path = destinationDirectory config </> url
+                mroute <- liftIO $ runRoutes routes provider id'
+                case mroute of
+                    Nothing    -> return ()
+                    Just route -> do
+                        let path = destinationDirectory config </> route
                         liftIO $ makeDirectories path
                         liftIO $ write path item
                         Logger.debug logger $ "Routed to " ++ path
