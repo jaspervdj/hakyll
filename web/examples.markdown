@@ -17,6 +17,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/Keruspe/blog/)
 - <http://blog.clement.delafargue.name/>,
   [source](https://github.com/divarvel/blog)
+- <http://bneijt.nl>,
+  [source](https://github.com/bneijt/bneijt.nl)
 
 ## Hakyll 3.X
 
