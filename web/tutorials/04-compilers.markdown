@@ -41,9 +41,11 @@ Templates
 
 Let's have a look at a simple template:
 
-    <h1>$title$</h1>
-    <div class="info">Posted on $date$</div>
-    $body$
+```html
+<h1>$title$</h1>
+<div class="info">Posted on $date$</div>
+$body$
+```
 
 As you can probably guess, template files just contain text and only the `$`
 character has special meaning: text between dollar signs ("fields") is replaced
@@ -53,7 +55,9 @@ use `$$`.
 You usually compile the templates from disk using the aptly named
 `templateCompiler`:
 
-    match "templates/*" $ compile templateCompiler
+```haskell
+match "templates/*" $ compile templateCompiler
+```
 
 Notice the lack of `route` here: this is because we don't need to write the
 templates to your `_site` folder, we just want to use them elsewhere.
@@ -86,7 +90,7 @@ And `$title$` like this:
 
 ```haskell
 titleContext :: Context a
-titleContext :: field "title" $ \item -> do
+titleContext = field "title" $ \item -> do
     metadata <- getMetadata (itemIdentifier item)
     return $ fromMaybe "No title" $ M.lookup "title" metadata
 ```
