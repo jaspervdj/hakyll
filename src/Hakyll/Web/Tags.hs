@@ -41,7 +41,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 module Hakyll.Web.Tags
-    ( Tags
+    ( Tags (..)
     , getTags
     , buildTagsWith
     , buildTags
