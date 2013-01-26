@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.1.4.0
+
+*January 26, 2013*
+
+- Export the flexible `renderTags` function
+
 ## Hakyll 4.1.3.0
 
 *January 26, 2013*
