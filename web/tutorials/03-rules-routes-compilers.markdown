@@ -61,7 +61,7 @@ this will become clear soon. The real question here is why we use `create`
 instead of `match`.
 
 The answer is simple: there is no `archive.html` file in our project directory!
-So if we were to use `match`, no a file would be matched, and hence, nothing
+So if we were to use `match`, no file would be matched, and hence, nothing
 would appear in the output directory. `create`, however, ensures the items
 listed are always produced.
 
