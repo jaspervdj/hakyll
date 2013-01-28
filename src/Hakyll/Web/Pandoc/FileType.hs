@@ -8,7 +8,7 @@ module Hakyll.Web.Pandoc.FileType
 
 
 --------------------------------------------------------------------------------
-import           System.FilePath        (takeExtension)
+import           System.FilePath        (splitExtension)
 
 
 --------------------------------------------------------------------------------
@@ -36,12 +36,16 @@ data FileType
 --------------------------------------------------------------------------------
 -- | Get the file type for a certain file. The type is determined by extension.
 fileType :: FilePath -> FileType
-fileType = uncurry fileType' . splitExtension 
+fileType = uncurry fileType' . splitExtension
   where
     fileType' _ ".css"      = Css
     fileType' _ ".htm"      = Html
     fileType' _ ".html"     = Html
-    fileType' f ".lhs"      = LiterateHaskell (fileType' (takeExtension f))
+    fileType' f ".lhs"      = LiterateHaskell $ case fileType f of
+        -- If no extension is given, default to Markdown + LiterateHaskell
+        Binary -> Markdown
+        -- Otherwise, LaTeX + LiterateHaskell or whatever the user specified
+        x      -> x
     fileType' _ ".markdown" = Markdown
     fileType' _ ".md"       = Markdown
     fileType' _ ".mdn"      = Markdown
