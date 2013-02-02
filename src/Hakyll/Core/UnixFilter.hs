@@ -57,7 +57,7 @@ unixFilter = unixFilterWith writer reader
 --
 -- > match "music.wav" $ do
 -- >     route   $ setExtension "ogg"
--- >     compile $ getResourceLBS >>= withItemBody (unixFilter "oggenc" ["-"])
+-- >     compile $ getResourceLBS >>= withItemBody (unixFilterLBS "oggenc" ["-"])
 unixFilterLBS :: String               -- ^ Program name
               -> [String]             -- ^ Program args
               -> ByteString           -- ^ Program input
