@@ -16,9 +16,9 @@ import           Control.Applicative            (Applicative, (<$>))
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
 import           Control.Monad.Trans            (liftIO)
-import qualified Data.Map                       as M
 import           Data.Monoid                    (Monoid, mappend, mempty)
 import           Data.Set                       (Set)
+import qualified Data.Set                       as S
 
 
 --------------------------------------------------------------------------------
@@ -92,7 +92,12 @@ instance MonadMetadata Rules where
 runRules :: Rules a -> Provider -> IO RuleSet
 runRules rules provider = do
     (_, _, ruleSet) <- runRWST (unRules rules) env emptyRulesState
-    return $ nubCompilers ruleSet
+    case findDuplicate (map fst $ rulesCompilers ruleSet) of
+        Nothing  -> return ruleSet
+        Just id' -> error $
+            "Hakyll.Core.Rules.Internal: two different rules for " ++
+            show id' ++ " exist, bailing out"
+
   where
     env = RulesRead
         { rulesProvider = provider
@@ -102,9 +107,10 @@ runRules rules provider = do
 
 
 --------------------------------------------------------------------------------
--- | Remove duplicate compilers from the 'RuleSet'. When two compilers match an
--- item, we prefer the first one
-nubCompilers :: RuleSet -> RuleSet
-nubCompilers set = set {rulesCompilers = nubCompilers' (rulesCompilers set)}
+findDuplicate :: Ord a => [a] -> Maybe a
+findDuplicate = go S.empty
   where
-    nubCompilers' = M.toList . M.fromListWith (flip const)
+    go _ []              = Nothing
+    go s (x : xs)
+        | x `S.member` s = Just x
+        | otherwise      = go (S.insert x s) xs
