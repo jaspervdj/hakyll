@@ -38,3 +38,4 @@ who still maintains the package. Contributors:
 - [seschwar](https://github.com/seschwar)
 - [favonia](https://github.com/favonia)
 - [Robin Windels](https://github.com/rwindelz)
+- [Miikka Koskinen](http://miikka.me/)
