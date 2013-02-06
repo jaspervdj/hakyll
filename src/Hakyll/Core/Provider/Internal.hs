@@ -51,8 +51,7 @@ newProvider :: Store               -- ^ Store to use
             -> FilePath            -- ^ Search directory
             -> IO Provider         -- ^ Resulting provider
 newProvider store ignore directory = do
-    list  <- map fromFilePath . filter (not . ignore) <$>
-        getRecursiveContents directory
+    list  <- map fromFilePath <$> getRecursiveContents ignore directory
     cache <- newIORef M.empty
     return $ Provider directory (S.fromList list) cache store
 

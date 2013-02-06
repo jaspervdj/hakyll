@@ -37,7 +37,7 @@ data Configuration = Configuration
       --
       -- Note that the files in 'destinationDirectory' and 'storeDirectory' will
       -- also be ignored. Note that this is the configuration parameter, if you
-          -- want to use the test, you should use 'shouldIgnoreFile'.
+      -- want to use the test, you should use 'shouldIgnoreFile'.
       --
       ignoreFile           :: FilePath -> Bool
     , -- | Here, you can plug in a system command to upload/deploy your site.
