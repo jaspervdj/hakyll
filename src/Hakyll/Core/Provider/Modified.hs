@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Hakyll.Core.Provider.Modified
     ( resourceModified
     , resourceModificationTime
@@ -9,12 +10,12 @@ module Hakyll.Core.Provider.Modified
 --------------------------------------------------------------------------------
 import           Control.Applicative                ((<$>), (<*>))
 import           Control.Monad                      (when)
-import qualified Crypto.Hash.MD5                    as MD5
-import qualified Data.ByteString                    as B
-import qualified Data.ByteString.Lazy               as BL
+import           Data.Binary                        (Binary (..))
 import           Data.IORef
 import qualified Data.Map                           as M
-import           Data.Time                          (UTCTime)
+import           Data.Time                          (Day (..), UTCTime (..),
+                                                     secondsToDiffTime)
+import           Data.Typeable                      (Typeable)
 import           System.Directory                   (getModificationTime)
 
 
@@ -48,7 +49,7 @@ resourceModified p r
                 -- Check if the actual file was modified, and do a recursive
                 -- call to check if the metadata file was modified
                 m <- (||)
-                    <$> fileDigestModified store filePath
+                    <$> fileModified store filePath
                     <*> resourceModified p (resourceMetadataResource r)
                 modifyIORef cacheRef (M.insert normalized m)
 
@@ -65,37 +66,50 @@ resourceModified p r
 
 
 --------------------------------------------------------------------------------
--- | Utility: Check if a the digest of a file was modified
-fileDigestModified :: Store -> FilePath -> IO Bool
-fileDigestModified store fp = do
-    -- Get the latest seen digest from the store, and calculate the current
-    -- digest for the
-    lastDigest <- Store.get store key
-    newDigest  <- fileDigest fp
-    if Store.Found newDigest == lastDigest
+-- | Utility: Check if a file was modified recently
+fileModified :: Store -> FilePath -> IO Bool
+fileModified store fp = do
+    lastModified <- Store.get store key
+    newModified  <- BinaryTime <$> fileModificationTime fp
+    if maybe False (>= newModified) (Store.toMaybe lastModified)
         -- All is fine, not modified
         then return False
         -- Resource modified; store new digest
         else do
-            Store.set store key newDigest
+            Store.set store key newModified
             return True
   where
     key = ["Hakyll.Core.Resource.Provider.fileModified", fp]
 
 
 --------------------------------------------------------------------------------
--- | Utility: Retrieve a digest for a given file
-fileDigest :: FilePath -> IO B.ByteString
-fileDigest = fmap MD5.hashlazy . BL.readFile
+resourceModificationTime :: Provider -> Identifier -> IO UTCTime
+resourceModificationTime p i = fileModificationTime $ resourceFilePath p i
 
 
 --------------------------------------------------------------------------------
-resourceModificationTime :: Provider -> Identifier -> IO UTCTime
-resourceModificationTime p i = do
+fileModificationTime :: FilePath -> IO UTCTime
+fileModificationTime fp = do
 #if MIN_VERSION_directory(1,2,0)
-    getModificationTime $ resourceFilePath p i
+    getModificationTime fp
 #else
-    ct <- toCalendarTime =<< getModificationTime (resourceFilePath p i)
+    ct <- toCalendarTime =<< getModificationTime fp
     let str = formatCalendarTime defaultTimeLocale "%s" ct
     return $ readTime defaultTimeLocale "%s" str
 #endif
+
+
+--------------------------------------------------------------------------------
+-- | Because UTCTime doesn't have a Binary instance...
+newtype BinaryTime = BinaryTime UTCTime
+    deriving (Eq, Ord, Typeable)
+
+
+--------------------------------------------------------------------------------
+instance Binary BinaryTime where
+    put (BinaryTime (UTCTime (ModifiedJulianDay d) dt)) =
+        put d >> put (floor dt :: Integer)
+
+    get = fmap BinaryTime $ UTCTime
+        <$> (ModifiedJulianDay <$> get)
+        <*> (secondsToDiffTime <$> get)
