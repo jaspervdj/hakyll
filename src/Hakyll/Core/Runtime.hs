@@ -6,7 +6,7 @@ module Hakyll.Core.Runtime
 
 --------------------------------------------------------------------------------
 import           Control.Applicative           ((<$>))
-import           Control.Monad                 (filterM, unless)
+import           Control.Monad                 (unless)
 import           Control.Monad.Error           (ErrorT, runErrorT, throwError)
 import           Control.Monad.Reader          (ask)
 import           Control.Monad.RWS             (RWST, runRWST)
@@ -140,8 +140,9 @@ scheduleOutOfDate = do
     todo     <- runtimeTodo     <$> get
 
     let identifiers = M.keys universe
-    modified <- fmap S.fromList $ flip filterM identifiers $
-        liftIO . resourceModified provider
+        modified    = S.fromList $ flip filter identifiers $
+            resourceModified provider
+
     let (ood, facts', msgs) = outOfDate identifiers modified facts
         todo'               = M.filterWithKey
             (\id' _ -> id' `S.member` ood) universe

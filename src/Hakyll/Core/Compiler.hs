@@ -131,7 +131,7 @@ cached name compiler = do
     id'      <- compilerUnderlying <$> compilerAsk
     store    <- compilerStore      <$> compilerAsk
     provider <- compilerProvider   <$> compilerAsk
-    modified <- compilerUnsafeIO $ resourceModified provider id'
+    let modified = resourceModified provider id'
     if modified
         then do
             x <- compiler

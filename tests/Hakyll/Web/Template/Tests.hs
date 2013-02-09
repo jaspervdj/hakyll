@@ -44,6 +44,7 @@ case01 = do
         pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 
     out @=? itemBody item
+    cleanTestEnv
 
 
 --------------------------------------------------------------------------------
@@ -63,6 +64,7 @@ testApplyJoinTemplateList = do
         applyJoinTemplateList ", " tpl defaultContext [i1, i2]
 
     str @?= "<b>Hello</b>, <b>World</b>"
+    cleanTestEnv
   where
     i1  = Item "item1" "Hello"
     i2  = Item "item2" "World"

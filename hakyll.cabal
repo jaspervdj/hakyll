@@ -151,7 +151,6 @@ Library
     Hakyll.Core.Provider.Internal
     Hakyll.Core.Provider.Metadata
     Hakyll.Core.Provider.MetadataCache
-    Hakyll.Core.Provider.Modified
     Hakyll.Core.Rules.Internal
     Hakyll.Core.Runtime
     Hakyll.Core.Store

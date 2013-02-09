@@ -31,13 +31,14 @@ loadMetadata p identifier = do
         then second Just <$> loadMetadataHeader fp
         else return (M.empty, Nothing)
 
-    emd <- if resourceExists p mi then loadMetadataFile mfp else return M.empty
+    emd <- case mi of
+        Nothing  -> return M.empty
+        Just mi' -> loadMetadataFile $ resourceFilePath p mi'
 
     return (M.union md emd, body)
   where
     fp  = resourceFilePath p identifier
-    mi  = resourceMetadataResource identifier
-    mfp = resourceFilePath p mi
+    mi  = M.lookup identifier (providerFiles p) >>= resourceInfoMetadata
 
 
 --------------------------------------------------------------------------------

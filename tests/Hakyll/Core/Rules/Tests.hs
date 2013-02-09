@@ -51,6 +51,7 @@ rulesTest = do
     Just "example.mv1"  @=? runRoutes routes (sv "mv1" "example.md")
     Just "example.mv2"  @=? runRoutes routes (sv "mv2" "example.md")
     readIORef ioref >>= assert
+    cleanTestEnv
   where
     sv g     = setVersion (Just g)
     expected =

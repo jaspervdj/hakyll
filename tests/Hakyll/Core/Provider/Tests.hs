@@ -37,3 +37,4 @@ case01 = do
 
     doesntExist <- resourceMetadata provider "doesntexist.md"
     M.empty @=? doesntExist
+    cleanTestEnv

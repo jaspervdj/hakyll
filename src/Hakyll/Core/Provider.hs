@@ -3,44 +3,43 @@
 -- caching.
 module Hakyll.Core.Provider
     ( -- * Constructing resource providers
-      Provider
+      Internal.Provider
     , newProvider
 
       -- * Querying resource properties
-    , resourceList
-    , resourceExists
-    , resourceModified
-    , resourceModificationTime
+    , Internal.resourceList
+    , Internal.resourceExists
+    , Internal.resourceModified
+    , Internal.resourceModificationTime
 
       -- * Access to raw resource content
-    , resourceString
-    , resourceLBS
+    , Internal.resourceString
+    , Internal.resourceLBS
 
       -- * Access to metadata and body content
-    , resourceMetadata
-    , resourceBody
+    , Internal.resourceMetadata
+    , Internal.resourceBody
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Identifier
-import           Hakyll.Core.Metadata
-import           Hakyll.Core.Provider.Internal
+import           Control.Monad                      (forM_)
+import qualified Hakyll.Core.Provider.Internal      as Internal
 import qualified Hakyll.Core.Provider.MetadataCache as Internal
-import           Hakyll.Core.Provider.Modified
+import           Hakyll.Core.Store                  (Store)
 
 
 --------------------------------------------------------------------------------
--- | Wrapper to ensure metadata cache is invalidated if necessary
-resourceMetadata :: Provider -> Identifier -> IO Metadata
-resourceMetadata rp r = do
-    _ <- resourceModified rp r
-    Internal.resourceMetadata rp r
-
-
---------------------------------------------------------------------------------
--- | Wrapper to ensure metadata cache is invalidated if necessary
-resourceBody :: Provider -> Identifier -> IO String
-resourceBody rp r = do
-    _ <- resourceModified rp r
-    Internal.resourceBody rp r
+-- | Create a resource provider
+newProvider :: Store                 -- ^ Store to use
+            -> (FilePath -> Bool)    -- ^ Should we ignore this file?
+            -> FilePath              -- ^ Search directory
+            -> IO Internal.Provider  -- ^ Resulting provider
+newProvider store ignore directory = do
+    -- Delete metadata cache where necessary
+    provider <- Internal.newProvider store ignore directory
+    forM_ (Internal.resourceList provider) $ \identifier ->
+        if Internal.resourceModified provider identifier
+            then Internal.resourceInvalidateMetadataCache provider identifier
+            else return ()
+    return provider
