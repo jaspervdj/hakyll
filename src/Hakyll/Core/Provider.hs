@@ -23,7 +23,6 @@ module Hakyll.Core.Provider
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                      (forM_)
 import qualified Hakyll.Core.Provider.Internal      as Internal
 import qualified Hakyll.Core.Provider.MetadataCache as Internal
 import           Hakyll.Core.Store                  (Store)
@@ -37,9 +36,7 @@ newProvider :: Store                 -- ^ Store to use
             -> IO Internal.Provider  -- ^ Resulting provider
 newProvider store ignore directory = do
     -- Delete metadata cache where necessary
-    provider <- Internal.newProvider store ignore directory
-    forM_ (Internal.resourceList provider) $ \identifier ->
-        if Internal.resourceModified provider identifier
-            then Internal.resourceInvalidateMetadataCache provider identifier
-            else return ()
-    return provider
+    p <- Internal.newProvider store ignore directory
+    mapM_ (Internal.resourceInvalidateMetadataCache p) $
+        filter (Internal.resourceModified p) $ Internal.resourceList p
+    return p

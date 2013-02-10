@@ -172,12 +172,13 @@ resourceLBS p i = BL.readFile $ resourceFilePath p i
 -- | A resource is modified if it or its metadata has changed
 resourceModified :: Provider -> Identifier -> Bool
 resourceModified p r = case (ri, oldRi) of
-    (Nothing, _)      -> True
+    (Nothing, _)      -> False
     (Just _, Nothing) -> True
     (Just n, Just o)  -> resourceInfoModified n > resourceInfoModified o
   where
-    ri    = M.lookup (setVersion Nothing r) (providerFiles p)
-    oldRi = ri >>= resourceInfoMetadata >>= flip M.lookup (providerFiles p)
+    normal = setVersion Nothing r
+    ri     = M.lookup normal (providerFiles p)
+    oldRi  = M.lookup normal (providerOldFiles p)
 
 
 --------------------------------------------------------------------------------
