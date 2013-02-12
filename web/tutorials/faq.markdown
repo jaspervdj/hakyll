@@ -49,7 +49,7 @@ blocks][pandoc-code-blocks] and [inline code][pandoc-inline-code].
 
 If you execute a `./site build`, Hakyll will build your site incrementally.
 However, we can not detect if you edited `site.hs`. In this case, you first want
-to compile it again `site.hs` again, and then do a `./site rebuild`.
+to compile `site.hs` again, and then do a `./site rebuild`.
 
 After rebuilding your site, all files will look as "modified" to the filesystem.
 This means that when you upload your site, it will usually transfer all files --
