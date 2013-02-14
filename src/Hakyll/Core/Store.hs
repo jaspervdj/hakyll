@@ -5,6 +5,7 @@
 module Hakyll.Core.Store
     ( Store
     , Result (..)
+    , toMaybe
     , new
     , set
     , get
@@ -51,6 +52,13 @@ data Result a
     | NotFound                   -- ^ Not found
     | WrongType TypeRep TypeRep  -- ^ Expected, true type
     deriving (Show, Eq)
+
+
+--------------------------------------------------------------------------------
+-- | Convert result to 'Maybe'
+toMaybe :: Result a -> Maybe a
+toMaybe (Found x) = Just x
+toMaybe _         = Nothing
 
 
 --------------------------------------------------------------------------------

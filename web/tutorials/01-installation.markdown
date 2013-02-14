@@ -32,8 +32,9 @@ started:
 
     $ hakyll-init my-site
 
-If `hakyll-init` is not found, you should make sure `$HOME/.cabal/bin` is in
-your `$PATH`.
+This creates a folder `my-site` in the current directory, with some example
+content and a generic configuration. If `hakyll-init` is not found, you should
+make sure `$HOME/.cabal/bin` is in your `$PATH`.
 
 The file `site.hs` holds the configuration of your site, as an executable
 haskell program. We can compile and run it like this:

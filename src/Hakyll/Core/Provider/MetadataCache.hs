@@ -23,6 +23,7 @@ resourceMetadata :: Provider -> Identifier -> IO Metadata
 resourceMetadata p r
     | not (resourceExists p r) = return M.empty
     | otherwise                = do
+        -- TODO keep time in md cache
         load p r
         Store.Found md <- Store.get (providerStore p)
             [name, toFilePath r, "metadata"]

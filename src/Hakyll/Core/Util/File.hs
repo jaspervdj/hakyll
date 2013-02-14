@@ -25,12 +25,13 @@ makeDirectories = createDirectoryIfMissing True . takeDirectory
 
 --------------------------------------------------------------------------------
 -- | Get all contents of a directory.
-getRecursiveContents :: FilePath       -- ^ Directory to search
-                     -> IO [FilePath]  -- ^ List of files found
-getRecursiveContents top = go ""
+getRecursiveContents :: (FilePath -> Bool)  -- ^ Ignore this file/directory
+                     -> FilePath            -- ^ Directory to search
+                     -> IO [FilePath]       -- ^ List of files found
+getRecursiveContents ignore top = go ""
   where
-    isProper = (`notElem` [".", ".."])
-    go dir   = do
+    isProper x = notElem x [".", ".."] && not (ignore x)
+    go dir     = do
         dirExists <- doesDirectoryExist (top </> dir)
         if not dirExists
             then return []

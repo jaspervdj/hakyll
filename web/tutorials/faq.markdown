@@ -31,13 +31,25 @@ recent version of Pandoc (1.9 and onwards). Note that you also need to include
 some CSS in order for this to work! This site, for example, uses the [default
 Pandoc syntax CSS file][syntax-css].
 
+To highlight a code block, you need to use Pandoc's fenced code block syntax to
+set the block's language. For example, here's how you highlight Haskell code:
+
+    ``` haskell
+    fac n = foldr (*) 1 [1..n]
+    ```
+
+For details, see Pandoc's user guide on [fenced code
+blocks][pandoc-code-blocks] and [inline code][pandoc-inline-code].
+
 [syntax-css]: https://github.com/jaspervdj/hakyll/blob/master/web/css/syntax.css
+[pandoc-code-blocks]: http://johnmacfarlane.net/pandoc/README.html#fenced-code-blocks
+[pandoc-inline-code]: http://johnmacfarlane.net/pandoc/README.html#verbatim
 
 ## When should I rebuild and when should I build?
 
 If you execute a `./site build`, Hakyll will build your site incrementally.
 However, we can not detect if you edited `site.hs`. In this case, you first want
-to compile it again `site.hs` again, and then do a `./site rebuild`.
+to compile `site.hs` again, and then do a `./site rebuild`.
 
 After rebuilding your site, all files will look as "modified" to the filesystem.
 This means that when you upload your site, it will usually transfer all files --

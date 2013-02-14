@@ -41,12 +41,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 module Hakyll.Web.Tags
-    ( Tags
+    ( Tags (..)
     , getTags
     , buildTagsWith
     , buildTags
     , buildCategories
     , tagsRules
+    , renderTags
     , renderTagCloud
     , renderTagList
     , tagsField
@@ -149,7 +150,7 @@ tagsRules tags rules =
 
 
 --------------------------------------------------------------------------------
--- | Render tags in HTML
+-- | Render tags in HTML (the flexible higher-order function)
 renderTags :: (String -> String -> Int -> Int -> Int -> String)
            -- ^ Produce a tag item: tag, url, count, min count, max count
            -> ([String] -> String)
@@ -218,13 +219,9 @@ renderTagList = renderTags makeLink (intercalate ", ")
 
 
 --------------------------------------------------------------------------------
--- | Render tags with links with custom function to get tags. It is typically
--- together with 'getTags' like this:
---
--- > renderTagsFieldWith (customFunction . getTags)
--- >     "tags" (fromCapture "tags/*")
+-- | Render tags with links with custom function to get tags
 tagsFieldWith :: (Identifier -> Compiler [String])  -- ^ Get the tags
-              -> String                             -- ^ Destination key
+              -> String                             -- ^ Destination field
               -> Tags                               -- ^ Tags structure
               -> Context a                          -- ^ Resulting context
 tagsFieldWith getTags' key tags = field key $ \item -> do

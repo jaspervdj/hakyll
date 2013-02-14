@@ -53,6 +53,7 @@ rulesTest = do
     checkRoute "example.mv1"  (sv "mv1" "example.md")
     checkRoute "example.mv2"  (sv "mv2" "example.md")
     readIORef ioref >>= assert
+    cleanTestEnv
   where
     sv g     = setVersion (Just g)
     expected =

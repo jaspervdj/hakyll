@@ -20,6 +20,7 @@ import qualified Hakyll.Core.UnixFilter.Tests
 import qualified Hakyll.Core.Util.String.Tests
 import qualified Hakyll.Web.Html.RelativizeUrls.Tests
 import qualified Hakyll.Web.Html.Tests
+import qualified Hakyll.Web.Pandoc.FileType.Tests
 import qualified Hakyll.Web.Template.Context.Tests
 import qualified Hakyll.Web.Template.Tests
 
@@ -38,6 +39,7 @@ main = defaultMain
     , Hakyll.Core.Util.String.Tests.tests
     , Hakyll.Web.Html.RelativizeUrls.Tests.tests
     , Hakyll.Web.Html.Tests.tests
+    , Hakyll.Web.Pandoc.FileType.Tests.tests
     , Hakyll.Web.Template.Context.Tests.tests
     , Hakyll.Web.Template.Tests.tests
     ]

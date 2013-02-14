@@ -67,3 +67,4 @@ wrongType = do
             e == typeOf (undefined :: Int) &&
             t == typeOf (undefined :: String)
         _                   -> False
+    cleanTestEnv

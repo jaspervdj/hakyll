@@ -23,7 +23,7 @@ main = do
     progName <- getProgName
     args     <- getArgs
     srcDir   <- getDataFileName "example"
-    files    <- getRecursiveContents srcDir
+    files    <- getRecursiveContents (const False) srcDir
 
     case args of
         [dstDir] -> forM_ files $ \file -> do
