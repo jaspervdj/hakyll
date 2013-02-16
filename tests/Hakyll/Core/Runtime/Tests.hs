@@ -20,7 +20,8 @@ import           TestSuite.Util
 
 --------------------------------------------------------------------------------
 tests :: Test
-tests = testGroup "Hakyll.Core.Runtime.Tests" $ fromAssertions "run" [case01]
+tests = testGroup "Hakyll.Core.Runtime.Tests" $
+    fromAssertions "run" [case01, case02]
 
 
 --------------------------------------------------------------------------------
@@ -46,5 +47,24 @@ case01 = do
 
     bodies <- readFile $ destinationDirectory testConfiguration </> "bodies.txt"
     head (lines bodies) @?=  "This is an example."
+
+    cleanTestEnv
+
+
+--------------------------------------------------------------------------------
+case02 :: Assertion
+case02 = do
+    _ <- run testConfiguration Logger.Error $ do
+        match "images/favicon.ico" $ do
+            route   $ gsubRoute "images/" (const "")
+            compile $ makeItem ("Test" :: String)
+
+        match "images/**" $ do
+            route   idRoute
+            compile copyFileCompiler
+
+    favicon <- readFile $
+        destinationDirectory testConfiguration </> "favicon.ico"
+    favicon @?= "Test"
 
     cleanTestEnv

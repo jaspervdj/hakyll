@@ -64,10 +64,11 @@ Data-files:
 Extra-source-files:
   tests/data/example.md
   tests/data/example.md.metadata
+  tests/data/images/favicon.ico
+  tests/data/posts/2010-08-26-birthday.md
   tests/data/russian.md
   tests/data/template.html
   tests/data/template.html.out
-  tests/data/posts/2010-08-26-birthday.md
 
 Source-Repository head
   Type:     git

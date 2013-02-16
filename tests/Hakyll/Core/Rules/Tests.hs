@@ -10,7 +10,6 @@ import           Data.IORef                     (IORef, newIORef, readIORef,
                                                  writeIORef)
 import qualified Data.Set                       as S
 import           Test.Framework                 (Test, testGroup)
-import           Test.Framework.Providers.HUnit (testCase)
 import           Test.HUnit                     (Assertion, assert, (@=?))
 
 
@@ -28,18 +27,17 @@ import           TestSuite.Util
 
 --------------------------------------------------------------------------------
 tests :: Test
-tests = testGroup "Hakyll.Core.Rules.Tests"
-    [ testCase "runRules" rulesTest
-    ]
+tests = testGroup "Hakyll.Core.Rules.Tests" $ fromAssertions "runRules"
+    [case01]
 
 
 --------------------------------------------------------------------------------
-rulesTest :: Assertion
-rulesTest = do
+case01 :: Assertion
+case01 = do
     ioref    <- newIORef False
     store    <- newTestStore
     provider <- newTestProvider store
-    ruleSet  <- runRules (rules ioref) provider
+    ruleSet  <- runRules (rules01 ioref) provider
     let identifiers = S.fromList $ map fst $ rulesCompilers ruleSet
         routes      = rulesRoutes ruleSet
 
@@ -64,8 +62,8 @@ rulesTest = do
 
 
 --------------------------------------------------------------------------------
-rules :: IORef Bool -> Rules ()
-rules ioref = do
+rules01 :: IORef Bool -> Rules ()
+rules01 ioref = do
     -- Compile some posts
     match "*.md" $ do
         route $ setExtension "html"
