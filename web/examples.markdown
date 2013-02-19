@@ -21,6 +21,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/bneijt/bneijt.nl)
 - <http://brianshourd.com/>,
   [source](https://github.com/brianshourd/brianshourd.com)
+- <http://variadic.me>,
+  [source](https://github.com/eakron/variadic.me)
 
 ## Hakyll 3.X
 
@@ -46,8 +48,6 @@ this list. This list has no particular ordering.
   [source](https://github.com/deepakjois/website)
 - <http://sigkill.dk/>,
   [literate source](http://sigkill.dk/programs/sigkill.html)
-- <http://variadic.me>,
-  [source](https://github.com/eakron/variadic.me)
 - <http://orftz.com>,
   [source](https://github.com/orftz/orftz.com)
 - <http://citationneeded.me/>,
