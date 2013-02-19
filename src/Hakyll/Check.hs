@@ -16,11 +16,12 @@ import           Control.Monad.RWS         (RWST, runRWST)
 import           Control.Monad.State       (get, modify)
 import           Control.Monad.Trans       (liftIO)
 import           Control.Monad.Writer      (tell)
-import           Data.List                 (isPrefixOf)
+import           Data.List                 (intercalate, isPrefixOf)
 import           Data.Monoid               (Monoid (..))
 import           Data.Set                  (Set)
 import qualified Data.Set                  as S
 import           Data.Typeable             (cast)
+import           GHC.Exts                  (fromString)
 import qualified Network.HTTP.Conduit      as Http
 import qualified Network.HTTP.Types        as Http
 import           System.Directory          (doesDirectoryExist, doesFileExist)
@@ -30,11 +31,13 @@ import qualified Text.HTML.TagSoup         as TS
 
 
 --------------------------------------------------------------------------------
+import           Data.Version              (versionBranch)
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Logger        (Logger, Verbosity)
 import qualified Hakyll.Core.Logger        as Logger
 import           Hakyll.Core.Util.File
 import           Hakyll.Web.Html
+import qualified Paths_hakyll              as Paths_hakyll
 
 
 --------------------------------------------------------------------------------
@@ -172,10 +175,16 @@ checkExternalUrl url = do
             modify $ S.insert url
             if isOk then ok url else faulty url
   where
+    -- Add additional request info
     settings r = r
-        { Http.method        = "HEAD"
-        , Http.redirectCount = 10
+        { Http.method         = "HEAD"
+        , Http.redirectCount  = 10
+        , Http.requestHeaders = ("User-Agent", ua) : Http.requestHeaders r
         }
+
+    -- Nice user agent info
+    ua = fromString $ "hakyll-check/" ++
+        (intercalate "." $ map show $ versionBranch $ Paths_hakyll.version)
 
     -- Catch all the things except UserInterrupt
     failure logger (SomeException e) = case cast e of
