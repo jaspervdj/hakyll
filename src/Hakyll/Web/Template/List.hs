@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 --------------------------------------------------------------------------------
 -- | Provides an easy way to combine several items in a list. The applications
 -- are obvious:
@@ -8,6 +7,7 @@
 -- * An image list in a gallery
 --
 -- * A sitemap
+{-# LANGUAGE TupleSections #-}
 module Hakyll.Web.Template.List
     ( applyTemplateList
     , applyJoinTemplateList
@@ -20,13 +20,11 @@ module Hakyll.Web.Template.List
 import           Control.Monad               (liftM)
 import           Data.List                   (intersperse, sortBy)
 import           Data.Ord                    (comparing)
-import           System.FilePath             (takeBaseName)
 import           System.Locale               (defaultTimeLocale)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
-import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Web.Template
