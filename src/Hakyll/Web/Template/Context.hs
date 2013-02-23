@@ -167,9 +167,10 @@ dateFieldWith locale key format = field key $ \i -> do
 -- | Parser to try to extract and parse the time from the @published@
 -- field or from the filename. See 'renderDateField' for more information.
 -- Exported for user convenience.
-getItemUTC :: TimeLocale        -- ^ Output time locale
+getItemUTC :: MonadMetadata m
+           => TimeLocale        -- ^ Output time locale
            -> Identifier        -- ^ Input page
-           -> Compiler UTCTime  -- ^ Parsed UTCTime
+           -> m UTCTime         -- ^ Parsed UTCTime
 getItemUTC locale id' = do
     metadata <- getMetadata id'
     let tryField k fmt = M.lookup k metadata >>= parseTime' fmt
@@ -180,7 +181,7 @@ getItemUTC locale id' = do
         [tryField "date"      fmt | fmt <- formats] ++
         [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fn]
   where
-    empty'     = compilerThrow $ "Hakyll.Web.Template.Context.getItemUTC: " ++
+    empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
         "could not parse time for " ++ show id'
     parseTime' = parseTime locale
     formats    =
