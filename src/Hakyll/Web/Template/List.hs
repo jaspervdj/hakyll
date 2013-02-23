@@ -61,10 +61,12 @@ applyJoinTemplateList delimiter tpl context items = do
 -- @year-month-day-title.extension@ naming scheme -- as is the convention in
 -- Hakyll.
 chronological :: MonadMetadata m => [Item a] -> m [Item a]
-chronological = sortByM $ getItemUTC defaultTimeLocale . itemIdentifier
-                where sortByM :: (Monad m, Ord k) => (a -> m k) -> [a] -> m [a]
-                      sortByM f xs = liftM (map fst . sortBy (comparing snd)) $
-                                     mapM (\x -> liftM (x,) (f x)) xs
+chronological =
+    sortByM $ getItemUTC defaultTimeLocale . itemIdentifier
+  where
+    sortByM :: (Monad m, Ord k) => (a -> m k) -> [a] -> m [a]
+    sortByM f xs = liftM (map fst . sortBy (comparing snd)) $
+                   mapM (\x -> liftM (x,) (f x)) xs
 
 --------------------------------------------------------------------------------
 -- | The reverse of 'chronological'
