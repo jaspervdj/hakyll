@@ -28,6 +28,7 @@ import           System.Locale               (defaultTimeLocale)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
+import           Hakyll.Core.Metadata
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 
@@ -59,7 +60,7 @@ applyJoinTemplateList delimiter tpl context items = do
 -- | Sort pages chronologically. This function assumes that the pages have a
 -- @year-month-day-title.extension@ naming scheme -- as is the convention in
 -- Hakyll.
-chronological :: [Item a] -> Compiler [Item a]
+chronological :: MonadMetadata m => [Item a] -> m [Item a]
 chronological = sortByM $ getItemUTC defaultTimeLocale . itemIdentifier
                 where sortByM :: (Monad m, Ord k) => (a -> m k) -> [a] -> m [a]
                       sortByM f xs = liftM (map fst . sortBy (comparing snd)) $
@@ -67,5 +68,5 @@ chronological = sortByM $ getItemUTC defaultTimeLocale . itemIdentifier
 
 --------------------------------------------------------------------------------
 -- | The reverse of 'chronological'
-recentFirst :: [Item a] -> Compiler [Item a]
-recentFirst i = return . reverse =<< chronological i
+recentFirst :: (MonadMetadata m, Functor m) => [Item a] -> m [Item a]
+recentFirst = fmap reverse . chronological
