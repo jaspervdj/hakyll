@@ -39,6 +39,7 @@ import           System.FilePath               (takeExtension)
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler.Internal
 import qualified Hakyll.Core.Compiler.Require  as Internal
+import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Logger            as Logger
@@ -71,8 +72,12 @@ makeItem x = do
 -- | Get the route for a specified item
 getRoute :: Identifier -> Compiler (Maybe FilePath)
 getRoute identifier = do
-    routes <- compilerRoutes <$> compilerAsk
-    return $ runRoutes routes identifier
+    provider <- compilerProvider <$> compilerAsk
+    routes   <- compilerRoutes <$> compilerAsk
+    -- Note that this makes us dependend on that identifier: when the metadata
+    -- of that item changes, the route may change, hence we have to recompile
+    compilerTellDependencies [IdentifierDependency identifier]
+    compilerUnsafeIO $ runRoutes routes provider identifier
 
 
 --------------------------------------------------------------------------------

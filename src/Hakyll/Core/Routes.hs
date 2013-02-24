@@ -35,36 +35,42 @@ module Hakyll.Core.Routes
     , customRoute
     , constRoute
     , gsubRoute
+    , metadataRoute
     , composeRoutes
     ) where
 
 
 --------------------------------------------------------------------------------
-import Data.Monoid (Monoid, mempty, mappend)
-import Control.Monad (mplus)
-import System.FilePath (replaceExtension)
+import           Data.Monoid                    (Monoid, mappend, mempty)
+import           System.FilePath                (replaceExtension)
 
 
 --------------------------------------------------------------------------------
-import Hakyll.Core.Identifier
-import Hakyll.Core.Identifier.Pattern
-import Hakyll.Core.Util.String
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Identifier.Pattern
+import           Hakyll.Core.Metadata
+import           Hakyll.Core.Provider
+import           Hakyll.Core.Util.String
 
 
 --------------------------------------------------------------------------------
 -- | Type used for a route
-newtype Routes = Routes {unRoutes :: Identifier -> Maybe FilePath}
+newtype Routes = Routes
+    { unRoutes :: Provider -> Identifier -> IO (Maybe FilePath)
+    }
 
 
 --------------------------------------------------------------------------------
 instance Monoid Routes where
-    mempty = Routes $ const Nothing
-    mappend (Routes f) (Routes g) = Routes $ \id' -> f id' `mplus` g id'
+    mempty = Routes $ \_ _ -> return Nothing
+    mappend (Routes f) (Routes g) = Routes $ \p id' -> do
+        mfp <- f p id'
+        maybe (g p id') (return . Just) mfp
 
 
 --------------------------------------------------------------------------------
 -- | Apply a route to an identifier
-runRoutes :: Routes -> Identifier -> Maybe FilePath
+runRoutes :: Routes -> Provider -> Identifier -> IO (Maybe FilePath)
 runRoutes = unRoutes
 
 
@@ -72,7 +78,7 @@ runRoutes = unRoutes
 -- | A route that uses the identifier as filepath. For example, the target with
 -- ID @foo\/bar@ will be written to the file @foo\/bar@.
 idRoute :: Routes
-idRoute = Routes $ Just . toFilePath
+idRoute = customRoute toFilePath
 
 
 --------------------------------------------------------------------------------
@@ -94,23 +100,23 @@ idRoute = Routes $ Just . toFilePath
 --
 -- > Just "posts/the-art-of-trolling.html"
 setExtension :: String -> Routes
-setExtension extension = Routes $
-    fmap (`replaceExtension` extension) . unRoutes idRoute
+setExtension extension = customRoute $
+    (`replaceExtension` extension) . toFilePath
 
 
 --------------------------------------------------------------------------------
 -- | Apply the route if the identifier matches the given pattern, fail
 -- otherwise
 matchRoute :: Pattern -> Routes -> Routes
-matchRoute pattern (Routes route) = Routes $ \id' ->
-    if matches pattern id' then route id' else Nothing
+matchRoute pattern (Routes route) = Routes $ \p id' ->
+    if matches pattern id' then route p id' else return Nothing
 
 
 --------------------------------------------------------------------------------
 -- | Create a custom route. This should almost always be used with
 -- 'matchRoute'
 customRoute :: (Identifier -> FilePath) -> Routes
-customRoute f = Routes $ Just . f
+customRoute f = Routes $ const $ return . Just . f
 
 
 --------------------------------------------------------------------------------
@@ -138,6 +144,14 @@ gsubRoute pattern replacement = customRoute $
 
 
 --------------------------------------------------------------------------------
+-- | Get access to the metadata in order to determine the route
+metadataRoute :: (Metadata -> Routes) -> Routes
+metadataRoute f = Routes $ \p i -> do
+    metadata <- resourceMetadata p i
+    unRoutes (f metadata) p i
+
+
+--------------------------------------------------------------------------------
 -- | Compose routes so that @f \`composeRoutes\` g@ is more or less equivalent
 -- with @g . f@.
 --
@@ -154,6 +168,6 @@ gsubRoute pattern replacement = customRoute $
 composeRoutes :: Routes  -- ^ First route to apply
               -> Routes  -- ^ Second route to apply
               -> Routes  -- ^ Resulting route
-composeRoutes (Routes f) (Routes g) = Routes $ \i -> do
-    p <- f i
-    g $ fromFilePath p
+composeRoutes (Routes f) (Routes g) = Routes $ \p i -> do
+    mfp <- f p i
+    maybe (return Nothing) (g p . fromFilePath) mfp
