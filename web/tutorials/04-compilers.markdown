@@ -158,18 +158,18 @@ We can reproduce a list of items in the archive using the following code:
 
 ```haskell
 compile $ do
-    posts   <- recentFirst <$> loadAll "posts/*"
+    posts   <- recentFirst =<< loadAll "posts/*"
     itemTpl <- loadBody "templates/post-item.html"
     list    <- applyTemplateList itemTpl postCtx posts
     makeItem list
 ```
 
 `recentFirst` sorts items by date. This relies on the convention that posts are
-always named `YYYY-MM-DD-title.extension` in Hakyll -- if you use some other
-format, you'll have to write some other sorting method.
+always named `YYYY-MM-DD-title.extension` in Hakyll -- or that the date must be
+present in the metadata.
 
 ```haskell
-recentFirst :: [Item a] -> [Item a]
+recentFirst :: [Item a] -> Compiler [Item a]
 ```
 
 After loading and sorting the items, we load a template for the posts.

@@ -4,8 +4,9 @@ import           Control.Applicative ((<$>))
 import           Control.Arrow       (second)
 import           Control.Monad       (forM_)
 import           Data.Char           (isDigit)
-import           Data.List           (isPrefixOf, partition)
+import           Data.List           (isPrefixOf, partition, sortBy)
 import           Data.Monoid         (mappend)
+import           Data.Ord            (comparing)
 import           Hakyll
 import           System.FilePath     (dropTrailingPathSeparator, splitPath)
 import           Text.Pandoc
@@ -55,7 +56,7 @@ main = hakyllWith config $ do
             tutorials <- loadAll "tutorials/*"
             itemTpl   <- loadBody "templates/tutorial-item.html"
             let (series, articles) = partitionTutorials $
-                    chronological tutorials
+                    sortBy (comparing itemIdentifier) tutorials
 
             series'   <- applyTemplateList itemTpl defaultContext series
             articles' <- applyTemplateList itemTpl defaultContext articles
