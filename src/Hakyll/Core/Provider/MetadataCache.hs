@@ -55,8 +55,8 @@ load p r = do
         Store.Found _  -> return ()
         -- Not yet loaded
         _ -> do
-            (metadata, body) <- loadMetadata p r
-            Store.set store mdk metadata
+            (md, body) <- loadMetadata p r
+            Store.set store mdk md
             Store.set store bk  body
   where
     store = providerStore p

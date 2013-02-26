@@ -11,6 +11,7 @@ import           Test.Framework                       (defaultMain)
 --------------------------------------------------------------------------------
 import qualified Hakyll.Core.Dependencies.Tests
 import qualified Hakyll.Core.Identifier.Tests
+import qualified Hakyll.Core.Provider.Metadata.Tests
 import qualified Hakyll.Core.Provider.Tests
 import qualified Hakyll.Core.Routes.Tests
 import qualified Hakyll.Core.Rules.Tests
@@ -30,6 +31,7 @@ main :: IO ()
 main = defaultMain
     [ Hakyll.Core.Dependencies.Tests.tests
     , Hakyll.Core.Identifier.Tests.tests
+    , Hakyll.Core.Provider.Metadata.Tests.tests
     , Hakyll.Core.Provider.Tests.tests
     , Hakyll.Core.Routes.Tests.tests
     , Hakyll.Core.Rules.Tests.tests

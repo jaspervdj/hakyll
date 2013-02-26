@@ -2,6 +2,8 @@
 -- | Internal module to parse metadata
 module Hakyll.Core.Provider.Metadata
     ( loadMetadata
+    , metadata
+    , page
     ) where
 
 
