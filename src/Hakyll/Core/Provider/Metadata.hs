@@ -9,6 +9,7 @@ module Hakyll.Core.Provider.Metadata
 import           Control.Applicative
 import           Control.Arrow                 (second)
 import qualified Data.ByteString.Char8         as BC
+import           Data.List                     (intercalate)
 import qualified Data.Map                      as M
 import           System.IO                     as IO
 import           Text.Parsec                   ((<?>))
@@ -94,9 +95,9 @@ metadataField = do
     P.skipMany1 inlineSpace <?> "space followed by metadata for: " ++ key
     value     <- P.manyTill P.anyChar newline
     trailing' <- P.many trailing
-    return (key, trim $ value ++ concat trailing')
+    return (key, trim $ value ++ intercalate " " trailing')
   where
-    trailing = (++) <$> P.many1 inlineSpace <*> P.manyTill P.anyChar newline
+    trailing = P.many1 inlineSpace *> P.manyTill P.anyChar newline
 
 
 --------------------------------------------------------------------------------
