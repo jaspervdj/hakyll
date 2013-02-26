@@ -97,7 +97,7 @@ metadataField = do
     P.skipMany1 inlineSpace <?> "space followed by metadata for: " ++ key
     value     <- P.manyTill P.anyChar newline
     trailing' <- P.many trailing
-    return (key, trim $ value ++ intercalate " " trailing')
+    return (key, trim $ intercalate " " $ value : trailing')
   where
     trailing = P.many1 inlineSpace *> P.manyTill P.anyChar newline
 
