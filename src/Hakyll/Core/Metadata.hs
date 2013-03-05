@@ -2,6 +2,7 @@
 module Hakyll.Core.Metadata
     ( Metadata
     , MonadMetadata (..)
+    , makePatternDependency
     ) where
 
 
@@ -11,6 +12,7 @@ import           Data.Map                       (Map)
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 
@@ -30,3 +32,10 @@ class Monad m => MonadMetadata m where
         forM matches' $ \id' -> do
             metadata <- getMetadata id'
             return (id', metadata)
+
+
+--------------------------------------------------------------------------------
+makePatternDependency :: MonadMetadata m => Pattern -> m Dependency
+makePatternDependency pattern = do
+    matches' <- getMatches pattern
+    return $ PatternDependency pattern matches'

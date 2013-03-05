@@ -171,6 +171,8 @@ preprocess = Rules . liftIO
 -- | Advanced usage: add extra dependencies to compilers. Basically this is
 -- needed when you're doing unsafe tricky stuff in the rules monad, but you
 -- still want correct builds.
+--
+-- A useful utility for this purpose is 'makePatternDependency'.
 rulesExtraDependencies :: [Dependency] -> Rules a -> Rules a
 rulesExtraDependencies deps = Rules . censor addDependencies . unRules
   where
