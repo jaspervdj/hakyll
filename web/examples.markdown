@@ -23,6 +23,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/brianshourd/brianshourd.com)
 - <http://variadic.me>,
   [source](https://github.com/eakron/variadic.me)
+- <http://yannesposito.com/>,
+  [source](https://github.com/yogsototh/yblog)
 
 ## Hakyll 3.X
 
