@@ -6,6 +6,8 @@ title: Releases
 
 ## Hakyll 4.2.0.0
 
+*March 7, 2013*
+
 - Read second extension for `.lhs`, e.g. `.md.lhs` or `.tex.lhs` (contribution
   by Alexander Vershilov)
 
