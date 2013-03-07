@@ -59,24 +59,7 @@ data Configuration = Configuration
 
 --------------------------------------------------------------------------------
 instance Default Configuration where
-    def = Configuration
-        { destinationDirectory = "_site"
-        , storeDirectory       = "_cache"
-        , tmpDirectory         = "_cache/tmp"
-        , providerDirectory    = "."
-        , ignoreFile           = ignoreFile'
-        , deployCommand        = "echo 'No deploy command specified'"
-        , inMemoryCache        = True
-        }
-      where
-        ignoreFile' path
-            | "."    `isPrefixOf` fileName = True
-            | "#"    `isPrefixOf` fileName = True
-            | "~"    `isSuffixOf` fileName = True
-            | ".swp" `isSuffixOf` fileName = True
-            | otherwise                    = False
-          where
-            fileName = takeFileName path
+    def = defaultConfiguration
 
 --------------------------------------------------------------------------------
 -- | Default configuration for a hakyll application
