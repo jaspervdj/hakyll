@@ -4,6 +4,38 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.2.0.0
+
+- Read second extension for `.lhs`, e.g. `.md.lhs` or `.tex.lhs` (contribution
+  by Alexander Vershilov)
+
+- Speedup initialization by using modification times instead of hashing files
+
+- Speedup initialization with a rewritten resource provider
+
+- Fix `./site check` not working with sites that require a user agent (e.g.
+  <http://www.wikipedia.org/>)
+
+- Change `chronological` and `recentFirst` to actually look at the dates of
+  items. This changes their types from:
+
+        chronological, recentFirst :: [Item a] -> [Item a]
+
+    to:
+
+        chronological, recentFirst
+            :: MonadMetadata m => [Item a] -> m [Item a]
+
+    (contribution by Simonas Kazlauskas)
+
+- Add `metadataRoute`, so it is now possible to use metadata when determining
+  routes
+
+- Improve metadata parser for multiline metadata fields (contribution by Peter
+  Jones)
+
+- Add the `getMetadataField` utility
+
 ## Hakyll 4.1.4.0
 
 *January 26, 2013*
@@ -38,6 +70,7 @@ Update to use Pandoc 1.10, this requires changes to your `site.hs` if you're
 using custom Pandoc options or the `Hakyll.Web.Pandoc.Biblio` module.
 
 - `defaultHakyllParserState` renamed to `defaultHakyllReaderOptions`
+
 - The type of `readPandocBiblio` changed
 
 Because of the many changes, this release is no longer compatible with Pandoc

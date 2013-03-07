@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.1.4.0
+Version: 4.2.0.0
 
 Synopsis: A static website compiler library
 Description:
@@ -85,8 +85,8 @@ Library
 
   Build-Depends:
     base         >= 4      && < 5,
-    binary       >= 0.5    && < 0.7,
-    blaze-html   >= 0.5    && < 0.6,
+    binary       >= 0.5    && < 0.8,
+    blaze-html   >= 0.5    && < 0.7,
     blaze-markup >= 0.5.1  && < 0.6,
     bytestring   >= 0.9    && < 0.11,
     citeproc-hs  >= 0.3.2  && < 0.4,
@@ -95,7 +95,7 @@ Library
     deepseq      >= 1.3    && < 1.4,
     directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
-    http-conduit >= 1.8    && < 1.9,
+    http-conduit >= 1.8    && < 1.10,
     http-types   >= 0.7    && < 0.9,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
@@ -183,8 +183,8 @@ Test-suite hakyll-tests
     test-framework-quickcheck2 >= 0.2 && < 0.4,
     -- Copy pasted from hakyll dependencies:
     base         >= 4      && < 5,
-    binary       >= 0.5    && < 0.7,
-    blaze-html   >= 0.5    && < 0.6,
+    binary       >= 0.5    && < 0.8,
+    blaze-html   >= 0.5    && < 0.7,
     blaze-markup >= 0.5.1  && < 0.6,
     bytestring   >= 0.9    && < 0.11,
     citeproc-hs  >= 0.3.2  && < 0.4,
@@ -193,7 +193,7 @@ Test-suite hakyll-tests
     deepseq      >= 1.3    && < 1.4,
     directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
-    http-conduit >= 1.8    && < 1.9,
+    http-conduit >= 1.8    && < 1.10,
     http-types   >= 0.7    && < 0.9,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
