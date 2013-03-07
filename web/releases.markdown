@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.2.1.0
+
+*March 7, 2013*
+
+- Fix issue where `copyFileCompiler` ignored `providerDirectory`
+
 ## Hakyll 4.2.0.0
 
 *March 7, 2013*
