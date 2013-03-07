@@ -9,6 +9,7 @@ module Hakyll.Core.Provider
       -- * Querying resource properties
     , Internal.resourceList
     , Internal.resourceExists
+    , Internal.resourceFilePath
     , Internal.resourceModified
     , Internal.resourceModificationTime
 

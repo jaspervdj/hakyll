@@ -24,8 +24,8 @@ import           System.Random                 (randomIO)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Configuration
-import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
+import           Hakyll.Core.Provider
 import qualified Hakyll.Core.Store             as Store
 import           Hakyll.Core.Util.File
 import           Hakyll.Core.Writable
@@ -33,24 +33,21 @@ import           Hakyll.Core.Writable
 
 --------------------------------------------------------------------------------
 -- | This will copy any file directly by using a system call
-data CopyFile = CopyFile
-    deriving (Show, Eq, Ord, Typeable)
-
-
---------------------------------------------------------------------------------
-instance Binary CopyFile where
-    put CopyFile = return ()
-    get          = return CopyFile
+newtype CopyFile = CopyFile FilePath
+    deriving (Binary, Eq, Ord, Show, Typeable)
 
 
 --------------------------------------------------------------------------------
 instance Writable CopyFile where
-    write dst item = copyFile (toFilePath $ itemIdentifier item) dst
+    write dst (Item _ (CopyFile src)) = copyFile src dst
 
 
 --------------------------------------------------------------------------------
 copyFileCompiler :: Compiler (Item CopyFile)
-copyFileCompiler = makeItem CopyFile
+copyFileCompiler = do
+    identifier <- getUnderlying
+    provider   <- compilerProvider <$> compilerAsk
+    makeItem $ CopyFile $ resourceFilePath provider identifier
 
 
 --------------------------------------------------------------------------------
