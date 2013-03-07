@@ -8,6 +8,7 @@ module Hakyll.Core.Configuration
 
 
 --------------------------------------------------------------------------------
+import           Data.Default       (Default(..))
 import           Data.List          (isPrefixOf, isSuffixOf)
 import           System.FilePath    (normalise, takeFileName)
 
@@ -56,6 +57,9 @@ data Configuration = Configuration
       inMemoryCache        :: Bool
     }
 
+--------------------------------------------------------------------------------
+instance Default Configuration where
+    def = defaultConfiguration
 
 --------------------------------------------------------------------------------
 -- | Default configuration for a hakyll application
