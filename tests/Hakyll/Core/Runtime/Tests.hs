@@ -6,6 +6,7 @@ module Hakyll.Core.Runtime.Tests
 
 
 --------------------------------------------------------------------------------
+import qualified Data.ByteString     as B
 import           System.FilePath     ((</>))
 import           Test.Framework      (Test, testGroup)
 import           Test.HUnit          (Assertion, (@?=))
@@ -28,6 +29,10 @@ tests = testGroup "Hakyll.Core.Runtime.Tests" $
 case01 :: Assertion
 case01 = do
     _ <- run testConfiguration Logger.Error $ do
+        match "images/*" $ do
+            route idRoute
+            compile copyFileCompiler
+
         match "*.md" $ do
             route   $ setExtension "html"
             compile $ do
@@ -40,6 +45,12 @@ case01 = do
             compile $ do
                 items <- loadAllSnapshots "*.md" "raw"
                 makeItem $ concat $ map itemBody (items :: [Item String])
+
+    favicon <- B.readFile $
+        providerDirectory testConfiguration </> "images/favicon.ico"
+    favicon' <- B.readFile $
+        destinationDirectory testConfiguration </> "images/favicon.ico"
+    favicon @?= favicon'
 
     example <- readFile $
         destinationDirectory testConfiguration </> "example.html"
