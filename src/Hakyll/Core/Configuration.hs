@@ -8,6 +8,7 @@ module Hakyll.Core.Configuration
 
 
 --------------------------------------------------------------------------------
+import           Data.Default
 import           Data.List          (isPrefixOf, isSuffixOf)
 import           System.FilePath    (normalise, takeFileName)
 
@@ -56,8 +57,28 @@ data Configuration = Configuration
       inMemoryCache        :: Bool
     }
 
+instance Default Configuration where
+  def = Configuration
+        { destinationDirectory = "_site"
+        , storeDirectory       = "_cache"
+        , tmpDirectory         = "_cache/tmp"
+        , providerDirectory    = "."
+        , ignoreFile           = ignoreFile'
+        , deployCommand        = "echo 'No deploy command specified'"
+        , inMemoryCache        = True
+        }
+    where
+      ignoreFile' path
+        | "."    `isPrefixOf` fileName = True
+        | "#"    `isPrefixOf` fileName = True
+        | "~"    `isSuffixOf` fileName = True
+        | ".swp" `isSuffixOf` fileName = True
+        | otherwise                    = False
+        where
+          fileName = takeFileName path
 
 --------------------------------------------------------------------------------
+
 -- | Default configuration for a hakyll application
 defaultConfiguration :: Configuration
 defaultConfiguration = Configuration
