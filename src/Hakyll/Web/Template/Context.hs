@@ -100,8 +100,8 @@ bodyField key = field key $ return . itemBody
 -- | Map any field to its metadata value, if present
 metadataField :: Context String
 metadataField = Context $ \k i -> do
-    metadata <- getMetadata $ itemIdentifier i
-    maybe empty return $ M.lookup k metadata
+    value <- getMetadataField (itemIdentifier i) k
+    maybe empty return value
 
 
 --------------------------------------------------------------------------------
