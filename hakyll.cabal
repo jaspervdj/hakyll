@@ -186,6 +186,7 @@ Test-suite hakyll-tests
   Other-modules:
     Hakyll.Core.Dependencies.Tests
     Hakyll.Core.Identifier.Tests
+    Hakyll.Core.Provider.Metadata.Tests
     Hakyll.Core.Provider.Tests
     Hakyll.Core.Routes.Tests
     Hakyll.Core.Rules.Tests
@@ -193,10 +194,11 @@ Test-suite hakyll-tests
     Hakyll.Core.Store.Tests
     Hakyll.Core.UnixFilter.Tests
     Hakyll.Core.Util.String.Tests
+    Hakyll.Web.Html.RelativizeUrls.Tests
+    Hakyll.Web.Html.Tests
+    Hakyll.Web.Pandoc.FileType.Tests
     Hakyll.Web.Template.Context.Tests
     Hakyll.Web.Template.Tests
-    Hakyll.Web.Html.Tests
-    Hakyll.Web.Html.RelativizeUrls.Tests
     TestSuite.Util
 
   Build-Depends:
