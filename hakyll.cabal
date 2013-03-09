@@ -78,39 +78,14 @@ Flag previewServer
   Description: Include the preview server
   Default:     True
 
+Flag checkExternal
+  Description: Include external link checking
+  Default:     True
+
 Library
   Ghc-Options:    -Wall
   Ghc-Prof-Options: -auto-all -caf-all
   Hs-Source-Dirs: src
-
-  Build-Depends:
-    base         >= 4      && < 5,
-    binary       >= 0.5    && < 0.8,
-    blaze-html   >= 0.5    && < 0.7,
-    blaze-markup >= 0.5.1  && < 0.6,
-    bytestring   >= 0.9    && < 0.11,
-    citeproc-hs  >= 0.3.2  && < 0.4,
-    containers   >= 0.3    && < 0.6,
-    cryptohash   >= 0.7    && < 0.9,
-    deepseq      >= 1.3    && < 1.4,
-    directory    >= 1.0    && < 1.3,
-    filepath     >= 1.0    && < 1.4,
-    http-conduit >= 1.8    && < 1.10,
-    http-types   >= 0.7    && < 0.9,
-    lrucache     >= 1.1.1  && < 1.2,
-    mtl          >= 1      && < 2.2,
-    old-locale   >= 1.0    && < 1.1,
-    old-time     >= 1.0    && < 1.2,
-    cmdargs      >= 0.10   && < 0.11,
-    pandoc       >= 1.10   && < 1.11,
-    parsec       >= 3.0    && < 3.2,
-    process      >= 1.0    && < 1.2,
-    random       >= 1.0    && < 1.1,
-    regex-base   >= 0.93   && < 0.94,
-    regex-tdfa   >= 1.1    && < 1.2,
-    tagsoup      >= 0.12.6 && < 0.13,
-    text         >= 0.11   && < 1.12,
-    time         >= 1.1    && < 1.5
 
   Exposed-Modules:
     Hakyll
@@ -159,6 +134,33 @@ Library
     Hakyll.Web.Template.Internal
     Paths_hakyll
 
+  Build-Depends:
+    base         >= 4      && < 5,
+    binary       >= 0.5    && < 0.8,
+    blaze-html   >= 0.5    && < 0.7,
+    blaze-markup >= 0.5.1  && < 0.6,
+    bytestring   >= 0.9    && < 0.11,
+    citeproc-hs  >= 0.3.2  && < 0.4,
+    containers   >= 0.3    && < 0.6,
+    cryptohash   >= 0.7    && < 0.9,
+    deepseq      >= 1.3    && < 1.4,
+    directory    >= 1.0    && < 1.3,
+    filepath     >= 1.0    && < 1.4,
+    lrucache     >= 1.1.1  && < 1.2,
+    mtl          >= 1      && < 2.2,
+    old-locale   >= 1.0    && < 1.1,
+    old-time     >= 1.0    && < 1.2,
+    cmdargs      >= 0.10   && < 0.11,
+    pandoc       >= 1.10   && < 1.11,
+    parsec       >= 3.0    && < 3.2,
+    process      >= 1.0    && < 1.2,
+    random       >= 1.0    && < 1.1,
+    regex-base   >= 0.93   && < 0.94,
+    regex-tdfa   >= 1.1    && < 1.2,
+    tagsoup      >= 0.12.6 && < 0.13,
+    text         >= 0.11   && < 1.12,
+    time         >= 1.1    && < 1.5
+
   If flag(previewServer)
     Build-depends:
       snap-core   >= 0.6 && < 0.10,
@@ -169,11 +171,33 @@ Library
       Hakyll.Preview.Poll
       Hakyll.Preview.Server
 
+  If flag(checkExternal)
+    Build-depends:
+      http-conduit >= 1.8    && < 1.10,
+      http-types   >= 0.7    && < 0.9
+    Cpp-options:
+      -DCHECK_EXTERNAL
+
 Test-suite hakyll-tests
   Type:           exitcode-stdio-1.0
   Hs-source-dirs: src tests
   Main-is:        TestSuite.hs
   Ghc-options:    -Wall
+  Other-modules:
+    Hakyll.Core.Dependencies.Tests
+    Hakyll.Core.Identifier.Tests
+    Hakyll.Core.Provider.Tests
+    Hakyll.Core.Routes.Tests
+    Hakyll.Core.Rules.Tests
+    Hakyll.Core.Runtime.Tests
+    Hakyll.Core.Store.Tests
+    Hakyll.Core.UnixFilter.Tests
+    Hakyll.Core.Util.String.Tests
+    Hakyll.Web.Template.Context.Tests
+    Hakyll.Web.Template.Tests
+    Hakyll.Web.Html.Tests
+    Hakyll.Web.Html.RelativizeUrls.Tests
+    TestSuite.Util
 
   Build-Depends:
     HUnit                      >= 1.2 && < 1.3,
@@ -193,14 +217,12 @@ Test-suite hakyll-tests
     deepseq      >= 1.3    && < 1.4,
     directory    >= 1.0    && < 1.3,
     filepath     >= 1.0    && < 1.4,
-    http-conduit >= 1.8    && < 1.10,
-    http-types   >= 0.7    && < 0.9,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
     old-locale   >= 1.0    && < 1.1,
     old-time     >= 1.0    && < 1.2,
     cmdargs      >= 0.10   && < 0.11,
-    pandoc       >= 1.0    && < 1.11,
+    pandoc       >= 1.10   && < 1.11,
     parsec       >= 3.0    && < 3.2,
     process      >= 1.0    && < 1.2,
     random       >= 1.0    && < 1.1,
@@ -210,21 +232,22 @@ Test-suite hakyll-tests
     text         >= 0.11   && < 1.12,
     time         >= 1.1    && < 1.5
 
-  Other-modules:
-    Hakyll.Core.Dependencies.Tests
-    Hakyll.Core.Identifier.Tests
-    Hakyll.Core.Provider.Tests
-    Hakyll.Core.Routes.Tests
-    Hakyll.Core.Rules.Tests
-    Hakyll.Core.Runtime.Tests
-    Hakyll.Core.Store.Tests
-    Hakyll.Core.UnixFilter.Tests
-    Hakyll.Core.Util.String.Tests
-    Hakyll.Web.Template.Context.Tests
-    Hakyll.Web.Template.Tests
-    Hakyll.Web.Html.Tests
-    Hakyll.Web.Html.RelativizeUrls.Tests
-    TestSuite.Util
+  If flag(previewServer)
+    Build-depends:
+      snap-core   >= 0.6 && < 0.10,
+      snap-server >= 0.6 && < 0.10
+    Cpp-options:
+      -DPREVIEW_SERVER
+    Other-modules:
+      Hakyll.Preview.Poll
+      Hakyll.Preview.Server
+
+  If flag(checkExternal)
+    Build-depends:
+      http-conduit >= 1.8    && < 1.10,
+      http-types   >= 0.7    && < 0.9
+    Cpp-options:
+      -DCHECK_EXTERNAL
 
 Executable hakyll-init
   Ghc-options:    -Wall

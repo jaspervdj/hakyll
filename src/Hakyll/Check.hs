@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Hakyll.Check
     ( Check (..)
@@ -8,22 +9,15 @@ module Hakyll.Check
 
 --------------------------------------------------------------------------------
 import           Control.Applicative       ((<$>))
-import           Control.Exception         (AsyncException (..),
-                                            SomeException (..), handle, throw)
 import           Control.Monad             (forM_)
 import           Control.Monad.Reader      (ask)
 import           Control.Monad.RWS         (RWST, runRWST)
-import           Control.Monad.State       (get, modify)
 import           Control.Monad.Trans       (liftIO)
 import           Control.Monad.Writer      (tell)
-import           Data.List                 (intercalate, isPrefixOf)
+import           Data.List                 (isPrefixOf)
 import           Data.Monoid               (Monoid (..))
 import           Data.Set                  (Set)
 import qualified Data.Set                  as S
-import           Data.Typeable             (cast)
-import           GHC.Exts                  (fromString)
-import qualified Network.HTTP.Conduit      as Http
-import qualified Network.HTTP.Types        as Http
 import           System.Directory          (doesDirectoryExist, doesFileExist)
 import           System.Exit               (ExitCode (..))
 import           System.FilePath           (takeDirectory, takeExtension, (</>))
@@ -31,13 +25,26 @@ import qualified Text.HTML.TagSoup         as TS
 
 
 --------------------------------------------------------------------------------
+#ifdef CHECK_EXTERNAL
+import           Control.Exception         (AsyncException (..),
+                                            SomeException (..), handle, throw)
+import           Control.Monad.State       (get, modify)
+import           Data.List                 (intercalate)
+import           Data.Typeable             (cast)
 import           Data.Version              (versionBranch)
+import           GHC.Exts                  (fromString)
+import qualified Network.HTTP.Conduit      as Http
+import qualified Network.HTTP.Types        as Http
+import qualified Paths_hakyll              as Paths_hakyll
+#endif
+
+
+--------------------------------------------------------------------------------
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Logger        (Logger, Verbosity)
 import qualified Hakyll.Core.Logger        as Logger
 import           Hakyll.Core.Util.File
 import           Hakyll.Web.Html
-import qualified Paths_hakyll              as Paths_hakyll
 
 
 --------------------------------------------------------------------------------
@@ -87,7 +94,12 @@ runChecker :: Checker a -> Configuration -> Verbosity -> Check
            -> IO (a, CheckerWrite)
 runChecker checker config verbosity check' = do
     logger <- Logger.new verbosity
-    let read' = CheckerRead config logger check'
+    let read' = CheckerRead
+                    { checkerConfig = config
+                    , checkerLogger = logger
+                    , checkerCheck  = check'
+                    }
+
     (x, _, write) <- runRWST checker read' S.empty
     Logger.flush logger
     return (x, write)
@@ -157,6 +169,7 @@ checkInternalUrl base url = case url' of
 
 --------------------------------------------------------------------------------
 checkExternalUrl :: String -> Checker ()
+#ifdef CHECK_EXTERNAL
 checkExternalUrl url = do
     logger     <- checkerLogger           <$> ask
     needsCheck <- (== All) . checkerCheck <$> ask
@@ -190,6 +203,10 @@ checkExternalUrl url = do
     failure logger (SomeException e) = case cast e of
         Just UserInterrupt -> throw UserInterrupt
         _                  -> Logger.error logger (show e) >> return False
+#else
+checkExternalUrl _ = return ()
+#endif
+
 
 
 --------------------------------------------------------------------------------
