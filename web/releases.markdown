@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.2.1.1
+
+*March 9, 2013*
+
+- Make `http-conduit` dependency optional by adding a `checkExternal` cabal flag
+
 ## Hakyll 4.2.1.0
 
 *March 7, 2013*
