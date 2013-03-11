@@ -3,6 +3,27 @@ title: FAQ
 author: Jasper Van der Jeugt
 ---
 
+## "hGetContents: invalid argument" or "commitBuffer: invalid argument"
+
+If you get any of the errors:
+
+    commitBuffer: invalid argument (invalid character)
+
+or:
+
+    hGetContents: invalid argument (Invalid or incomplete multibyte or wide
+        character)
+
+It means that your Hakyll executable couldn't write to (in the former case) or
+read (in the latter) from an UTF-8 encoded file.
+
+On most linux distros, you can solve this by setting your `LANG` to use UTF-8,
+using something like:
+
+    LANG=nl_BE.UTF-8 ./site build
+
+You should also add this to your `.profile`, or whatever config file you use.
+
 ## "File name does not match module name" on Mac OS
 
     Hakyll.hs:1:1:
