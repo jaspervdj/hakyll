@@ -51,7 +51,7 @@ create ["atom.xml"] $ do
         let feedCtx = postCtx `mappend`
                 constField "description" "This is the post description"
 
-        posts <- take 10 . recentFirst <$> loadAll "posts/*"
+        posts <- fmap (take 10) . recentFirst =<< loadAll "posts/*"
         renderAtom myFeedConfiguration feedCtx posts
 ```
 
@@ -122,6 +122,7 @@ create ["atom.xml"] $ do
     route idRoute
     compile $ do
         let feedCtx = postCtx `mappend` bodyField "description"
-        posts <- take 10 . recentFirst <$> loadAllSnapshots "posts/*" "content"
+        posts <- fmap (take 10) . recentFirst =<<
+            loadAllSnapshots "posts/*" "content"
         renderAtom myFeedConfiguration feedCtx posts
 ```
