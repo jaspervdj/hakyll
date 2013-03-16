@@ -127,23 +127,35 @@ titleField key = mapContext takeBaseName $ pathField key
 -- | When the metadata has a field called @published@ in one of the
 -- following formats then this function can render the date.
 --
---   * @Sun, 01 Feb 2000 13:00:00 UT@ (RSS date format)
+--   * @Mon, 06 Sep 2010 00:01:00 +0000@
 --
---   * @2000-02-01T13:00:00Z@ (Atom date format)
+--   * @Mon, 06 Sep 2010 00:01:00 UTC@
 --
---   * @February 1, 2000 1:00 PM@ (PM is usually uppercase)
+--   * @Mon, 06 Sep 2010 00:01:00@
 --
---   * @February 1, 2000@ (assumes 12:00 AM for the time)
+--   * @2010-09-06T00:01:00+0000@
+--
+--   * @2010-09-06T00:01:00Z@
+--
+--   * @2010-09-06T00:01:00@
+--
+--   * @2010-09-06 00:01:00+0000@
+--
+--   * @2010-09-06 00:01:00@
+--
+--   * @September 06, 2010 00:01 AM@
+--
+-- Following date-only formats are supported too (@00:00:00@ for time is
+-- assumed)
+--
+--   * @2010-09-06@
+--
+--   * @September 06, 2010@
 --
 -- Alternatively, when the metadata has a field called @path@ in a
 -- @folder/yyyy-mm-dd-title.extension@ format (the convention for pages)
 -- and no @published@ metadata field set, this function can render
 -- the date.
---
--- > renderDateField "date" "%B %e, %Y" "Date unknown"
---
--- Will render something like @January 32, 2010@.
---
 dateField :: String     -- ^ Key in which the rendered date should be placed
           -> String     -- ^ Format to use on the date
           -> Context a  -- ^ Resulting context
@@ -165,7 +177,7 @@ dateFieldWith locale key format = field key $ \i -> do
 
 --------------------------------------------------------------------------------
 -- | Parser to try to extract and parse the time from the @published@
--- field or from the filename. See 'renderDateField' for more information.
+-- field or from the filename. See 'dateField' for more information.
 -- Exported for user convenience.
 getItemUTC :: MonadMetadata m
            => TimeLocale        -- ^ Output time locale
@@ -185,9 +197,9 @@ getItemUTC locale id' = do
         "could not parse time for " ++ show id'
     parseTime' = parseTime locale
     formats    =
-        [ "%a, %d %b %Y %H:%M:%S UT"
-        , "%Y-%m-%dT%H:%M:%SZ"
-        , "%Y-%m-%d %H:%M:%S"
+        [ "%a, %d %b %Y %H:%M:%S %Z"
+        , "%Y-%m-%dT%H:%M:%S%Z"
+        , "%Y-%m-%d %H:%M:%S%Z"
         , "%Y-%m-%d"
         , "%B %e, %Y %l:%M %p"
         , "%B %e, %Y"
