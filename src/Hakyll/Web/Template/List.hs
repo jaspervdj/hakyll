@@ -55,9 +55,8 @@ applyJoinTemplateList delimiter tpl context items = do
 
 
 --------------------------------------------------------------------------------
--- | Sort pages chronologically. This function assumes that the pages have a
--- @year-month-day-title.extension@ naming scheme -- as is the convention in
--- Hakyll.
+-- | Sort pages chronologically. Uses the same method as 'dateField' for
+-- extracting the date.
 chronological :: MonadMetadata m => [Item a] -> m [Item a]
 chronological =
     sortByM $ getItemUTC defaultTimeLocale . itemIdentifier
