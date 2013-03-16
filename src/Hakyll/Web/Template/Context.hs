@@ -139,11 +139,6 @@ titleField key = mapContext takeBaseName $ pathField key
 -- @folder/yyyy-mm-dd-title.extension@ format (the convention for pages)
 -- and no @published@ metadata field set, this function can render
 -- the date.
---
--- > renderDateField "date" "%B %e, %Y" "Date unknown"
---
--- Will render something like @January 32, 2010@.
---
 dateField :: String     -- ^ Key in which the rendered date should be placed
           -> String     -- ^ Format to use on the date
           -> Context a  -- ^ Resulting context
@@ -165,7 +160,7 @@ dateFieldWith locale key format = field key $ \i -> do
 
 --------------------------------------------------------------------------------
 -- | Parser to try to extract and parse the time from the @published@
--- field or from the filename. See 'renderDateField' for more information.
+-- field or from the filename. See 'dateField' for more information.
 -- Exported for user convenience.
 getItemUTC :: MonadMetadata m
            => TimeLocale        -- ^ Output time locale
