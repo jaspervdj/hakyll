@@ -8,9 +8,11 @@ module Hakyll.Core.Configuration
 
 
 --------------------------------------------------------------------------------
+import           Control.Monad      (void)
 import           Data.Default       (Default(..))
 import           Data.List          (isPrefixOf, isSuffixOf)
 import           System.FilePath    (normalise, takeFileName)
+import           System.Process     (system)
 
 
 --------------------------------------------------------------------------------
@@ -52,6 +54,16 @@ data Configuration = Configuration
       -- > ./site deploy
       --
       deployCommand        :: String
+    , -- | Function to deploy the site from Haskell.
+      --
+      -- By default, this command executes the shell command stored in
+      -- 'deployCommand'. If you override it, 'deployCommand' will not
+      -- be used implicitely.
+      --
+      -- The 'Configuration' object is passed as a parameter to this
+      -- function.
+      --
+      deploySite           :: Configuration -> IO ()
     , -- | Use an in-memory cache for items. This is faster but uses more
       -- memory.
       inMemoryCache        :: Bool
@@ -71,6 +83,7 @@ defaultConfiguration = Configuration
     , providerDirectory    = "."
     , ignoreFile           = ignoreFile'
     , deployCommand        = "echo 'No deploy command specified'"
+    , deploySite           = void . system . deployCommand
     , inMemoryCache        = True
     }
   where
