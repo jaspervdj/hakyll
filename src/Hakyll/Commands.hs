@@ -14,7 +14,6 @@ module Hakyll.Commands
 
 --------------------------------------------------------------------------------
 import           System.Exit                (ExitCode (ExitSuccess), exitWith)
-import           System.Process             (system)
 
 
 --------------------------------------------------------------------------------
@@ -109,9 +108,7 @@ server _ _ = previewServerDisabled
 --------------------------------------------------------------------------------
 -- | Upload the site
 deploy :: Configuration -> IO ()
-deploy conf = do
-    _ <- system $ deployCommand conf
-    return ()
+deploy conf = deploySite conf conf
 
 
 --------------------------------------------------------------------------------
