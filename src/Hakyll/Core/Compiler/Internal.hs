@@ -183,8 +183,9 @@ compilerCatch :: Compiler a -> (String -> Compiler a) -> Compiler a
 compilerCatch (Compiler x) f = Compiler $ \r -> do
     res <- x r
     case res of
-        CompilerError e -> unCompiler (f e) r
-        _               -> return res
+        CompilerDone res' w -> return (CompilerDone res' w)
+        CompilerError e     -> unCompiler (f e) r
+        CompilerRequire i c -> return (CompilerRequire i (compilerCatch c f))
 {-# INLINE compilerCatch #-}
 
 

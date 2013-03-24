@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.2.2.0
+
+- Fix issue with `Alternative` instance of `Compiler`
+
 ## Hakyll 4.2.1.1
 
 *March 9, 2013*
