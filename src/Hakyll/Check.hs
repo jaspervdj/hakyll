@@ -131,9 +131,15 @@ checkFile filePath = do
     let urls = getUrls $ TS.parseTags contents
     forM_ urls $ \url -> do
         Logger.debug logger $ "Checking link " ++ url
-        if isExternal url
-            then checkExternalUrl url
-            else checkInternalUrl filePath url
+        checkUrl filePath url
+
+
+--------------------------------------------------------------------------------
+checkUrl :: FilePath -> String -> Checker ()
+checkUrl filePath url
+    | isExternal url             = checkExternalUrl url
+    | "mailto:" `isPrefixOf` url = ok url
+    | otherwise                  = checkInternalUrl filePath url
 
 
 --------------------------------------------------------------------------------
