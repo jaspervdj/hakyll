@@ -7,16 +7,24 @@ module Hakyll.Core.UnixFilter
 
 
 --------------------------------------------------------------------------------
-import           Control.Concurrent   (forkIO)
-import           Data.ByteString.Lazy (ByteString)
-import qualified Data.ByteString.Lazy as LB
-import           System.IO            (Handle, hClose, hGetContents, hPutStr,
-                                       hSetEncoding, localeEncoding)
+import           Control.Concurrent            (forkIO)
+import           Control.Concurrent.MVar       (newEmptyMVar, putMVar, takeMVar)
+import           Control.DeepSeq               (NFData, deepseq)
+import           Control.Monad                 (forM_)
+import           Data.ByteString.Lazy          (ByteString)
+import qualified Data.ByteString.Lazy          as LB
+import           Data.IORef                    (newIORef, readIORef, writeIORef)
+import           Data.Monoid                   (Monoid, mempty)
+import           System.Exit                   (ExitCode (..))
+import           System.IO                     (Handle, hClose, hFlush,
+                                                hGetContents, hPutStr,
+                                                hSetEncoding, localeEncoding)
 import           System.Process
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Compiler.Internal
 
 
 --------------------------------------------------------------------------------
@@ -67,7 +75,8 @@ unixFilterLBS = unixFilterWith LB.hPutStr LB.hGetContents
 
 --------------------------------------------------------------------------------
 -- | Overloaded compiler
-unixFilterWith :: (Handle -> i -> IO ())  -- ^ Writer
+unixFilterWith :: (Monoid o, NFData o)
+               => (Handle -> i -> IO ())  -- ^ Writer
                -> (Handle -> IO o)        -- ^ Reader
                -> String                  -- ^ Program name
                -> [String]                -- ^ Program args
@@ -75,31 +84,59 @@ unixFilterWith :: (Handle -> i -> IO ())  -- ^ Writer
                -> Compiler o              -- ^ Program output
 unixFilterWith writer reader programName args input = do
     debugCompiler ("Executing external program " ++ programName)
-    unsafeCompiler $ unixFilterIO writer reader programName args input
+    (output, err, exitCode) <- unsafeCompiler $
+        unixFilterIO writer reader programName args input
+    forM_ (lines err) debugCompiler
+    case exitCode of
+        ExitSuccess   -> return output
+        ExitFailure e -> compilerThrow $
+            "Hakyll.Core.UnixFilter.unixFilterWith: " ++
+            unwords (programName : args) ++ " gave exit code " ++ show e
 
 
 --------------------------------------------------------------------------------
 -- | Internally used function
-unixFilterIO :: (Handle -> i -> IO ())
+unixFilterIO :: (Monoid o, NFData o)
+             => (Handle -> i -> IO ())
              -> (Handle -> IO o)
              -> String
              -> [String]
              -> i
-             -> IO o
+             -> IO (o, String, ExitCode)
 unixFilterIO writer reader programName args input = do
-    let process = (proc programName args)
-            { std_in    = CreatePipe
-            , std_out   = CreatePipe
-            , close_fds = True
-            }
+    (Just inh, Just outh, Just errh, pid) <-
+        createProcess (proc programName args)
+                { std_in  = CreatePipe
+                , std_out = CreatePipe
+                , std_err = CreatePipe
+                }
 
-    (Just stdinWriteHandle, Just stdoutReadHandle, _, _) <-
-        createProcess process
+    -- Create boxes
+    lock   <- newEmptyMVar
+    outRef <- newIORef mempty
+    errRef <- newIORef ""
 
     -- Write the input to the child pipe
-    _ <- forkIO $ do
-        writer stdinWriteHandle input
-        hClose stdinWriteHandle
+    _ <- forkIO $ writer inh input >> hFlush inh >> hClose inh
 
-    -- Receive the output from the child
-    reader stdoutReadHandle
+    -- Read from stdout
+    _ <- forkIO $ do
+        out <- reader outh
+        deepseq out (hClose outh)
+        writeIORef outRef out
+        putMVar lock ()
+
+    -- Read from stderr
+    _ <- forkIO $ do
+        err <- hGetContents errh
+        deepseq err (hClose errh)
+        writeIORef errRef err
+        putMVar lock ()
+
+    -- Get exit code & return
+    takeMVar lock
+    takeMVar lock
+    exitCode <- waitForProcess pid
+    out      <- readIORef outRef
+    err      <- readIORef errRef
+    return (out, err, exitCode)
