@@ -165,7 +165,9 @@ Library
   If flag(previewServer)
     Build-depends:
       snap-core   >= 0.6 && < 0.10,
-      snap-server >= 0.6 && < 0.10
+      snap-server >= 0.6 && < 0.10,
+      fsnotify    >= 0.0.6 && < 0.1,
+      system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DPREVIEW_SERVER
     Other-modules:
@@ -238,8 +240,10 @@ Test-suite hakyll-tests
 
   If flag(previewServer)
     Build-depends:
-      snap-core   >= 0.6 && < 0.10,
-      snap-server >= 0.6 && < 0.10
+      snap-core       >= 0.6 && < 0.10,
+      snap-server     >= 0.6 && < 0.10,
+      fsnotify        >= 0.0.6 && < 0.1,
+      system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DPREVIEW_SERVER
     Other-modules:
