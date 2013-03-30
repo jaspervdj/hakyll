@@ -25,6 +25,10 @@ this list. This list has no particular ordering.
   [source](https://github.com/eakron/variadic.me)
 - <http://yannesposito.com/>,
   [source](https://github.com/yogsototh/yblog)
+- <http://dannysu.com/>,
+  [source](https://github.com/dannysu/hakyll-blog)
+- <http://meta.plasm.us/>,
+  [source](https://github.com/travisbrown/metaplasm)
 
 ## Hakyll 3.X
 
