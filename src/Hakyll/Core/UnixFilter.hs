@@ -9,7 +9,7 @@ module Hakyll.Core.UnixFilter
 --------------------------------------------------------------------------------
 import           Control.Concurrent            (forkIO)
 import           Control.Concurrent.MVar       (newEmptyMVar, putMVar, takeMVar)
-import           Control.DeepSeq               (NFData, deepseq)
+import           Control.DeepSeq               (deepseq)
 import           Control.Monad                 (forM_)
 import           Data.ByteString.Lazy          (ByteString)
 import qualified Data.ByteString.Lazy          as LB
@@ -57,7 +57,8 @@ unixFilter = unixFilterWith writer reader
         hPutStr handle input
     reader handle = do
         hSetEncoding handle localeEncoding
-        hGetContents handle
+        out <- hGetContents handle
+        deepseq out (return out)
 
 
 --------------------------------------------------------------------------------
@@ -70,12 +71,14 @@ unixFilterLBS :: String               -- ^ Program name
               -> [String]             -- ^ Program args
               -> ByteString           -- ^ Program input
               -> Compiler ByteString  -- ^ Program output
-unixFilterLBS = unixFilterWith LB.hPutStr LB.hGetContents
+unixFilterLBS = unixFilterWith LB.hPutStr $ \handle -> do
+    out <- LB.hGetContents handle
+    LB.length out `seq` return out
 
 
 --------------------------------------------------------------------------------
 -- | Overloaded compiler
-unixFilterWith :: (Monoid o, NFData o)
+unixFilterWith :: Monoid o
                => (Handle -> i -> IO ())  -- ^ Writer
                -> (Handle -> IO o)        -- ^ Reader
                -> String                  -- ^ Program name
@@ -96,7 +99,7 @@ unixFilterWith writer reader programName args input = do
 
 --------------------------------------------------------------------------------
 -- | Internally used function
-unixFilterIO :: (Monoid o, NFData o)
+unixFilterIO :: Monoid o
              => (Handle -> i -> IO ())
              -> (Handle -> IO o)
              -> String
@@ -122,14 +125,14 @@ unixFilterIO writer reader programName args input = do
     -- Read from stdout
     _ <- forkIO $ do
         out <- reader outh
-        deepseq out (hClose outh)
+        hClose outh
         writeIORef outRef out
         putMVar lock ()
 
     -- Read from stderr
     _ <- forkIO $ do
         err <- hGetContents errh
-        deepseq err (hClose errh)
+        hClose errh
         writeIORef errRef err
         putMVar lock ()
 
