@@ -21,21 +21,19 @@ import           Hakyll.Core.Configuration
 previewPoll :: Configuration  -- ^ Configuration
             -> IO [FilePath]  -- ^ Updating action
             -> IO ()          -- ^ Can block forever
-previewPoll conf update = monitor =<< startManagerConf (Debounce 0.1)
+previewPoll conf update = do
+    _ <- update
+    manager <- startManagerConf (Debounce 0.1)
+    ignore <- mapM getPath [destinationDirectory, storeDirectory, tmpDirectory]
+    watchTree manager path (predicate ignore) (\_ -> void update)
   where
     path = decodeString $ providerDirectory conf
-    monitor manager = do
-        _ <- update
-        ignore <- mapM getPath
-                  [destinationDirectory, storeDirectory, tmpDirectory]
-        watchTree manager path (predicate ignore) (\_ -> void update)
     getPath fn = catchIOError (canonicalizePath $ fn conf)
                               (const $ return $ fn conf)
     predicate ignore evt
         | isRemove evt = False
         | any (flip isPrefixOf $ eventPath evt) ignore == True = False
-        | (ignoreFile conf) (eventPath evt) == True = False
-        | otherwise = True
+        | otherwise = not $ shouldIgnoreFile conf (eventPath evt)
 
 eventPath :: Event -> FilePath
 eventPath (Added p _) = encodeString p
