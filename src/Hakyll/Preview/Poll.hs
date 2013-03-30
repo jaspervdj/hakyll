@@ -3,12 +3,12 @@ module Hakyll.Preview.Poll
     ) where
 
 --------------------------------------------------------------------------------
-import           Control.Concurrent        (threadDelay)
 import           Control.Monad             (void)
 import           Data.List                 (isPrefixOf)
 import           Filesystem.Path.CurrentOS (decodeString, encodeString)
 import           System.Directory          (canonicalizePath)
-import           System.FSNotify           (withManagerConf, watchTree, Event(..), WatchConfig(..))
+import           System.FSNotify           (startManagerConf, watchTree,
+                                            Event(..), WatchConfig(..))
 import           System.IO.Error           (catchIOError)
 
 --------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ import           Hakyll.Core.Configuration
 previewPoll :: Configuration  -- ^ Configuration
             -> IO [FilePath]  -- ^ Updating action
             -> IO ()          -- ^ Can block forever
-previewPoll conf update = withManagerConf (Debounce 0.1) monitor
+previewPoll conf update = monitor =<< startManagerConf (Debounce 0.1)
   where
     path = decodeString $ providerDirectory conf
     monitor manager = do
@@ -29,7 +29,6 @@ previewPoll conf update = withManagerConf (Debounce 0.1) monitor
         ignore <- mapM getPath
                   [destinationDirectory, storeDirectory, tmpDirectory]
         watchTree manager path (predicate ignore) (\_ -> void update)
-        infiniteLoop
     getPath fn = catchIOError (canonicalizePath $ fn conf)
                               (const $ return $ fn conf)
     predicate ignore evt
@@ -37,11 +36,6 @@ previewPoll conf update = withManagerConf (Debounce 0.1) monitor
         | any (flip isPrefixOf $ eventPath evt) ignore == True = False
         | (ignoreFile conf) (eventPath evt) == True = False
         | otherwise = True
-
-infiniteLoop :: IO ()
-infiniteLoop = do
-    threadDelay maxBound
-    infiniteLoop
 
 eventPath :: Event -> FilePath
 eventPath (Added p _) = encodeString p

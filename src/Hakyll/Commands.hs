@@ -27,7 +27,6 @@ import           Hakyll.Core.Util.File
 
 --------------------------------------------------------------------------------
 #ifdef PREVIEW_SERVER
-import           Control.Concurrent         (forkIO)
 import qualified Data.Set                   as S
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Rules.Internal
@@ -68,9 +67,8 @@ clean conf = do
 preview :: Configuration -> Verbosity -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 preview conf verbosity rules port = do
-    -- Run the server in a separate thread
-    _ <- forkIO $ server conf port
     previewPoll conf update
+    server conf port
   where
     update = do
         (exitCode, ruleSet) <- run conf verbosity rules
