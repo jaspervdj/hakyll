@@ -4,12 +4,11 @@ module Hakyll.Preview.Poll
 
 --------------------------------------------------------------------------------
 import           Control.Monad             (void)
-import           Data.List                 (isPrefixOf)
 import           Filesystem.Path.CurrentOS (decodeString, encodeString)
-import           System.Directory          (canonicalizePath)
+import           System.Directory          (getCurrentDirectory)
+import           System.FilePath           (makeRelative)
 import           System.FSNotify           (startManagerConf, watchTree,
                                             Event(..), WatchConfig(..))
-import           System.IO.Error           (catchIOError)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Configuration
@@ -24,21 +23,20 @@ previewPoll :: Configuration  -- ^ Configuration
 previewPoll conf update = do
     _ <- update
     manager <- startManagerConf (Debounce 0.1)
-    ignore <- mapM getPath [destinationDirectory, storeDirectory, tmpDirectory]
-    watchTree manager path (predicate ignore) (\_ -> void update)
+    wDir <- getCurrentDirectory
+    watchTree manager path (predicate wDir) (\_ -> void update)
   where
     path = decodeString $ providerDirectory conf
-    getPath fn = catchIOError (canonicalizePath $ fn conf)
-                              (const $ return $ fn conf)
-    predicate ignore evt
+    predicate wDir evt
         | isRemove evt = False
-        | any (flip isPrefixOf $ eventPath evt) ignore == True = False
-        | otherwise = not $ shouldIgnoreFile conf (eventPath evt)
+        | otherwise = not $ shouldIgnoreFile conf (relativeEventPath wDir evt)
 
-eventPath :: Event -> FilePath
-eventPath (Added p _) = encodeString p
-eventPath (Modified p _) = encodeString p
-eventPath (Removed p _) = encodeString p
+relativeEventPath :: FilePath -> Event -> FilePath
+relativeEventPath b evt = makeRelative b $ encodeString $ evtPath evt
+  where
+    evtPath (Added p _) = p
+    evtPath (Modified p _) = p
+    evtPath (Removed p _) = p
 
 isRemove :: Event -> Bool
 isRemove (Removed _ _) = True
