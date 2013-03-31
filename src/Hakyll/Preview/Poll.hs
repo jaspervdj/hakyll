@@ -1,9 +1,8 @@
 module Hakyll.Preview.Poll
-    ( previewPoll
+    ( watchUpdates
     ) where
 
 --------------------------------------------------------------------------------
-import           Control.Monad             (void)
 import           Filesystem.Path.CurrentOS (decodeString, encodeString)
 import           System.Directory          (getCurrentDirectory)
 import           System.FilePath           (makeRelative)
@@ -16,20 +15,20 @@ import           Hakyll.Core.Configuration
 
 
 --------------------------------------------------------------------------------
--- | A preview thread that recompiles the site when files change.
-previewPoll :: Configuration  -- ^ Configuration
-            -> IO [FilePath]  -- ^ Updating action
-            -> IO ()          -- ^ Can block forever
-previewPoll conf update = do
+-- | A thread that watches for updates in a 'providerDirectory' and recompiles
+-- a site as soon as any changes occur
+watchUpdates :: Configuration -> IO () -> IO ()
+watchUpdates conf update = do
     _ <- update
     manager <- startManagerConf (Debounce 0.1)
-    wDir <- getCurrentDirectory
-    watchTree manager path (predicate wDir) (\_ -> void update)
+    workingDirectory <- getCurrentDirectory
+    watchTree manager path (predicate workingDirectory) $ const update
   where
     path = decodeString $ providerDirectory conf
     predicate wDir evt
         | isRemove evt = False
         | otherwise = not $ shouldIgnoreFile conf (relativeEventPath wDir evt)
+
 
 relativeEventPath :: FilePath -> Event -> FilePath
 relativeEventPath b evt = makeRelative b $ encodeString $ evtPath evt
@@ -37,6 +36,7 @@ relativeEventPath b evt = makeRelative b $ encodeString $ evtPath evt
     evtPath (Added p _) = p
     evtPath (Modified p _) = p
     evtPath (Removed p _) = p
+
 
 isRemove :: Event -> Bool
 isRemove (Removed _ _) = True
