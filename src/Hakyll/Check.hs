@@ -137,15 +137,23 @@ checkFile filePath = do
 --------------------------------------------------------------------------------
 checkUrl :: FilePath -> String -> Checker ()
 checkUrl filePath url
-    | isExternal url             = checkExternalUrl url
-    | "mailto:" `isPrefixOf` url = ok url
-    | otherwise                  = checkInternalUrl filePath url
-
+    | isExternal url  = checkExternalUrl url
+    | hasProtocol url = skip "Unknown protocol, skipping"
+    | otherwise       = checkInternalUrl filePath url
+  where
+    hasProtocol = all (`elem` validProtoChars) . takeWhile (/= ':')
+    validProtoChars = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9'] ++ "+-."
 
 --------------------------------------------------------------------------------
 ok :: String -> Checker ()
 ok _ = tell $ mempty {checkerOk = 1}
 
+--------------------------------------------------------------------------------
+skip :: String -> Checker ()
+skip reason = do
+    logger <- checkerLogger <$> ask
+    Logger.debug logger $ reason
+    tell $ mempty {checkerOk = 1}
 
 --------------------------------------------------------------------------------
 faulty :: String -> Checker ()
