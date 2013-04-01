@@ -141,12 +141,16 @@ checkUrl filePath url
     | hasProtocol url = skip "Unknown protocol, skipping"
     | otherwise       = checkInternalUrl filePath url
   where
-    hasProtocol = all (`elem` validProtoChars) . takeWhile (/= ':')
     validProtoChars = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9'] ++ "+-."
+    hasProtocol str = case break (== ':') str of
+        (proto, ':' : _) -> all (`elem` validProtoChars) proto
+        _                -> False
+
 
 --------------------------------------------------------------------------------
 ok :: String -> Checker ()
 ok _ = tell $ mempty {checkerOk = 1}
+
 
 --------------------------------------------------------------------------------
 skip :: String -> Checker ()
