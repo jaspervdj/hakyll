@@ -10,7 +10,7 @@ module Hakyll.Core.Compiler
     , getResourceBody
     , getResourceString
     , getResourceLBS
-    , getResourceWith
+    , getResourceFilePath
 
     , Internal.Snapshot
     , saveSnapshot
@@ -96,6 +96,15 @@ getResourceString = getResourceWith resourceString
 -- | Get the resource we are compiling as a lazy bytestring
 getResourceLBS :: Compiler (Item ByteString)
 getResourceLBS = getResourceWith resourceLBS
+
+
+--------------------------------------------------------------------------------
+-- | Get the file path of the resource we are compiling
+getResourceFilePath :: Compiler FilePath
+getResourceFilePath = do
+    provider <- compilerProvider   <$> compilerAsk
+    id'      <- compilerUnderlying <$> compilerAsk
+    return $ resourceFilePath provider id'
 
 
 --------------------------------------------------------------------------------
