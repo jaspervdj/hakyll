@@ -4,8 +4,6 @@ module Hakyll.Preview.Poll
 
 --------------------------------------------------------------------------------
 import           Filesystem.Path.CurrentOS (decodeString, encodeString)
-import           System.Directory          (getCurrentDirectory)
-import           System.FilePath           (makeRelative)
 import           System.FSNotify           (startManagerConf, watchTree,
                                             Event(..), WatchConfig(..))
 
@@ -21,17 +19,16 @@ watchUpdates :: Configuration -> IO () -> IO ()
 watchUpdates conf update = do
     _ <- update
     manager <- startManagerConf (Debounce 0.1)
-    workingDirectory <- getCurrentDirectory
-    watchTree manager path (predicate workingDirectory) $ const update
+    watchTree manager path (not . isRemove) update'
   where
     path = decodeString $ providerDirectory conf
-    predicate wDir evt
-        | isRemove evt = False
-        | otherwise = not $ shouldIgnoreFile conf (relativeEventPath wDir evt)
+    update' evt = do
+        ignore <- shouldIgnoreFile conf $ eventPath evt
+        if ignore then return () else update
 
 
-relativeEventPath :: FilePath -> Event -> FilePath
-relativeEventPath b evt = makeRelative b $ encodeString $ evtPath evt
+eventPath :: Event -> FilePath
+eventPath evt = encodeString $ evtPath evt
   where
     evtPath (Added p _) = p
     evtPath (Modified p _) = p
