@@ -103,10 +103,10 @@ data Provider = Provider
 
 --------------------------------------------------------------------------------
 -- | Create a resource provider
-newProvider :: Store               -- ^ Store to use
-            -> (FilePath -> Bool)  -- ^ Should we ignore this file?
-            -> FilePath            -- ^ Search directory
-            -> IO Provider         -- ^ Resulting provider
+newProvider :: Store                  -- ^ Store to use
+            -> (FilePath -> IO Bool)  -- ^ Should we ignore this file?
+            -> FilePath               -- ^ Search directory
+            -> IO Provider            -- ^ Resulting provider
 newProvider store ignore directory = do
     list <- map fromFilePath <$> getRecursiveContents ignore directory
     let universe = S.fromList list

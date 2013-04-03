@@ -8,11 +8,13 @@ module Hakyll.Core.Configuration
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad      (void)
-import           Data.Default       (Default(..))
-import           Data.List          (isPrefixOf, isSuffixOf)
-import           System.FilePath    (normalise, takeFileName)
-import           System.Process     (system)
+import           Control.Monad    (void)
+import           Data.Default     (Default (..))
+import           Data.List        (isPrefixOf, isSuffixOf)
+import           System.Directory (canonicalizePath)
+import           System.FilePath  (isAbsolute, normalise, takeFileName)
+import           System.IO.Error  (catchIOError)
+import           System.Process   (system)
 
 
 --------------------------------------------------------------------------------
@@ -99,11 +101,23 @@ defaultConfiguration = Configuration
 
 --------------------------------------------------------------------------------
 -- | Check if a file should be ignored
-shouldIgnoreFile :: Configuration -> FilePath -> Bool
-shouldIgnoreFile conf path =
-    destinationDirectory conf `isPrefixOf` path' ||
-    storeDirectory conf `isPrefixOf` path' ||
-    tmpDirectory conf `isPrefixOf` path' ||
-    ignoreFile conf path'
+shouldIgnoreFile :: Configuration -> FilePath -> IO Bool
+shouldIgnoreFile conf path = orM
+    [ inDir (destinationDirectory conf)
+    , inDir (storeDirectory conf)
+    , inDir (tmpDirectory conf)
+    , return (ignoreFile conf path')
+    ]
   where
-    path' = normalise path
+    path'    = normalise path
+    absolute = isAbsolute path
+
+    inDir dir
+        | absolute  = do
+            dir' <- catchIOError (canonicalizePath dir) (const $ return dir)
+            return $ dir' `isPrefixOf` path'
+        | otherwise = return $ dir `isPrefixOf` path'
+
+    orM :: [IO Bool] -> IO Bool
+    orM []       = return False
+    orM (x : xs) = x >>= \b -> if b then return True else orM xs

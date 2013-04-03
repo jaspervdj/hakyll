@@ -9,7 +9,7 @@ module Hakyll.Core.Util.File
 
 --------------------------------------------------------------------------------
 import           Control.Applicative ((<$>))
-import           Control.Monad       (forM, when)
+import           Control.Monad       (filterM, forM, when)
 import           System.Directory    (createDirectoryIfMissing,
                                       doesDirectoryExist, getDirectoryContents,
                                       removeDirectoryRecursive)
@@ -25,18 +25,21 @@ makeDirectories = createDirectoryIfMissing True . takeDirectory
 
 --------------------------------------------------------------------------------
 -- | Get all contents of a directory.
-getRecursiveContents :: (FilePath -> Bool)  -- ^ Ignore this file/directory
-                     -> FilePath            -- ^ Directory to search
-                     -> IO [FilePath]       -- ^ List of files found
+getRecursiveContents :: (FilePath -> IO Bool)  -- ^ Ignore this file/directory
+                     -> FilePath               -- ^ Directory to search
+                     -> IO [FilePath]          -- ^ List of files found
 getRecursiveContents ignore top = go ""
   where
-    isProper x = notElem x [".", ".."] && not (ignore x)
+    isProper x
+        | x `elem` [".", ".."] = return False
+        | otherwise            = not <$> ignore x
+
     go dir     = do
         dirExists <- doesDirectoryExist (top </> dir)
         if not dirExists
             then return []
             else do
-                names <- filter isProper <$> getDirectoryContents (top </> dir)
+                names <- filterM isProper =<< getDirectoryContents (top </> dir)
                 paths <- forM names $ \name -> do
                     let rel = dir </> name
                     isDirectory <- doesDirectoryExist (top </> rel)

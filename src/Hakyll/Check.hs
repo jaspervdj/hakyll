@@ -109,8 +109,8 @@ runChecker checker config verbosity check' = do
 checkDestination :: Checker ()
 checkDestination = do
     config <- checkerConfig <$> ask
-    files  <- liftIO $
-        getRecursiveContents (const False) (destinationDirectory config)
+    files  <- liftIO $ getRecursiveContents
+        (const $ return False) (destinationDirectory config)
 
     let htmls =
             [ destinationDirectory config </> file
@@ -137,15 +137,27 @@ checkFile filePath = do
 --------------------------------------------------------------------------------
 checkUrl :: FilePath -> String -> Checker ()
 checkUrl filePath url
-    | isExternal url             = checkExternalUrl url
-    | "mailto:" `isPrefixOf` url = ok url
-    | otherwise                  = checkInternalUrl filePath url
+    | isExternal url  = checkExternalUrl url
+    | hasProtocol url = skip "Unknown protocol, skipping"
+    | otherwise       = checkInternalUrl filePath url
+  where
+    validProtoChars = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9'] ++ "+-."
+    hasProtocol str = case break (== ':') str of
+        (proto, ':' : _) -> all (`elem` validProtoChars) proto
+        _                -> False
 
 
 --------------------------------------------------------------------------------
 ok :: String -> Checker ()
 ok _ = tell $ mempty {checkerOk = 1}
 
+
+--------------------------------------------------------------------------------
+skip :: String -> Checker ()
+skip reason = do
+    logger <- checkerLogger <$> ask
+    Logger.debug logger $ reason
+    tell $ mempty {checkerOk = 1}
 
 --------------------------------------------------------------------------------
 faulty :: String -> Checker ()
