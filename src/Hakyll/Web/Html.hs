@@ -120,7 +120,7 @@ toSiteRoot = emptyException . joinPath . map parent
 --------------------------------------------------------------------------------
 -- | Check if an URL links to an external HTTP(S) source
 isExternal :: String -> Bool
-isExternal url = any (flip isPrefixOf url) ["http://", "https://"]
+isExternal url = any (flip isPrefixOf url) ["http://", "https://", "//"]
 
 
 --------------------------------------------------------------------------------

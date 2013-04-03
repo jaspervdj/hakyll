@@ -198,12 +198,14 @@ checkExternalUrl url = do
         else do
             isOk <- liftIO $ handle (failure logger) $
                 Http.withManager $ \mgr -> do
-                    request  <- Http.parseUrl url
+                    request  <- Http.parseUrl $ urlToCheck url
                     response <- Http.http (settings request) mgr
                     let code = Http.statusCode (Http.responseStatus response)
                     return $ code >= 200 && code < 300
 
-            modify $ S.insert url
+            modify $ if schemeRelative url
+                         then S.insert (urlToCheck url) . S.insert url
+                         else S.insert url
             if isOk then ok url else faulty url
   where
     -- Add additional request info
@@ -221,6 +223,10 @@ checkExternalUrl url = do
     failure logger (SomeException e) = case cast e of
         Just UserInterrupt -> throw UserInterrupt
         _                  -> Logger.error logger (show e) >> return False
+
+    -- Check scheme-relative links
+    schemeRelative = isPrefixOf "//"
+    urlToCheck uri = if schemeRelative uri then "http:" ++ uri else uri
 #else
 checkExternalUrl _ = return ()
 #endif
