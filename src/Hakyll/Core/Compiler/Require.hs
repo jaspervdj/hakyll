@@ -67,14 +67,14 @@ loadSnapshot id' snapshot = do
     universe <- compilerUniverse <$> compilerAsk
 
     -- Quick check for better error messages
-    when (id' `S.notMember` universe) $ compilerThrow notFound
+    when (id' `S.notMember` universe) $ fail notFound
 
     compilerTellDependencies [IdentifierDependency id']
     compilerResult $ CompilerRequire id' $ do
         result <- compilerUnsafeIO $ Store.get store (key id' snapshot)
         case result of
-            Store.NotFound      -> compilerThrow notFound
-            Store.WrongType e r -> compilerThrow $ wrongType e r
+            Store.NotFound      -> fail notFound
+            Store.WrongType e r -> fail $ wrongType e r
             Store.Found x       -> return $ Item id' x
   where
     notFound =

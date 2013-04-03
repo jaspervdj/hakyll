@@ -12,6 +12,7 @@ module TestSuite.Util
 
 
 --------------------------------------------------------------------------------
+import           Data.List                      (intercalate)
 import           Data.Monoid                    (mempty)
 import qualified Data.Set                       as S
 import           Test.Framework
@@ -78,7 +79,7 @@ testCompilerDone store provider underlying compiler = do
         CompilerDone x _    -> return x
         CompilerError e     -> error $
             "TestSuite.Util.testCompilerDone: compiler " ++ show underlying ++
-            " threw: " ++ e
+            " threw: " ++ intercalate "; " e
         CompilerRequire i _ -> error $
             "TestSuite.Util.testCompilerDone: compiler " ++ show underlying ++
             " requires: " ++ show i

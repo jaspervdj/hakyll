@@ -49,8 +49,8 @@ unixFilterFalse = do
     provider <- newTestProvider store
     result   <- testCompiler store provider "russian.md" compiler
     H.assert $ case result of
-        CompilerError e -> "exit code" `isInfixOf` e
-        _               -> False
+        CompilerError es -> any ("exit code" `isInfixOf`) es
+        _                -> False
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "false" [])

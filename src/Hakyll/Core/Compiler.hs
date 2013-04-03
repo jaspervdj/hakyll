@@ -116,7 +116,7 @@ getResourceWith reader = do
     let filePath = toFilePath id'
     if resourceExists provider id'
         then compilerUnsafeIO $ Item id' <$> reader provider id'
-        else compilerThrow $ error' filePath
+        else fail $ error' filePath
   where
     error' fp = "Hakyll.Core.Compiler.getResourceWith: resource " ++
         show fp ++ " not found"
@@ -156,7 +156,7 @@ cached name compiler = do
             x        <- compilerUnsafeIO $ Store.get store [name, show id']
             progName <- compilerUnsafeIO getProgName
             case x of Store.Found x' -> return x'
-                      _              -> compilerThrow (error' progName)
+                      _              -> fail $ error' progName
   where
     error' progName =
         "Hakyll.Core.Compiler.cached: Cache corrupt! " ++

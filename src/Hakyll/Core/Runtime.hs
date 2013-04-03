@@ -200,7 +200,9 @@ chase trail id'
         result <- liftIO $ runCompiler compiler read'
         case result of
             -- Rethrow error
-            CompilerError e -> throwError e
+            CompilerError [] -> throwError
+                "Compiler failed but no info given, try running with -v?"
+            CompilerError es -> throwError $ intercalate "; " es
 
             -- Huge success
             CompilerDone (SomeItem item) cwrite -> do

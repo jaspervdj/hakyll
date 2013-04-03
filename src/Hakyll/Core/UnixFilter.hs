@@ -7,24 +7,22 @@ module Hakyll.Core.UnixFilter
 
 
 --------------------------------------------------------------------------------
-import           Control.Concurrent            (forkIO)
-import           Control.Concurrent.MVar       (newEmptyMVar, putMVar, takeMVar)
-import           Control.DeepSeq               (deepseq)
-import           Control.Monad                 (forM_)
-import           Data.ByteString.Lazy          (ByteString)
-import qualified Data.ByteString.Lazy          as LB
-import           Data.IORef                    (newIORef, readIORef, writeIORef)
-import           Data.Monoid                   (Monoid, mempty)
-import           System.Exit                   (ExitCode (..))
-import           System.IO                     (Handle, hClose, hFlush,
-                                                hGetContents, hPutStr,
-                                                hSetEncoding, localeEncoding)
+import           Control.Concurrent      (forkIO)
+import           Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
+import           Control.DeepSeq         (deepseq)
+import           Control.Monad           (forM_)
+import           Data.ByteString.Lazy    (ByteString)
+import qualified Data.ByteString.Lazy    as LB
+import           Data.IORef              (newIORef, readIORef, writeIORef)
+import           Data.Monoid             (Monoid, mempty)
+import           System.Exit             (ExitCode (..))
+import           System.IO               (Handle, hClose, hFlush, hGetContents,
+                                          hPutStr, hSetEncoding, localeEncoding)
 import           System.Process
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
-import           Hakyll.Core.Compiler.Internal
 
 
 --------------------------------------------------------------------------------
@@ -92,7 +90,7 @@ unixFilterWith writer reader programName args input = do
     forM_ (lines err) debugCompiler
     case exitCode of
         ExitSuccess   -> return output
-        ExitFailure e -> compilerThrow $
+        ExitFailure e -> fail $
             "Hakyll.Core.UnixFilter.unixFilterWith: " ++
             unwords (programName : args) ++ " gave exit code " ++ show e
 

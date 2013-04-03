@@ -226,6 +226,6 @@ modificationTimeFieldWith locale key fmt = field key $ \i -> do
 
 --------------------------------------------------------------------------------
 missingField :: Context a
-missingField = Context $ \k i -> compilerThrow $
+missingField = Context $ \k i -> fail $
     "Missing field $" ++ k ++ "$ in context for item " ++
     show (itemIdentifier i)

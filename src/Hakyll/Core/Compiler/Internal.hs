@@ -28,6 +28,7 @@ module Hakyll.Core.Compiler.Internal
 import           Control.Applicative            (Alternative (..),
                                                  Applicative (..), (<$>))
 import           Control.Exception              (SomeException, handle)
+import           Control.Monad                  (forM_)
 import           Data.Monoid                    (Monoid (..))
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
@@ -38,7 +39,8 @@ import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
-import           Hakyll.Core.Logger
+import           Hakyll.Core.Logger             (Logger)
+import qualified Hakyll.Core.Logger             as Logger
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
@@ -82,7 +84,7 @@ instance Monoid CompilerWrite where
 --------------------------------------------------------------------------------
 data CompilerResult a where
     CompilerDone    :: a -> CompilerWrite -> CompilerResult a
-    CompilerError   :: String -> CompilerResult a
+    CompilerError   :: [String] -> CompilerResult a
     CompilerRequire :: Identifier -> Compiler a -> CompilerResult a
 
 
@@ -126,7 +128,7 @@ instance Monad Compiler where
             CompilerRequire i c' -> return $ CompilerRequire i $ c' >>= f
     {-# INLINE (>>=) #-}
 
-    fail = compilerThrow
+    fail = compilerThrow . return
     {-# INLINE fail #-}
 
 
@@ -150,13 +152,17 @@ runCompiler :: Compiler a -> CompilerRead -> IO (CompilerResult a)
 runCompiler compiler read' = handle handler $ unCompiler compiler read'
   where
     handler :: SomeException -> IO (CompilerResult a)
-    handler e = return $ CompilerError $ show e
+    handler e = return $ CompilerError [show e]
 
 
 --------------------------------------------------------------------------------
 instance Alternative Compiler where
-    empty   = compilerThrow "Hakyll.Core.Compiler.Internal: empty alternative"
-    x <|> y = compilerCatch x (\_ -> y)
+    empty   = compilerThrow []
+    x <|> y = compilerCatch x $ \es -> do
+        logger <- compilerLogger <$> compilerAsk
+        forM_ es $ \e -> compilerUnsafeIO $ Logger.debug logger $
+            "Hakyll.Core.Compiler.Internal: Alternative failed: " ++ e
+        y
     {-# INLINE (<|>) #-}
 
 
@@ -173,13 +179,13 @@ compilerTell deps = Compiler $ \_ -> return $ CompilerDone () deps
 
 
 --------------------------------------------------------------------------------
-compilerThrow :: String -> Compiler a
-compilerThrow e = Compiler $ \_ -> return $ CompilerError e
+compilerThrow :: [String] -> Compiler a
+compilerThrow es = Compiler $ \_ -> return $ CompilerError es
 {-# INLINE compilerThrow #-}
 
 
 --------------------------------------------------------------------------------
-compilerCatch :: Compiler a -> (String -> Compiler a) -> Compiler a
+compilerCatch :: Compiler a -> ([String] -> Compiler a) -> Compiler a
 compilerCatch (Compiler x) f = Compiler $ \r -> do
     res <- x r
     case res of
