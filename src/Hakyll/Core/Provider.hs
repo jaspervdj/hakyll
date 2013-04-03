@@ -31,10 +31,10 @@ import           Hakyll.Core.Store                  (Store)
 
 --------------------------------------------------------------------------------
 -- | Create a resource provider
-newProvider :: Store                 -- ^ Store to use
-            -> (FilePath -> Bool)    -- ^ Should we ignore this file?
-            -> FilePath              -- ^ Search directory
-            -> IO Internal.Provider  -- ^ Resulting provider
+newProvider :: Store                   -- ^ Store to use
+            -> (FilePath -> IO Bool)   -- ^ Should we ignore this file?
+            -> FilePath                -- ^ Search directory
+            -> IO Internal.Provider    -- ^ Resulting provider
 newProvider store ignore directory = do
     -- Delete metadata cache where necessary
     p <- Internal.newProvider store ignore directory

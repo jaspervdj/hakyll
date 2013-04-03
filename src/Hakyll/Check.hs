@@ -109,8 +109,8 @@ runChecker checker config verbosity check' = do
 checkDestination :: Checker ()
 checkDestination = do
     config <- checkerConfig <$> ask
-    files  <- liftIO $
-        getRecursiveContents (const False) (destinationDirectory config)
+    files  <- liftIO $ getRecursiveContents
+        (const $ return False) (destinationDirectory config)
 
     let htmls =
             [ destinationDirectory config </> file

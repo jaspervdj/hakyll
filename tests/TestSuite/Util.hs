@@ -46,7 +46,7 @@ newTestStore = Store.new True $ storeDirectory testConfiguration
 
 --------------------------------------------------------------------------------
 newTestProvider :: Store -> IO Provider
-newTestProvider store = newProvider store (const False) $
+newTestProvider store = newProvider store (const $ return False) $
     providerDirectory testConfiguration
 
 
