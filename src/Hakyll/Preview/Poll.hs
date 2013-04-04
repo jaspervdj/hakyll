@@ -1,48 +1,40 @@
---------------------------------------------------------------------------------
--- | Interval-based implementation of preview polling
-{-# LANGUAGE CPP #-}
 module Hakyll.Preview.Poll
-    ( previewPoll
+    ( watchUpdates
     ) where
 
-
 --------------------------------------------------------------------------------
-import           Control.Applicative       ((<$>))
-import           Control.Concurrent        (threadDelay)
-import           Control.Monad             (filterM)
-#if MIN_VERSION_directory(1,2,0)
-import           Data.Time                 (getCurrentTime)
-#else
-import           System.Time               (getClockTime)
-#endif
-import           System.Directory          (doesFileExist, getModificationTime)
-
+import           Filesystem.Path.CurrentOS (decodeString, encodeString)
+import           System.FSNotify           (startManagerConf, watchTree,
+                                            Event(..), WatchConfig(..))
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Configuration
 
 
---------------------------------------------------------------------------------
--- | A preview thread that periodically recompiles the site.
-previewPoll :: Configuration  -- ^ Configuration
-            -> IO [FilePath]  -- ^ Updating action
-            -> IO ()          -- ^ Can block forever
-previewPoll _ update = do
-#if MIN_VERSION_directory(1,2,0)
-    time <- getCurrentTime
-#else
-    time <- getClockTime
-#endif
-    loop time =<< update
-  where
-    delay = 1000000
-    loop time files = do
-        threadDelay delay
-        files' <- filterM doesFileExist files
-        filesTime <- case files' of
-            []  -> return time
-            _   -> maximum <$> mapM getModificationTime files'
 
-        if filesTime > time || files' /= files
-            then loop filesTime =<< update
-            else loop time files'
+--------------------------------------------------------------------------------
+-- | A thread that watches for updates in a 'providerDirectory' and recompiles
+-- a site as soon as any changes occur
+watchUpdates :: Configuration -> IO () -> IO ()
+watchUpdates conf update = do
+    _ <- update
+    manager <- startManagerConf (Debounce 0.1)
+    watchTree manager path (not . isRemove) update'
+  where
+    path = decodeString $ providerDirectory conf
+    update' evt = do
+        ignore <- shouldIgnoreFile conf $ eventPath evt
+        if ignore then return () else update
+
+
+eventPath :: Event -> FilePath
+eventPath evt = encodeString $ evtPath evt
+  where
+    evtPath (Added p _) = p
+    evtPath (Modified p _) = p
+    evtPath (Removed p _) = p
+
+
+isRemove :: Event -> Bool
+isRemove (Removed _ _) = True
+isRemove _ = False
