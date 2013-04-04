@@ -39,3 +39,4 @@ who still maintains the package. Contributors:
 - [favonia](https://github.com/favonia)
 - [Robin Windels](https://github.com/rwindelz)
 - [Miikka Koskinen](http://miikka.me/)
+- [Simonas Kazlauskas](http://kazlauskas.me/)
