@@ -47,14 +47,17 @@ data RuleSet = RuleSet
       rulesCompilers :: [(Identifier, Compiler SomeItem)]
     , -- | A set of the actually used files
       rulesResources :: Set Identifier
+    , -- | A pattern we can use to check if a file *would* be used. This is
+      -- needed for the preview server.
+      rulesPattern   :: Pattern
     }
 
 
 --------------------------------------------------------------------------------
 instance Monoid RuleSet where
-    mempty = RuleSet mempty mempty mempty
-    mappend (RuleSet r1 c1 s1) (RuleSet r2 c2 s2) =
-        RuleSet (mappend r1 r2) (mappend c1 c2) (mappend s1 s2)
+    mempty = RuleSet mempty mempty mempty mempty
+    mappend (RuleSet r1 c1 s1 p1) (RuleSet r2 c2 s2 p2) =
+        RuleSet (mappend r1 r2) (mappend c1 c2) (mappend s1 s2) (p1 .||. p2)
 
 
 --------------------------------------------------------------------------------

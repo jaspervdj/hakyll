@@ -21,6 +21,7 @@ import qualified Hakyll.Check               as Check
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Logger         (Verbosity)
 import           Hakyll.Core.Rules
+import           Hakyll.Core.Rules.Internal
 import           Hakyll.Core.Runtime
 import           Hakyll.Core.Util.File
 
@@ -68,8 +69,8 @@ preview conf verbosity rules port = do
     server conf port
   where
     update = do
-        _ <- run conf verbosity rules
-        return ()
+        (_, ruleSet) <- run conf verbosity rules
+        return $ rulesPattern ruleSet
 #else
 preview _ _ _ _ = previewServerDisabled
 #endif

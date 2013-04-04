@@ -63,20 +63,26 @@ import           Hakyll.Core.Writable
 --------------------------------------------------------------------------------
 -- | Add a route
 tellRoute :: Routes -> Rules ()
-tellRoute route' = Rules $ tell $ RuleSet route' mempty mempty
+tellRoute route' = Rules $ tell $ RuleSet route' mempty mempty mempty
 
 
 --------------------------------------------------------------------------------
 -- | Add a number of compilers
 tellCompilers :: [(Identifier, Compiler SomeItem)] -> Rules ()
-tellCompilers compilers = Rules $ tell $ RuleSet mempty compilers mempty
+tellCompilers compilers = Rules $ tell $ RuleSet mempty compilers mempty mempty
 
 
 --------------------------------------------------------------------------------
 -- | Add resources
 tellResources :: [Identifier] -> Rules ()
 tellResources resources' = Rules $ tell $
-    RuleSet mempty mempty $ S.fromList resources'
+    RuleSet mempty mempty (S.fromList resources') mempty
+
+
+--------------------------------------------------------------------------------
+-- | Add a pattern
+tellPattern :: Pattern -> Rules ()
+tellPattern pattern = Rules $ tell $ RuleSet mempty mempty mempty pattern
 
 
 --------------------------------------------------------------------------------
@@ -116,6 +122,7 @@ flush = Rules $ do
 --------------------------------------------------------------------------------
 match :: Pattern -> Rules () -> Rules ()
 match pattern rules = do
+    tellPattern pattern
     flush
     ids <- getMatches pattern
     tellResources ids
