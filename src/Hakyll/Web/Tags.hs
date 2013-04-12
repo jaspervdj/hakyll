@@ -16,7 +16,7 @@
 -- > its populations have been damaged greatly by Nuclear...
 --
 -- To use categories, use the 'buildCategories' function. Categories are
--- determined by the direcetory a page is in, for example, the post
+-- determined by the directory a page is in, for example, the post
 --
 -- > posts/coding/2010-01-28-hakyll-categories.markdown
 --
