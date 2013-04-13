@@ -31,6 +31,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/travisbrown/metaplasm)
 - <http://www.web2day-nantes.org/>,
   [source](https://github.com/CompanyCampus/web2day2013)
+- <http://workforpizza.com/>,
+  [source](https://github.com/irneh/workforpizza)
 
 ## Hakyll 3.X
 
