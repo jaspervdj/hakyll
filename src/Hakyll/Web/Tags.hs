@@ -49,8 +49,12 @@ module Hakyll.Web.Tags
     , tagsRules
     , renderTags
     , renderTagCloud
+    , renderTagCloudWith
+    , tagCloudField
+    , tagCloudFieldWith
     , renderTagList
     , tagsField
+    , tagsFieldWith
     , categoryField
     , sortTagsBy
     , caseInsensitiveTags
@@ -184,7 +188,6 @@ renderTags makeHtml concatHtml tags = do
 
 --------------------------------------------------------------------------------
 -- | Render a tag cloud in HTML
--- TODO: Maybe produce a Context here
 renderTagCloud :: Double
                -- ^ Smallest font size, in percent
                -> Double
@@ -193,19 +196,75 @@ renderTagCloud :: Double
                -- ^ Input tags
                -> Compiler String
                -- ^ Rendered cloud
-renderTagCloud minSize maxSize = renderTags makeLink (intercalate " ")
+renderTagCloud = renderTagCloudWith makeLink (intercalate " ")
   where
-    makeLink tag url count min' max' = renderHtml $
+    makeLink minSize maxSize tag url count min' max' = renderHtml $
         H.a ! A.style (toValue $ "font-size: " ++ size count min' max')
             ! A.href (toValue url)
             $ toHtml tag
+      where
+        -- Show the relative size of one 'count' in percent
+        size count min' max' =
+          let diff = 1 + fromIntegral max' - fromIntegral min'
+              relative = (fromIntegral count - fromIntegral min') / diff
+              size' = floor $ minSize + relative * (maxSize - minSize)
+          in show (size' :: Int) ++ "%"
 
-    -- Show the relative size of one 'count' in percent
-    size count min' max' =
-        let diff = 1 + fromIntegral max' - fromIntegral min'
-            relative = (fromIntegral count - fromIntegral min') / diff
-            size' = floor $ minSize + relative * (maxSize - minSize)
-        in show (size' :: Int) ++ "%"
+
+--------------------------------------------------------------------------------
+-- | Render a tag cloud in HTML
+renderTagCloudWith :: (Double -> Double ->
+                       String -> String -> Int -> Int -> Int -> String)
+                   -- ^ Render a single tag link
+                   -> ([String] -> String)
+                   -- ^ Concatenate links
+                   -> Double
+                   -- ^ Smallest font size, in percent
+                   -> Double
+                   -- ^ Biggest font size, in percent
+                   -> Tags
+                   -- ^ Input tags
+                   -> Compiler String
+                   -- ^ Rendered cloud
+renderTagCloudWith makeLink cat minSize maxSize =
+  renderTags (makeLink minSize maxSize) cat
+
+
+--------------------------------------------------------------------------------
+-- | Render a tag cloud in HTML as a context
+tagCloudField :: String
+               -- ^ Destination key
+               -> Double
+               -- ^ Smallest font size, in percent
+               -> Double
+               -- ^ Biggest font size, in percent
+               -> Tags
+               -- ^ Input tags
+               -> Context a
+               -- ^ Context
+tagCloudField key minSize maxSize tags =
+  field key $ \_ -> renderTagCloud minSize maxSize tags
+
+
+--------------------------------------------------------------------------------
+-- | Render a tag cloud in HTML as a context
+tagCloudFieldWith :: String
+                  -- ^ Destination key
+                  -> (Double -> Double ->
+                      String -> String -> Int -> Int -> Int -> String)
+                  -- ^ Render a single tag link
+                  -> ([String] -> String)
+                  -- ^ Concatenate links
+                  -> Double
+                  -- ^ Smallest font size, in percent
+                  -> Double
+                  -- ^ Biggest font size, in percent
+                  -> Tags
+                  -- ^ Input tags
+                  -> Context a
+                  -- ^ Context
+tagCloudFieldWith key makeLink cat minSize maxSize tags =
+  field key $ \_ -> renderTagCloudWith makeLink cat minSize maxSize tags
 
 
 --------------------------------------------------------------------------------
@@ -215,27 +274,31 @@ renderTagList :: Tags -> Compiler (String)
 renderTagList = renderTags makeLink (intercalate ", ")
   where
     makeLink tag url count _ _ = renderHtml $
-        H.a ! A.href (toValue url) $ toHtml (tag ++ " (" ++ show count ++ ")")
+         H.a ! A.href (toValue url) $ toHtml (tag ++ " (" ++ show count ++ ")")
 
 
 --------------------------------------------------------------------------------
--- | Render tags with links with custom function to get tags
-tagsFieldWith :: (Identifier -> Compiler [String])  -- ^ Get the tags
-              -> String                             -- ^ Destination field
-              -> Tags                               -- ^ Tags structure
-              -> Context a                          -- ^ Resulting context
-tagsFieldWith getTags' key tags = field key $ \item -> do
+-- | Render tags with links with custom functions to get tags and to
+-- render links
+tagsFieldWith :: (Identifier -> Compiler [String])
+              -- ^ Get the tags
+              -> (String -> (Maybe FilePath) -> Maybe H.Html)
+              -- ^ Render link for one tag
+              -> ([H.Html] -> H.Html)
+              -- ^ Concatenate tag links
+              -> String
+              -- ^ Destination field
+              -> Tags
+              -- ^ Tags structure
+              -> Context a
+              -- ^ Resulting context
+tagsFieldWith getTags' renderLink cat key tags = field key $ \item -> do
     tags' <- getTags' $ itemIdentifier item
     links <- forM tags' $ \tag -> do
         route' <- getRoute $ tagsMakeId tags tag
         return $ renderLink tag route'
 
-    return $ renderHtml $ mconcat $ intersperse ", " $ catMaybes $ links
-  where
-    -- Render one tag link
-    renderLink _   Nothing         = Nothing
-    renderLink tag (Just filePath) = Just $
-        H.a ! A.href (toValue $ toUrl filePath) $ toHtml tag
+    return $ renderHtml $ cat $ catMaybes $ links
 
 
 --------------------------------------------------------------------------------
@@ -243,7 +306,8 @@ tagsFieldWith getTags' key tags = field key $ \item -> do
 tagsField :: String     -- ^ Destination key
           -> Tags       -- ^ Tags
           -> Context a  -- ^ Context
-tagsField = tagsFieldWith getTags
+tagsField =
+  tagsFieldWith getTags simpleRenderLink (mconcat . intersperse ", ")
 
 
 --------------------------------------------------------------------------------
@@ -251,7 +315,16 @@ tagsField = tagsFieldWith getTags
 categoryField :: String     -- ^ Destination key
               -> Tags       -- ^ Tags
               -> Context a  -- ^ Context
-categoryField = tagsFieldWith getCategory
+categoryField =
+  tagsFieldWith getCategory simpleRenderLink (mconcat . intersperse ", ")
+
+
+--------------------------------------------------------------------------------
+-- | Render one tag link
+simpleRenderLink :: String -> (Maybe FilePath) -> Maybe H.Html
+simpleRenderLink _   Nothing         = Nothing
+simpleRenderLink tag (Just filePath) =
+  Just $ H.a ! A.href (toValue $ toUrl filePath) $ toHtml tag
 
 
 --------------------------------------------------------------------------------
