@@ -33,6 +33,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/CompanyCampus/web2day2013)
 - <http://workforpizza.com/>,
   [source](https://github.com/irneh/workforpizza)
+- <http://poleiro.info/>,
+  [source](https://github.com/arthuraa/poleiro)
 
 ## Hakyll 3.X
 
