@@ -58,6 +58,7 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
     , fromAssertions "isExternal"
         [ assert (isExternal "http://reddit.com")
         , assert (isExternal "https://mail.google.com")
+        , assert (isExternal "//ajax.googleapis.com")
         , assert (not (isExternal "../header.png"))
         , assert (not (isExternal "/foo/index.html"))
         ]
