@@ -198,13 +198,13 @@ checkExternalUrl url = do
         else do
             isOk <- liftIO $ handle (failure logger) $
                 Http.withManager $ \mgr -> do
-                    request  <- Http.parseUrl $ urlToCheck url
+                    request  <- Http.parseUrl urlToCheck
                     response <- Http.http (settings request) mgr
                     let code = Http.statusCode (Http.responseStatus response)
                     return $ code >= 200 && code < 300
 
             modify $ if schemeRelative url
-                         then S.insert (urlToCheck url) . S.insert url
+                         then S.insert urlToCheck . S.insert url
                          else S.insert url
             if isOk then ok url else faulty url
   where
@@ -226,7 +226,7 @@ checkExternalUrl url = do
 
     -- Check scheme-relative links
     schemeRelative = isPrefixOf "//"
-    urlToCheck uri = if schemeRelative uri then "http:" ++ uri else uri
+    urlToCheck     = if schemeRelative url then "http:" ++ url else url
 #else
 checkExternalUrl _ = return ()
 #endif

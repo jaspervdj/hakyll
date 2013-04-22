@@ -198,17 +198,15 @@ renderTagCloud :: Double
                -- ^ Rendered cloud
 renderTagCloud = renderTagCloudWith makeLink (intercalate " ")
   where
-    makeLink minSize maxSize tag url count min' max' = renderHtml $
-        H.a ! A.style (toValue $ "font-size: " ++ size count min' max')
-            ! A.href (toValue url)
-            $ toHtml tag
-      where
+    makeLink minSize maxSize tag url count min' max' =
         -- Show the relative size of one 'count' in percent
-        size count min' max' =
-          let diff = 1 + fromIntegral max' - fromIntegral min'
-              relative = (fromIntegral count - fromIntegral min') / diff
-              size' = floor $ minSize + relative * (maxSize - minSize)
-          in show (size' :: Int) ++ "%"
+        let diff     = 1 + fromIntegral max' - fromIntegral min'
+            relative = (fromIntegral count - fromIntegral min') / diff
+            size     = floor $ minSize + relative * (maxSize - minSize) :: Int
+        in renderHtml $
+            H.a ! A.style (toValue $ "font-size: " ++ show size ++ "%")
+                ! A.href (toValue url)
+                $ toHtml tag
 
 
 --------------------------------------------------------------------------------
