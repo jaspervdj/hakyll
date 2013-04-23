@@ -203,6 +203,7 @@ getItemUTC locale id' = do
         , "%Y-%m-%d"
         , "%B %e, %Y %l:%M %p"
         , "%B %e, %Y"
+        , "%b %d, %Y"
         ]
 
 
