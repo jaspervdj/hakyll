@@ -35,6 +35,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/irneh/workforpizza)
 - <http://poleiro.info/>,
   [source](https://github.com/arthuraa/poleiro)
+- <https://benjeffrey.com/>,
+  [source](https://benjeffrey.com)
 
 ## Hakyll 3.X
 
