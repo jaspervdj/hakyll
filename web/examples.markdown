@@ -36,7 +36,7 @@ this list. This list has no particular ordering.
 - <http://poleiro.info/>,
   [source](https://github.com/arthuraa/poleiro)
 - <https://benjeffrey.com/>,
-  [source](https://benjeffrey.com)
+  [source](https://github.com/jeffbr13/benjeffrey.com)
 
 ## Hakyll 3.X
 
