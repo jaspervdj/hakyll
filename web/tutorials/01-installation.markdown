@@ -26,15 +26,19 @@ Linux distro packages:
 Building the example site
 -------------------------
 
-Apart from the main Hakyll library, the cabal package also provided you with an
+Apart from the main Hakyll library, the cabal package also provides you with an
 executable `hakyll-init` to create an example site. This is an easy way to get
 started:
 
     $ hakyll-init my-site
 
 This creates a folder `my-site` in the current directory, with some example
-content and a generic configuration. If `hakyll-init` is not found, you should
-make sure `$HOME/.cabal/bin` is in your `$PATH`.
+content and a generic configuration.
+
+If `hakyll-init` is not found, you should make sure `$HOME/.cabal/bin` is in
+your `$PATH`. (If you're on OS X, you may not have a bin directory in
+`$HOME/.cabal`. In this case, check `$HOME/Library/Haskell/bin` and put it on
+your path if you find `hakyll-init` there.)
 
 The file `site.hs` holds the configuration of your site, as an executable
 haskell program. We can compile and run it like this:
