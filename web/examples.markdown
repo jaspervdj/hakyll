@@ -37,6 +37,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/arthuraa/poleiro)
 - <http://www.austinrochford.com/>,
   [source](https://github.com/AustinRochford/blog)
+- <http://www.regisfoucault.com/>,
+  [source](https://github.com/regisfoucault/blog)
 
 ## Hakyll 3.X
 
