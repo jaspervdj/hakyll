@@ -39,6 +39,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/AustinRochford/blog)
 - <http://www.regisfoucault.com/>,
   [source](https://github.com/regisfoucault/blog)
+- <http://www.chaoxuprime.com/>,
+  [source](https://github.com/Mgccl/blog)
 
 ## Hakyll 3.X
 
