@@ -43,6 +43,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/Mgccl/blog)
 - <https://benjeffrey.com/>,
   [source](https://github.com/jeffbr13/benjeffrey.com)
+- <http://www.skybluetrades.net/>,
+  [source](https://github.com/ian-ross/blog)
 
 ## Hakyll 3.X
 
@@ -60,8 +62,6 @@ this list. This list has no particular ordering.
   [source](https://github.com/robertseaton/rs.io/)
 - <http://www.gwern.net/>,
   source: `darcs get http://www.gwern.net`
-- <http://www.skybluetrades.net/>,
-  [source](https://github.com/ian-ross/blog)
 - <http://blog.coldflake.com/>,
   [source](https://github.com/marcmo/blog.coldflake)
 - <http://deepak.jois.name>,
