@@ -6,7 +6,7 @@ module Hakyll.Web.Template.Read
 
 --------------------------------------------------------------------------------
 import           Control.Applicative          ((<$>), (<$), (<*>))
-import           Control.Monad                (void, mzero, guard)
+import           Control.Monad                (void, mzero)
 import           Text.Parsec
 import           Text.Parsec.String
 
