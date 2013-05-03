@@ -221,7 +221,7 @@ chase trail id'
                     "(you probably want to call makeItem to solve this problem)"
 
                 -- Write if necessary
-                mroute <- liftIO $ runRoutes routes provider id'
+                (mroute, _) <- liftIO $ runRoutes routes provider id'
                 case mroute of
                     Nothing    -> return ()
                     Just route -> do

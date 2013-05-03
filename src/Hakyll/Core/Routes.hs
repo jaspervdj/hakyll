@@ -27,7 +27,8 @@
 -- * If an item matches multiple routes, the first rule will be chosen.
 {-# LANGUAGE Rank2Types #-}
 module Hakyll.Core.Routes
-    ( Routes
+    ( UsedMetadata
+    , Routes
     , runRoutes
     , idRoute
     , setExtension
@@ -54,23 +55,32 @@ import           Hakyll.Core.Util.String
 
 
 --------------------------------------------------------------------------------
+-- | When you ran a route, it's useful to know whether or not this used
+-- metadata. This allows us to do more granular dependency analysis.
+type UsedMetadata = Bool
+
+
+--------------------------------------------------------------------------------
 -- | Type used for a route
 newtype Routes = Routes
-    { unRoutes :: Provider -> Identifier -> IO (Maybe FilePath)
+    { unRoutes :: Provider -> Identifier -> IO (Maybe FilePath, UsedMetadata)
     }
 
 
 --------------------------------------------------------------------------------
 instance Monoid Routes where
-    mempty = Routes $ \_ _ -> return Nothing
+    mempty = Routes $ \_ _ -> return (Nothing, False)
     mappend (Routes f) (Routes g) = Routes $ \p id' -> do
-        mfp <- f p id'
-        maybe (g p id') (return . Just) mfp
+        (mfp, um) <- f p id'
+        case mfp of
+            Nothing -> g p id'
+            Just _  -> return (mfp, um)
 
 
 --------------------------------------------------------------------------------
 -- | Apply a route to an identifier
-runRoutes :: Routes -> Provider -> Identifier -> IO (Maybe FilePath)
+runRoutes :: Routes -> Provider -> Identifier
+          -> IO (Maybe FilePath, UsedMetadata)
 runRoutes = unRoutes
 
 
@@ -109,14 +119,14 @@ setExtension extension = customRoute $
 -- otherwise
 matchRoute :: Pattern -> Routes -> Routes
 matchRoute pattern (Routes route) = Routes $ \p id' ->
-    if matches pattern id' then route p id' else return Nothing
+    if matches pattern id' then route p id' else return (Nothing, False)
 
 
 --------------------------------------------------------------------------------
 -- | Create a custom route. This should almost always be used with
 -- 'matchRoute'
 customRoute :: (Identifier -> FilePath) -> Routes
-customRoute f = Routes $ const $ return . Just . f
+customRoute f = Routes $ const $ \id' -> return (Just (f id'), False)
 
 
 --------------------------------------------------------------------------------
@@ -169,5 +179,9 @@ composeRoutes :: Routes  -- ^ First route to apply
               -> Routes  -- ^ Second route to apply
               -> Routes  -- ^ Resulting route
 composeRoutes (Routes f) (Routes g) = Routes $ \p i -> do
-    mfp <- f p i
-    maybe (return Nothing) (g p . fromFilePath) mfp
+    (mfp, um) <- f p i
+    case mfp of
+        Nothing -> return (Nothing, um)
+        Just fp -> do
+            (mfp', um') <- g p (fromFilePath fp)
+            return (mfp', um || um')
