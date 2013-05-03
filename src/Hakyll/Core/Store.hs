@@ -15,20 +15,22 @@ module Hakyll.Core.Store
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative ((<$>))
-import           Control.Exception   (IOException, handle)
-import qualified Crypto.Hash.MD5     as MD5
-import           Data.Binary         (Binary, decodeFile, encodeFile)
-import qualified Data.ByteString     as B
-import qualified Data.Cache.LRU.IO   as Lru
-import           Data.List           (intercalate)
-import qualified Data.Text           as T
-import qualified Data.Text.Encoding  as T
-import           Data.Typeable       (TypeRep, Typeable, cast, typeOf)
-import           System.Directory    (createDirectoryIfMissing)
-import           System.Directory    (doesFileExist, removeFile)
-import           System.FilePath     ((</>))
-import           Text.Printf         (printf)
+import           Control.Applicative  ((<$>))
+import           Control.Exception    (IOException, handle)
+import qualified Crypto.Hash.MD5      as MD5
+import           Data.Binary          (Binary, decode, encodeFile)
+import qualified Data.ByteString      as B
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.Cache.LRU.IO    as Lru
+import           Data.List            (intercalate)
+import qualified Data.Text            as T
+import qualified Data.Text.Encoding   as T
+import           Data.Typeable        (TypeRep, Typeable, cast, typeOf)
+import           System.Directory     (createDirectoryIfMissing)
+import           System.Directory     (doesFileExist, removeFile)
+import           System.FilePath      ((</>))
+import           System.IO            (IOMode (..), hClose, openFile)
+import           Text.Printf          (printf)
 
 
 --------------------------------------------------------------------------------
@@ -132,7 +134,7 @@ get store identifier = do
                 then return NotFound
                 -- Found in the filesystem
                 else do
-                    v <- decodeFile path
+                    v <- decodeClose
                     cacheInsert store key v
                     return $ Found v
         -- Found in the in-memory map (or wrong type), just return
@@ -140,6 +142,13 @@ get store identifier = do
   where
     key  = hash identifier
     path = storeDirectory store </> key
+
+    -- 'decodeFile' from Data.Binary which closes the file ASAP
+    decodeClose = do
+        h   <- openFile path ReadMode
+        lbs <- BL.hGetContents h
+        BL.length lbs `seq` hClose h
+        return $ decode lbs
 
 
 --------------------------------------------------------------------------------
