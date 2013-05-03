@@ -41,7 +41,7 @@ case01 = do
     let identifiers     = S.fromList $ map fst $ rulesCompilers ruleSet
         routes          = rulesRoutes ruleSet
         checkRoute ex i =
-            runRoutes routes provider i >>= \r -> Just ex @=? r
+            runRoutes routes provider i >>= \(r, _) -> Just ex @=? r
 
     -- Test that we have some identifiers and that the routes work out
     assert $ all (`S.member` identifiers) expected

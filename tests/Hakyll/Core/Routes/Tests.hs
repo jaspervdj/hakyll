@@ -39,5 +39,6 @@ tests = testGroup "Hakyll.Core.Routes.Tests" $ fromAssertions "runRoutes"
 --------------------------------------------------------------------------------
 testRoutes :: FilePath -> Routes -> Identifier -> Assertion
 testRoutes expected r id' = do
-    route <- runRoutes r (error "Hakyll.Core.Routes.Tests: no provider") id'
+    (route, _) <- runRoutes r
+        (error "Hakyll.Core.Routes.Tests: no provider") id'
     Just expected @=? route
