@@ -8,7 +8,7 @@ module Hakyll.Core.Provider.MetadataCache
 
 --------------------------------------------------------------------------------
 import qualified Data.Map                      as M
-
+import Control.Monad (unless)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Identifier
@@ -49,12 +49,8 @@ resourceInvalidateMetadataCache p r = do
 --------------------------------------------------------------------------------
 load :: Provider -> Identifier -> IO ()
 load p r = do
-    mmd <- Store.get store mdk :: IO (Store.Result Metadata)
-    case mmd of
-        -- Already loaded
-        Store.Found _  -> return ()
-        -- Not yet loaded
-        _ -> do
+    mmof <- Store.isMember store mdk
+    unless mmof $ do
             (md, body) <- loadMetadata p r
             Store.set store mdk md
             Store.set store bk  body
