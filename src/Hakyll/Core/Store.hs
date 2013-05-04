@@ -9,6 +9,7 @@ module Hakyll.Core.Store
     , new
     , set
     , get
+    , isMember
     , delete
     , hash
     ) where
@@ -101,6 +102,16 @@ cacheLookup (Store _ (Just lru)) key = do
 
 
 --------------------------------------------------------------------------------
+cacheIsMember :: Store -> String -> Bool
+cacheIsMember (Store _ Nothing) _ =  False
+cacheIsMember (Store _ (Just lru)) key =
+    let res = Lru.lookup key lru in
+        case Just res of
+            Nothing -> False
+            _       ->  True
+
+
+--------------------------------------------------------------------------------
 -- | Auxiliary: delete an item from the in-memory cache
 cacheDelete :: Store -> String -> IO ()
 cacheDelete (Store _ Nothing)    _   = return ()
@@ -150,6 +161,17 @@ get store identifier = do
         BL.length lbs `seq` hClose h
         return $ decode lbs
 
+
+--------------------------------------------------------------------------------
+-- | Strict function
+isMember :: Store -> [String] -> IO Bool
+isMember store identifier
+    | cacheIsMember store key = return True
+    | otherwise               = doesFileExist path
+
+    where
+        key = hash identifier
+        path = storeDirectory store </> key
 
 --------------------------------------------------------------------------------
 -- | Delete an item
