@@ -103,7 +103,7 @@ teaserContext snapshot = field "teaser" $ \item ->
 
 --------------------------------------------------------------------------------
 teaserSeparator :: String
-teaserSeparator = "<!-- teaser_end -->"
+teaserSeparator = "<!--more-->"
 
 
 --------------------------------------------------------------------------------
