@@ -102,13 +102,13 @@ cacheLookup (Store _ (Just lru)) key = do
 
 
 --------------------------------------------------------------------------------
-cacheIsMember :: Store -> String -> Bool
-cacheIsMember (Store _ Nothing) _ =  False
-cacheIsMember (Store _ (Just lru)) key =
-    let res = Lru.lookup key lru in
-        case Just res of
-            Nothing -> False
-            _       ->  True
+cacheIsMember :: Store -> String -> IO Bool
+cacheIsMember (Store _ Nothing) _ =  return False
+cacheIsMember (Store _ (Just lru)) key = do
+    res <- Lru.lookup key lru
+    case res of
+        Nothing -> return False
+        _       -> return True
 
 
 --------------------------------------------------------------------------------
@@ -165,10 +165,9 @@ get store identifier = do
 --------------------------------------------------------------------------------
 -- | Strict function
 isMember :: Store -> [String] -> IO Bool
-isMember store identifier
-    | cacheIsMember store key = return True
-    | otherwise               = doesFileExist path
-
+isMember store identifier = do
+    inCache <- cacheIsMember store key
+    if inCache then return True else doesFileExist path
     where
         key = hash identifier
         path = storeDirectory store </> key
