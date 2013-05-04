@@ -7,8 +7,8 @@ module Hakyll.Core.Provider.MetadataCache
 
 
 --------------------------------------------------------------------------------
+import           Control.Monad                 (unless)
 import qualified Data.Map                      as M
-import Control.Monad (unless)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Identifier
@@ -51,9 +51,9 @@ load :: Provider -> Identifier -> IO ()
 load p r = do
     mmof <- Store.isMember store mdk
     unless mmof $ do
-            (md, body) <- loadMetadata p r
-            Store.set store mdk md
-            Store.set store bk  body
+        (md, body) <- loadMetadata p r
+        Store.set store mdk md
+        Store.set store bk  body
   where
     store = providerStore p
     mdk   = [name, toFilePath r, "metadata"]

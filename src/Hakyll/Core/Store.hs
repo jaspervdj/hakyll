@@ -24,6 +24,7 @@ import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cache.LRU.IO    as Lru
 import           Data.List            (intercalate)
+import           Data.Maybe           (isJust)
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as T
 import           Data.Typeable        (TypeRep, Typeable, cast, typeOf)
@@ -103,12 +104,8 @@ cacheLookup (Store _ (Just lru)) key = do
 
 --------------------------------------------------------------------------------
 cacheIsMember :: Store -> String -> IO Bool
-cacheIsMember (Store _ Nothing) _ =  return False
-cacheIsMember (Store _ (Just lru)) key = do
-    res <- Lru.lookup key lru
-    case res of
-        Nothing -> return False
-        _       -> return True
+cacheIsMember (Store _ Nothing)    _   = return False
+cacheIsMember (Store _ (Just lru)) key = isJust <$> Lru.lookup key lru
 
 
 --------------------------------------------------------------------------------
@@ -168,9 +165,10 @@ isMember :: Store -> [String] -> IO Bool
 isMember store identifier = do
     inCache <- cacheIsMember store key
     if inCache then return True else doesFileExist path
-    where
-        key = hash identifier
-        path = storeDirectory store </> key
+  where
+    key  = hash identifier
+    path = storeDirectory store </> key
+
 
 --------------------------------------------------------------------------------
 -- | Delete an item

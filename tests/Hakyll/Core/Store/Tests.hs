@@ -72,15 +72,12 @@ wrongType = do
 
 
 --------------------------------------------------------------------------------
-
 isMembertest :: H.Assertion
 isMembertest = do
     store <- newTestStore
     Store.set store ["foo", "bar"] ("qux" :: String)
-    --value <- Store.get store ["foo", "bar"] :: IO (Store.Result Int)
     good <- Store.isMember store ["foo", "bar"]
-
-    bad <- Store.isMember store ["foo", "baz"]
-    H.assert good 
+    bad  <- Store.isMember store ["foo", "baz"]
+    H.assert good
     H.assert (not bad)
     cleanTestEnv
