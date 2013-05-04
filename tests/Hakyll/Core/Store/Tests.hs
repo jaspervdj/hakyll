@@ -26,6 +26,7 @@ tests = testGroup "Hakyll.Core.Store.Tests"
     [ testProperty "simple get . set"     simpleSetGet
     , testProperty "persistent get . set" persistentSetGet
     , testCase     "WrongType get . set"  wrongType
+    , testCase     "isMembertest . set"   isMembertest
     ]
 
 
@@ -67,4 +68,19 @@ wrongType = do
             e == typeOf (undefined :: Int) &&
             t == typeOf (undefined :: String)
         _                   -> False
+    cleanTestEnv
+
+
+--------------------------------------------------------------------------------
+
+isMembertest :: H.Assertion
+isMembertest = do
+    store <- newTestStore
+    Store.set store ["foo", "bar"] ("qux" :: String)
+    --value <- Store.get store ["foo", "bar"] :: IO (Store.Result Int)
+    good <- Store.isMember store ["foo", "bar"]
+
+    bad <- Store.isMember store ["foo", "baz"]
+    H.assert good 
+    H.assert (not bad)
     cleanTestEnv
