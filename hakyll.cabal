@@ -131,6 +131,7 @@ Library
     Hakyll.Core.Runtime
     Hakyll.Core.Store
     Hakyll.Core.Util.File
+    Hakyll.Core.Util.Parser
     Hakyll.Web.Template.Internal
     Paths_hakyll
 

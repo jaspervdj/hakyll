@@ -4,6 +4,9 @@ module Hakyll.Core.Provider.Metadata
     ( loadMetadata
     , metadata
     , page
+
+      -- This parser can be reused in some places
+    , metadataKey
     ) where
 
 
@@ -23,6 +26,7 @@ import           Text.Parsec.String            (Parser)
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
+import           Hakyll.Core.Util.Parser
 import           Hakyll.Core.Util.String
 
 
@@ -93,7 +97,8 @@ newline = P.string "\n" <|> P.string "\r\n"
 -- | Parse a single metadata field
 metadataField :: Parser (String, String)
 metadataField = do
-    key <- P.manyTill P.alphaNum $ P.char ':'
+    key <- metadataKey
+    _   <- P.char ':'
     P.skipMany1 inlineSpace <?> "space followed by metadata for: " ++ key
     value     <- P.manyTill P.anyChar newline
     trailing' <- P.many trailing
