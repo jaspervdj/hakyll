@@ -2,6 +2,8 @@
 -- | Internally used compiler module
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Hakyll.Core.Compiler.Internal
     ( -- * Types
       CompilerRead (..)
@@ -29,6 +31,7 @@ import           Control.Applicative            (Alternative (..),
                                                  Applicative (..), (<$>))
 import           Control.Exception              (SomeException, handle)
 import           Control.Monad                  (forM_)
+import           Control.Monad.Error
 import           Data.Monoid                    (Monoid (..))
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
@@ -145,6 +148,11 @@ instance Applicative Compiler where
 instance MonadMetadata Compiler where
     getMetadata = compilerGetMetadata
     getMatches  = compilerGetMatches
+
+--------------------------------------------------------------------------------
+instance MonadError [String] Compiler where
+  throwError = compilerThrow
+  catchError = compilerCatch
 
 
 --------------------------------------------------------------------------------

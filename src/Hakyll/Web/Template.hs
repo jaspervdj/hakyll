@@ -44,7 +44,8 @@ module Hakyll.Web.Template
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                (forM, liftM)
+import           Control.Monad                (liftM)
+import           Control.Monad.Error          (MonadError(..))
 import           Data.Monoid                  (mappend)
 import           Prelude                      hiding (id)
 
@@ -112,11 +113,17 @@ applyAsTemplate context item =
 
 --------------------------------------------------------------------------------
 -- | Overloaded apply template function to work in an arbitrary Monad.
-applyTemplateWith :: Monad m
+applyTemplateWith :: MonadError e m
                   => (String -> a -> m String)
                   -> Template -> a -> m String
-applyTemplateWith context tpl x = liftM concat $
-    forM (unTemplate tpl) $ \e -> case e of
-        Chunk c -> return c
-        Escaped -> return "$"
-        Key k   -> context k x
+applyTemplateWith context tpl x = go tpl where
+
+    go = liftM concat . mapM applyElem . unTemplate
+
+    applyElem (Chunk c)   = return c
+    applyElem Escaped     = return "$"
+    applyElem (Key k)     = context k x
+    applyElem (If k t mf) = (context k x >> go t) `catchError` handler where
+      handler _ = case mf of
+        Nothing -> return ""
+        Just f  -> go f

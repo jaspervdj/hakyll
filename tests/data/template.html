@@ -1,5 +1,16 @@
 <div>
     I'm so rich I have $$3.
-    $echo test!$
+    $echo test$
+    $if(body)$
+    I have body
+    $else$
+    or no
+    $endif$
+    $if(unbound)$
+    should not be printed
+    $endif$
+    $if(body)$
+    should be printed
+    $endif$
     $body$
 </div>

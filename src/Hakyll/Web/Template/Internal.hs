@@ -9,7 +9,7 @@ module Hakyll.Web.Template.Internal
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative  ((<$>))
+import           Control.Applicative  (pure, (<$>), (<*>))
 import           Data.Binary          (Binary, get, getWord8, put, putWord8)
 import           Data.Typeable        (Typeable)
 
@@ -38,18 +38,20 @@ data TemplateElement
     = Chunk String
     | Key String
     | Escaped
+    | If String Template (Maybe Template) -- key, then branch, else branch
     deriving (Show, Eq, Typeable)
-
 
 --------------------------------------------------------------------------------
 instance Binary TemplateElement where
-    put (Chunk string)    = putWord8 0 >> put string
-    put (Key key)  = putWord8 1 >> put key
+    put (Chunk string) = putWord8 0 >> put string
+    put (Key key) = putWord8 1 >> put key
     put (Escaped) = putWord8 2
+    put (If key t f) = putWord8 3 >> put key >> put t >> put f
 
     get = getWord8 >>= \tag -> case tag of
             0 -> Chunk <$> get
             1 -> Key   <$> get
-            2 -> return Escaped
+            2 -> pure Escaped
+            3 -> If <$> get <*> get <*> get
             _ -> error $  "Hakyll.Web.Template.Internal: "
                        ++ "Error reading cached template"

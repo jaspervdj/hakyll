@@ -4,38 +4,56 @@ module Hakyll.Web.Template.Read
     ( readTemplate
     ) where
 
-
 --------------------------------------------------------------------------------
-import           Data.List                    (isPrefixOf)
-
+import           Control.Applicative          ((<$>), (<$), (<*>))
+import           Control.Monad                (void, mzero)
+import           Text.Parsec
+import           Text.Parsec.String
 
 --------------------------------------------------------------------------------
 import           Hakyll.Web.Template.Internal
 
-
 --------------------------------------------------------------------------------
--- | Construct a @Template@ from a string.
+
 readTemplate :: String -> Template
-readTemplate = Template . readTemplate'
-  where
-    readTemplate' [] = []
-    readTemplate' string
-        | "$$" `isPrefixOf` string =
-            Escaped : readTemplate' (drop 2 string)
-        | "$" `isPrefixOf` string =
-            case readKey (drop 1 string) of
-                Just (key, rest) -> Key key : readTemplate' rest
-                Nothing          -> Chunk "$" : readTemplate' (drop 1 string)
-        | otherwise =
-            let (chunk, rest) = break (== '$') string
-            in Chunk chunk : readTemplate' rest
+readTemplate input =
+  case parse template "" input of
+    Left err -> error $ "Cannot parse template: " ++ show err
+    Right t -> t
 
-    -- Parse an key into (key, rest) if it's valid, and return
-    -- Nothing otherwise
-    readKey string =
-        let (key, rest) = span validKeyChar string
-        in if not (null key) && "$" `isPrefixOf` rest
-            then Just (key, drop 1 rest)
-            else Nothing
+template :: Parser Template
+template = Template <$>
+  (many1 $ chunk <|> escaped <|> conditional <|> key)
 
-    validKeyChar x = x `notElem` ['$', '\n', '\r']
+chunk :: Parser TemplateElement
+chunk = Chunk <$> (many1 $ noneOf "$")
+
+escaped :: Parser TemplateElement
+escaped = Escaped <$ (try $ string "$$")
+
+conditional :: Parser TemplateElement
+conditional = try $ do
+  void $ string "$if("
+  i <- ident
+  void $ string ")$"
+  thenBranch <- template
+  elseBranch <- optionMaybe $ try (string "$else$") >> template
+  void $ string "$endif$"
+  return $ If i thenBranch elseBranch
+
+ident :: Parser String
+ident = do
+  i <- (:) <$> letter <*> (many $ alphaNum <|> oneOf " _-.")
+  if i `elem` reserved
+     then mzero
+     else return i
+
+reserved :: [String]
+reserved = ["if", "else","endif"]
+
+key :: Parser TemplateElement
+key = try $ do
+  void $ char '$'
+  k <- ident
+  void $ char '$'
+  return $ Key k
