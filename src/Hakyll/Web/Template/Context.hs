@@ -92,6 +92,9 @@ defaultContext =
     missingField
 
 --------------------------------------------------------------------------------
+-- | A context with "teaser" key which contain a teaser of the item.
+-- The item is loaded from the given snapshot (which should be saved
+-- in the user code before any templates are applied).
 teaserContext :: Snapshot -> Context String
 teaserContext snapshot = field "teaser" $ \item ->
     (needlePrefix teaserSeparator . itemBody) <$>
