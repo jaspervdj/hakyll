@@ -7,6 +7,7 @@ module Hakyll.Web.Template.Context
     , functionField
 
     , defaultContext
+    , teaserContext
     , bodyField
     , metadataField
     , urlField
@@ -40,7 +41,7 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
-import           Hakyll.Core.Util.String       (splitAll)
+import           Hakyll.Core.Util.String       (splitAll, needlePrefix)
 import           Hakyll.Web.Html
 
 
@@ -89,6 +90,17 @@ defaultContext =
     pathField     "path"     `mappend`
     titleField    "title"    `mappend`
     missingField
+
+--------------------------------------------------------------------------------
+teaserContext :: Snapshot -> Context String
+teaserContext snapshot = field "teaser" $ \item ->
+    (needlePrefix teaserSeparator . itemBody) <$>
+    loadSnapshot (itemIdentifier item) snapshot
+
+
+--------------------------------------------------------------------------------
+teaserSeparator :: String
+teaserSeparator = "<!-- teaser_end -->"
 
 
 --------------------------------------------------------------------------------
