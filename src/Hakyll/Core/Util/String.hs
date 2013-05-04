@@ -4,9 +4,11 @@ module Hakyll.Core.Util.String
     ( trim
     , replaceAll
     , splitAll
+    , needlePrefix
     ) where
 
 import Data.Char (isSpace)
+import Data.List (isPrefixOf)
 import Data.Maybe (listToMaybe)
 
 import Text.Regex.TDFA ((=~~))
@@ -46,3 +48,21 @@ splitAll pattern = filter (not . null) . splitAll'
         Just (o, l) ->
             let (before, tmp) = splitAt o src
             in before : splitAll' (drop l tmp)
+
+
+-- | Find the first instance of needle (must be non-empty) in
+-- haystack. We return the prefix of haystack before needle is
+-- matched.
+--
+-- Examples:
+--   needlePrefix "cd" "abcde" = "ab"
+--   needlePrefix "ab" "abc" = ""
+--   needlePrefix "ab" "xxab" = "xx"
+--   needlePrefix "a" "xx" = "xx"
+--
+needlePrefix :: String -> String -> String
+needlePrefix needle haystack = go haystack
+  where
+    go [] = []
+    go xss@(x:xs) | needle `isPrefixOf` xss = []
+                  | otherwise = x : go xs
