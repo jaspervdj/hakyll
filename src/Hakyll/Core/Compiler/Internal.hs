@@ -221,7 +221,11 @@ compilerUnsafeIO io = Compiler $ \_ -> do
 
 --------------------------------------------------------------------------------
 compilerTellDependencies :: [Dependency] -> Compiler ()
-compilerTellDependencies ds = compilerTell mempty {compilerDependencies = ds}
+compilerTellDependencies ds = do
+  logger <- compilerLogger <$> compilerAsk
+  forM_ ds $ \d -> compilerUnsafeIO $ Logger.debug logger $
+      "Hakyll.Core.Compiler.Internal: Adding dependency: " ++ show d
+  compilerTell mempty {compilerDependencies = ds}
 {-# INLINE compilerTellDependencies #-}
 
 
