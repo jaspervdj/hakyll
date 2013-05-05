@@ -28,6 +28,16 @@ tests = testGroup "Hakyll.Core.Util.String.Tests" $ concat
     , fromAssertions "splitAll"
         [ ["λ", "∀x.x", "hi"] @=? splitAll ", *" "λ, ∀x.x,  hi"
         ]
+
+    , fromAssertions "needlePrefix"
+        [ "ab" @=? needlePrefix "cd" "abcde"
+        , "xx" @=? needlePrefix "ab" "xxab"
+        , "xx" @=? needlePrefix "a" "xx"
+        , "x" @=? needlePrefix "ab" "xabxab"
+        , "" @=? needlePrefix "ab" "abc"
+        , "" @=? needlePrefix "ab" "abab"
+        , "" @=? needlePrefix "" ""
+        ]
     ]
 
   where
