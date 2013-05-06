@@ -39,13 +39,13 @@ module Hakyll.Web.Template
     , applyTemplate
     , loadAndApplyTemplate
     , applyAsTemplate
-    , applyTemplateWith
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Monad                (liftM)
-import           Control.Monad.Error          (MonadError(..))
+import           Control.Monad.Error          (MonadError (..))
+import           Data.List                    (intercalate)
 import           Data.Monoid                  (mappend)
 import           Prelude                      hiding (id)
 
@@ -73,10 +73,41 @@ applyTemplate :: Template                -- ^ Template
               -> Item a                  -- ^ Page
               -> Compiler (Item String)  -- ^ Resulting item
 applyTemplate tpl context item = do
-    -- Appending missingField gives better error messages
-    let context' k x = unContext (context `mappend` missingField) k x
-    body <- applyTemplateWith context' tpl item
+    body <- applyTemplate' tpl context item
     return $ itemSetBody body item
+
+
+--------------------------------------------------------------------------------
+applyTemplate' :: Template         -- ^ Template
+               -> Context a        -- ^ Context
+               -> Item a           -- ^ Page
+               -> Compiler String  -- ^ Resulting item
+applyTemplate' tpl context x = go tpl
+  where
+    context' = unContext (context `mappend` missingField)
+    go = liftM concat . mapM applyElem . unTemplate
+
+    applyElem (Chunk c)   = return c
+    applyElem Escaped     = return "$"
+    applyElem (Key k)     = context' k x >>= getString k
+    applyElem (If k t mf) = (context' k x >> go t) `catchError` handler
+      where
+        handler _ = case mf of
+            Nothing -> return ""
+            Just f  -> go f
+    applyElem (For k b s) = context' k x >>= \cf -> case cf of
+        StringField _  -> fail $
+            "Hakyll.Web.Template.applyTemplateWith: expected ListField but " ++
+            "got StringField for key " ++ show k
+        ListField c xs -> do
+            sep <- maybe (return "") go s
+            bs  <- mapM (applyTemplate' b c) xs
+            return $ intercalate sep bs
+
+    getString _ (StringField s) = return s
+    getString k (ListField _ _) = fail $
+        "Hakyll.Web.Template.applyTemplateWith: expected StringField but " ++
+        "got ListField for key " ++ show k
 
 
 --------------------------------------------------------------------------------
@@ -109,22 +140,3 @@ applyAsTemplate :: Context String          -- ^ Context
 applyAsTemplate context item =
     let tpl = readTemplate $ itemBody item
     in applyTemplate tpl context item
-
-
---------------------------------------------------------------------------------
--- | Overloaded apply template function to work in an arbitrary Monad.
-applyTemplateWith :: MonadError e m
-                  => (String -> a -> m String)
-                  -> Template -> a -> m String
-applyTemplateWith context tpl x = go tpl
-  where
-    go = liftM concat . mapM applyElem . unTemplate
-
-    applyElem (Chunk c)   = return c
-    applyElem Escaped     = return "$"
-    applyElem (Key k)     = context k x
-    applyElem (If k t mf) = (context k x >> go t) `catchError` handler
-      where
-        handler _ = case mf of
-            Nothing -> return ""
-            Just f  -> go f

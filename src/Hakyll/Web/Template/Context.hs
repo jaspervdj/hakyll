@@ -1,10 +1,11 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE ExistentialQuantification #-}
 module Hakyll.Web.Template.Context
-    ( Context (..)
-    , mapContext
+    ( ContextField (..)
+    , Context (..)
     , field
     , constField
-    , functionField
+    , listField
 
     , defaultContext
     , teaserContext
@@ -46,8 +47,15 @@ import           Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------
+-- | Mostly for internal usage
+data ContextField
+    = StringField String
+    | forall a. ListField (Context a) [Item a]
+
+
+--------------------------------------------------------------------------------
 newtype Context a = Context
-    { unContext :: String -> Item a -> Compiler String
+    { unContext :: String -> Item a -> Compiler ContextField
     }
 
 
@@ -58,13 +66,13 @@ instance Monoid (Context a) where
 
 
 --------------------------------------------------------------------------------
-mapContext :: (String -> String) -> Context a -> Context a
-mapContext f (Context g) = Context $ \k i -> f <$> g k i
+field' :: String -> (Item a -> Compiler ContextField) -> Context a
+field' key value = Context $ \k i -> if k == key then value i else empty
 
 
 --------------------------------------------------------------------------------
 field :: String -> (Item a -> Compiler String) -> Context a
-field key value = Context $ \k i -> if k == key then value i else empty
+field key value = field' key (fmap StringField . value)
 
 
 --------------------------------------------------------------------------------
@@ -73,12 +81,8 @@ constField key = field key . const . return
 
 
 --------------------------------------------------------------------------------
-functionField :: String -> ([String] -> Item a -> Compiler String) -> Context a
-functionField name value = Context $ \k i -> case words k of
-    []              -> empty
-    (n : args)
-        | n == name -> value args i
-        | otherwise -> empty
+listField :: String -> Context a -> Compiler [Item a] -> Context b
+listField key c xs = field' key $ \_ -> fmap (ListField c) xs
 
 
 --------------------------------------------------------------------------------
@@ -90,6 +94,7 @@ defaultContext =
     pathField     "path"     `mappend`
     titleField    "title"    `mappend`
     missingField
+
 
 --------------------------------------------------------------------------------
 -- | A context with "teaser" key which contain a teaser of the item.
@@ -116,7 +121,7 @@ bodyField key = field key $ return . itemBody
 metadataField :: Context String
 metadataField = Context $ \k i -> do
     value <- getMetadataField (itemIdentifier i) k
-    maybe empty return value
+    maybe empty (return . StringField) value
 
 
 --------------------------------------------------------------------------------
@@ -135,7 +140,7 @@ pathField key = field key $ return . toFilePath . itemIdentifier
 --------------------------------------------------------------------------------
 -- | This title field takes the basename of the underlying file by default
 titleField :: String -> Context a
-titleField key = mapContext takeBaseName $ pathField key
+titleField key = field key $ return . takeBaseName . toFilePath . itemIdentifier
 
 
 --------------------------------------------------------------------------------

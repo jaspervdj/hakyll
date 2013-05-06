@@ -22,4 +22,4 @@ metadataKey = do
 
 --------------------------------------------------------------------------------
 reservedKeys :: [String]
-reservedKeys = ["if", "else","endif"]
+reservedKeys = ["if", "else", "endif", "for", "sep", "endfor"]

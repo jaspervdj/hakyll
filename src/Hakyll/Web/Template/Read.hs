@@ -26,7 +26,8 @@ readTemplate input = case parse template "" input of
 
 --------------------------------------------------------------------------------
 template :: Parser Template
-template = Template <$> (many1 $ chunk <|> escaped <|> conditional <|> key)
+template = Template <$>
+    (many1 $ chunk <|> escaped <|> conditional <|> for <|> key)
 
 
 --------------------------------------------------------------------------------
@@ -49,6 +50,18 @@ conditional = try $ do
     elseBranch <- optionMaybe $ try (string "$else$") >> template
     void $ string "$endif$"
     return $ If i thenBranch elseBranch
+
+
+--------------------------------------------------------------------------------
+for :: Parser TemplateElement
+for = try $ do
+    void $ string "$for("
+    i <- metadataKey
+    void $ string ")$"
+    body <- template
+    sep  <- optionMaybe $ try (string "$sep$") >> template
+    void $ string "$endfor$"
+    return $ For i body sep
 
 
 --------------------------------------------------------------------------------

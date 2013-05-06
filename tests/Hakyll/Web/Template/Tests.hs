@@ -13,6 +13,7 @@ import           Test.HUnit                     (Assertion, (@=?), (@?=))
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Core.Compiler
 import           Hakyll.Core.Item
 import           Hakyll.Core.Provider
 import           Hakyll.Web.Pandoc
@@ -43,6 +44,8 @@ case01 = do
     item <- testCompilerDone store provider "example.md"    $
         pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 
+    writeFile "foo" (itemBody item)
+
     out @=? itemBody item
     cleanTestEnv
 
@@ -50,9 +53,13 @@ case01 = do
 --------------------------------------------------------------------------------
 testContext :: Context String
 testContext = mconcat
-    [ functionField "echo" (\args _ -> return $ unwords args)
-    , defaultContext
+    [ defaultContext
+    , listField "authors" (bodyField "name") $ do
+        n1 <- makeItem "Jan"
+        n2 <- makeItem "Piet"
+        return [n1, n2]
     ]
+  where
 
 
 --------------------------------------------------------------------------------
