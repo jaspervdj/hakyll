@@ -24,7 +24,7 @@ module Hakyll
     , module Hakyll.Web.Pandoc.Biblio
     , module Hakyll.Web.Pandoc.FileType
     , module Hakyll.Web.Tags
-    , module Hakyll.Web.Paginator
+    , module Hakyll.Web.Paginate
     , module Hakyll.Web.Template
     , module Hakyll.Web.Template.Context
     , module Hakyll.Web.Template.List
@@ -51,11 +51,11 @@ import           Hakyll.Web.CompressCss
 import           Hakyll.Web.Feed
 import           Hakyll.Web.Html
 import           Hakyll.Web.Html.RelativizeUrls
+import           Hakyll.Web.Paginate
 import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Pandoc.Biblio
 import           Hakyll.Web.Pandoc.FileType
 import           Hakyll.Web.Tags
-import           Hakyll.Web.Paginator
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.List
