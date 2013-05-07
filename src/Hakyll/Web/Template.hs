@@ -87,14 +87,18 @@ applyTemplate' tpl context x = go tpl
     context' = unContext (context `mappend` missingField)
     go = liftM concat . mapM applyElem . unTemplate
 
-    applyElem (Chunk c)   = return c
-    applyElem Escaped     = return "$"
-    applyElem (Key k)     = context' k x >>= getString k
+    applyElem (Chunk c) = return c
+
+    applyElem Escaped = return "$"
+
+    applyElem (Key k) = context' k x >>= getString k
+
     applyElem (If k t mf) = (context' k x >> go t) `catchError` handler
       where
         handler _ = case mf of
             Nothing -> return ""
             Just f  -> go f
+
     applyElem (For k b s) = context' k x >>= \cf -> case cf of
         StringField _  -> fail $
             "Hakyll.Web.Template.applyTemplateWith: expected ListField but " ++
@@ -103,6 +107,10 @@ applyTemplate' tpl context x = go tpl
             sep <- maybe (return "") go s
             bs  <- mapM (applyTemplate' b c) xs
             return $ intercalate sep bs
+
+    applyElem (Partial p) = do
+        tpl' <- loadBody (fromFilePath p)
+        applyTemplate' tpl' context x
 
     getString _ (StringField s) = return s
     getString k (ListField _ _) = fail $

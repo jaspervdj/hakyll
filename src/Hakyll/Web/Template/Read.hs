@@ -27,7 +27,7 @@ readTemplate input = case parse template "" input of
 --------------------------------------------------------------------------------
 template :: Parser Template
 template = Template <$>
-    (many1 $ chunk <|> escaped <|> conditional <|> for <|> key)
+    (many1 $ chunk <|> escaped <|> conditional <|> for <|> partial <|> key)
 
 
 --------------------------------------------------------------------------------
@@ -65,9 +65,29 @@ for = try $ do
 
 
 --------------------------------------------------------------------------------
+partial :: Parser TemplateElement
+partial = try $ do
+    void $ string "$partial("
+    i <- stringLiteral
+    void $ string ")$"
+    return $ Partial i
+
+
+--------------------------------------------------------------------------------
 key :: Parser TemplateElement
 key = try $ do
     void $ char '$'
     k <- metadataKey
     void $ char '$'
     return $ Key k
+
+
+--------------------------------------------------------------------------------
+stringLiteral :: Parser String
+stringLiteral = do
+    void $ char '\"'
+    str <- many $ do
+        x <- noneOf "\""
+        if x == '\\' then anyChar else return x
+    void $ char '\"'
+    return str

@@ -39,6 +39,7 @@ data TemplateElement
     | Escaped
     | If String Template (Maybe Template)   -- key, then branch, else branch
     | For String Template (Maybe Template)  -- key, body, separator
+    | Partial String                        -- filename
     deriving (Show, Eq, Typeable)
 
 
@@ -49,12 +50,14 @@ instance Binary TemplateElement where
     put (Escaped)      = putWord8 2
     put (If key t f)   = putWord8 3 >> put key >> put t >> put f
     put (For key b s)  = putWord8 4 >> put key >> put b >> put s
+    put (Partial p)    = putWord8 5 >> put p
 
     get = getWord8 >>= \tag -> case tag of
         0 -> Chunk <$> get
         1 -> Key   <$> get
         2 -> pure Escaped
-        3 -> If  <$> get <*> get <*> get
+        3 -> If <$> get <*> get <*> get
         4 -> For <$> get <*> get <*> get
+        5 -> Partial <$> get
         _ -> error $
             "Hakyll.Web.Template.Internal: Error reading cached template"

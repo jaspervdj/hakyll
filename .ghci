@@ -1,1 +1,2 @@
 :set -isrc -isrc-interval -itests -idist/build/autogen -DPREVIEW_SERVER
+:set -optP-include -optPdist/build/autogen/cabal_macros.h
