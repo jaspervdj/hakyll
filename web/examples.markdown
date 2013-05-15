@@ -45,6 +45,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/jeffbr13/benjeffrey.com)
 - <http://www.skybluetrades.net/>,
   [source](https://github.com/ian-ross/blog)
+- <http://chromaticleaves.com/>,
+  [source](https://github.com/ericrasmussen/chromaticleaves)
 
 ## Hakyll 3.X
 
