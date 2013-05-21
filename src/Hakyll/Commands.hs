@@ -14,7 +14,7 @@ module Hakyll.Commands
 
 --------------------------------------------------------------------------------
 import           System.Exit                (exitWith, ExitCode)
-
+import           Control.Applicative
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check               as Check
@@ -34,10 +34,8 @@ import           Hakyll.Preview.Server
 
 --------------------------------------------------------------------------------
 -- | Build the site
-build :: Configuration -> Verbosity -> Rules a -> IO (ExitCode)
-build conf verbosity rules = do
-    (ec, _) <- run conf verbosity rules
-    return ec
+build :: Configuration -> Verbosity -> Rules a -> IO ExitCode
+build conf verbosity rules = fst <$> run conf verbosity rules
 
 --------------------------------------------------------------------------------
 -- | Run the checker and exit
@@ -76,7 +74,7 @@ preview _ _ _ _ = previewServerDisabled
 
 --------------------------------------------------------------------------------
 -- | Rebuild the site
-rebuild :: Configuration -> Verbosity -> Rules a -> IO (ExitCode)
+rebuild :: Configuration -> Verbosity -> Rules a -> IO ExitCode
 rebuild conf verbosity rules =
     clean conf >> build conf verbosity rules
 
