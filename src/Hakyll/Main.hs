@@ -13,7 +13,7 @@ import           System.Console.CmdArgs
 import qualified System.Console.CmdArgs.Explicit as CA
 import           System.Environment              (getProgName)
 import           System.IO.Unsafe                (unsafePerformIO)
-
+import           System.Exit                     (exitWith)
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check                    as Check
@@ -41,13 +41,13 @@ hakyllWith conf rules = do
             if internal_links args' then Check.InternalLinks else Check.All
 
     case args' of
-        Build   _   -> Commands.build conf verbosity' rules
+        Build   _   -> Commands.build conf verbosity' rules >>= exitWith
         Check   _ _ -> Commands.check conf verbosity' check'
         Clean   _   -> Commands.clean conf
         Deploy  _   -> Commands.deploy conf
         Help    _   -> showHelp
         Preview _ p -> Commands.preview conf verbosity' rules p
-        Rebuild _   -> Commands.rebuild conf verbosity' rules
+        Rebuild _   -> Commands.rebuild conf verbosity' rules >>= exitWith
         Server  _ _ -> Commands.server conf (port args')
 
 

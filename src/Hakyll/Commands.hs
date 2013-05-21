@@ -13,7 +13,7 @@ module Hakyll.Commands
 
 
 --------------------------------------------------------------------------------
-import           System.Exit                (exitWith)
+import           System.Exit                (exitWith, ExitCode)
 
 
 --------------------------------------------------------------------------------
@@ -25,7 +25,6 @@ import           Hakyll.Core.Rules.Internal
 import           Hakyll.Core.Runtime
 import           Hakyll.Core.Util.File
 
-
 --------------------------------------------------------------------------------
 #ifdef PREVIEW_SERVER
 import           Hakyll.Preview.Poll
@@ -35,11 +34,10 @@ import           Hakyll.Preview.Server
 
 --------------------------------------------------------------------------------
 -- | Build the site
-build :: Configuration -> Verbosity -> Rules a -> IO ()
+build :: Configuration -> Verbosity -> Rules a -> IO (ExitCode)
 build conf verbosity rules = do
-    _ <- run conf verbosity rules
-    return ()
-
+    (ec, _) <- run conf verbosity rules
+    return ec
 
 --------------------------------------------------------------------------------
 -- | Run the checker and exit
@@ -78,11 +76,9 @@ preview _ _ _ _ = previewServerDisabled
 
 --------------------------------------------------------------------------------
 -- | Rebuild the site
-rebuild :: Configuration -> Verbosity -> Rules a -> IO ()
-rebuild conf verbosity rules = do
-    clean conf
-    build conf verbosity rules
-
+rebuild :: Configuration -> Verbosity -> Rules a -> IO (ExitCode)
+rebuild conf verbosity rules =
+    clean conf >> build conf verbosity rules
 
 --------------------------------------------------------------------------------
 -- | Start a server
