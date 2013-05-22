@@ -94,7 +94,7 @@ server _ _ = previewServerDisabled
 
 --------------------------------------------------------------------------------
 -- | Upload the site
-deploy :: Configuration -> IO ()
+deploy :: Configuration -> IO ExitCode
 deploy conf = deploySite conf conf
 
 
