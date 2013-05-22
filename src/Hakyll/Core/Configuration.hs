@@ -12,6 +12,7 @@ import           Control.Monad    (void)
 import           Data.Default     (Default (..))
 import           Data.List        (isPrefixOf, isSuffixOf)
 import           System.Directory (canonicalizePath)
+import           System.Exit      (ExitCode)
 import           System.FilePath  (isAbsolute, normalise, takeFileName)
 import           System.IO.Error  (catchIOError)
 import           System.Process   (system)
@@ -65,7 +66,7 @@ data Configuration = Configuration
       -- The 'Configuration' object is passed as a parameter to this
       -- function.
       --
-      deploySite           :: Configuration -> IO ()
+      deploySite           :: Configuration -> IO ExitCode
     , -- | Use an in-memory cache for items. This is faster but uses more
       -- memory.
       inMemoryCache        :: Bool
@@ -84,8 +85,8 @@ defaultConfiguration = Configuration
     , tmpDirectory         = "_cache/tmp"
     , providerDirectory    = "."
     , ignoreFile           = ignoreFile'
-    , deployCommand        = "echo 'No deploy command specified'"
-    , deploySite           = void . system . deployCommand
+    , deployCommand        = "echo 'No deploy command specified' && exit 1"
+    , deploySite           = system . deployCommand
     , inMemoryCache        = True
     }
   where
