@@ -44,7 +44,7 @@ hakyllWith conf rules = do
         Build   _   -> Commands.build conf verbosity' rules >>= exitWith
         Check   _ _ -> Commands.check conf verbosity' check'
         Clean   _   -> Commands.clean conf
-        Deploy  _   -> Commands.deploy conf
+        Deploy  _   -> Commands.deploy conf >>= exitWith
         Help    _   -> showHelp
         Preview _ p -> Commands.preview conf verbosity' rules p
         Rebuild _   -> Commands.rebuild conf verbosity' rules >>= exitWith
