@@ -64,7 +64,7 @@ watchUpdates conf update = do
 #else
       update' event provider = do
           let path = provider </> eventPath event
-          -- on windows
+          -- on windows, a 'Modified' event is also sent on file deletion
           fileExists <- doesFileExist path
 
           when fileExists . void $ waitOpen path ReadMode (\_ -> update) 10
