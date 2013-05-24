@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 --------------------------------------------------------------------------------
 module Hakyll.Preview.Poll
     ( watchUpdates
@@ -6,13 +8,22 @@ module Hakyll.Preview.Poll
 
 --------------------------------------------------------------------------------
 import           Control.Concurrent.MVar        (newMVar, putMVar, takeMVar)
-import           Control.Monad                  (when)
+import           Control.Monad                  (when, void)
 import           Filesystem.Path.CurrentOS      (decodeString, encodeString)
 import           System.Directory               (canonicalizePath)
-import           System.FilePath                (pathSeparators)
+import           System.FilePath                (pathSeparators, (</>))
 import           System.FSNotify                (Event (..), WatchConfig (..),
                                                  startManagerConf, watchTree)
 
+#ifdef mingw32_HOST_OS
+import           System.IO                      (IOMode(ReadMode), Handle, openFile,
+                                                 hClose)
+import           System.IO.Error                (isPermissionError)
+import           Control.Concurrent             (threadDelay)
+import           Control.Exception              (IOException, throw, try)
+import           System.Exit                    (exitFailure)
+import           System.Directory               (doesFileExist)
+#endif
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Configuration
@@ -45,9 +56,38 @@ watchUpdates conf update = do
     watchTree manager providerDir (not . isRemove) $ \event -> do
         ()       <- takeMVar lock
         allowed' <- allowed event
-        when allowed' $ update >> return ()
+        when allowed' $ update' event (encodeString providerDir)
         putMVar lock ()
+    where
+#ifndef mingw32_HOST_OS
+      update' _     _        = void update
+#else
+      update' event provider = do
+          let path = provider </> eventPath event
+          -- on windows, a 'Modified' event is also sent on file deletion
+          fileExists <- doesFileExist path
 
+          when fileExists . void $ waitOpen path ReadMode (\_ -> update) 10
+
+      -- continuously attempts to open the file in between sleep intervals
+      -- handler is run only once it is able to open the file
+      waitOpen :: FilePath -> IOMode -> (Handle -> IO r) -> Integer -> IO r
+      waitOpen _    _    _       0 = do
+          putStrLn "[ERROR] Failed to retrieve modified file for regeneration"
+          exitFailure
+      waitOpen path mode handler retries = do
+          res <- try $ openFile path mode :: IO (Either IOException Handle)
+          case res of
+              Left ex -> if isPermissionError ex
+                         then do
+                             threadDelay 100000
+                             waitOpen path mode handler (retries - 1)
+                         else throw ex
+              Right h -> do
+                  handled <- handler h
+                  hClose h
+                  return handled
+#endif
 
 --------------------------------------------------------------------------------
 eventPath :: Event -> FilePath
