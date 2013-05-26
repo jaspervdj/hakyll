@@ -47,6 +47,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/ian-ross/blog)
 - <http://chromaticleaves.com/>,
   [source](https://github.com/ericrasmussen/chromaticleaves)
+- <http://www.clever-cloud.com/>,
+  [source](https://github.com/CleverCloud/clever-cloud.com)
 
 ## Hakyll 3.X
 
