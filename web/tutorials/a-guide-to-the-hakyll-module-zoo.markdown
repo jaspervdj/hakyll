@@ -81,10 +81,6 @@ tools.
 
     Use any unix utility as a compiler.
 
-* [Hakyll.Core.Util.File](/reference/Hakyll-Core-Util-File.html)
-
-    Utility functions for working with the file system.
-
 * [Hakyll.Core.Util.String](/reference/Hakyll-Core-Util-String.html)
 
     A few utility functions for working with `String`s (trim spaces, find and
