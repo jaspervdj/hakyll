@@ -62,7 +62,7 @@ These modules contain some "pre-packaged" solutions for common situations. They
 can be used as-is, or their source can be used as inspiration for your own
 tools.
 
-* [Hakyll.Web.Page.List](/reference/Hakyll-Web-Page-List.html)
+* [Hakyll.Web.Template.List](/reference/Hakyll-Web-Template-List.html)
 
     Combine several pages into a list, such as a list of posts, images in a
     gallery, etc.
