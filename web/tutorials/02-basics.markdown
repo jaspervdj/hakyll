@@ -16,8 +16,12 @@ directories:
 `./site clean` removes these directories, and `./site rebuild` performs a
 `clean` and then a `build`.
 
-In general, it's only necessary to use `rebuild` when you made changes to your
-`site.hs`, and not when you just made changes to the contents of your website.
+In general, you want to use `./site build` when you just made changes to the
+contents of your website. If you made important changes to `site.hs`, you need
+to recompile `site.hs` followed by a rebuild:
+
+    ghc --make site.hs
+    ./site rebuild
 
 At this point, feel free to change some files, `./site build` and see what
 happens!
