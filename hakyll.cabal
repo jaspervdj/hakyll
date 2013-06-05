@@ -48,7 +48,7 @@ Data-files:
   example/posts/2012-08-12-spqr.markdown
   example/site.hs
   example/images/haskell-logo.png
-  example/templates/post-item.html
+  example/templates/post-list.html
   example/templates/default.html
   example/templates/archive.html
   example/templates/post.html
