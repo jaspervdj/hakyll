@@ -8,7 +8,6 @@ module Hakyll.Core.Configuration
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad    (void)
 import           Data.Default     (Default (..))
 import           Data.List        (isPrefixOf, isSuffixOf)
 import           System.Directory (canonicalizePath)

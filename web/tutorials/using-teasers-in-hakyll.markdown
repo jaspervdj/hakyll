@@ -69,13 +69,13 @@ match "posts/*" $ do
 You can read more about snapshots in
 [Snapshots tutorial](/tutorials/05-snapshots-feeds.html).
 
-Then we use this snapshot while generating teasers using
-`teaserContext` function:
+Then we use this snapshot while generating teasers using the
+`teaserField` function:
 
 ``` haskell
     loadAndApplyTemplate
          "template/postitem.html"
-         (teaserContext "content" <> defaultContext)
+         (teaserField "teaser" "content" <> defaultContext)
          item
 ```
 

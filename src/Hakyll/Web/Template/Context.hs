@@ -8,7 +8,6 @@ module Hakyll.Web.Template.Context
     , listField
 
     , defaultContext
-    , teaserContext
     , bodyField
     , metadataField
     , urlField
@@ -19,6 +18,7 @@ module Hakyll.Web.Template.Context
     , getItemUTC
     , modificationTimeField
     , modificationTimeFieldWith
+    , teaserField
     , missingField
     ) where
 
@@ -94,16 +94,6 @@ defaultContext =
     pathField     "path"     `mappend`
     titleField    "title"    `mappend`
     missingField
-
-
---------------------------------------------------------------------------------
--- | A context with "teaser" key which contain a teaser of the item.
--- The item is loaded from the given snapshot (which should be saved
--- in the user code before any templates are applied).
-teaserContext :: Snapshot -> Context String
-teaserContext snapshot = field "teaser" $ \item ->
-    (needlePrefix teaserSeparator . itemBody) <$>
-    loadSnapshot (itemIdentifier item) snapshot
 
 
 --------------------------------------------------------------------------------
@@ -243,6 +233,18 @@ modificationTimeFieldWith locale key fmt = field key $ \i -> do
     provider <- compilerProvider <$> compilerAsk
     let mtime = resourceModificationTime provider $ itemIdentifier i
     return $ formatTime locale fmt mtime
+
+
+--------------------------------------------------------------------------------
+-- | A context with "teaser" key which contain a teaser of the item.
+-- The item is loaded from the given snapshot (which should be saved
+-- in the user code before any templates are applied).
+teaserField :: String           -- ^ Key to use
+            -> Snapshot         -- ^ Snapshot to load
+            -> Context String   -- ^ Resulting context
+teaserField key snapshot = field key $ \item ->
+    (needlePrefix teaserSeparator . itemBody) <$>
+    loadSnapshot (itemIdentifier item) snapshot
 
 
 --------------------------------------------------------------------------------
