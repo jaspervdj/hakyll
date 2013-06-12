@@ -145,24 +145,107 @@ compile $
     pandocCompiler >>= loadAndApplyTemplate "templates/post.html" postCtx
 ```
 
-## Producing a list of items
+Control flow in templates
+-------------------------
+
+Sometimes string interpolation does not suffice, and you want a little more
+control over how your templates are layed out. Hakyll provides a few control
+structures for this. The syntax for these structures was based on the syntax
+used in pandoc templates, since Hakyll already has tight integration with
+pandoc.
+
+### Conditionals
+
+In `templates/post.html` of the example site we generated using `hakyll-init`,
+we see an example of a conditional:
+
+```html
+<div class="info">
+    Posted on $date$
+    $if(author)$
+        by $author$
+    $endif$
+</div>
+```
+
+This example should be pretty straightforward. One important thing to notice is
+that `$if(foo)$` **does not** check the truth value of `$foo$`: it merely checks
+if such a key is present.
+
+Note that an if-else form is supported as well:
+
+```html
+<div class="info">
+    Posted on $date$
+    $if(author)$
+        by $author$
+    $else$
+        by some unknown author
+    $endif$
+</div>
+```
+
+### Partials
+
+Partials allow you to [DRY] up your templates by putting repetitive actions into
+separate template files. You can then include them using
+`$partial("filename.html")$.
+
+[DRY]: http://en.wikipedia.org/wiki/Don%27t_repeat_yourself
+
+An example can be found in `templates/archive.html`:
+
+```html
+Here you can find all my previous posts:
+$partial("templates/post-list.html")$
+```
+
+This partial is just another template and uses the same syntax. Note that in
+order to use something like this, we also need to load the partial template in
+our `site.hs`:
+
+```haskell
+match "templates/post-list.html" $ compile templateCompiler
+```
+
+Fortunately, we usually don't need to add this since we already have:
+
+```haskell
+match "templates/*" $ compile templateCompiler
+```
+
+### Producing a list of items: for
 
 At this point, everything in the example site we generated should be clear to
 you, except for how we produce the list of posts in `archive.html` and
-`index.html`.
+`index.html`. Let's look at the `templates/post-list.html` template:
 
-However, this really isn't hard and just uses the things we saw before: loading
-other items and applying templates.
+```html
+<ul>
+    $for(posts)$
+        <li>
+            <a href="$url$">$title$</a> - $date$
+        </li>
+    $endfor$
+</ul>
+```
 
-We can reproduce a list of items in the archive using the following code:
+This uses the `$for(foo)$` construct. This construct allows you loop over a
+list, in this case, `$posts$`. Inside the body of this for loop, all fields
+refer to the current post, e.g.: `$url$`, `$title$` and `$date$`.
+
+Of course, $posts$ does not magically appear. We have to specify this in
+`site.hs`. Let's look at how `archive.html` is generated:
 
 ```haskell
-compile $ do
-    posts   <- recentFirst =<< loadAll "posts/*"
-    itemTpl <- loadBody "templates/post-item.html"
-    list    <- applyTemplateList itemTpl postCtx posts
-    makeItem list
+posts <- recentFirst =<< loadAll "posts/*"
+let archiveCtx =
+        listField "posts" postCtx (return posts) `mappend`
+        constField "title" "Archives"            `mappend`
+        defaultContext
 ```
+
+We discussed `loadAll` earlier in this tutorial.
 
 `recentFirst` sorts items by date. This relies on the convention that posts are
 always named `YYYY-MM-DD-title.extension` in Hakyll -- or that the date must be
@@ -172,7 +255,24 @@ present in the metadata.
 recentFirst :: [Item a] -> Compiler [Item a]
 ```
 
-After loading and sorting the items, we load a template for the posts.
-`applyTemplateList` applies this template to every post and concatenates the
-result, which is a simple `String`. After that, we need `makeItem` to wrap the
-returned `String` to `Item String`.
+After loading and sorting the items, we use `listField` to create the `$posts$`
+key.
+
+```haskell
+listField :: String -> Context a -> Compiler [Item a] -> Context b
+```
+
+The first parameter is simply the name of the key (`"posts"`). Secondly we have
+a `Context` with which all items should be rendered -- for our example site, we
+already wrote such a `Context` for posts: `postCtx`. Lastly, we have a
+`Compiler` which loads the items. We already loaded the items so we can just use
+`return posts`.
+
+The following snippet would produce the same result:
+
+```haskell
+let archiveCtx =
+        listField "posts" postCtx (recentFirst =<< loadAll "posts/*") `mappend`
+        constField "title" "Archives"                                 `mappend`
+        defaultContext
+```

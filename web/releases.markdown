@@ -4,6 +4,31 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.3.0.0
+
+- Add conditionals, partials and for loops to the template system (includes a
+  contribution by Ivan N. Veselov)
+
+- Improvements to the preview functionality on windows (contribution by Jorge
+  Israel Peña)
+
+- Add pagination support (contribution by Anton Dubovik)
+
+- Slight speedup for the Hakyll cache (contribution by justnoxx)
+
+- Add teaser functionality (contribution by Ivan N. Veselov)
+
+- Make `./site check` work with scheme-relative URLs (contribution by Simonas
+  Kazlauskas)
+
+- The `./site deploy` command can now be customized with Haskell code
+  (contribution by Samuel Tardieu)
+
+- Use `hsnotify` for proper polling instead of sleep loop on all platforms
+  (contribution by Simonas Kazlauskas)
+
+- More useful debug info available
+
 ## Hakyll 4.2.2.0
 
 - Fix issue with `Alternative` instance of `Compiler`
