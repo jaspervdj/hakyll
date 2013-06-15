@@ -98,9 +98,17 @@ renderTags' = TS.renderTagsOptions TS.renderOptions
 -- Result:
 --
 -- > "/foo/bar.html"
+--
+-- This also sanitizes the URL, e.g. converting spaces into '%20'
 toUrl :: FilePath -> String
-toUrl ('/' : xs) = '/' : xs
-toUrl url        = '/' : url
+toUrl url = case url of
+    ('/' : xs) -> '/' : sanitize xs
+    xs         -> '/' : sanitize xs
+  where
+    -- This probably needs to be a separate function
+    sanitize = concatMap $ \c -> case c of
+        ' ' -> "%20"
+        _   -> [c]
 
 
 --------------------------------------------------------------------------------

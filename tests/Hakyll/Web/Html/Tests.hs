@@ -43,9 +43,10 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
         ]
 
     , fromAssertions "toUrl"
-        [ "/foo/bar.html"    @=? toUrl "foo/bar.html"
-        , "/"                @=? toUrl "/"
-        , "/funny-pics.html" @=? toUrl "/funny-pics.html"
+        [ "/foo/bar.html"       @=? toUrl "foo/bar.html"
+        , "/"                   @=? toUrl "/"
+        , "/funny-pics.html"    @=? toUrl "/funny-pics.html"
+        , "/funny%20pics.html"  @=? toUrl "funny pics.html"
         ]
 
     , fromAssertions "toSiteRoot"
