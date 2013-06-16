@@ -162,7 +162,8 @@ Library
     regex-tdfa   >= 1.1    && < 1.2,
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
-    time         >= 1.1    && < 1.5
+    time         >= 1.1    && < 1.5,
+    network      >= 2.0    && < 2.5
 
   If flag(previewServer)
     Build-depends:
@@ -238,7 +239,8 @@ Test-suite hakyll-tests
     regex-tdfa   >= 1.1    && < 1.2,
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
-    time         >= 1.1    && < 1.5
+    time         >= 1.1    && < 1.5,
+    network      >= 2.0    && < 2.5
 
   If flag(previewServer)
     Build-depends:

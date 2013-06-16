@@ -30,6 +30,7 @@ import           System.FilePath                 (joinPath, splitPath,
 import           Text.Blaze.Html                 (toHtml)
 import           Text.Blaze.Html.Renderer.String (renderHtml)
 import qualified Text.HTML.TagSoup               as TS
+import           Network.URI                     (isUnreserved, escapeURIString)
 
 
 --------------------------------------------------------------------------------
@@ -105,10 +106,11 @@ toUrl url = case url of
     ('/' : xs) -> '/' : sanitize xs
     xs         -> '/' : sanitize xs
   where
-    -- This probably needs to be a separate function
-    sanitize = concatMap $ \c -> case c of
-        ' ' -> "%20"
-        _   -> [c]
+    -- Everything but unreserved characters should be escaped as we are
+    -- sanitising the path therefore reserved characters which have a
+    -- meaning in URI does not appear. Special casing for `/`, because it has
+    -- a special meaning in FilePath as well as in URI.
+    sanitize = escapeURIString (\c -> c == '/' || isUnreserved c)
 
 
 --------------------------------------------------------------------------------
