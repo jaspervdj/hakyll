@@ -143,6 +143,7 @@ Library
     blaze-markup >= 0.5.1  && < 0.6,
     bytestring   >= 0.9    && < 0.11,
     citeproc-hs  >= 0.3.2  && < 0.4,
+    cmdargs      >= 0.10   && < 0.11,
     containers   >= 0.3    && < 0.6,
     cryptohash   >= 0.7    && < 0.10,
     data-default >= 0.4    && < 0.6,
@@ -151,9 +152,9 @@ Library
     filepath     >= 1.0    && < 1.4,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
+    network      >= 2.4    && < 2.5,
     old-locale   >= 1.0    && < 1.1,
     old-time     >= 1.0    && < 1.2,
-    cmdargs      >= 0.10   && < 0.11,
     pandoc       >= 1.10   && < 1.12,
     parsec       >= 3.0    && < 3.2,
     process      >= 1.0    && < 1.2,
@@ -162,8 +163,7 @@ Library
     regex-tdfa   >= 1.1    && < 1.2,
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
-    time         >= 1.1    && < 1.5,
-    network      >= 2.0    && < 2.5
+    time         >= 1.1    && < 1.5
 
   If flag(previewServer)
     Build-depends:
@@ -220,6 +220,7 @@ Test-suite hakyll-tests
     blaze-markup >= 0.5.1  && < 0.6,
     bytestring   >= 0.9    && < 0.11,
     citeproc-hs  >= 0.3.2  && < 0.4,
+    cmdargs      >= 0.10   && < 0.11,
     containers   >= 0.3    && < 0.6,
     cryptohash   >= 0.7    && < 0.10,
     data-default >= 0.4    && < 0.6,
@@ -228,9 +229,9 @@ Test-suite hakyll-tests
     filepath     >= 1.0    && < 1.4,
     lrucache     >= 1.1.1  && < 1.2,
     mtl          >= 1      && < 2.2,
+    network      >= 2.4    && < 2.5,
     old-locale   >= 1.0    && < 1.1,
     old-time     >= 1.0    && < 1.2,
-    cmdargs      >= 0.10   && < 0.11,
     pandoc       >= 1.10   && < 1.12,
     parsec       >= 3.0    && < 3.2,
     process      >= 1.0    && < 1.2,
@@ -239,8 +240,7 @@ Test-suite hakyll-tests
     regex-tdfa   >= 1.1    && < 1.2,
     tagsoup      >= 0.12.6 && < 0.13,
     text         >= 0.11   && < 1.12,
-    time         >= 1.1    && < 1.5,
-    network      >= 2.0    && < 2.5
+    time         >= 1.1    && < 1.5
 
   If flag(previewServer)
     Build-depends:
