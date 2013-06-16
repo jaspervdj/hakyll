@@ -43,10 +43,15 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
         ]
 
     , fromAssertions "toUrl"
-        [ "/foo/bar.html"       @=? toUrl "foo/bar.html"
-        , "/"                   @=? toUrl "/"
-        , "/funny-pics.html"    @=? toUrl "/funny-pics.html"
-        , "/funny%20pics.html"  @=? toUrl "funny pics.html"
+        [ "/foo/bar.html"                     @=? toUrl "foo/bar.html"
+        , "/"                                 @=? toUrl "/"
+        , "/funny-pics.html"                  @=? toUrl "/funny-pics.html"
+        , "/funny%20pics.html"                @=? toUrl "funny pics.html"
+        -- Test various reserved characters (RFC 3986, section 2.2)
+        , "/%21%2A%27%28%29%3B%3A%40%26.html" @=? toUrl "/!*'();:@&.html"
+        , "/%3D%2B%24%2C/%3F%23%5B%5D.html"   @=? toUrl "=+$,/?#[].html"
+        -- Test various characters that are nor reserved, nor unreserved.
+        , "/%E3%81%82%F0%9D%90%87%E2%88%80"   @=? toUrl "\12354\119815\8704"
         ]
 
     , fromAssertions "toSiteRoot"
