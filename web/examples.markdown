@@ -51,6 +51,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/CleverCloud/clever-cloud.com)
 - <http://blaenkdenum.com/>,
   [source](https://github.com/blaenk/blaenk.github.io)
+- <https://xinitrc.de/>,
+  [source](https://github.com/xinitrc/xinitrc.de)
 
 ## Hakyll 3.X
 
