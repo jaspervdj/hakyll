@@ -30,13 +30,13 @@ tests = testGroup "Hakyll.Core.Util.String.Tests" $ concat
         ]
 
     , fromAssertions "needlePrefix"
-        [ "ab" @=? needlePrefix "cd" "abcde"
-        , "xx" @=? needlePrefix "ab" "xxab"
-        , "xx" @=? needlePrefix "a" "xx"
-        , "x" @=? needlePrefix "ab" "xabxab"
-        , "" @=? needlePrefix "ab" "abc"
-        , "" @=? needlePrefix "ab" "abab"
-        , "" @=? needlePrefix "" ""
+        [ Just "ab" @=? needlePrefix "cd" "abcde"
+        , Just "xx" @=? needlePrefix "ab" "xxab"
+        , Nothing   @=? needlePrefix "a" "xx"
+        , Just "x"  @=? needlePrefix "ab" "xabxab"
+        , Just ""   @=? needlePrefix "ab" "abc"
+        , Just ""   @=? needlePrefix "ab" "abab"
+        , Nothing   @=? needlePrefix "" ""
         ]
     ]
 

@@ -242,9 +242,13 @@ modificationTimeFieldWith locale key fmt = field key $ \i -> do
 teaserField :: String           -- ^ Key to use
             -> Snapshot         -- ^ Snapshot to load
             -> Context String   -- ^ Resulting context
-teaserField key snapshot = field key $ \item ->
-    (needlePrefix teaserSeparator . itemBody) <$>
-    loadSnapshot (itemIdentifier item) snapshot
+teaserField key snapshot = field key $ \item -> do
+    body <- itemBody <$> loadSnapshot (itemIdentifier item) snapshot
+    case needlePrefix teaserSeparator body of
+        Nothing -> fail $
+            "Hakyll.Web.Template.Context: no teaser defined for " ++
+            show (itemIdentifier item)
+        Just t -> return t
 
 
 --------------------------------------------------------------------------------
