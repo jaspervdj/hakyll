@@ -129,7 +129,9 @@ unixFilterIO writer reader programName args input = do
 
     -- Read from stderr
     _ <- forkIO $ do
+        hSetEncoding errh localeEncoding
         err <- hGetContents errh
+        _   <- deepseq err (return err)
         hClose errh
         writeIORef errRef err
         putMVar lock ()
