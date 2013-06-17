@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.3.1.0
+
+- Make teasers undefined if no `<!--more-->` comment is found
+
+- Sanitize tag URLs (contribution by Simonas Kazlauskas)
+
 ## Hakyll 4.3.0.0
 
 - Add conditionals, partials and for loops to the template system (includes a
