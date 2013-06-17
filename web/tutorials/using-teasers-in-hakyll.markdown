@@ -83,6 +83,19 @@ Here, we've just added a new context which knows how to handle
 `$teaser$` key to the default context (note that we passed the same
 snapshot name `"content"` which we used while saving).
 
+## Optional teasers
+
+In case you don't add a `<!--more-->` comment, `$teaser$` will not be defined.
+This means you can use something like:
+
+```html
+$if(teaser)$
+    $teaser$
+$else$
+    $body$
+$endif$
+```
+
 ## Known issues
 
 Since we use an HTML comment `<!--more-->` to separate the teaser,
