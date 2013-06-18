@@ -53,6 +53,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/blaenk/blaenk.github.io)
 - <https://xinitrc.de/>,
   [source](https://github.com/xinitrc/xinitrc.de)
+- <http://darkfox.us.to/>,
+  [source](http://hub.darcs.net/DarkFox/DarkFox-blog)
 
 ## Hakyll 3.X
 
