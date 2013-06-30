@@ -292,7 +292,7 @@ capture' (CaptureMany : ms) str =
 --
 -- Example:
 --
--- > fromCapture (parseGlob "tags/*") "foo"
+-- > fromCapture (fromGlob "tags/*") "foo"
 --
 -- Result:
 --
