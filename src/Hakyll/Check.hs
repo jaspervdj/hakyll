@@ -18,6 +18,7 @@ import           Data.List                 (isPrefixOf)
 import           Data.Monoid               (Monoid (..))
 import           Data.Set                  (Set)
 import qualified Data.Set                  as S
+import           Network.URI               (unEscapeString)
 import           System.Directory          (doesDirectoryExist, doesFileExist)
 import           System.Exit               (ExitCode (..))
 import           System.FilePath           (takeDirectory, takeExtension, (</>))
@@ -182,7 +183,7 @@ checkInternalUrl base url = case url' of
         exists <- checkFileExists filePath
         if exists then ok url else faulty url
   where
-    url' = stripFragments url
+    url' = stripFragments $ unEscapeString url
 
 
 --------------------------------------------------------------------------------
