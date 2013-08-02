@@ -57,6 +57,8 @@ this list. This list has no particular ordering.
   [source](http://hub.darcs.net/DarkFox/DarkFox-blog)
 - <http://nickcharlton.net/>,
   [source](https://github.com/nickcharlton/nickcharlton.net)
+- <http://scr.stunts.hu/>,
+  [literate source](http://scr.stunts.hu/hakyll.html)
 
 ## Hakyll 3.X
 
