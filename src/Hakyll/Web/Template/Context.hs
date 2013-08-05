@@ -6,6 +6,7 @@ module Hakyll.Web.Template.Context
     , field
     , constField
     , listField
+    , mapContext
 
     , defaultContext
     , bodyField
@@ -86,6 +87,15 @@ listField key c xs = field' key $ \_ -> fmap (ListField c) xs
 
 
 --------------------------------------------------------------------------------
+mapContext :: (String -> String) -> Context a -> Context a
+mapContext f (Context c) = Context $ \k i -> do
+    fld <- c k i
+    return $ case fld of
+        StringField str  -> StringField (f str)
+        ListField ctx is -> ListField ctx is
+
+
+--------------------------------------------------------------------------------
 defaultContext :: Context String
 defaultContext =
     bodyField     "body"     `mappend`
@@ -130,7 +140,7 @@ pathField key = field key $ return . toFilePath . itemIdentifier
 --------------------------------------------------------------------------------
 -- | This title field takes the basename of the underlying file by default
 titleField :: String -> Context a
-titleField key = field key $ return . takeBaseName . toFilePath . itemIdentifier
+titleField = mapContext takeBaseName . pathField
 
 
 --------------------------------------------------------------------------------
