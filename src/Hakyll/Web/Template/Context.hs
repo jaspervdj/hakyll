@@ -6,6 +6,7 @@ module Hakyll.Web.Template.Context
     , field
     , constField
     , listField
+    , functionField
     , mapContext
 
     , defaultContext
@@ -84,6 +85,15 @@ constField key = field key . const . return
 --------------------------------------------------------------------------------
 listField :: String -> Context a -> Compiler [Item a] -> Context b
 listField key c xs = field' key $ \_ -> fmap (ListField c) xs
+
+
+--------------------------------------------------------------------------------
+functionField :: String -> ([String] -> Item a -> Compiler String) -> Context a
+functionField name value = Context $ \k i -> case words k of
+    []              -> empty
+    (n : args)
+        | n == name -> StringField <$> value args i
+        | otherwise -> empty
 
 
 --------------------------------------------------------------------------------

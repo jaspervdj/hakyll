@@ -21,7 +21,7 @@ import           Hakyll.Web.Template.Internal
 readTemplate :: String -> Template
 readTemplate input = case parse template "" input of
     Left err -> error $ "Cannot parse template: " ++ show err
-    Right t -> t
+    Right t  -> t
 
 
 --------------------------------------------------------------------------------

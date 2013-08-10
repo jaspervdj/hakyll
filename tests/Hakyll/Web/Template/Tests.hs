@@ -58,6 +58,7 @@ testContext = mconcat
         n1 <- makeItem "Jan"
         n2 <- makeItem "Piet"
         return [n1, n2]
+    , functionField "rev" $ \args _ -> return $ unwords $ map reverse args
     ]
   where
 
