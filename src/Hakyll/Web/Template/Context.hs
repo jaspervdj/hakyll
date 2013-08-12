@@ -100,9 +100,11 @@ functionField name value = Context $ \k i -> case words k of
 mapContext :: (String -> String) -> Context a -> Context a
 mapContext f (Context c) = Context $ \k i -> do
     fld <- c k i
-    return $ case fld of
-        StringField str  -> StringField (f str)
-        ListField ctx is -> ListField ctx is
+    case fld of
+        StringField str -> return $ StringField (f str)
+        ListField _ _   -> fail $
+            "Hakyll.Web.Template.Context.mapContext: " ++
+            "can't map over a ListField!"
 
 
 --------------------------------------------------------------------------------
