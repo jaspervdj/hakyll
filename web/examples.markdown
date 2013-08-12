@@ -59,6 +59,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/nickcharlton/nickcharlton.net)
 - <http://scr.stunts.hu/>,
   [literate source](http://scr.stunts.hu/hakyll.html)
+- <http://www.eanalytica.com/>,
+  [literate source](http://www.eanalytica.com/site/)
 
 ## Hakyll 3.X
 
