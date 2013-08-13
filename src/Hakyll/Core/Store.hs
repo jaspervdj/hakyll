@@ -50,6 +50,11 @@ data Store = Store
 
 
 --------------------------------------------------------------------------------
+instance Show Store where
+    show _ = "<Store>"
+
+
+--------------------------------------------------------------------------------
 -- | Result of a store query
 data Result a
     = Found a                    -- ^ Found, result
