@@ -130,7 +130,7 @@ bodyField key = field key $ return . itemBody
 
 --------------------------------------------------------------------------------
 -- | Map any field to its metadata value, if present
-metadataField :: Context String
+metadataField :: Context a
 metadataField = Context $ \k i -> do
     value <- getMetadataField (itemIdentifier i) k
     maybe empty (return . StringField) value
