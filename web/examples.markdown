@@ -77,7 +77,7 @@ this list. This list has no particular ordering.
 - <http://rs.io>,
   [source](https://github.com/robertseaton/rs.io/)
 - <http://www.gwern.net/>,
-  source: `darcs get http://www.gwern.net`
+  source [on Patch-tag](https://patch-tag.com/r/gwern/Gwern/home)
 - <http://blog.coldflake.com/>,
   [source](https://github.com/marcmo/blog.coldflake)
 - <http://deepak.jois.name>,
