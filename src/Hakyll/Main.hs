@@ -49,6 +49,7 @@ hakyllWith conf rules = do
         Preview _ p -> Commands.preview conf verbosity' rules p
         Rebuild _   -> Commands.rebuild conf verbosity' rules >>= exitWith
         Server  _ _ -> Commands.server conf (port args')
+        Watch   _   -> Commands.watch conf verbosity' rules
 
 
 --------------------------------------------------------------------------------
@@ -67,6 +68,7 @@ data HakyllArgs
     | Preview {verbose :: Bool, port :: Int}
     | Rebuild {verbose :: Bool}
     | Server  {verbose :: Bool, port :: Int}
+    | Watch   {verbose :: Bool}
     deriving (Data, Typeable, Show)
 
 
@@ -84,6 +86,7 @@ hakyllArgs = modes
     , (Rebuild $ verboseFlag def) &= help "Clean and build again"
     , (Server (verboseFlag def) (portFlag 8000)) &=
         help "Start a preview server"
+    , (Watch (verboseFlag def) &= help "Autocompile on changes")
     ] &= help "Hakyll static site compiler" &= program progName
 
 
