@@ -98,7 +98,7 @@ data Provider = Provider
       providerOldFiles  :: Map Identifier ResourceInfo
     , -- | Underlying persistent store for caching
       providerStore     :: Store
-    }
+    } deriving (Show)
 
 
 --------------------------------------------------------------------------------

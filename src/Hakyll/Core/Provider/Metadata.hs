@@ -44,8 +44,9 @@ loadMetadata p identifier = do
 
     return (M.union md emd, body)
   where
-    fp  = resourceFilePath p identifier
-    mi  = M.lookup identifier (providerFiles p) >>= resourceInfoMetadata
+    normal = setVersion Nothing identifier
+    fp     = resourceFilePath p identifier
+    mi     = M.lookup normal (providerFiles p) >>= resourceInfoMetadata
 
 
 --------------------------------------------------------------------------------
