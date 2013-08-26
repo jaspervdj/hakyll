@@ -28,8 +28,11 @@ import           Hakyll.Core.Runtime
 import           Hakyll.Core.Util.File
 
 --------------------------------------------------------------------------------
-#ifdef PREVIEW_SERVER
+#ifdef WATCH_SERVER
 import           Hakyll.Preview.Poll (watchUpdates)
+#endif
+
+#ifdef PREVIEW_SERVER
 import           Hakyll.Preview.Server
 #endif
 
@@ -62,8 +65,9 @@ clean conf = do
 -- | Preview the site
 preview :: Configuration -> Verbosity -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
-preview conf verbosity rules port = do
-    watch' conf verbosity rules (server conf port)
+preview _ _ _ _ = mapM_ putStrLn [ "The preview command has been deprecated."
+                                 , "Use the watch command for recompilation and serving."
+                                 , "You can disable the server with watch --no-server"]
 #else
 preview _ _ _ _ = previewServerDisabled
 #endif
@@ -71,30 +75,27 @@ preview _ _ _ _ = previewServerDisabled
 
 --------------------------------------------------------------------------------
 -- | Watch and recompile for changes
-watch :: Configuration -> Verbosity -> Rules a -> IO ()
-watch conf verbosity rules = watch' conf verbosity rules (return ())
 
-watch' :: Configuration -> Verbosity -> Rules a -> IO () -> IO ()
-#ifdef PREVIEW_SERVER
-watch' conf verbosity rules action = do
+watch :: Configuration -> Verbosity -> Int -> Bool -> Rules a -> IO ()
+#ifdef WATCH_SERVER
+watch conf verbosity port runServer rules = do
     watchUpdates conf update
-    _ <- forkIO (action)
-    putStrLn "Press <enter> to quit watching."
+    _ <- forkIO (server')
     loop
   where
     update = do
         (_, ruleSet) <- run conf verbosity rules
         return $ rulesPattern ruleSet
 
-    loop = do
-        line <- getLine
-        if line == ""
-            then putStrLn "Quitting..."
-            else loop     
-#else
-watch' _ _ _ _ = watchServerDisabled
-#endif
+    server' :: IO ()
+    server' = if runServer
+                  then (server conf port)
+                  else (return ())
 
+    loop = threadDelay 100000 >> loop
+#else
+watch _ _ _ _ _ = watchServerDisabled
+#endif
 
 --------------------------------------------------------------------------------
 -- | Rebuild the site
@@ -134,7 +135,9 @@ previewServerDisabled =
         , "enable it, set the flag to True and recompile Hakyll."
         , "Alternatively, use an external tool to serve your site directory."
         ]
+#endif
 
+#ifndef WATCH_SERVER
 watchServerDisabled :: IO ()
 watchServerDisabled =
     mapM_ putStrLn
@@ -144,5 +147,5 @@ watchServerDisabled =
       , "enable it, set the flag to True and recompile Hakyll."
       , "Alternatively, use an external tool to serve your site directory."
       ]
-
 #endif
+
