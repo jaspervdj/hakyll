@@ -41,14 +41,15 @@ hakyllWith conf rules = do
             if internal_links args' then Check.InternalLinks else Check.All
 
     case args' of
-        Build   _   -> Commands.build conf verbosity' rules >>= exitWith
-        Check   _ _ -> Commands.check conf verbosity' check'
-        Clean   _   -> Commands.clean conf
-        Deploy  _   -> Commands.deploy conf >>= exitWith
-        Help    _   -> showHelp
-        Preview _ p -> Commands.preview conf verbosity' rules p
-        Rebuild _   -> Commands.rebuild conf verbosity' rules >>= exitWith
-        Server  _ _ -> Commands.server conf (port args')
+        Build   _     -> Commands.build conf verbosity' rules >>= exitWith
+        Check   _ _   -> Commands.check conf verbosity' check'
+        Clean   _     -> Commands.clean conf
+        Deploy  _     -> Commands.deploy conf >>= exitWith
+        Help    _     -> showHelp
+        Preview _ p   -> Commands.preview conf verbosity' rules p
+        Rebuild _     -> Commands.rebuild conf verbosity' rules >>= exitWith
+        Server  _ _   -> Commands.server conf (port args')
+        Watch   _ p s -> Commands.watch conf verbosity' p (not s) rules
 
 
 --------------------------------------------------------------------------------
@@ -67,6 +68,7 @@ data HakyllArgs
     | Preview {verbose :: Bool, port :: Int}
     | Rebuild {verbose :: Bool}
     | Server  {verbose :: Bool, port :: Int}
+    | Watch   {verbose :: Bool, port :: Int, no_server :: Bool }
     deriving (Data, Typeable, Show)
 
 
@@ -80,10 +82,12 @@ hakyllArgs = modes
     , (Deploy $ verboseFlag def) &= help "Upload/deploy your site"
     , (Help $ verboseFlag def) &= help "Show this message" &= auto
     , (Preview (verboseFlag def) (portFlag 8000)) &=
-        help "Start a preview server and autocompile on changes"
+        help "[Deprecated] Please use the watch command"
     , (Rebuild $ verboseFlag def) &= help "Clean and build again"
     , (Server (verboseFlag def) (portFlag 8000)) &=
         help "Start a preview server"
+    , (Watch (verboseFlag def) (portFlag 8000) (noServerFlag False) &=
+       help "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server.")
     ] &= help "Hakyll static site compiler" &= program progName
 
 
@@ -92,6 +96,11 @@ verboseFlag :: Data a => a -> a
 verboseFlag x = x &= help "Run in verbose mode"
 {-# INLINE verboseFlag #-}
 
+
+--------------------------------------------------------------------------------
+noServerFlag :: Data a => a -> a
+noServerFlag x = x &= help "Disable the built-in web server"
+{-# INLINE noServerFlag #-}
 
 --------------------------------------------------------------------------------
 portFlag :: Data a => a -> a
