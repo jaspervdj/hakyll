@@ -65,9 +65,13 @@ clean conf = do
 -- | Preview the site
 preview :: Configuration -> Verbosity -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
-preview _ _ _ _ = mapM_ putStrLn [ "The preview command has been deprecated."
-                                 , "Use the watch command for recompilation and serving."
-                                 , "You can disable the server with watch --no-server"]
+preview conf verbosity rules port  = do
+    deprecatedMessage
+    watch conf verbosity port True rules
+  where
+    deprecatedMessage = mapM_ putStrLn [ "The preview command has been deprecated."
+                                       , "Use the watch command for recompilation and serving."
+                                       ]
 #else
 preview _ _ _ _ = previewServerDisabled
 #endif
@@ -87,12 +91,9 @@ watch conf verbosity port runServer rules = do
         (_, ruleSet) <- run conf verbosity rules
         return $ rulesPattern ruleSet
 
-    server' :: IO ()
-    server' = if runServer
-                  then (server conf port)
-                  else (return ())
-
     loop = threadDelay 100000 >> loop
+
+    server' = if runServer then server conf port else return ()
 #else
 watch _ _ _ _ _ = watchServerDisabled
 #endif

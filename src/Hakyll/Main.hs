@@ -87,7 +87,7 @@ hakyllArgs = modes
     , (Server (verboseFlag def) (portFlag 8000)) &=
         help "Start a preview server"
     , (Watch (verboseFlag def) (portFlag 8000) (noServerFlag False) &=
-       help "Autocompile on changes and start a preview server")
+       help "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server.")
     ] &= help "Hakyll static site compiler" &= program progName
 
 
