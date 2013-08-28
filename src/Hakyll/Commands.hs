@@ -1,4 +1,4 @@
---------------------------------------------------------------------------------
+ --------------------------------------------------------------------------------
 -- | Implementation of Hakyll commands: build, preview...
 {-# LANGUAGE CPP #-}
 module Hakyll.Commands
@@ -9,12 +9,14 @@ module Hakyll.Commands
     , rebuild
     , server
     , deploy
+    , watch 
     ) where
 
 
 --------------------------------------------------------------------------------
 import           System.Exit                (exitWith, ExitCode)
 import           Control.Applicative
+import           Control.Concurrent
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check               as Check
@@ -26,8 +28,11 @@ import           Hakyll.Core.Runtime
 import           Hakyll.Core.Util.File
 
 --------------------------------------------------------------------------------
+#ifdef WATCH_SERVER
+import           Hakyll.Preview.Poll (watchUpdates)
+#endif
+
 #ifdef PREVIEW_SERVER
-import           Hakyll.Preview.Poll
 import           Hakyll.Preview.Server
 #endif
 
@@ -60,17 +65,38 @@ clean conf = do
 -- | Preview the site
 preview :: Configuration -> Verbosity -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
-preview conf verbosity rules port = do
-    watchUpdates conf update
-    server conf port
+preview conf verbosity rules port  = do
+    deprecatedMessage
+    watch conf verbosity port True rules
   where
-    update = do
-        (_, ruleSet) <- run conf verbosity rules
-        return $ rulesPattern ruleSet
+    deprecatedMessage = mapM_ putStrLn [ "The preview command has been deprecated."
+                                       , "Use the watch command for recompilation and serving."
+                                       ]
 #else
 preview _ _ _ _ = previewServerDisabled
 #endif
 
+
+--------------------------------------------------------------------------------
+-- | Watch and recompile for changes
+
+watch :: Configuration -> Verbosity -> Int -> Bool -> Rules a -> IO ()
+#ifdef WATCH_SERVER
+watch conf verbosity port runServer rules = do
+    watchUpdates conf update
+    _ <- forkIO (server')
+    loop
+  where
+    update = do
+        (_, ruleSet) <- run conf verbosity rules
+        return $ rulesPattern ruleSet
+
+    loop = threadDelay 100000 >> loop
+
+    server' = if runServer then server conf port else return ()
+#else
+watch _ _ _ _ _ = watchServerDisabled
+#endif
 
 --------------------------------------------------------------------------------
 -- | Rebuild the site
@@ -111,3 +137,16 @@ previewServerDisabled =
         , "Alternatively, use an external tool to serve your site directory."
         ]
 #endif
+
+#ifndef WATCH_SERVER
+watchServerDisabled :: IO ()
+watchServerDisabled =
+    mapM_ putStrLn
+      [ "WATCH SERVER"
+      , ""
+      , "The watch server is not enabled in the version of Hakyll. To"
+      , "enable it, set the flag to True and recompile Hakyll."
+      , "Alternatively, use an external tool to serve your site directory."
+      ]
+#endif
+

@@ -78,6 +78,10 @@ Flag previewServer
   Description: Include the preview server
   Default:     True
 
+Flag watchServer
+  Description: Include the watch server
+  Default:     True
+
 Flag checkExternal
   Description: Include external link checking
   Default:     True
@@ -177,6 +181,15 @@ Library
       Hakyll.Preview.Poll
       Hakyll.Preview.Server
 
+  If flag(watchServer)
+    Build-depends:
+      fsnotify        >= 0.0.6 && < 0.1,
+      system-filepath >= 0.4.6 && <= 0.5
+    Cpp-options:
+      -DWATCH_SERVER
+    Other-modules:
+      Hakyll.Preview.Poll
+
   If flag(checkExternal)
     Build-depends:
       http-conduit >= 1.8    && < 1.10,
@@ -253,6 +266,15 @@ Test-suite hakyll-tests
     Other-modules:
       Hakyll.Preview.Poll
       Hakyll.Preview.Server
+
+  If flag(watchServer)
+    Build-depends:
+      fsnotify        >= 0.0.6 && < 0.1,
+      system-filepath >= 0.4.6 && <= 0.5
+    Cpp-options:
+      -DWATCH_SERVER
+    Other-modules:
+      Hakyll.Preview.Poll
 
   If flag(checkExternal)
     Build-depends:
