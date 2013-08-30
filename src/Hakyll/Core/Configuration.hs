@@ -69,6 +69,10 @@ data Configuration = Configuration
     , -- | Use an in-memory cache for items. This is faster but uses more
       -- memory.
       inMemoryCache        :: Bool
+    , -- | Override default port for preview server. Default is 8000.
+      -- One can also override the port as a command line argument:
+      -- ./site preview -p 1234
+      previewPort          :: Int
     }
 
 --------------------------------------------------------------------------------
@@ -87,6 +91,7 @@ defaultConfiguration = Configuration
     , deployCommand        = "echo 'No deploy command specified' && exit 1"
     , deploySite           = system . deployCommand
     , inMemoryCache        = True
+    , previewPort          = 8000
     }
   where
     ignoreFile' path
