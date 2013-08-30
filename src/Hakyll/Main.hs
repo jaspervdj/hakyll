@@ -34,7 +34,7 @@ hakyll = hakyllWith Config.defaultConfiguration
 -- configuration
 hakyllWith :: Config.Configuration -> Rules a -> IO ()
 hakyllWith conf rules = do
-    args' <- cmdArgs hakyllArgs
+    args' <- cmdArgs (hakyllArgs conf)
 
     let verbosity' = if verbose args' then Logger.Debug else Logger.Message
         check'     =
@@ -55,7 +55,7 @@ hakyllWith conf rules = do
 --------------------------------------------------------------------------------
 -- | Show usage information.
 showHelp :: IO ()
-showHelp = print $ CA.helpText [] CA.HelpFormatOne $ cmdArgsMode hakyllArgs
+showHelp = print $ CA.helpText [] CA.HelpFormatOne $ cmdArgsMode (hakyllArgs Config.defaultConfiguration)
 
 
 --------------------------------------------------------------------------------
@@ -73,22 +73,23 @@ data HakyllArgs
 
 
 --------------------------------------------------------------------------------
-hakyllArgs :: HakyllArgs
-hakyllArgs = modes
+hakyllArgs :: Config.Configuration -> HakyllArgs
+hakyllArgs conf = modes
     [ (Build $ verboseFlag def) &= help "Generate the site"
     , (Check (verboseFlag def) (False &= help "Check internal links only")) &=
         help "Validate the site output"
     , (Clean $ verboseFlag def) &= help "Clean up and remove cache"
     , (Deploy $ verboseFlag def) &= help "Upload/deploy your site"
     , (Help $ verboseFlag def) &= help "Show this message" &= auto
-    , (Preview (verboseFlag def) (portFlag 8000)) &=
+    , (Preview (verboseFlag def) (portFlag defaultPort)) &=
         help "[Deprecated] Please use the watch command"
     , (Rebuild $ verboseFlag def) &= help "Clean and build again"
-    , (Server (verboseFlag def) (portFlag 8000)) &=
+    , (Server (verboseFlag def) (portFlag defaultPort)) &=
         help "Start a preview server"
-    , (Watch (verboseFlag def) (portFlag 8000) (noServerFlag False) &=
+    , (Watch (verboseFlag def) (portFlag defaultPort) (noServerFlag False) &=
        help "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server.")
     ] &= help "Hakyll static site compiler" &= program progName
+    where defaultPort = Config.previewPort conf
 
 
 --------------------------------------------------------------------------------
