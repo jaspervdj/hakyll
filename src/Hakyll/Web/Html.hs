@@ -25,7 +25,7 @@ import           Data.Char                       (digitToInt, intToDigit,
                                                   isDigit, toLower)
 import           Data.List                       (isPrefixOf)
 import qualified Data.Set                        as S
-import           System.FilePath                 (joinPath, splitPath,
+import           System.FilePath.Posix           (joinPath, splitPath,
                                                   takeDirectory)
 import           Text.Blaze.Html                 (toHtml)
 import           Text.Blaze.Html.Renderer.String (renderHtml)
