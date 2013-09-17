@@ -22,12 +22,10 @@ module Hakyll.Web.Pandoc.Biblio
 --------------------------------------------------------------------------------
 import           Control.Applicative    ((<$>))
 import           Data.Binary            (Binary (..))
-import           Data.Traversable       (traverse)
 import           Data.Typeable          (Typeable)
 import qualified Text.CSL               as CSL
+import           Text.CSL.Pandoc        (processCites)
 import           Text.Pandoc            (Pandoc, ReaderOptions (..))
-import           Text.Pandoc.Biblio     (processBiblio)
-
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
@@ -86,21 +84,20 @@ biblioCompiler = do
 
 --------------------------------------------------------------------------------
 readPandocBiblio :: ReaderOptions
-                 -> Maybe (Item CSL)
+                 -> Item CSL
                  -> Item Biblio
                  -> (Item String)
                  -> Compiler (Item Pandoc)
 readPandocBiblio ropt csl biblio item = do
     -- Parse CSL file, if given
-    style <- unsafeCompiler $
-        traverse (CSL.readCSLFile . toFilePath . itemIdentifier) csl
+    style <- unsafeCompiler $ CSL.readCSLFile . toFilePath . itemIdentifier $ csl
 
     -- We need to know the citation keys, add then *before* actually parsing the
     -- actual page. If we don't do this, pandoc won't even consider them
     -- citations!
     let Biblio refs = itemBody biblio
-        ropt'       = ropt {readerReferences = readerReferences ropt ++ refs}
-        pandoc      = itemBody $ readPandocWith ropt' item
-        pandoc'     = processBiblio style refs pandoc
+        pandoc      = itemBody $ readPandocWith ropt item
+        pandoc'     = processCites style refs pandoc
 
     return $ fmap (const pandoc') item
+
