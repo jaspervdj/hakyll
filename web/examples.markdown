@@ -61,6 +61,8 @@ this list. This list has no particular ordering.
   [literate source](http://scr.stunts.hu/hakyll.html)
 - <http://www.eanalytica.com/>,
   [literate source](http://www.eanalytica.com/site/)
+- <http://dikmax.name/>,
+  [source](https://github.com/dikmax/dikmax.name)
 
 ## Hakyll 3.X
 
