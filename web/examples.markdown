@@ -55,6 +55,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/xinitrc/xinitrc.de)
 - <http://darkfox.us.to/>,
   [source](http://hub.darcs.net/DarkFox/DarkFox-blog)
+- <http://cse.iitk.ac.in/users/ppk>
+  [source](https://github.com/piyush-kurur-pages/website)
 
 ## Hakyll 3.X
 
