@@ -4,6 +4,35 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.4.0.0
+
+- Update to work with Pandoc 1.12. This changes the type of `readPandocBibilio`:
+  the `CSL` argument is no longer optional.
+
+- Fix incorrect output of `toSiteRoot` on windows (contribution by Saeid
+  Al-Wazzan)
+
+- Add a preview port option to `Configuration` (contribution by Jorge Israel
+  Peña)
+
+- Add `watch` command that polls for changes but does not necessarily launch a
+  server (contribution by Eric Stolten)
+
+- Generalise type of `metadataField`
+
+- Fix issue where metadata was not correctly loaded when using versions
+
+## Hakyll 4.3.3.0
+
+- Re-add the `functionField` function
+
+## Hakyll 4.3.2.0
+
+- Re-add the `mapContext` function
+
+- Unescape internal URLs when using `./site check` (contribution by Marc-Antoine
+  Perennou)
+
 ## Hakyll 4.3.1.0
 
 - Make teasers undefined if no `<!--more-->` comment is found
