@@ -63,6 +63,8 @@ this list. This list has no particular ordering.
   [literate source](http://www.eanalytica.com/site/)
 - <http://dikmax.name/>,
   [source](https://github.com/dikmax/dikmax.name)
+- <http://cse.iitk.ac.in/users/ppk>,
+  [source](https://github.com/piyush-kurur-pages/website)
 
 ## Hakyll 3.X
 
