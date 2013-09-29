@@ -131,4 +131,7 @@ defaultHakyllWriterOptions = def
     { -- This option causes literate haskell to be written using '>' marks in
       -- html, which I think is a good default.
       writerExtensions = S.insert Ext_literate_haskell (writerExtensions def)
+    , -- We want to have hightlighting by default, to be compatible with earlier
+      -- Hakyll releases
+      writerHighlight  = True
     }

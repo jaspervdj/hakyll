@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.4.1.0
+
+- Use Pandoc 1.12 highlighting by default
+
 ## Hakyll 4.4.0.0
 
 - Update to work with Pandoc 1.12. This changes the type of `readPandocBibilio`:
