@@ -7,7 +7,7 @@ title: Releases
 ## Hakyll 4.4.0.0
 
 - Update to work with Pandoc 1.12. This changes the type of `readPandocBibilio`:
-  the `CSL` argument is no longer optional.
+  the `CSL` argument is no longer optional (contribution by Jorge Israel Peña)
 
 - Fix incorrect output of `toSiteRoot` on windows (contribution by Saeid
   Al-Wazzan)
