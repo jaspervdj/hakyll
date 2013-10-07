@@ -65,6 +65,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/dikmax/dikmax.name)
 - <http://cse.iitk.ac.in/users/ppk>,
   [source](https://github.com/piyush-kurur-pages/website)
+- <http://web.engr.oregonstate.edu/~walkiner/>,
+  [source](https://github.com/walkie/WebPage)
 
 ## Hakyll 3.X
 
