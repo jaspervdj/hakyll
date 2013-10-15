@@ -44,7 +44,7 @@ loadMetadata p identifier = do
         Nothing  -> return M.empty
         Just mi' -> loadMetadataFile $ resourceFilePath p mi'
 
-    gmd <- loadGlobalMetadata p $ toFilePath identifier
+    gmd <- loadGlobalMetadata p identifier
 
     return (M.unions [md, emd, gmd], body)
   where
@@ -141,21 +141,17 @@ page = do
 
 --------------------------------------------------------------------------------
 -- | Load directory-wise metadata
-loadGlobalMetadata :: Provider -> FilePath -> IO (M.Map String String)
-loadGlobalMetadata p fp = liftM M.fromList $ loadgm $ takeDirectory fp where 
-    loadgm :: FilePath -> IO [(String, String)]
-    loadgm dir | dir == "." = return []
-               | otherwise = do
-        let mfp = fromFilePath $ combine dir "metadata"
-        md <- if resourceExists p mfp then loadOne mfp dir else return []
-        others <- loadgm (takeDirectory dir)
-        return $ others ++ md 
-    loadOne mfp dir =
+loadGlobalMetadata :: Provider -> Identifier -> IO Metadata
+loadGlobalMetadata p fp = liftM M.fromList $ loadgm fp where 
+    loadgm :: Identifier -> IO [(String, String)]
+    loadgm = liftM concat . mapM loadOne . reverse . filter (resourceExists p) . metadataFiles
+    loadOne mfp =
         let path = resourceFilePath p mfp
+            dir = takeDirectory $ toFilePath mfp
         -- TODO: It might be better to print warning and continue
         in either (error.show) (findMetadata dir) . P.parse namedMetadata path <$> readFile path
     findMetadata dir = 
-        concatMap snd . filter (flip matches (fromFilePath fp) . fromGlob . combine dir . fst)
+        concatMap snd . filter (flip matches fp . fromGlob . combine dir . fst)
 
 namedMetadata :: Parser [(String, [(String, String)])]
 namedMetadata = P.many namedMetadataBlock

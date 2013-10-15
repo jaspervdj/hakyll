@@ -35,6 +35,7 @@ import qualified Hakyll.Core.Logger            as Logger
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules.Internal
+import           Hakyll.Core.Rules.Default
 import           Hakyll.Core.Store             (Store)
 import qualified Hakyll.Core.Store             as Store
 import           Hakyll.Core.Util.File
@@ -53,7 +54,7 @@ run config verbosity rules = do
     provider <- newProvider store (shouldIgnoreFile config) $
         providerDirectory config
     Logger.message logger "Running rules..."
-    ruleSet  <- runRules rules provider
+    ruleSet  <- runRules (internalRules >> rules) provider
 
     -- Get old facts
     mOldFacts <- Store.get store factsKey
@@ -186,7 +187,7 @@ chase trail id'
         config   <- runtimeConfiguration <$> ask
         Logger.debug logger $ "Processing " ++ show id'
 
-        let compiler = todo M.! id'
+        let compiler = addMetadataDependencies >> todo M.! id'
             read' = CompilerRead
                 { compilerConfig     = config
                 , compilerUnderlying = id'
