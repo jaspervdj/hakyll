@@ -151,7 +151,7 @@ loadGlobalMetadata p fp = liftM M.fromList $ loadgm fp where
         -- TODO: It might be better to print warning and continue
         in either (error.show) (findMetadata dir) . P.parse namedMetadata path <$> readFile path
     findMetadata dir = 
-        concatMap snd . filter (flip matches fp . fromGlob . combine dir . fst)
+        concatMap snd . filter (flip matches fp . fromGlob . normalise . combine dir . fst)
 
 namedMetadata :: Parser [(String, [(String, String)])]
 namedMetadata = P.many namedMetadataBlock
