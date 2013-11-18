@@ -174,7 +174,9 @@ resourceModified :: Provider -> Identifier -> Bool
 resourceModified p r = case (ri, oldRi) of
     (Nothing, _)      -> False
     (Just _, Nothing) -> True
-    (Just n, Just o)  -> resourceInfoModified n > resourceInfoModified o
+    (Just n, Just o)  ->
+        resourceInfoModified n >  resourceInfoModified o ||
+        resourceInfoMetadata n /= resourceInfoMetadata o
   where
     normal = setVersion Nothing r
     ri     = M.lookup normal (providerFiles p)
