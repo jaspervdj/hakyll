@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.4.2.0
+
+- Fix issue where Hakyll would not detect a change if a `.metadata` file was
+  deleted
+
 ## Hakyll 4.4.1.0
 
 - Use Pandoc 1.12 highlighting by default
