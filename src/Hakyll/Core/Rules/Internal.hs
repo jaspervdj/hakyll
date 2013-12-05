@@ -16,7 +16,6 @@ import           Control.Applicative            (Applicative, (<$>))
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
 import           Control.Monad.Trans            (liftIO)
-import           Data.Map                       (Map)
 import qualified Data.Map                       as M
 import           Data.Monoid                    (Monoid, mappend, mempty)
 import           Data.Set                       (Set)
@@ -98,26 +97,15 @@ runRules rules provider = do
     (_, _, ruleSet) <- runRWST (unRules rules) env emptyRulesState
 
     -- Ensure compiler uniqueness
-    uniqueCompilers <- case fromListUnique (rulesCompilers ruleSet) of
-        Right m  -> return m
-        Left id' -> error $
-            "Hakyll.Core.Rules.Internal.runRules: duplicate compiler for " ++
-            show id'
+    let ruleSet' = ruleSet
+            { rulesCompilers = M.toList $
+                M.fromListWith (flip const) (rulesCompilers ruleSet)
+            }
 
-    return ruleSet {rulesCompilers = M.toList uniqueCompilers}
+    return ruleSet'
   where
     env = RulesRead
         { rulesProvider = provider
         , rulesMatches  = []
         , rulesVersion  = Nothing
         }
-
-
---------------------------------------------------------------------------------
-fromListUnique :: Ord k => [(k, v)] -> Either k (Map k v)
-fromListUnique = go M.empty
-  where
-    go m []            = Right m
-    go m ((k, v) : zs) = case M.lookup k m of
-        Nothing -> go (M.insert k v m) zs
-        Just _  -> Left k
