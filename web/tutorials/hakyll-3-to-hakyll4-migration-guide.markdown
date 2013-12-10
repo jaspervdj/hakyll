@@ -37,7 +37,7 @@ The `Page` type in Hakyll 3.X has been removed and replaced by an `Item` type.
 `pageCompiler` no longer exists -- where you previously used this, you probably
 want to use `pandocCompiler` instead.
 
-`Page`s where manipulated using `setField`/`getField` functions in Hakyll 3.X.
+`Page`s were manipulated using `setField`/`getField` functions in Hakyll 3.X.
 In Hakyll 4, all metadata is completely immutable, so these functions have been
 removed. In order to format and add fields, use a `Context` -- see the next
 section.
