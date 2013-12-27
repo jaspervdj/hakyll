@@ -69,6 +69,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/walkie/WebPage)
 - <http://techblog.rosedu.org/>,
   [source](https://github.com/rosedu/techblog)
+- <http://abizern.org>,
+  [source](https://github.com/Abizern/hblog)
 
 ## Hakyll 3.X
 
