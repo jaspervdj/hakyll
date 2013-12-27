@@ -67,6 +67,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/piyush-kurur-pages/website)
 - <http://web.engr.oregonstate.edu/~walkiner/>,
   [source](https://github.com/walkie/WebPage)
+- <http://techblog.rosedu.org/>,
+  [source](https://github.com/rosedu/techblog)
 
 ## Hakyll 3.X
 
