@@ -71,6 +71,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/rosedu/techblog)
 - <http://abizern.org>,
   [source](https://github.com/Abizern/hblog)
+- <http://freizl.github.io>,
+  [source](https://github.com/freizl/freizl.github.com/tree/master/build)
 
 ## Hakyll 3.X
 
