@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.4.3.0
+
+- Fix issue when using `metadataRoute` after other custom routes
+
 ## Hakyll 4.4.2.0
 
 - Fix issue where Hakyll would not detect a change if a `.metadata` file was
