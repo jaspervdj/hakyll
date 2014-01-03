@@ -61,9 +61,16 @@ type UsedMetadata = Bool
 
 
 --------------------------------------------------------------------------------
+data RoutesRead = RoutesRead
+    { routesProvider   :: Provider
+    , routesUnderlying :: Identifier
+    }
+
+
+--------------------------------------------------------------------------------
 -- | Type used for a route
 newtype Routes = Routes
-    { unRoutes :: Provider -> Identifier -> IO (Maybe FilePath, UsedMetadata)
+    { unRoutes :: RoutesRead -> Identifier -> IO (Maybe FilePath, UsedMetadata)
     }
 
 
@@ -81,7 +88,8 @@ instance Monoid Routes where
 -- | Apply a route to an identifier
 runRoutes :: Routes -> Provider -> Identifier
           -> IO (Maybe FilePath, UsedMetadata)
-runRoutes = unRoutes
+runRoutes routes provider identifier =
+    unRoutes routes (RoutesRead provider identifier) identifier
 
 
 --------------------------------------------------------------------------------
@@ -156,9 +164,9 @@ gsubRoute pattern replacement = customRoute $
 --------------------------------------------------------------------------------
 -- | Get access to the metadata in order to determine the route
 metadataRoute :: (Metadata -> Routes) -> Routes
-metadataRoute f = Routes $ \p i -> do
-    metadata <- resourceMetadata p i
-    unRoutes (f metadata) p i
+metadataRoute f = Routes $ \r i -> do
+    metadata <- resourceMetadata (routesProvider r) (routesUnderlying r)
+    unRoutes (f metadata) r i
 
 
 --------------------------------------------------------------------------------
