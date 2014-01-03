@@ -6,6 +6,8 @@ module Hakyll.Core.Routes.Tests
 
 
 --------------------------------------------------------------------------------
+import qualified Data.Map               as M
+import           System.FilePath        ((</>))
 import           Test.Framework         (Test, testGroup)
 import           Test.HUnit             (Assertion, (@=?))
 
@@ -33,12 +35,18 @@ tests = testGroup "Hakyll.Core.Routes.Tests" $ fromAssertions "runRoutes"
     , testRoutes "tags/bar.xml"
         (gsubRoute "rss/" (const "") `composeRoutes` setExtension "xml")
         "tags/rss/bar"
+
+    , testRoutes "food/example.md" (metadataRoute $ \md -> customRoute $ \id' ->
+        M.findWithDefault "?" "subblog" md </> toFilePath id')
+        "example.md"
     ]
 
 
 --------------------------------------------------------------------------------
 testRoutes :: FilePath -> Routes -> Identifier -> Assertion
 testRoutes expected r id' = do
-    (route, _) <- runRoutes r
-        (error "Hakyll.Core.Routes.Tests: no provider") id'
+    store      <- newTestStore
+    provider   <- newTestProvider store
+    (route, _) <- runRoutes r provider id'
     Just expected @=? route
+    cleanTestEnv
