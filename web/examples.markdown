@@ -53,7 +53,7 @@ this list. This list has no particular ordering.
   [source](https://github.com/blaenk/blaenk.github.io)
 - <https://xinitrc.de/>,
   [source](https://github.com/xinitrc/xinitrc.de)
-- <http://darkfox.us.to/>,
+- <https://darkfox.id.au/>,
   [source](http://hub.darcs.net/DarkFox/DarkFox-blog)
 - <http://nickcharlton.net/>,
   [source](https://github.com/nickcharlton/nickcharlton.net)
