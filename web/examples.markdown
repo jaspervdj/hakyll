@@ -73,6 +73,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/Abizern/hblog)
 - <http://freizl.github.io>,
   [source](https://github.com/freizl/freizl.github.com/tree/master/build)
+- <http://covariant.me>,
+  [source](http://hub.darcs.net/co-dan/website)
 
 ## Hakyll 3.X
 
