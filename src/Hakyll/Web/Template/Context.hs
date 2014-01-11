@@ -56,6 +56,20 @@ data ContextField
 
 
 --------------------------------------------------------------------------------
+-- | The 'Context' monoid. Please note that the order in which you
+-- compose the items is important. For example in
+--
+-- > field "A" f1 <> field "A" f2
+--
+-- the first context will overwrite the second. This is especially
+-- important when something is being composed with
+-- 'metadataField' (or 'defaultContext'). If you want your context to be
+-- overwritten by the metadata fields, compose it from the right:
+--
+-- @
+-- 'metadataField' \<\> field \"date\" fDate
+-- @
+-- 
 newtype Context a = Context
     { unContext :: String -> Item a -> Compiler ContextField
     }
@@ -108,6 +122,17 @@ mapContext f (Context c) = Context $ \k i -> do
 
 
 --------------------------------------------------------------------------------
+-- | A context that contains (in that order)
+--
+--     1. A @$body$@ field
+--
+--     2. Metadata fields
+--        
+--     3. A @$url$@ 'urlField'
+--
+--     4. A @$path$@ 'pathField'
+--
+--     5. A @$title$@ 'titleField'        
 defaultContext :: Context String
 defaultContext =
     bodyField     "body"     `mappend`
