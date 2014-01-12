@@ -1,8 +1,9 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE Rank2Types                 #-}
 module Hakyll.Core.Rules.Internal
     ( RulesRead (..)
+    , RulesItem (..)
+    , RulesWrite (..)
     , RuleSet (..)
     , RulesState (..)
     , emptyRulesState
@@ -23,6 +24,7 @@ import           Data.Set                       (Set)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler.Internal
+import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item.SomeItem
@@ -33,23 +35,56 @@ import           Hakyll.Core.Routes
 
 --------------------------------------------------------------------------------
 data RulesRead = RulesRead
-    { rulesProvider :: Provider
-    , rulesMatches  :: [Identifier]
-    , rulesVersion  :: Maybe String
+    { rulesProvider     :: Provider
+    , rulesPattern      :: Maybe Pattern
+    , rulesCreate       :: [Identifier]
+    , rulesVersion      :: Maybe String
+    , rulesDependencies :: [Dependency]
     }
+
+
+--------------------------------------------------------------------------------
+data RulesItem = RulesItem (Maybe Routes) (Maybe (Compiler SomeItem))
+
+
+--------------------------------------------------------------------------------
+unionRulesItem :: RulesItem -> RulesItem -> Either String RulesItem
+unionRulesItem (RulesItem r1 c1) (RulesItem r2 c2) = do
+    r <- union "duplicate Routes"   r1 r2
+    c <- union "duplicate Compiler" c1 c2
+    return $ RulesItem r c
+  where
+    union _ Nothing  Nothing  = Right Nothing
+    union _ (Just x) Nothing  = Right (Just x)
+    union _ Nothing  (Just x) = Right (Just x)
+    union e (Just _) (Just _) = Left e
+
+
+--------------------------------------------------------------------------------
+data RulesWrite = RulesWrite
+    { rulesCreated :: [(Identifier, Maybe String, RulesItem)]
+    , rulesMatched :: [(Pattern, Maybe String, RulesItem)]
+    }
+
+
+--------------------------------------------------------------------------------
+instance Monoid RulesWrite where
+    mempty                                        = RulesWrite mempty mempty
+    mappend (RulesWrite c1 m1) (RulesWrite c2 m2) = RulesWrite
+        (mappend c1 c2) (mappend m1 m2)
 
 
 --------------------------------------------------------------------------------
 data RuleSet = RuleSet
     { -- | Accumulated routes
-      rulesRoutes    :: Routes
+      rulesRoutes       :: Routes
     , -- | Accumulated compilers
-      rulesCompilers :: [(Identifier, Compiler SomeItem)]
+      rulesCompilers    :: [(Identifier, Compiler SomeItem)]
     , -- | A set of the actually used files
-      rulesResources :: Set Identifier
+      rulesResources    :: Set Identifier
     , -- | A pattern we can use to check if a file *would* be used. This is
       -- needed for the preview server.
-      rulesPattern   :: Pattern
+      rulesTotalPattern :: Pattern
     }
 
 
@@ -75,7 +110,7 @@ emptyRulesState = RulesState Nothing Nothing
 --------------------------------------------------------------------------------
 -- | The monad used to compose rules
 newtype Rules a = Rules
-    { unRules :: RWST RulesRead RuleSet RulesState IO a
+    { unRules :: RWST RulesRead RulesWrite RulesState IO a
     } deriving (Monad, Functor, Applicative)
 
 
@@ -93,7 +128,9 @@ instance MonadMetadata Rules where
 --------------------------------------------------------------------------------
 -- | Run a Rules monad, resulting in a 'RuleSet'
 runRules :: Rules a -> Provider -> IO RuleSet
-runRules rules provider = do
+runRules = undefined
+    {-
+     - rules provider = do
     (_, _, ruleSet) <- runRWST (unRules rules) env emptyRulesState
 
     -- Ensure compiler uniqueness
@@ -109,3 +146,4 @@ runRules rules provider = do
         , rulesMatches  = []
         , rulesVersion  = Nothing
         }
+-}

@@ -34,12 +34,10 @@ module Hakyll.Core.Rules
 --------------------------------------------------------------------------------
 import           Control.Applicative            ((<$>))
 import           Control.Monad.Reader           (ask, local)
-import           Control.Monad.State            (get, modify, put)
 import           Control.Monad.Trans            (liftIO)
-import           Control.Monad.Writer           (censor, tell)
+import           Control.Monad.Writer           (tell)
 import           Data.Maybe                     (fromMaybe)
 import           Data.Monoid                    (mempty)
-import qualified Data.Set                       as S
 
 
 --------------------------------------------------------------------------------
@@ -54,100 +52,45 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item
 import           Hakyll.Core.Item.SomeItem
-import           Hakyll.Core.Metadata
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules.Internal
 import           Hakyll.Core.Writable
 
 
 --------------------------------------------------------------------------------
--- | Add a route
-tellRoute :: Routes -> Rules ()
-tellRoute route' = Rules $ tell $ RuleSet route' mempty mempty mempty
+tellRulesItem :: RulesItem -> Rules ()
+tellRulesItem ri = Rules $ do
+    pattern      <- fromMaybe mempty . rulesPattern <$> ask
+    create'      <- rulesCreate                     <$> ask
+    version'     <- rulesVersion                    <$> ask
+    dependencies <- rulesDependencies               <$> ask
 
-
---------------------------------------------------------------------------------
--- | Add a number of compilers
-tellCompilers :: [(Identifier, Compiler SomeItem)] -> Rules ()
-tellCompilers compilers = Rules $ tell $ RuleSet mempty compilers mempty mempty
-
-
---------------------------------------------------------------------------------
--- | Add resources
-tellResources :: [Identifier] -> Rules ()
-tellResources resources' = Rules $ tell $
-    RuleSet mempty mempty (S.fromList resources') mempty
-
-
---------------------------------------------------------------------------------
--- | Add a pattern
-tellPattern :: Pattern -> Rules ()
-tellPattern pattern = Rules $ tell $ RuleSet mempty mempty mempty pattern
-
-
---------------------------------------------------------------------------------
-flush :: Rules ()
-flush = Rules $ do
-    mcompiler <- rulesCompiler <$> get
-    case mcompiler of
-        Nothing       -> return ()
-        Just compiler -> do
-            matches' <- rulesMatches                  <$> ask
-            version' <- rulesVersion                  <$> ask
-            route'   <- fromMaybe mempty . rulesRoute <$> get
-
-            -- The version is possibly not set correctly at this point (yet)
-            let ids = map (setVersion version') matches'
-
-            {-
-            ids      <- case fromLiteral pattern of
-                Just id' -> return [setVersion version' id']
-                Nothing  -> do
-                    ids <- unRules $ getMatches pattern
-                    unRules $ tellResources ids
-                    return $ map (setVersion version') ids
-            -}
-
-            -- Create a fast pattern for routing that matches exactly the
-            -- compilers created in the block given to match
-            let fastPattern = fromList ids
-
-            -- Write out the compilers and routes
-            unRules $ tellRoute $ matchRoute fastPattern route'
-            unRules $ tellCompilers $ [(id', compiler) | id' <- ids]
-
-    put $ emptyRulesState
+    let ri' = addDependencies dependencies ri
+    case create' of
+        [] -> tell mempty {rulesMatched = [(pattern, version', ri')]}
+        ls -> tell mempty {rulesCreated = [(i, version', ri') | i <- ls]}
+  where
+    addDependencies [] x                 = x
+    addDependencies ds (RulesItem mr mc) =
+        RulesItem mr (fmap (compilerTellDependencies ds >>) mc)
 
 
 --------------------------------------------------------------------------------
 match :: Pattern -> Rules () -> Rules ()
-match pattern rules = do
-    tellPattern pattern
-    flush
-    ids <- getMatches pattern
-    tellResources ids
-    Rules $ local (setMatches ids) $ unRules $ rules >> flush
-  where
-    setMatches ids env = env {rulesMatches = ids}
+match pattern =
+    Rules . local (\r -> r {rulesPattern = Just pattern}) . unRules
 
 
 --------------------------------------------------------------------------------
 create :: [Identifier] -> Rules () -> Rules ()
-create ids rules = do
-    flush
-    -- TODO Maybe check if the resources exist and call tellResources on that
-    Rules $ local setMatches $ unRules $ rules >> flush
-  where
-    setMatches env = env {rulesMatches = ids}
+create ids =
+    Rules . local (\r -> r {rulesCreate = ids}) . unRules
 
 
 --------------------------------------------------------------------------------
 version :: String -> Rules () -> Rules ()
-version v rules = do
-    flush
-    Rules $ local setVersion' $ unRules $ rules >> flush
-  where
-    setVersion' env = env {rulesVersion = Just v}
+version v =
+    Rules . local (\r -> r {rulesVersion = Just v}) . unRules
 
 
 --------------------------------------------------------------------------------
@@ -155,8 +98,9 @@ version v rules = do
 --
 -- This instructs all resources to be compiled using the given compiler.
 compile :: (Binary a, Typeable a, Writable a) => Compiler (Item a) -> Rules ()
-compile compiler = Rules $ modify $ \s ->
-    s {rulesCompiler = Just (fmap SomeItem compiler)}
+compile compiler = tellRulesItem $ RulesItem Nothing (Just compiler')
+  where
+    compiler' = fmap SomeItem compiler
 
 
 --------------------------------------------------------------------------------
@@ -164,7 +108,7 @@ compile compiler = Rules $ modify $ \s ->
 --
 -- This adds a route for all items matching the current pattern.
 route :: Routes -> Rules ()
-route route' = Rules $ modify $ \s -> s {rulesRoute = Just route'}
+route route' = tellRulesItem $ RulesItem (Just route') Nothing
 
 
 --------------------------------------------------------------------------------
@@ -181,12 +125,5 @@ preprocess = Rules . liftIO
 --
 -- A useful utility for this purpose is 'makePatternDependency'.
 rulesExtraDependencies :: [Dependency] -> Rules a -> Rules a
-rulesExtraDependencies deps = Rules . censor addDependencies . unRules
-  where
-    -- Adds the dependencies to the compilers in the ruleset
-    addDependencies ruleSet = ruleSet
-        { rulesCompilers =
-            [ (i, compilerTellDependencies deps >> c)
-            | (i, c) <- rulesCompilers ruleSet
-            ]
-        }
+rulesExtraDependencies deps =
+    Rules . local (\r -> r {rulesDependencies = deps}) . unRules
