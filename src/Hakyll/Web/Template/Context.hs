@@ -87,11 +87,16 @@ field' key value = Context $ \k i -> if k == key then value i else empty
 
 
 --------------------------------------------------------------------------------
-field :: String -> (Item a -> Compiler String) -> Context a
+-- | Constructs a new field in the 'Context.'
+field :: String  -- ^ Key
+      -> (Item a -> Compiler String) -- ^ Function that constructs a 
+                                     -- value based on the item
+      -> Context a
 field key value = field' key (fmap StringField . value)
 
 
 --------------------------------------------------------------------------------
+-- | Creates a 'field' that does not depend on the 'Item'
 constField :: String -> String -> Context a
 constField key = field key . const . return
 
@@ -149,6 +154,7 @@ teaserSeparator = "<!--more-->"
 
 
 --------------------------------------------------------------------------------
+-- | Constructs a 'field' that contains the body of the item.
 bodyField :: String -> Context String
 bodyField key = field key $ return . itemBody
 
@@ -175,7 +181,7 @@ pathField key = field key $ return . toFilePath . itemIdentifier
 
 
 --------------------------------------------------------------------------------
--- | This title field takes the basename of the underlying file by default
+-- | This title 'field' takes the basename of the underlying file by default
 titleField :: String -> Context a
 titleField = mapContext takeBaseName . pathField
 
