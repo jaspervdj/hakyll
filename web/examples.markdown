@@ -49,11 +49,11 @@ this list. This list has no particular ordering.
   [source](https://github.com/ericrasmussen/chromaticleaves)
 - <http://www.clever-cloud.com/en/>,
   [source](https://github.com/CleverCloud/clever-cloud.com)
-- <http://blaenkdenum.com/>,
-  [source](https://github.com/blaenk/blaenk.github.io)
-- <https://xinitrc.de/>,
+- <http://blaenkdenum.com/>,d
   [source](https://github.com/xinitrc/xinitrc.de)
-- <https://darkfox.id.au/>,
+- <https://darkfox.id.au/>
+  [source](http://hub.darcs.net/DarkFox/DarkFox-home)
+- <http://blog.darkfox.id.au/>
   [source](http://hub.darcs.net/DarkFox/DarkFox-blog)
 - <http://nickcharlton.net/>,
   [source](https://github.com/nickcharlton/nickcharlton.net)
