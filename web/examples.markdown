@@ -75,6 +75,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/freizl/freizl.github.com/tree/master/build)
 - <http://covariant.me>,
   [source](http://hub.darcs.net/co-dan/website)
+- <http://www.gwern.net/>,
+  [source](https://github.com/gwern/gwern.net)
 
 ## Hakyll 3.X
 
@@ -90,8 +92,6 @@ this list. This list has no particular ordering.
   [source](https://github.com/wunki/wunki.org)
 - <http://rs.io>,
   [source](https://github.com/robertseaton/rs.io/)
-- <http://www.gwern.net/>,
-  source [on Patch-tag](https://patch-tag.com/r/gwern/Gwern/home)
 - <http://blog.coldflake.com/>,
   [source](https://github.com/marcmo/blog.coldflake)
 - <http://deepak.jois.name>,
