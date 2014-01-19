@@ -53,7 +53,7 @@ watchUpdates conf update = do
             shouldIgnore <- shouldIgnoreFile conf path
             return $ not shouldIgnore && matches pattern identifier
 
-    watchTree manager providerDir (not . isRemove) $ \event -> do
+    void $ watchTree manager providerDir (not . isRemove) $ \event -> do
         ()       <- takeMVar lock
         allowed' <- allowed event
         when allowed' $ update' event (encodeString providerDir)
