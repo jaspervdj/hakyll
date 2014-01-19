@@ -122,6 +122,7 @@ module Hakyll.Web.Template
     , applyTemplate
     , loadAndApplyTemplate
     , applyAsTemplate
+    , readTemplate
     ) where
 
 
@@ -139,7 +140,6 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
-import           Hakyll.Web.Template.Read
 
 
 --------------------------------------------------------------------------------

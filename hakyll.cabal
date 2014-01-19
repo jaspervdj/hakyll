@@ -119,7 +119,6 @@ Library
     Hakyll.Web.Template
     Hakyll.Web.Template.Context
     Hakyll.Web.Template.List
-    Hakyll.Web.Template.Read
 
   Other-Modules:
     Hakyll.Check

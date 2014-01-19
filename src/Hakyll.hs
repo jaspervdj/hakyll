@@ -28,7 +28,6 @@ module Hakyll
     , module Hakyll.Web.Template
     , module Hakyll.Web.Template.Context
     , module Hakyll.Web.Template.List
-    , module Hakyll.Web.Template.Read
     ) where
 
 
@@ -59,4 +58,3 @@ import           Hakyll.Web.Tags
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.List
-import           Hakyll.Web.Template.Read

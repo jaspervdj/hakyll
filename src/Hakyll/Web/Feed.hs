@@ -35,7 +35,6 @@ import           Hakyll.Core.Item
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.List
-import           Hakyll.Web.Template.Read
 
 
 --------------------------------------------------------------------------------
