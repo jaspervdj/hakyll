@@ -33,6 +33,89 @@
 --
 -- Because of it's simplicity, these templates can be used for more than HTML:
 -- you could make, for example, CSS or JS templates as well.
+--
+-- Apart from interpolating @$key$@s from the 'Context' you can also
+-- use the following macros:
+--
+-- * @$if(key)$@
+--
+-- > $if(key)$
+-- >  <b> Defined </b>
+-- > $else$
+-- >  <b> Non-defined </b>
+-- > $endif$
+--
+-- This example will print @Defined@ if @key@ is defined in the
+-- context and @Non-defined@ otherwise. The @$else$@ clause is
+-- optional.
+--
+-- * @$for(key)$@
+--
+-- The @for@ macro is used for enumerating 'Context' elements that are
+-- lists, i.e. constructed using the 'listField' function. Assume that
+-- in a context we have an element @listField \"key\" c itms@. Then
+-- the snippet 
+--
+-- > $for(key)$
+-- >   $x$
+-- > $sep$,
+-- > $endfor$
+--
+-- would, for each item @i@ in 'itms', lookup @$x$@ in the context @c@
+-- with item @i@, interpolate it, and join the resulting list with
+-- @,@.
+--
+-- More concrete example one may consider is the following. Given the
+-- context
+--
+-- > listField "things" (field "thing" (return . itemBody))
+-- >    (sequence [makeItem "fruits", makeItem "vegetables"])
+-- 
+-- and a template
+--
+-- >  I like
+-- >  $for(things)$
+-- >    fresh $thing$$sep$, and 
+-- >  $endfor$
+--
+-- the resulting page would look like
+--
+-- > <p>
+-- >  I like
+-- > 
+-- >   fresh fruits, and 
+-- > 
+-- >   fresh vegetables
+-- > </p>
+--
+-- The @$sep$@ part can be omitted. Usually, you can get by using the
+-- 'applyListTemplate' and 'applyJoinListTemplate' functions.
+--
+-- * @$partial(path)$@
+--
+-- Loads a template located in a separate file and interpolates it
+-- under the current context.
+--
+-- Assuming that the file @test.html@ contains
+--
+-- > <b>$key$</b>
+--
+-- The result of rendering
+--
+-- > <p>
+-- >   $partial(\"test.html\")$
+-- > </p>
+--
+-- is the same as the result of rendering
+--
+-- > <p>
+-- >   <b>$key$</b>
+-- > </p>
+--
+-- That is, @$partial$@ is equivalent to just copying and pasting
+-- template code.
+--
+
 module Hakyll.Web.Template
     ( Template
     , templateCompiler
