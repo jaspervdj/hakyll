@@ -65,7 +65,7 @@
 -- with item @i@, interpolate it, and join the resulting list with
 -- @,@.
 --
--- More concrete example one may consider is the following. Given the
+-- Another concrete example one may consider is the following. Given the
 -- context
 --
 -- > listField "things" (field "thing" (return . itemBody))
@@ -103,7 +103,7 @@
 -- The result of rendering
 --
 -- > <p>
--- >   $partial(\"test.html\")$
+-- >   $partial("test.html")$
 -- > </p>
 --
 -- is the same as the result of rendering
@@ -112,7 +112,7 @@
 -- >   <b>$key$</b>
 -- > </p>
 --
--- That is, @$partial$@ is equivalent to just copying and pasting
+-- That is, calling @$partial$@ is equivalent to just copying and pasting
 -- template code.
 --
 
