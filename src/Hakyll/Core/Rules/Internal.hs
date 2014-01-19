@@ -1,5 +1,7 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 module Hakyll.Core.Rules.Internal
     ( RulesRead (..)
     , RulesItem (..)
@@ -14,9 +16,13 @@ module Hakyll.Core.Rules.Internal
 
 --------------------------------------------------------------------------------
 import           Control.Applicative            (Applicative, (<$>))
+import           Control.Monad                  (foldM)
+import           Control.Monad.Error            (ErrorT, MonadError, throwError)
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
-import           Control.Monad.Trans            (liftIO)
+import           Control.Monad.Trans            (lift, liftIO)
+import           Data.List                      (foldl')
+import           Data.Map                       (Map)
 import qualified Data.Map                       as M
 import           Data.Monoid                    (Monoid, mappend, mempty)
 import           Data.Set                       (Set)
@@ -48,19 +54,6 @@ data RulesItem = RulesItem (Maybe Routes) (Maybe (Compiler SomeItem))
 
 
 --------------------------------------------------------------------------------
-unionRulesItem :: RulesItem -> RulesItem -> Either String RulesItem
-unionRulesItem (RulesItem r1 c1) (RulesItem r2 c2) = do
-    r <- union "duplicate Routes"   r1 r2
-    c <- union "duplicate Compiler" c1 c2
-    return $ RulesItem r c
-  where
-    union _ Nothing  Nothing  = Right Nothing
-    union _ (Just x) Nothing  = Right (Just x)
-    union _ Nothing  (Just x) = Right (Just x)
-    union e (Just _) (Just _) = Left e
-
-
---------------------------------------------------------------------------------
 data RulesWrite = RulesWrite
     { rulesCreated :: [(Identifier, Maybe String, RulesItem)]
     , rulesMatched :: [(Pattern, Maybe String, RulesItem)]
@@ -76,23 +69,14 @@ instance Monoid RulesWrite where
 
 --------------------------------------------------------------------------------
 data RuleSet = RuleSet
-    { -- | Accumulated routes
-      rulesRoutes       :: Routes
-    , -- | Accumulated compilers
-      rulesCompilers    :: [(Identifier, Compiler SomeItem)]
+    { -- | Accumulated compilers
+      rulesItems        :: Map Identifier (Maybe Routes, Compiler SomeItem)
     , -- | A set of the actually used files
       rulesResources    :: Set Identifier
     , -- | A pattern we can use to check if a file *would* be used. This is
       -- needed for the preview server.
       rulesTotalPattern :: Pattern
     }
-
-
---------------------------------------------------------------------------------
-instance Monoid RuleSet where
-    mempty = RuleSet mempty mempty mempty mempty
-    mappend (RuleSet r1 c1 s1 p1) (RuleSet r2 c2 s2 p2) =
-        RuleSet (mappend r1 r2) (mappend c1 c2) (mappend s1 s2) (p1 .||. p2)
 
 
 --------------------------------------------------------------------------------
@@ -129,6 +113,24 @@ instance MonadMetadata Rules where
 -- | Run a Rules monad, resulting in a 'RuleSet'
 runRules :: Rules a -> Provider -> IO RuleSet
 runRules = undefined
+
+
+--------------------------------------------------------------------------------
+processRules :: Rules a -> Provider -> ErrorT String IO RuleSet
+processRules rules provider = do
+    -- Start by extracting the written stuff
+    (_, _, rs) <- lift $ runRWST (unRules rules) env emptyRulesState
+
+    -- The created compilers are easy. We just insert those.
+    compilers0 <- foldM
+        (\m (k, ri) -> insertRulesItem k ri m)
+        M.empty [(overrideVersion v k, ri) | (k, v, ri) <- rulesCreated rs]
+
+    -- j
+    
+
+    undefined
+
     {-
      - rules provider = do
     (_, _, ruleSet) <- runRWST (unRules rules) env emptyRulesState
@@ -140,10 +142,41 @@ runRules = undefined
             }
 
     return ruleSet'
+    -}
   where
+    overrideVersion Nothing  i = i
+    overrideVersion (Just v) i = setVersion (Just v) i
+
     env = RulesRead
-        { rulesProvider = provider
-        , rulesMatches  = []
-        , rulesVersion  = Nothing
+        { rulesProvider     = provider
+        , rulesPattern      = Nothing
+        , rulesCreate       = []
+        , rulesVersion      = Nothing
+        , rulesDependencies = []
         }
--}
+
+
+--------------------------------------------------------------------------------
+unionRulesItem :: RulesItem -> RulesItem -> Either String RulesItem
+unionRulesItem (RulesItem r1 c1) (RulesItem r2 c2) = do
+    r <- union "duplicate Routes"   r1 r2
+    c <- union "duplicate Compiler" c1 c2
+    return $ RulesItem r c
+  where
+    union _ Nothing  Nothing  = Right Nothing
+    union _ (Just x) Nothing  = Right (Just x)
+    union _ Nothing  (Just x) = Right (Just x)
+    union e (Just _) (Just _) = Left e
+
+
+--------------------------------------------------------------------------------
+insertRulesItem :: MonadError String m
+                => Identifier -> RulesItem -> Map Identifier RulesItem
+                -> m (Map Identifier RulesItem)
+insertRulesItem k ri1 m = case M.lookup k m of
+    Nothing  -> return $ M.insert k ri1 m
+    Just ri2 -> case unionRulesItem ri1 ri2 of
+        Right ri -> return $ M.insert k ri m
+        Left err -> throwError $
+            "Hakyll.Core.Rules.Internal.insertRulesItem: " ++
+            show k ++ ": " ++ err
