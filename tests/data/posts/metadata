@@ -16,3 +16,5 @@ a1: 3
 a2: 3
 a3: 3
 
+--- nonexistent
+a3: 0

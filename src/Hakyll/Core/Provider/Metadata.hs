@@ -46,7 +46,7 @@ loadMetadata p identifier = do
 
     gmd <- loadGlobalMetadata p identifier
 
-    return (M.unions [md, emd, gmd], body)
+    return (M.unions [md, gmd], body)
   where
     normal = setVersion Nothing identifier
     fp     = resourceFilePath p identifier
@@ -154,11 +154,13 @@ loadGlobalMetadata p fp = liftM M.fromList $ loadgm fp where
         concatMap snd . filter (flip matches fp . fromGlob . normalise . combine dir . fst)
 
 namedMetadata :: Parser [(String, [(String, String)])]
-namedMetadata = P.many namedMetadataBlock
+namedMetadata = liftA2 (:) (namedMetadataBlock False) $ P.many $ namedMetadataBlock True
 
-namedMetadataBlock :: Parser (String, [(String, String)])
-namedMetadataBlock = do
-    name      <- P.many1 (P.char '-') *> P.many inlineSpace *> P.manyTill P.anyChar newline
+namedMetadataBlock :: Bool -> Parser (String, [(String, String)])
+namedMetadataBlock isNamed = do
+    name      <- if isNamed
+        then P.many1 (P.char '-') *> P.many inlineSpace *> P.manyTill P.anyChar newline
+        else pure "**"
     metadata' <- metadata
     P.skipMany P.space
     return (name, metadata')

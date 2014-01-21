@@ -67,7 +67,8 @@ makePatternDependency pattern = do
 --------------------------------------------------------------------------------
 -- | Returns a list of all directory-wise metadata files, subdir first, global last
 metadataFiles :: Identifier -> [Identifier]
-metadataFiles = go . takeDirectory . toFilePath where
+metadataFiles identifier = local : go (takeDirectory $ toFilePath identifier) where
     go "." = [fromFilePath "metadata"]
     go dir = fromFilePath (dir </> "metadata") : go (takeDirectory dir)
+    local = fromFilePath $ toFilePath identifier ++ ".metadata"
 

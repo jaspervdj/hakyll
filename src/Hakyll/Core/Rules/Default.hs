@@ -14,6 +14,7 @@ internalRules :: Rules ()
 internalRules  = do
     match "metadata" $ compile $ makeItem ()
     match "**/metadata" $ compile $ makeItem ()
+    match "**.metadata" $ compile $ makeItem ()
 
 --------------------------------------------------------------------------------
 addMetadataDependencies :: Compiler ()
