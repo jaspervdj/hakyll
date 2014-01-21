@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.4.3.1
+Version: 4.4.3.2
 
 Synopsis: A static website compiler library
 Description:
@@ -164,7 +164,7 @@ Library
     random          >= 1.0    && < 1.1,
     regex-base      >= 0.93   && < 0.94,
     regex-tdfa      >= 1.1    && < 1.2,
-    tagsoup         >= 0.12.6 && < 0.14,
+    tagsoup         >= 0.13.1 && < 0.14,
     text            >= 0.11   && < 1.2,
     time            >= 1.1    && < 1.5
 
@@ -250,7 +250,7 @@ Test-suite hakyll-tests
     random          >= 1.0    && < 1.1,
     regex-base      >= 0.93   && < 0.94,
     regex-tdfa      >= 1.1    && < 1.2,
-    tagsoup         >= 0.12.6 && < 0.14,
+    tagsoup         >= 0.13.1 && < 0.14,
     text            >= 0.11   && < 1.2,
     time            >= 1.1    && < 1.5
 
