@@ -54,7 +54,7 @@ run config verbosity rules = do
     provider <- newProvider store (shouldIgnoreFile config) $
         providerDirectory config
     Logger.message logger "Running rules..."
-    ruleSet  <- runRules (internalRules >> rules) provider
+    ruleSet  <- runRules (rules >> internalRules) provider
 
     -- Get old facts
     mOldFacts <- Store.get store factsKey
