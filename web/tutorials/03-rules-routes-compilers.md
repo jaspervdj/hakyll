@@ -69,14 +69,14 @@ Basic routes
 ------------
 
 The `route` function is used for determining the output file. For example, you
-probably want to write the processed contents of `contact.markdown` to
-`_site/contact.html` and not `_site/contact.markdown`.
+probably want to write the processed contents of `contact.md` to
+`_site/contact.html` and not `_site/contact.md`.
 
 `idRoute` is a commonly used route and just keeps the filename. We use this for
 e.g.  the images and CSS files.
 
 `setExtension` is another common route which takes a single argument: the
-desired extension of the resulting file. In order to route `contact.markdown` to
+desired extension of the resulting file. In order to route `contact.md` to
 `_site/contact.html`, use:
 
 ```haskell
@@ -84,7 +84,7 @@ route $ setExtension "html"
 ```
 
 `customRoute` is a more advanced higher-order function which allows for even
-more customization. You want to route `contact.markdown` to
+more customization. You want to route `contact.md` to
 `_site/nwodkram.tcatnoc`? No problem, just use:
 
 ```haskell
@@ -122,7 +122,7 @@ relativizeUrls :: Item String -> Compiler (Item String)
 ```
 
 This compiler traverses your HTML and changes absolute URLs (e.g.
-`/posts/foo.markdown` into relative ones: `../posts/foo.markdown`). This is
+`/posts/foo.md` into relative ones: `../posts/foo.md`). This is
 extremely useful if you want to deploy your site in a subdirectory (e.g.
 `jaspervdj.be/hakyll` instead of `jaspervdj.be`). Combining this with the
 `pandocCompiler` gives us:

@@ -48,13 +48,13 @@ captureTests = fromAssertions "capture"
 --------------------------------------------------------------------------------
 matchesTests :: [Test]
 matchesTests = fromAssertions "matches"
-    [ True  @=? matches (fromList ["foo.markdown"]) "foo.markdown"
+    [ True  @=? matches (fromList ["foo.md"]) "foo.md"
     , False @=? matches (fromList ["foo"]) (setVersion (Just "x") "foo")
     , True  @=? matches (fromVersion (Just "xz")) (setVersion (Just "xz") "bar")
     , True  @=? matches (fromRegex "^foo/[^x]*$") "foo/bar"
     , False @=? matches (fromRegex "^foo/[^x]*$") "foo/barx"
-    , True  @=? matches (complement "foo.markdown") "bar.markdown"
-    , False @=? matches (complement "foo.markdown") "foo.markdown"
+    , True  @=? matches (complement "foo.md") "bar.md"
+    , False @=? matches (complement "foo.md") "foo.md"
     , True  @=? matches ("foo" .||. "bar") "bar"
     , False @=? matches ("bar" .&&. hasNoVersion) (setVersion (Just "xz") "bar")
     ]

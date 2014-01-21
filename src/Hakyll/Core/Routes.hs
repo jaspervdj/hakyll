@@ -3,17 +3,17 @@
 -- This is where the 'Routes' type comes in; it determines where a certain
 -- target should be written.
 --
--- Suppose we have an item @foo\/bar.markdown@. We can render this to
+-- Suppose we have an item @foo\/bar.md@. We can render this to
 -- @foo\/bar.html@ using:
 --
--- > route "foo/bar.markdown" (setExtension ".html")
+-- > route "foo/bar.md" (setExtension ".html")
 --
 -- If we do not want to change the extension, we can use 'idRoute', the simplest
 -- route available:
 --
--- > route "foo/bar.markdown" idRoute
+-- > route "foo/bar.md" idRoute
 --
--- That will route @foo\/bar.markdown@ to @foo\/bar.markdown@.
+-- That will route @foo\/bar.md@ to @foo\/bar.md@.
 --
 -- Note that the extension says nothing about the content! If you set the
 -- extension to @.html@, it is your own responsibility to ensure that the
@@ -112,7 +112,7 @@ idRoute = customRoute toFilePath
 --
 -- Example:
 --
--- > runRoutes (setExtension "html") "posts/the-art-of-trolling.markdown"
+-- > runRoutes (setExtension "html") "posts/the-art-of-trolling.md"
 --
 -- Result:
 --

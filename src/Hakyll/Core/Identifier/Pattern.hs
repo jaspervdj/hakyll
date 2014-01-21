@@ -166,16 +166,16 @@ fromGlob = Glob . parse'
 --
 -- A more concrete example,
 --
--- > fromList ["foo.markdown"] .&&. hasVersion "pdf"
+-- > fromList ["foo.md"] .&&. hasVersion "pdf"
 --
--- will not match anything! The @"foo.markdown"@ 'Identifier' has no version
+-- will not match anything! The @"foo.md"@ 'Identifier' has no version
 -- assigned, so the LHS of '.&&.' will only match this 'Identifier' with no
 -- version. The RHS only matches 'Identifier's with version set to @"pdf"@ --
 -- hence, this pattern matches nothing.
 --
 -- The correct way to use this is:
 --
--- > fromList $ map (setVersion $ Just "pdf") ["foo.markdown"]
+-- > fromList $ map (setVersion $ Just "pdf") ["foo.md"]
 fromList :: [Identifier] -> Pattern
 fromList = List . S.fromList
 
@@ -199,7 +199,7 @@ fromVersion = Version
 --------------------------------------------------------------------------------
 -- | Specify a version, e.g.
 --
--- > "foo/*.markdown" .&&. hasVersion "pdf"
+-- > "foo/*.md" .&&. hasVersion "pdf"
 hasVersion :: String -> Pattern
 hasVersion = fromVersion . Just
 
@@ -207,7 +207,7 @@ hasVersion = fromVersion . Just
 --------------------------------------------------------------------------------
 -- | Match only if the identifier has no version set, e.g.
 --
--- > "foo/*.markdown" .&&. hasNoVersion
+-- > "foo/*.md" .&&. hasNoVersion
 hasNoVersion :: Pattern
 hasNoVersion = fromVersion Nothing
 

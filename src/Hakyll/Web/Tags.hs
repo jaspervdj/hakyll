@@ -18,7 +18,7 @@
 -- To use categories, use the 'buildCategories' function. Categories are
 -- determined by the directory a page is in, for example, the post
 --
--- > posts/coding/2010-01-28-hakyll-categories.markdown
+-- > posts/coding/2010-01-28-hakyll-categories.md
 --
 -- will receive the @coding@ category.
 --
