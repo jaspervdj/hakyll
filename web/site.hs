@@ -35,7 +35,7 @@ main = hakyllWith config $ do
         compile copyFileCompiler
 
     -- Pages
-    match "*.markdown" $ do
+    match "*.md" $ do
         route   $ setExtension "html"
         compile $ pandocCompiler
             >>= loadAndApplyTemplate "templates/default.html" defaultContext

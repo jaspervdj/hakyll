@@ -2,7 +2,7 @@
 -- | An identifier is a type used to uniquely identify an item. An identifier is
 -- conceptually similar to a file path. Examples of identifiers are:
 --
--- * @posts/foo.markdown@
+-- * @posts/foo.md@
 --
 -- * @index@
 --

@@ -23,8 +23,8 @@ tests :: Test
 tests = testGroup "Hakyll.Core.Routes.Tests" $ fromAssertions "runRoutes"
     [ testRoutes "foo.html" (setExtension "html") "foo"
     , testRoutes "foo.html" (setExtension ".html") "foo"
-    , testRoutes "foo.html" (setExtension "html") "foo.markdown"
-    , testRoutes "foo.html" (setExtension ".html") "foo.markdown"
+    , testRoutes "foo.html" (setExtension "html") "foo.md"
+    , testRoutes "foo.html" (setExtension ".html") "foo.md"
 
     , testRoutes "neve ro ddo reven"
         (customRoute (reverse . toFilePath  )) "never odd or even"
