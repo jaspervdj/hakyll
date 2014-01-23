@@ -20,6 +20,8 @@ import           System.IO                     as IO
 import           Text.Parsec                   ((<?>))
 import qualified Text.Parsec                   as P
 import           Text.Parsec.String            (Parser)
+import           System.FilePath.Posix
+import           Control.Monad                 (liftM)
 
 
 --------------------------------------------------------------------------------
@@ -28,7 +30,7 @@ import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
 import           Hakyll.Core.Util.Parser
 import           Hakyll.Core.Util.String
-
+import           Hakyll.Core.Identifier.Pattern
 
 --------------------------------------------------------------------------------
 loadMetadata :: Provider -> Identifier -> IO (Metadata, Maybe String)
@@ -42,7 +44,9 @@ loadMetadata p identifier = do
         Nothing  -> return M.empty
         Just mi' -> loadMetadataFile $ resourceFilePath p mi'
 
-    return (M.union md emd, body)
+    gmd <- loadGlobalMetadata p identifier
+
+    return (M.unions [md, gmd], body)
   where
     normal = setVersion Nothing identifier
     fp     = resourceFilePath p identifier
@@ -133,3 +137,32 @@ page = do
     metadata' <- P.option [] metadataBlock
     body      <- P.many P.anyChar
     return (metadata', body)
+
+
+--------------------------------------------------------------------------------
+-- | Load directory-wise metadata
+loadGlobalMetadata :: Provider -> Identifier -> IO Metadata
+loadGlobalMetadata p fp = liftM M.fromList $ loadgm fp where 
+    loadgm :: Identifier -> IO [(String, String)]
+    loadgm = liftM concat . mapM loadOne . reverse . filter (resourceExists p) . metadataFiles
+    loadOne mfp =
+        let path = resourceFilePath p mfp
+            dir = takeDirectory $ toFilePath mfp
+        -- TODO: It might be better to print warning and continue
+        in either (error.show) (findMetadata dir) . P.parse namedMetadata path <$> readFile path
+    findMetadata dir = 
+        concatMap snd . filter (flip matches fp . fromGlob . normalise . combine dir . fst)
+
+namedMetadata :: Parser [(String, [(String, String)])]
+namedMetadata = liftA2 (:) (namedMetadataBlock False) $ P.many $ namedMetadataBlock True
+
+namedMetadataBlock :: Bool -> Parser (String, [(String, String)])
+namedMetadataBlock isNamed = do
+    name      <- if isNamed
+        then P.many1 (P.char '-') *> P.many inlineSpace *> P.manyTill P.anyChar newline
+        else pure "**"
+    metadata' <- metadata
+    P.skipMany P.space
+    return (name, metadata')
+
+
