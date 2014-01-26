@@ -118,7 +118,7 @@ pandocCompilerWithTransform ropt wopt f = cached cacheName $
 --------------------------------------------------------------------------------
 -- | Similar to 'pandocCompilerWithTransform', but the transformation
 -- function is monadic. This is useful when you want the pandoc
--- tranfromation to use the 'Compiler' information such as routes,
+-- transformation to use the 'Compiler' information such as routes,
 -- metadata, etc
 pandocCompilerWithTransformM :: ReaderOptions -> WriterOptions
                     -> (Pandoc -> Compiler Pandoc)
