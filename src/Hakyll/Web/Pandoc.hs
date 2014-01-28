@@ -13,6 +13,7 @@ module Hakyll.Web.Pandoc
     , pandocCompiler
     , pandocCompilerWith
     , pandocCompilerWithTransform
+    , pandocCompilerWithTransformM
 
       -- * Default options
     , defaultHakyllReaderOptions
@@ -23,6 +24,7 @@ module Hakyll.Web.Pandoc
 --------------------------------------------------------------------------------
 import           Control.Applicative        ((<$>))
 import qualified Data.Set                   as S
+import           Data.Traversable           (traverse)
 import           Text.Pandoc
 
 
@@ -113,6 +115,20 @@ pandocCompilerWithTransform ropt wopt f = cached cacheName $
   where
     cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"
 
+--------------------------------------------------------------------------------
+-- | Similar to 'pandocCompilerWithTransform', but the transformation
+-- function is monadic. This is useful when you want the pandoc
+-- transformation to use the 'Compiler' information such as routes,
+-- metadata, etc
+pandocCompilerWithTransformM :: ReaderOptions -> WriterOptions
+                    -> (Pandoc -> Compiler Pandoc)
+                    -> Compiler (Item String)
+pandocCompilerWithTransformM ropt wopt f = cached cacheName $
+    writePandocWith wopt <$>
+        (traverse f
+         =<< readPandocWith ropt <$> getResourceBody)
+  where
+    cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"
 
 --------------------------------------------------------------------------------
 -- | The default reader options for pandoc parsing in hakyll
