@@ -101,7 +101,9 @@ pandocCompiler =
 -- | A version of 'pandocCompiler' which allows you to specify your own pandoc
 -- options
 pandocCompilerWith :: ReaderOptions -> WriterOptions -> Compiler (Item String)
-pandocCompilerWith ropt wopt = pandocCompilerWithTransform ropt wopt id
+pandocCompilerWith ropt wopt =
+    cached "Hakyll.Web.Pandoc.pandocCompilerWith" $
+        pandocCompilerWithTransform ropt wopt id
 
 
 --------------------------------------------------------------------------------
@@ -110,10 +112,9 @@ pandocCompilerWith ropt wopt = pandocCompilerWithTransform ropt wopt id
 pandocCompilerWithTransform :: ReaderOptions -> WriterOptions
                             -> (Pandoc -> Pandoc)
                             -> Compiler (Item String)
-pandocCompilerWithTransform ropt wopt f = cached cacheName $
-    writePandocWith wopt . fmap f . readPandocWith ropt <$> getResourceBody
-  where
-    cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"
+pandocCompilerWithTransform ropt wopt f =
+    pandocCompilerWithTransformM ropt wopt (return . f)
+
 
 --------------------------------------------------------------------------------
 -- | Similar to 'pandocCompilerWithTransform', but the transformation
@@ -123,12 +124,10 @@ pandocCompilerWithTransform ropt wopt f = cached cacheName $
 pandocCompilerWithTransformM :: ReaderOptions -> WriterOptions
                     -> (Pandoc -> Compiler Pandoc)
                     -> Compiler (Item String)
-pandocCompilerWithTransformM ropt wopt f = cached cacheName $
+pandocCompilerWithTransformM ropt wopt f =
     writePandocWith wopt <$>
-        (traverse f
-         =<< readPandocWith ropt <$> getResourceBody)
-  where
-    cacheName = "Hakyll.Web.Page.pageCompilerWithPandoc"
+        (traverse f =<< readPandocWith ropt <$> getResourceBody)
+
 
 --------------------------------------------------------------------------------
 -- | The default reader options for pandoc parsing in hakyll
