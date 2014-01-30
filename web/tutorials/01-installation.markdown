@@ -55,7 +55,7 @@ haskell program. We can compile and run it like this:
 If you installed `hakyll` with a preview server (this is the default), you can
 now use
 
-    $ ./site preview
+    $ ./site watch
 
 and have a look at your site at
 [http://localhost:8000/](http://localhost:8000/).
