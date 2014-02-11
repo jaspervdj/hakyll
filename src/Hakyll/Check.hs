@@ -57,7 +57,7 @@ data Check = All | InternalLinks
 check :: Configuration -> Verbosity -> Check -> IO ExitCode
 check config verbosity check' = do
     ((), write) <- runChecker checkDestination config verbosity check'
-    return $ if checkerFaulty write >= 0 then ExitFailure 1 else ExitSuccess
+    return $ if checkerFaulty write > 0 then ExitFailure 1 else ExitSuccess
 
 
 --------------------------------------------------------------------------------
