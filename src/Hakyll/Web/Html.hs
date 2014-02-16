@@ -80,6 +80,7 @@ renderTags' :: [TS.Tag String] -> String
 renderTags' = TS.renderTagsOptions TS.renderOptions
     { TS.optRawTag   = (`elem` ["script", "style"]) . map toLower
     , TS.optMinimize = (`S.member` minimize) . map toLower
+    , TS.optEscape   = id
     }
   where
     -- A list of elements which must be minimized
