@@ -79,6 +79,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/gwern/gwern.net)
 - <http://www.rohanjain.in/>,
   [source](https://github.com/crodjer/rohanjain.in)
+- <http://www.corentindupont.info/>,
+  [source](https://github.com/cdupont/CorentinDupont-WebPage)
 
 ## Hakyll 3.X
 
