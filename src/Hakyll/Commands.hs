@@ -9,13 +9,15 @@ module Hakyll.Commands
     , rebuild
     , server
     , deploy
-    , watch 
+    , watch
     ) where
 
 
 --------------------------------------------------------------------------------
 import           System.Exit                (exitWith, ExitCode)
+import           System.IO.Error            (catchIOError)
 import           Control.Applicative
+import           Control.Monad              (void)
 import           Control.Concurrent
 
 --------------------------------------------------------------------------------
@@ -83,17 +85,22 @@ preview _ _ _ _ = previewServerDisabled
 watch :: Configuration -> Verbosity -> Int -> Bool -> Rules a -> IO ()
 #ifdef WATCH_SERVER
 watch conf verbosity port runServer rules = do
-    watchUpdates conf update
-    _ <- forkIO (server')
-    loop
+#ifndef mingw32_HOST_OS
+    _ <- forkIO $ watchUpdates conf update
+#else
+    -- Force windows users to compile with -threaded flag, as otherwise
+    -- thread is blocked indefinitely.
+    catchIOError (void $ forkOS $ watchUpdates conf update) $ do
+        fail $ "Hakyll.Commands.watch: Could not start update watching " ++
+               "thread. Did you compile with -threaded flag?"
+#endif
+    server'
   where
     update = do
         (_, ruleSet) <- run conf verbosity rules
         return $ rulesPattern ruleSet
-
     loop = threadDelay 100000 >> loop
-
-    server' = if runServer then server conf port else return ()
+    server' = if runServer then server conf port else loop
 #else
 watch _ _ _ _ _ = watchServerDisabled
 #endif
