@@ -49,7 +49,7 @@ The file `site.hs` holds the configuration of your site, as an executable
 haskell program. We can compile and run it like this:
 
     $ cd my-site
-    $ ghc --make site.hs
+    $ ghc --make -threaded site.hs
     $ ./site build
 
 If you installed `hakyll` with a preview server (this is the default), you can
