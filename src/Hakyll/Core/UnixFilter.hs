@@ -19,7 +19,7 @@ import           System.Exit             (ExitCode (..))
 import           System.IO               (Handle, hClose, hFlush, hGetContents,
                                           hPutStr, hSetEncoding, localeEncoding)
 import           System.Process
-
+import           System.Info
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
@@ -105,8 +105,12 @@ unixFilterIO :: Monoid o
              -> i
              -> IO (o, String, ExitCode)
 unixFilterIO writer reader programName args input = do
+    let pr = if os == "mingw32"
+             then shell $ unwords (programName : args)
+             else proc programName args
+
     (Just inh, Just outh, Just errh, pid) <-
-        createProcess (proc programName args)
+        createProcess pr
                 { std_in  = CreatePipe
                 , std_out = CreatePipe
                 , std_err = CreatePipe
