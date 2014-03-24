@@ -106,7 +106,7 @@ noServerFlag x = x &= help "Disable the built-in web server"
 
 --------------------------------------------------------------------------------
 hostFlag :: Data a => a -> a
-hostFlag x = x &= help "Host to serve on"
+hostFlag x = x &= help "Host to bind on"
 {-# INLINE hostFlag #-}
 
 --------------------------------------------------------------------------------
