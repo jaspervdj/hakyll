@@ -8,6 +8,7 @@ module Hakyll.Preview.Server
 
 --------------------------------------------------------------------------------
 import           Control.Monad.Trans (liftIO)
+import qualified Data.ByteString.Char8 as B
 import qualified Snap.Core           as Snap
 import qualified Snap.Http.Server    as Snap
 import qualified Snap.Util.FileServe as Snap
@@ -31,13 +32,15 @@ static directory preServe =
 -- | Main method, runs a static server in the given directory
 staticServer :: FilePath             -- ^ Directory to serve
              -> (FilePath -> IO ())  -- ^ Pre-serve hook
+             -> String               -- ^ Host to bind on
              -> Int                  -- ^ Port to listen on
              -> IO ()                -- ^ Blocks forever
-staticServer directory preServe port =
+staticServer directory preServe host port =
     Snap.httpServe config $ static directory preServe
   where
     -- Snap server config
-    config = Snap.setPort      port
+    config = Snap.setBind  (B.pack host)
+           $ Snap.setPort      port
            $ Snap.setAccessLog Snap.ConfigNoLog
            $ Snap.setErrorLog  Snap.ConfigNoLog
            $ Snap.emptyConfig

@@ -15,9 +15,7 @@ module Hakyll.Commands
 
 --------------------------------------------------------------------------------
 import           System.Exit                (exitWith, ExitCode)
-import           System.IO.Error            (catchIOError)
 import           Control.Applicative
-import           Control.Monad              (void)
 import           Control.Concurrent
 
 --------------------------------------------------------------------------------
@@ -69,7 +67,7 @@ preview :: Configuration -> Verbosity -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 preview conf verbosity rules port  = do
     deprecatedMessage
-    watch conf verbosity port True rules
+    watch conf verbosity "0.0.0.0" port True rules
   where
     deprecatedMessage = mapM_ putStrLn [ "The preview command has been deprecated."
                                        , "Use the watch command for recompilation and serving."
@@ -82,9 +80,9 @@ preview _ _ _ _ = previewServerDisabled
 --------------------------------------------------------------------------------
 -- | Watch and recompile for changes
 
-watch :: Configuration -> Verbosity -> Int -> Bool -> Rules a -> IO ()
+watch :: Configuration -> Verbosity -> String -> Int -> Bool -> Rules a -> IO ()
 #ifdef WATCH_SERVER
-watch conf verbosity port runServer rules = do
+watch conf verbosity host port runServer rules = do
 #ifndef mingw32_HOST_OS
     _ <- forkIO $ watchUpdates conf update
 #else
@@ -100,9 +98,9 @@ watch conf verbosity port runServer rules = do
         (_, ruleSet) <- run conf verbosity rules
         return $ rulesPattern ruleSet
     loop = threadDelay 100000 >> loop
-    server' = if runServer then server conf port else loop
+    server' = if runServer then server conf host port else loop
 #else
-watch _ _ _ _ _ = watchServerDisabled
+watch _ _ _ _ = watchServerDisabled
 #endif
 
 --------------------------------------------------------------------------------
@@ -113,15 +111,15 @@ rebuild conf verbosity rules =
 
 --------------------------------------------------------------------------------
 -- | Start a server
-server :: Configuration -> Int -> IO ()
+server :: Configuration -> String -> Int -> IO ()
 #ifdef PREVIEW_SERVER
-server conf port = do
+server conf host port = do
     let destination = destinationDirectory conf
-    staticServer destination preServeHook port
+    staticServer destination preServeHook host port
   where
     preServeHook _ = return ()
 #else
-server _ _ = previewServerDisabled
+server _ _ _ = previewServerDisabled
 #endif
 
 

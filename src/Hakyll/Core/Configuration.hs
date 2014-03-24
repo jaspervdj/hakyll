@@ -69,6 +69,11 @@ data Configuration = Configuration
     , -- | Use an in-memory cache for items. This is faster but uses more
       -- memory.
       inMemoryCache        :: Bool
+    , -- | Override default host for preview server. Default is "127.0.0.1",
+      -- which binds only on the loopback address.
+      -- One can also override the host as a command line argument:
+      -- ./site preview -h "0.0.0.0"
+      previewHost          :: String
     , -- | Override default port for preview server. Default is 8000.
       -- One can also override the port as a command line argument:
       -- ./site preview -p 1234
@@ -91,6 +96,7 @@ defaultConfiguration = Configuration
     , deployCommand        = "echo 'No deploy command specified' && exit 1"
     , deploySite           = system . deployCommand
     , inMemoryCache        = True
+    , previewHost          = "127.0.0.1"
     , previewPort          = 8000
     }
   where
