@@ -8,6 +8,8 @@
 TAGS
 dist
 tags
+cabal.sandbox.config
+.cabal-sandbox/
 
 # Ignore test builds.
 tests/Main

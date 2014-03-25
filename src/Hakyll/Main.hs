@@ -48,8 +48,8 @@ hakyllWith conf rules = do
         Help    _     -> showHelp
         Preview _ p   -> Commands.preview conf verbosity' rules p
         Rebuild _     -> Commands.rebuild conf verbosity' rules >>= exitWith
-        Server  _ _   -> Commands.server conf (port args')
-        Watch   _ p s -> Commands.watch conf verbosity' p (not s) rules
+        Server  _ _ _   -> Commands.server conf (host args') (port args')
+        Watch   _ _ p s -> Commands.watch conf verbosity' (host args') p (not s) rules
 
 
 --------------------------------------------------------------------------------
@@ -67,8 +67,8 @@ data HakyllArgs
     | Help    {verbose :: Bool}
     | Preview {verbose :: Bool, port :: Int}
     | Rebuild {verbose :: Bool}
-    | Server  {verbose :: Bool, port :: Int}
-    | Watch   {verbose :: Bool, port :: Int, no_server :: Bool }
+    | Server  {verbose :: Bool, host :: String, port :: Int}
+    | Watch   {verbose :: Bool, host :: String, port :: Int, no_server :: Bool }
     deriving (Data, Typeable, Show)
 
 
@@ -84,13 +84,14 @@ hakyllArgs conf = modes
     , (Preview (verboseFlag def) (portFlag defaultPort)) &=
         help "[Deprecated] Please use the watch command"
     , (Rebuild $ verboseFlag def) &= help "Clean and build again"
-    , (Server (verboseFlag def) (portFlag defaultPort)) &=
+    , (Server (verboseFlag def) (hostFlag defaultHost) (portFlag defaultPort)) &=
         help "Start a preview server"
-    , (Watch (verboseFlag def) (portFlag defaultPort) (noServerFlag False) &=
+    , (Watch (verboseFlag def) (hostFlag defaultHost) (portFlag defaultPort) (noServerFlag False) &=
        help "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server.")
     ] &= help "Hakyll static site compiler" &= program progName
-    where defaultPort = Config.previewPort conf
-
+    where
+        defaultHost = Config.previewHost conf
+        defaultPort = Config.previewPort conf
 
 --------------------------------------------------------------------------------
 verboseFlag :: Data a => a -> a
@@ -102,6 +103,11 @@ verboseFlag x = x &= help "Run in verbose mode"
 noServerFlag :: Data a => a -> a
 noServerFlag x = x &= help "Disable the built-in web server"
 {-# INLINE noServerFlag #-}
+
+--------------------------------------------------------------------------------
+hostFlag :: Data a => a -> a
+hostFlag x = x &= help "Host to bind on"
+{-# INLINE hostFlag #-}
 
 --------------------------------------------------------------------------------
 portFlag :: Data a => a -> a
