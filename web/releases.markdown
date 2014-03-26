@@ -4,6 +4,22 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.5.0.0
+
+- Fix issue with syntax highlighting and line numbers (contribution by Adelbert
+  Chang)
+- Improve documentation for `Context` (contribution by Daniil Frumin)
+- Added `IsString` instance for `Template`
+- Added the `pandocCompilerWithTransformM` function (contribution by Daniil
+  Frumin)
+- Make `./site check` return the right exit code (contribution by Andres Loeh)
+- Use OS threads to make `./site watch` work nicely on Windows (contribution by
+  Simonas Kazlauskas)
+- Make the `unixFilter` function work better on windows by calling `shell`
+  (contribution by Collin J. Doering)
+- Add a command-line flag to bind on a user-specified host (contribution by
+  chrisdotcode)
+
 ## Hakyll 4.4.3.0
 
 - Fix issue when using `metadataRoute` after other custom routes
