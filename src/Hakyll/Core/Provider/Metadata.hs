@@ -142,20 +142,26 @@ page = do
 --------------------------------------------------------------------------------
 -- | Load directory-wise metadata
 loadGlobalMetadata :: Provider -> FilePath -> IO (M.Map String String)
-loadGlobalMetadata p fp = liftM M.fromList $ loadgm $ takeDirectory fp where 
-    loadgm :: FilePath -> IO [(String, String)]
-    loadgm dir | dir == "." = return []
-               | otherwise = do
-        let mfp = fromFilePath $ combine dir "metadata"
-        md <- if resourceExists p mfp then loadOne mfp dir else return []
-        others <- loadgm (takeDirectory dir)
-        return $ others ++ md 
-    loadOne mfp dir =
-        let path = resourceFilePath p mfp
-        -- TODO: It might be better to print warning and continue
-        in either (error.show) (findMetadata dir) . P.parse namedMetadata path <$> readFile path
-    findMetadata dir = 
-        concatMap snd . filter (flip matches (fromFilePath fp) . fromGlob . combine dir . fst)
+loadGlobalMetadata p fp = do
+    let dir = takeDirectory fp
+    liftM M.fromList $ loadgm dir
+    where 
+        loadgm :: FilePath -> IO [(String, String)]
+        loadgm dir | dir == providerDirectory p = return []
+                   | otherwise = do
+            let mfp = combine dir "metadata"
+            md <- if M.member (fromFilePath mfp) (providerFiles p) 
+                    then loadOne mfp dir 
+                    else return []
+            others <- loadgm (takeDirectory dir)
+            return $ others ++ md 
+        loadOne mfp dir = do
+            contents <- IO.readFile $ resourceFilePath p $ fromFilePath mfp
+            return $ case P.parse namedMetadata mfp contents of
+                        Left err -> error (show err)
+                        Right mds -> findMetadata mds dir
+        findMetadata mds dir = 
+            concatMap snd $ filter (flip matches (fromFilePath fp) . fromGlob . combine dir . fst) mds
 
 namedMetadata :: Parser [(String, [(String, String)])]
 namedMetadata = liftA2 (:) (namedMetadataBlock False) $ P.many $ namedMetadataBlock True
