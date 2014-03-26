@@ -21,7 +21,7 @@ import           Text.Parsec                   ((<?>))
 import qualified Text.Parsec                   as P
 import           Text.Parsec.String            (Parser)
 import           System.FilePath.Posix
-import           Control.Monad                 (liftM)
+import           Control.Monad                  (liftM)
 
 
 --------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ loadMetadata p identifier = do
         Nothing  -> return M.empty
         Just mi' -> loadMetadataFile $ resourceFilePath p mi'
 
-    gmd <- loadGlobalMetadata p $ toFilePath identifier
+    gmd <- loadGlobalMetadata p fp
 
     return (M.unions [md, gmd], body)
   where
@@ -150,13 +150,13 @@ loadGlobalMetadata p fp = do
         loadgm dir | dir == providerDirectory p = return []
                    | otherwise = do
             let mfp = combine dir "metadata"
-            md <- if M.member (fromFilePath mfp) (providerFiles p) 
+            md <- if M.member (fromFilePath $ normalise mfp) (providerFiles p) 
                     then loadOne mfp dir 
                     else return []
             others <- loadgm (takeDirectory dir)
             return $ others ++ md 
         loadOne mfp dir = do
-            contents <- IO.readFile $ resourceFilePath p $ fromFilePath mfp
+            contents <- IO.readFile mfp
             return $ case P.parse namedMetadata mfp contents of
                         Left err -> error (show err)
                         Right mds -> findMetadata mds dir
