@@ -20,8 +20,6 @@ import           System.IO                     as IO
 import           Text.Parsec                   ((<?>))
 import qualified Text.Parsec                   as P
 import           Text.Parsec.String            (Parser)
-import           System.FilePath.Posix
-import           Control.Monad                  (liftM)
 
 
 --------------------------------------------------------------------------------
@@ -30,7 +28,7 @@ import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
 import           Hakyll.Core.Util.Parser
 import           Hakyll.Core.Util.String
-import           Hakyll.Core.Identifier.Pattern
+
 
 --------------------------------------------------------------------------------
 loadMetadata :: Provider -> Identifier -> IO (Metadata, Maybe String)
@@ -44,9 +42,7 @@ loadMetadata p identifier = do
         Nothing  -> return M.empty
         Just mi' -> loadMetadataFile $ resourceFilePath p mi'
 
-    gmd <- loadGlobalMetadata p fp
-
-    return (M.unions [md, gmd], body)
+    return (M.union md emd, body)
   where
     normal = setVersion Nothing identifier
     fp     = resourceFilePath p identifier
@@ -137,42 +133,3 @@ page = do
     metadata' <- P.option [] metadataBlock
     body      <- P.many P.anyChar
     return (metadata', body)
-
-
---------------------------------------------------------------------------------
--- | Load directory-wise metadata
-loadGlobalMetadata :: Provider -> FilePath -> IO (M.Map String String)
-loadGlobalMetadata p fp = do
-    let dir = takeDirectory fp
-    liftM M.fromList $ loadgm dir
-    where 
-        loadgm :: FilePath -> IO [(String, String)]
-        loadgm dir | dir == providerDirectory p = return []
-                   | otherwise = do
-            let mfp = combine dir "metadata"
-            md <- if M.member (fromFilePath $ normalise mfp) (providerFiles p) 
-                    then loadOne mfp dir 
-                    else return []
-            others <- loadgm (takeDirectory dir)
-            return $ others ++ md 
-        loadOne mfp dir = do
-            contents <- IO.readFile mfp
-            return $ case P.parse namedMetadata mfp contents of
-                        Left err -> error (show err)
-                        Right mds -> findMetadata mds dir
-        findMetadata mds dir = 
-            concatMap snd $ filter (flip matches (fromFilePath fp) . fromGlob . combine dir . fst) mds
-
-namedMetadata :: Parser [(String, [(String, String)])]
-namedMetadata = liftA2 (:) (namedMetadataBlock False) $ P.many $ namedMetadataBlock True
-
-namedMetadataBlock :: Bool -> Parser (String, [(String, String)])
-namedMetadataBlock isNamed = do
-    name      <- if isNamed
-        then P.many1 (P.char '-') *> P.many inlineSpace *> P.manyTill P.anyChar newline
-        else pure "**"
-    metadata' <- metadata
-    P.skipMany P.space
-    return (name, metadata')
-
-
