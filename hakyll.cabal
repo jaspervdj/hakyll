@@ -132,7 +132,6 @@ Library
     Hakyll.Core.Provider.Metadata
     Hakyll.Core.Provider.MetadataCache
     Hakyll.Core.Rules.Internal
-    Hakyll.Core.Rules.Default
     Hakyll.Core.Runtime
     Hakyll.Core.Store
     Hakyll.Core.Util.File

@@ -5,7 +5,6 @@ module Hakyll.Core.Metadata
     , getMetadataField
     , getMetadataField'
     , makePatternDependency
-    , metadataFiles
     ) where
 
 
@@ -13,7 +12,6 @@ module Hakyll.Core.Metadata
 import           Control.Monad                  (forM)
 import           Data.Map                       (Map)
 import qualified Data.Map                       as M
-import           System.FilePath.Posix          ((</>), takeDirectory)
 
 
 --------------------------------------------------------------------------------
@@ -63,12 +61,3 @@ makePatternDependency :: MonadMetadata m => Pattern -> m Dependency
 makePatternDependency pattern = do
     matches' <- getMatches pattern
     return $ PatternDependency pattern matches'
-
---------------------------------------------------------------------------------
--- | Returns a list of all directory-wise metadata files, subdir first, global last
-metadataFiles :: Identifier -> [Identifier]
-metadataFiles identifier = local : go (takeDirectory $ toFilePath identifier) where
-    go "." = [fromFilePath "metadata"]
-    go dir = fromFilePath (dir </> "metadata") : go (takeDirectory dir)
-    local = fromFilePath $ toFilePath identifier ++ ".metadata"
-
