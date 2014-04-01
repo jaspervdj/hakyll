@@ -15,7 +15,9 @@ module Hakyll.Commands
 
 --------------------------------------------------------------------------------
 import           System.Exit                (exitWith, ExitCode)
+import           System.IO.Error            (catchIOError)
 import           Control.Applicative
+import           Control.Monad              (void)
 import           Control.Concurrent
 
 --------------------------------------------------------------------------------
