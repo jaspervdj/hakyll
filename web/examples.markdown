@@ -83,6 +83,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/cdupont/CorentinDupont-WebPage)
 - <http://jelv.is>,
   [source](https://github.com/TikhonJelvis/website)
+- <https://secure.plaimi.net/>,
+  [source](https://github.com/plaimi/www)
 
 ## Hakyll 3.X
 
