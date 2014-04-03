@@ -81,6 +81,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/crodjer/rohanjain.in)
 - <http://www.corentindupont.info/>,
   [source](https://github.com/cdupont/CorentinDupont-WebPage)
+- <http://jelv.is>,
+  [source](https://github.com/TikhonJelvis/website)
 
 ## Hakyll 3.X
 
