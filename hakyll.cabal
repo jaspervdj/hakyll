@@ -191,7 +191,7 @@ Library
 
   If flag(checkExternal)
     Build-depends:
-      http-conduit >= 1.8    && < 2.1,
+      http-conduit >= 1.8    && < 2.2,
       http-types   >= 0.7    && < 0.9
     Cpp-options:
       -DCHECK_EXTERNAL
@@ -277,7 +277,7 @@ Test-suite hakyll-tests
 
   If flag(checkExternal)
     Build-depends:
-      http-conduit >= 1.8    && < 2.1,
+      http-conduit >= 1.8    && < 2.2,
       http-types   >= 0.7    && < 0.9
     Cpp-options:
       -DCHECK_EXTERNAL
