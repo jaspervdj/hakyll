@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.5.0.1
+Version: 4.5.0.2
 
 Synopsis: A static website compiler library
 Description:
@@ -191,7 +191,7 @@ Library
 
   If flag(checkExternal)
     Build-depends:
-      http-conduit >= 1.8    && < 2.2,
+      http-conduit >= 2.1    && < 2.2,
       http-types   >= 0.7    && < 0.9
     Cpp-options:
       -DCHECK_EXTERNAL
@@ -277,7 +277,7 @@ Test-suite hakyll-tests
 
   If flag(checkExternal)
     Build-depends:
-      http-conduit >= 1.8    && < 2.2,
+      http-conduit >= 2.1    && < 2.2,
       http-types   >= 0.7    && < 0.9
     Cpp-options:
       -DCHECK_EXTERNAL
