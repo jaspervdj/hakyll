@@ -102,7 +102,7 @@ watch conf verbosity host port runServer rules = do
     loop = threadDelay 100000 >> loop
     server' = if runServer then server conf host port else loop
 #else
-watch _ _ _ _ = watchServerDisabled
+watch _ _ _ _ _ _ = watchServerDisabled
 #endif
 
 --------------------------------------------------------------------------------
