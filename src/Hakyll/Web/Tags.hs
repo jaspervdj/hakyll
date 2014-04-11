@@ -71,6 +71,7 @@ import qualified Data.Map                        as M
 import           Data.Maybe                      (catMaybes, fromMaybe)
 import           Data.Monoid                     (mconcat)
 import           Data.Ord                        (comparing)
+import qualified Data.Set                        as S
 import           System.FilePath                 (takeBaseName, takeDirectory)
 import           Text.Blaze.Html                 (toHtml, toValue, (!))
 import           Text.Blaze.Html.Renderer.String (renderHtml)
@@ -124,7 +125,8 @@ buildTagsWith :: MonadMetadata m
 buildTagsWith f pattern makeId = do
     ids    <- getMatches pattern
     tagMap <- foldM addTags M.empty ids
-    return $ Tags (M.toList tagMap) makeId (PatternDependency pattern ids)
+    let set' = S.fromList ids
+    return $ Tags (M.toList tagMap) makeId (PatternDependency pattern set')
   where
     -- Create a tag map for one page
     addTags tagMap id' = do
@@ -148,8 +150,8 @@ buildCategories = buildTagsWith getCategory
 tagsRules :: Tags -> (String -> Pattern -> Rules ()) -> Rules ()
 tagsRules tags rules =
     forM_ (tagsMap tags) $ \(tag, identifiers) ->
-        create [tagsMakeId tags tag] $
-            rulesExtraDependencies [tagsDependency tags] $
+        rulesExtraDependencies [tagsDependency tags] $
+            create [tagsMakeId tags tag] $
                 rules tag $ fromList identifiers
 
 

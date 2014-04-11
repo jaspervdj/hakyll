@@ -12,6 +12,7 @@ module Hakyll.Core.Metadata
 import           Control.Monad                  (forM)
 import           Data.Map                       (Map)
 import qualified Data.Map                       as M
+import qualified Data.Set                       as S
 
 
 --------------------------------------------------------------------------------
@@ -60,4 +61,4 @@ getMetadataField' identifier key = do
 makePatternDependency :: MonadMetadata m => Pattern -> m Dependency
 makePatternDependency pattern = do
     matches' <- getMatches pattern
-    return $ PatternDependency pattern matches'
+    return $ PatternDependency pattern (S.fromList matches')

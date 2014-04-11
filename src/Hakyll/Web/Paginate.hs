@@ -15,6 +15,7 @@ import           Control.Monad                  (forM_)
 import           Data.List                      (unfoldr)
 import qualified Data.Map                       as M
 import           Data.Monoid                    (mconcat)
+import qualified Data.Set                       as S
 import           Text.Printf                    (printf)
 
 
@@ -58,7 +59,7 @@ buildPaginate pattern = do
                 "invalid page number: " ++ show pn
 
     return $ Paginate pagPages pagPlaces makeId
-        (PatternDependency pattern idents)
+        (PatternDependency pattern (S.fromList idents))
 
 
 --------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ buildPaginateWith n makeId pattern = do
             [(makeId i, i) | i <- [1 .. nPages]]
 
     return $ Paginate (M.fromList paginatePages') (M.fromList pagPlaces') makeId
-        (PatternDependency pattern idents)
+        (PatternDependency pattern (S.fromList idents))
 
 
 --------------------------------------------------------------------------------

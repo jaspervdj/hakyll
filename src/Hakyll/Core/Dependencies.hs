@@ -32,7 +32,7 @@ import           Hakyll.Core.Identifier.Pattern
 
 --------------------------------------------------------------------------------
 data Dependency
-    = PatternDependency Pattern [Identifier]
+    = PatternDependency Pattern (Set Identifier)
     | IdentifierDependency Identifier
     deriving (Show, Typeable)
 
@@ -91,7 +91,7 @@ dependenciesFor id' = do
     return $ concatMap dependenciesFor' $ fromMaybe [] $ M.lookup id' facts
   where
     dependenciesFor' (IdentifierDependency i) = [i]
-    dependenciesFor' (PatternDependency _ is) = is
+    dependenciesFor' (PatternDependency _ is) = S.toList is
 
 
 --------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ checkChangedPatterns = do
     go _   ds (IdentifierDependency i) = return $ IdentifierDependency i : ds
     go id' ds (PatternDependency p ls) = do
         universe <- ask
-        let ls' = filterMatches p universe
+        let ls' = S.fromList $ filterMatches p universe
         if ls == ls'
             then return $ PatternDependency p ls : ds
             else do

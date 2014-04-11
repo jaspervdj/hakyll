@@ -248,5 +248,6 @@ compilerGetMatches :: Pattern -> Compiler [Identifier]
 compilerGetMatches pattern = do
     universe <- compilerUniverse <$> compilerAsk
     let matching = filterMatches pattern $ S.toList universe
-    compilerTellDependencies [PatternDependency pattern matching]
+        set'     = S.fromList matching
+    compilerTellDependencies [PatternDependency pattern set']
     return matching
