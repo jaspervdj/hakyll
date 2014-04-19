@@ -124,6 +124,7 @@ toSiteRoot = emptyException . joinPath . map parent
     emptyException x  = x
     relevant "."      = False
     relevant "/"      = False
+    relevant "./"     = False
     relevant _        = True
 
 
