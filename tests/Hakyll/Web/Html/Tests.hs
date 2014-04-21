@@ -59,6 +59,8 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
         , "."     @=? toSiteRoot "index.html"
         , "."     @=? toSiteRoot "/index.html"
         , "../.." @=? toSiteRoot "foo/bar/qux"
+        , ".."    @=? toSiteRoot "./foo/bar.html"
+        , ".."    @=? toSiteRoot "/foo/./bar.html"
         ]
 
     , fromAssertions "isExternal"
