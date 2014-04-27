@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 --------------------------------------------------------------------------------
 -- | A Compiler that supports unix filters.
 module Hakyll.Core.UnixFilter
@@ -19,7 +21,6 @@ import           System.Exit             (ExitCode (..))
 import           System.IO               (Handle, hClose, hFlush, hGetContents,
                                           hPutStr, hSetEncoding, localeEncoding)
 import           System.Process
-import qualified System.Info             as System
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
@@ -105,17 +106,19 @@ unixFilterIO :: Monoid o
              -> i
              -> IO (o, String, ExitCode)
 unixFilterIO writer reader programName args input = do
-    -- The problem on Windows is that `proc` is that it is unable to execute
+    -- The problem on Windows is that `proc` is unable to execute
     -- batch stubs (eg. anything created using 'gem install ...') even if its in
     -- `$PATH`. A solution to this issue is to execute the batch file explicitly
     -- using `cmd /c batchfile` but there is no rational way to know where said
     -- batchfile is on the system. Hence, we detect windows using the
-    -- `System.Info` module and then instead of using `proc` to create the
-    -- process, use `shell` instead which will be able to execute everything
-    -- `proc` can, and this can deal with batch files as well.
-    let pr = if System.os == "mingw32"
-                 then shell $ unwords (programName : args)
-                 else proc programName args
+    -- CPP and instead of using `proc` to create the process, use `shell`
+    -- which will be able to execute everything `proc` can
+    -- as well as batch files.
+#ifdef mingw32_HOST_OS
+    let pr = shell $ unwords (programName : args)
+#else
+    let pr = proc programName args
+#endif
 
     (Just inh, Just outh, Just errh, pid) <-
         createProcess pr
