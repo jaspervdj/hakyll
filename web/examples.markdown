@@ -85,6 +85,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/TikhonJelvis/website)
 - <https://secure.plaimi.net/>,
   [source](https://github.com/plaimi/www)
+- <http://duplode.github.io/>,
+  [source](https://github.com/duplode/duplode.github.io/tree/sources)
 
 ## Hakyll 3.X
 
