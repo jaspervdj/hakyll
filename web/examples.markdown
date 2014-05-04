@@ -87,6 +87,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/plaimi/www)
 - <http://duplode.github.io/>,
   [source](https://github.com/duplode/duplode.github.io/tree/sources)
+- <http://maseek.codes>,
+  [source](https://github.com/maseek/maseek-codes)
 
 ## Hakyll 3.X
 
