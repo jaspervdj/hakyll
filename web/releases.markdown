@@ -4,6 +4,13 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.5.2.0
+
+- Fix rebuilding everything issue with latest directory (contribution by Jorge
+  Israel Peña)
+- Fix issue with `toSiteRoot` (contribution by Izzy Cecil)
+- Fix issue with tag dependencies, slightly improve caching
+
 ## Hakyll 4.5.0.0
 
 - Fix issue with syntax highlighting and line numbers (contribution by Adelbert
