@@ -31,8 +31,7 @@ import           Data.Maybe             (fromMaybe)
 import           Data.Monoid            (mempty)
 import           Data.Set               (Set)
 import qualified Data.Set               as S
-import           Data.Time              (Day (..), UTCTime (..),
-                                         secondsToDiffTime)
+import           Data.Time              (Day (..), UTCTime (..))
 import           Data.Typeable          (Typeable)
 import           System.Directory       (getModificationTime)
 import           System.FilePath        (addExtension, (</>))
@@ -62,11 +61,11 @@ newtype BinaryTime = BinaryTime {unBinaryTime :: UTCTime}
 --------------------------------------------------------------------------------
 instance Binary BinaryTime where
     put (BinaryTime (UTCTime (ModifiedJulianDay d) dt)) =
-        put d >> put (floor dt :: Integer)
+        put d >> put (toRational dt)
 
     get = fmap BinaryTime $ UTCTime
         <$> (ModifiedJulianDay <$> get)
-        <*> (secondsToDiffTime <$> get)
+        <*> (fromRational <$> get)
 
 
 --------------------------------------------------------------------------------
