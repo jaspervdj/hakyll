@@ -197,9 +197,14 @@ resourceModificationTime p i =
 fileModificationTime :: FilePath -> IO UTCTime
 fileModificationTime fp = do
 #if MIN_VERSION_directory(1,2,0)
-    getModificationTime fp
+    time <- getModificationTime fp
 #else
     ct <- toCalendarTime =<< getModificationTime fp
     let str = formatCalendarTime defaultTimeLocale "%s" ct
-    return $ readTime defaultTimeLocale "%s" str
+    time <- readTime defaultTimeLocale "%s" str
 #endif
+
+    -- shave sub-second precision
+    let dt = secondsToDiffTime . floor $ utctDayTime time
+
+    return $ time { utctDayTime = dt }
