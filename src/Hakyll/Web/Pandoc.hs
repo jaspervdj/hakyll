@@ -53,6 +53,7 @@ readPandocWith ropt item = fmap (reader ropt (itemFileType item)) item
         LaTeX              -> readLaTeX ro
         LiterateHaskell t' -> reader (addExt ro Ext_literate_haskell) t'
         Markdown           -> readMarkdown ro
+        OrgMode            -> readOrg ro
         Rst                -> readRST ro
         Textile            -> readTextile ro
         _                  -> error $

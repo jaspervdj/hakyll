@@ -157,7 +157,7 @@ Library
     network         >= 2.4    && < 2.5,
     old-locale      >= 1.0    && < 1.1,
     old-time        >= 1.0    && < 1.2,
-    pandoc          >= 1.12   && < 1.13,
+    pandoc          >= 1.12.4 && < 1.13,
     pandoc-citeproc >= 0.1    && < 0.4,
     parsec          >= 3.0    && < 3.2,
     process         >= 1.0    && < 1.3,
