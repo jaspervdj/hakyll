@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.5.3.0
+
+- Bump Pandoc to 1.12.4 to include the org-mode reader.
+
 ## Hakyll 4.5.2.0
 
 - Fix rebuilding everything issue with latest directory (contribution by Jorge

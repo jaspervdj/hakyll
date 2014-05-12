@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.5.2.0
+Version: 4.5.3.0
 
 Synopsis: A static website compiler library
 Description:
@@ -154,7 +154,7 @@ Library
     filepath        >= 1.0    && < 1.4,
     lrucache        >= 1.1.1  && < 1.2,
     mtl             >= 1      && < 2.2,
-    network         >= 2.4    && < 2.5,
+    network         >= 2.4    && < 2.6,
     old-locale      >= 1.0    && < 1.1,
     old-time        >= 1.0    && < 1.2,
     pandoc          >= 1.12.4 && < 1.13,
@@ -240,10 +240,10 @@ Test-suite hakyll-tests
     filepath        >= 1.0    && < 1.4,
     lrucache        >= 1.1.1  && < 1.2,
     mtl             >= 1      && < 2.2,
-    network         >= 2.4    && < 2.5,
+    network         >= 2.4    && < 2.6,
     old-locale      >= 1.0    && < 1.1,
     old-time        >= 1.0    && < 1.2,
-    pandoc          >= 1.12   && < 1.13,
+    pandoc          >= 1.12.4 && < 1.13,
     pandoc-citeproc >= 0.1    && < 0.4,
     parsec          >= 3.0    && < 3.2,
     process         >= 1.0    && < 1.3,
