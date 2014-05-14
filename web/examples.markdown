@@ -89,6 +89,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/duplode/duplode.github.io/tree/sources)
 - <http://maseek.codes>,
   [source](https://github.com/maseek/maseek-codes)
+- <http://listx.github.io>,
+  [source](https://github.com/listx/listx_blog)
 
 ## Hakyll 3.X
 
