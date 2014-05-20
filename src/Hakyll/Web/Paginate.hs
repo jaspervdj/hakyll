@@ -70,7 +70,7 @@ buildPaginateWith :: MonadMetadata m
                   -> m Paginate
 buildPaginateWith n makeId pattern = do
     -- TODO: there is no sensible order for `ids` here, for now it's random;
-    -- but it should be `resectFirst` order because most recent posts should
+    -- but it should be `recentFirst` order because most recent posts should
     -- correspond to 1st paginator page and oldest one to last page
     idents <- getMatches pattern
     let pages          = flip unfoldr idents $ \xs ->
@@ -89,8 +89,8 @@ buildPaginateWith n makeId pattern = do
 paginateRules :: Paginate -> (PageNumber -> Pattern -> Rules ()) -> Rules ()
 paginateRules paginator rules =
     forM_ (M.toList $ paginatePages paginator) $ \(idx, identifiers) ->
-        create [paginateMakeId paginator idx] $
-            rulesExtraDependencies [paginateDependency paginator] $
+        rulesExtraDependencies [paginateDependency paginator] $
+            create [paginateMakeId paginator idx] $
                 rules idx $ fromList identifiers
 
 
