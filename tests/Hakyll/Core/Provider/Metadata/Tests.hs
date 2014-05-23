@@ -19,7 +19,7 @@ import           TestSuite.Util
 --------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Hakyll.Core.Provider.Metadata.Tests" $
-    fromAssertions "page" [testPage01, testPage02]
+    fromAssertions "page" [testPage01, testPage02, testPage03, testPage04]
 
 
 --------------------------------------------------------------------------------
@@ -44,6 +44,28 @@ testPage02 = testParse page
     descr =
         "A long description that would look better if it \
         \spanned multiple lines and was indented"
+
+
+--------------------------------------------------------------------------------
+testPage03 :: Assertion
+testPage03 = testParse page
+    ([("title", "Next: Org-mode")], "Yes, this is cow\n")
+    (unlines [ "#+title: Next: Org-mode"
+             , "Yes, this is cow"
+             ])
+
+
+--------------------------------------------------------------------------------
+testPage04 :: Assertion
+testPage04 = testParse page
+    ( [ ("tags", "org, emacs, test")
+      , ("date", "2014-05-23")
+      ], "\nTwenty five years ago today, the hacker Karl Koch died.\n")
+    (unlines [ "#+tags: org, emacs, test"
+             , "#+date: 2014-05-23"
+             , ""
+             , "Twenty five years ago today, the hacker Karl Koch died."
+             ])
 
 
 --------------------------------------------------------------------------------
