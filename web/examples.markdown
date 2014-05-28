@@ -91,6 +91,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/maseek/maseek-codes)
 - <http://listx.github.io>,
   [source](https://github.com/listx/listx_blog)
+- <http://kyle.marek-spartz.org>,
+  [source](https://github.com/zeckalpha/kyle.marek-spartz.org)
 
 ## Hakyll 3.X
 
