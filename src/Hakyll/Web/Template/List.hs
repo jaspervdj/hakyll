@@ -13,6 +13,8 @@ module Hakyll.Web.Template.List
     , applyJoinTemplateList
     , chronological
     , recentFirst
+    , sortChronological
+    , sortRecentFirst
     ) where
 
 
@@ -25,6 +27,7 @@ import           System.Locale               (defaultTimeLocale)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Web.Template
@@ -65,7 +68,24 @@ chronological =
     sortByM f xs = liftM (map fst . sortBy (comparing snd)) $
                    mapM (\x -> liftM (x,) (f x)) xs
 
+
 --------------------------------------------------------------------------------
 -- | The reverse of 'chronological'
-recentFirst :: (MonadMetadata m, Functor m) => [Item a] -> m [Item a]
-recentFirst = fmap reverse . chronological
+recentFirst :: MonadMetadata m => [Item a] -> m [Item a]
+recentFirst = liftM reverse . chronological
+
+
+--------------------------------------------------------------------------------
+-- | Version of 'chronological' which doesn't need the actual items.
+sortChronological
+    :: MonadMetadata m => [Identifier] -> m [Identifier]
+sortChronological ids =
+    liftM (map itemIdentifier) $ chronological [Item i () | i <- ids]
+
+
+--------------------------------------------------------------------------------
+-- | Version of 'recentFirst' which doesn't need the actual items.
+sortRecentFirst
+    :: MonadMetadata m => [Identifier] -> m [Identifier]
+sortRecentFirst ids =
+    liftM (map itemIdentifier) $ recentFirst [Item i () | i <- ids]

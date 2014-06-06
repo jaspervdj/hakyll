@@ -3,8 +3,8 @@
 module Hakyll.Web.Paginate
     ( PageNumber
     , Paginate (..)
-    , buildPaginate
     , buildPaginateWith
+    , paginateEvery
     , paginateRules
     , paginateContext
     ) where
@@ -12,11 +12,9 @@ module Hakyll.Web.Paginate
 
 --------------------------------------------------------------------------------
 import           Control.Monad                  (forM_)
-import           Data.List                      (unfoldr)
 import qualified Data.Map                       as M
 import           Data.Monoid                    (mconcat)
 import qualified Data.Set                       as S
-import           Text.Printf                    (printf)
 
 
 --------------------------------------------------------------------------------
@@ -37,99 +35,93 @@ type PageNumber = Int
 --------------------------------------------------------------------------------
 -- | Data about paginators
 data Paginate = Paginate
-    { paginatePages      :: M.Map PageNumber [Identifier]
-    , paginatePlaces     :: M.Map Identifier PageNumber
+    { paginateMap        :: M.Map PageNumber [Identifier]
     , paginateMakeId     :: PageNumber -> Identifier
     , paginateDependency :: Dependency
     } deriving (Show)
 
 
 --------------------------------------------------------------------------------
-buildPaginate :: MonadMetadata m
-              => Pattern
-              -> m Paginate
-buildPaginate pattern = do
-    idents <- getMatches pattern
-    let pagPages  = M.fromList $ zip [1 ..] (map return idents)
-        pagPlaces = M.fromList $ zip idents [1 ..]
-        makeId pn = case M.lookup pn pagPages of
-            Just [id'] -> id'
-            _          -> error $
-                "Hakyll.Web.Paginate.buildPaginate: " ++
-                "invalid page number: " ++ show pn
-
-    return $ Paginate pagPages pagPlaces makeId
-        (PatternDependency pattern (S.fromList idents))
+paginateNumPages :: Paginate -> Int
+paginateNumPages = M.size . paginateMap
 
 
 --------------------------------------------------------------------------------
-buildPaginateWith :: MonadMetadata m
-                  => Int
-                  -> (PageNumber -> Identifier)
-                  -> Pattern
-                  -> m Paginate
-buildPaginateWith n makeId pattern = do
-    -- TODO: there is no sensible order for `ids` here, for now it's random;
-    -- but it should be `recentFirst` order because most recent posts should
-    -- correspond to 1st paginator page and oldest one to last page
-    idents <- getMatches pattern
-    let pages          = flip unfoldr idents $ \xs ->
-            if null xs then Nothing else Just (splitAt n xs)
-        nPages         = length pages
-        paginatePages' = zip [1..] pages
-        pagPlaces'     =
-            [(ident, idx) | (idx,ids) <- paginatePages', ident <- ids] ++
-            [(makeId i, i) | i <- [1 .. nPages]]
+paginateEvery :: Int -> [a] -> [[a]]
+paginateEvery n = go
+  where
+    go [] = []
+    go xs = let (y, ys) = splitAt n xs in y : go ys
 
-    return $ Paginate (M.fromList paginatePages') (M.fromList pagPlaces') makeId
-        (PatternDependency pattern (S.fromList idents))
+
+--------------------------------------------------------------------------------
+buildPaginateWith
+    :: MonadMetadata m
+    => ([Identifier] -> m [[Identifier]])  -- ^ Group items into pages
+    -> Pattern                             -- ^ Select items to paginate
+    -> (PageNumber -> Identifier)          -- ^ Identifiers for the pages
+    -> m Paginate
+buildPaginateWith grouper pattern makeId = do
+    ids      <- getMatches pattern
+    idGroups <- grouper ids
+    let idsSet = S.fromList ids
+    return Paginate
+        { paginateMap        = M.fromList (zip [1 ..] idGroups)
+        , paginateMakeId     = makeId
+        , paginateDependency = PatternDependency pattern idsSet
+        }
 
 
 --------------------------------------------------------------------------------
 paginateRules :: Paginate -> (PageNumber -> Pattern -> Rules ()) -> Rules ()
 paginateRules paginator rules =
-    forM_ (M.toList $ paginatePages paginator) $ \(idx, identifiers) ->
+    forM_ (M.toList $ paginateMap paginator) $ \(idx, identifiers) ->
         rulesExtraDependencies [paginateDependency paginator] $
             create [paginateMakeId paginator idx] $
                 rules idx $ fromList identifiers
 
 
 --------------------------------------------------------------------------------
--- | Takes first, current, last page and produces index of next page
-type RelPage = PageNumber -> PageNumber -> PageNumber -> Maybe PageNumber
+-- | Get the identifier for a certain page by passing in the page number.
+paginatePage :: Paginate -> PageNumber -> Maybe Identifier
+paginatePage pag pageNumber
+    | pageNumber < 1                      = Nothing
+    | pageNumber > (paginateNumPages pag) = Nothing
+    | otherwise                           = Just $ paginateMakeId pag pageNumber
 
 
 --------------------------------------------------------------------------------
-paginateField :: Paginate -> String -> RelPage -> Context a
-paginateField pag fieldName relPage = field fieldName $ \item ->
-    let identifier = itemIdentifier item
-    in case M.lookup identifier (paginatePlaces pag) of
-        Nothing -> fail $ printf
-            "Hakyll.Web.Paginate: there is no page %s in paginator map."
-            (show identifier)
-        Just pos -> case relPage 1 pos nPages of
-            Nothing   -> fail "Hakyll.Web.Paginate: No page here."
-            Just pos' -> do
-                let nextId = paginateMakeId pag pos'
-                mroute <- getRoute nextId
-                case mroute of
-                    Nothing -> fail $ printf
-                        "Hakyll.Web.Paginate: unable to get route for %s."
-                        (show nextId)
-                    Just rt -> return $ toUrl rt
-  where
-    nPages = M.size (paginatePages pag)
-
-
---------------------------------------------------------------------------------
-paginateContext :: Paginate -> Context a
-paginateContext pag = mconcat
-    [ paginateField pag "firstPage"
-        (\f c _ -> if c <= f then Nothing else Just f)
-    , paginateField pag "previousPage"
-        (\f c _ -> if c <= f then Nothing else Just (c - 1))
-    , paginateField pag "nextPage"
-        (\_ c l -> if c >= l then Nothing else Just (c + 1))
-    , paginateField pag "lastPage"
-        (\_ c l -> if c >= l then Nothing else Just l)
+-- | A default paginate context which provides the following keys:
+--
+--
+paginateContext :: Paginate -> PageNumber -> Context a
+paginateContext pag currentPage = mconcat
+    [ field "firstPageNum"    $ \_ -> otherPage 1                 >>= num
+    , field "firstPageUrl"    $ \_ -> otherPage 1                 >>= url
+    , field "previousPageNum" $ \_ -> otherPage (currentPage - 1) >>= num
+    , field "previousPageUrl" $ \_ -> otherPage (currentPage - 1) >>= url
+    , field "nextPageNum"     $ \_ -> otherPage (currentPage + 1) >>= num
+    , field "nextPageUrl"     $ \_ -> otherPage (currentPage + 1) >>= url
+    , field "lastPageNum"     $ \_ -> otherPage lastPage          >>= num
+    , field "lastPageUrl"     $ \_ -> otherPage lastPage          >>= url
+    , field "currentPageNum"  $ \i -> thisPage i                  >>= num
+    , field "currentPageUrl"  $ \i -> thisPage i                  >>= url
+    , constField "numPages"   $ show $ paginateNumPages pag
     ]
+  where
+    lastPage = paginateNumPages pag
+
+    thisPage i = return (currentPage, itemIdentifier i)
+    otherPage n
+        | n == currentPage = fail $ "This is the current page: " ++ show n
+        | otherwise        = case paginatePage pag n of
+            Nothing -> fail $ "No such page: " ++ show n
+            Just i  -> return (n, i)
+
+    num :: (Int, Identifier) -> Compiler String
+    num = return . show . fst
+
+    url :: (Int, Identifier) -> Compiler String
+    url (n, i) = getRoute i >>= \mbR -> case mbR of
+        Just r  -> return $ toUrl r
+        Nothing -> fail $ "No URL for page: " ++ show n
