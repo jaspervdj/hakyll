@@ -91,6 +91,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/maseek/maseek-codes)
 - <http://listx.github.io>,
   [source](https://github.com/listx/listx_blog)
+- <http://ladatura-corsets.com/>,
+  [source](https://github.com/dsferruzza/datura-corsets)
 
 ## Hakyll 3.X
 
