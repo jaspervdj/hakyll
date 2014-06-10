@@ -93,6 +93,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/listx/listx_blog)
 - <http://kyle.marek-spartz.org>,
   [source](https://github.com/zeckalpha/kyle.marek-spartz.org)
+- <http://ladatura-corsets.com/>,
+  [source](https://github.com/dsferruzza/datura-corsets)
 
 ## Hakyll 3.X
 
