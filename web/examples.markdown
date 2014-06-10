@@ -95,6 +95,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/zeckalpha/kyle.marek-spartz.org)
 - <http://ladatura-corsets.com/>,
   [source](https://github.com/dsferruzza/datura-corsets)
+- <http://reichertbrothers.com/>,
+  [source](https://github.com/rbros/reichertbrothers.com)
 
 ## Hakyll 3.X
 
