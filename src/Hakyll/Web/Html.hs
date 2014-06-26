@@ -77,7 +77,7 @@ withUrls f = withTags tag
 -- | Customized TagSoup renderer. The default TagSoup renderer escape CSS
 -- within style tags, and doesn't properly minimize.
 renderTags' :: [TS.Tag String] -> String
-renderTags' = TS.renderTagsOptions TS.renderOptions
+renderTags' = TS.renderTagsOptions TS.RenderOptions
     { TS.optRawTag   = (`elem` ["script", "style"]) . map toLower
     , TS.optMinimize = (`S.member` minimize) . map toLower
     , TS.optEscape   = id
