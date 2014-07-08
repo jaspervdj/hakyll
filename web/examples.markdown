@@ -97,6 +97,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/dsferruzza/datura-corsets)
 - <http://reichertbrothers.com/>,
   [source](https://github.com/rbros/reichertbrothers.com)
+- <http://alemedeiros.sdf.org>,
+  [source](https://github.com/alemedeiros/homepage)
 
 ## Hakyll 3.X
 
