@@ -46,6 +46,7 @@ module Hakyll.Web.Tags
     , buildTagsWith
     , buildTags
     , buildCategories
+    , tagsFeedRules
     , tagsRules
     , renderTags
     , renderTagCloud
@@ -69,7 +70,7 @@ import           Data.List                       (intercalate, intersperse,
                                                   sortBy)
 import qualified Data.Map                        as M
 import           Data.Maybe                      (catMaybes, fromMaybe)
-import           Data.Monoid                     (mconcat)
+import           Data.Monoid                     (mappend,mconcat)
 import           Data.Ord                        (comparing)
 import qualified Data.Set                        as S
 import           System.FilePath                 (takeBaseName, takeDirectory)
@@ -87,7 +88,9 @@ import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Rules
+import           Hakyll.Core.Routes
 import           Hakyll.Core.Util.String
+import           Hakyll.Web.Feed
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Html
 
@@ -144,6 +147,22 @@ buildTags = buildTagsWith getTags
 buildCategories :: MonadMetadata m => Pattern -> (String -> Identifier)
                 -> m Tags
 buildCategories = buildTagsWith getCategory
+
+--------------------------------------------------------------------------------
+-- | Create an Atom Feed for every tag. Posts need to have the 'description'
+-- field and a snapshot of their plain content with the name 'content' must
+-- exist.
+-- This can be achieved by following
+-- <http://jaspervdj.be/hakyll/tutorials/05-snapshots-feeds.html>
+tagsFeedRules :: Tags -> Context String -> FeedConfiguration -> Rules ()
+tagsFeedRules tags postCtx feedConfiguration =
+    forM_ (tagsMap tags) $ \(tag, identifiers) ->
+        create [fromFilePath $ "feeds/" ++ tag ++ ".xml"] $ do
+            route idRoute
+            compile $ do
+                let feedCtx = postCtx `mappend` bodyField "description"
+                tagPosts <- mapM (\i -> loadSnapshot i "content") identifiers
+                renderAtom feedConfiguration feedCtx tagPosts
 
 
 --------------------------------------------------------------------------------
