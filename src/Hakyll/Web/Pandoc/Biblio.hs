@@ -90,7 +90,7 @@ readPandocBiblio :: ReaderOptions
                  -> Compiler (Item Pandoc)
 readPandocBiblio ropt csl biblio item = do
     -- Parse CSL file, if given
-    style <- unsafeCompiler $ CSL.readCSLFile . toFilePath . itemIdentifier $ csl
+    style <- unsafeCompiler $ CSL.readCSLFile Nothing . toFilePath . itemIdentifier $ csl
 
     -- We need to know the citation keys, add then *before* actually parsing the
     -- actual page. If we don't do this, pandoc won't even consider them
@@ -100,4 +100,3 @@ readPandocBiblio ropt csl biblio item = do
         pandoc'     = processCites style refs pandoc
 
     return $ fmap (const pandoc') item
-
