@@ -99,6 +99,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/rbros/reichertbrothers.com)
 - <http://alemedeiros.sdf.org>,
   [source](https://github.com/alemedeiros/homepage)
+- <http://blog.ssanj.net/>,
+  [source](https://github.com/ssanj/babyloncandle)
 
 ## Hakyll 3.X
 
