@@ -36,7 +36,7 @@ import           Network.URI                     (isUnreserved, escapeURIString)
 --------------------------------------------------------------------------------
 -- | Map over all tags in the document
 withTags :: (TS.Tag String -> TS.Tag String) -> String -> String
-withTags f = renderTags' . map f . TS.parseTags
+withTags f = renderTags' . map f . parseTags'
 
 
 --------------------------------------------------------------------------------
@@ -88,6 +88,15 @@ renderTags' = TS.renderTagsOptions TS.RenderOptions
         [ "area", "br", "col", "embed", "hr", "img", "input", "meta", "link"
         , "param"
         ]
+
+
+--------------------------------------------------------------------------------
+-- | Customized TagSoup parser: do not decode any entities.
+parseTags' :: String -> [TS.Tag String]
+parseTags' = TS.parseTagsOptions (TS.parseOptions :: TS.ParseOptions String)
+    { TS.optEntityData   = \(str, b) -> [TS.TagText $ "&" ++ str ++ [';' | b]]
+    , TS.optEntityAttrib = \(str, b) -> ("&" ++ str ++ [';' | b], [])
+    }
 
 
 --------------------------------------------------------------------------------
