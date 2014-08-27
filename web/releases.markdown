@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.5.4.0
+
+- Fix issue with HTML entities when running `withUrls` and `demoteHeaders`.
+- Generate a cabal file for the initialised site.
+- Add pagination support.
+
 ## Hakyll 4.5.3.0
 
 - Bump Pandoc to 1.12.4 to include the org-mode reader.
