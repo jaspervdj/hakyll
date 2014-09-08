@@ -21,6 +21,7 @@ module Hakyll.Web.Pandoc.Biblio
 
 --------------------------------------------------------------------------------
 import           Control.Applicative    ((<$>))
+import           Control.Monad          (replicateM)
 import           Data.Binary            (Binary (..))
 import           Data.Typeable          (Typeable)
 import qualified Text.CSL               as CSL
@@ -33,6 +34,7 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Writable
 import           Hakyll.Web.Pandoc
+import           Hakyll.Web.Pandoc.Binary ()
 
 
 --------------------------------------------------------------------------------
@@ -65,8 +67,10 @@ newtype Biblio = Biblio [CSL.Reference]
 --------------------------------------------------------------------------------
 instance Binary Biblio where
     -- Ugly.
-    get             = Biblio . read <$> get
-    put (Biblio rs) = put $ show rs
+    get             = do
+        len <- get
+        Biblio <$> replicateM len get
+    put (Biblio rs) = put (length rs) >> mapM_ put rs
 
 
 --------------------------------------------------------------------------------
