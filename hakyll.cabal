@@ -137,6 +137,7 @@ Library
     Hakyll.Core.Util.File
     Hakyll.Core.Util.Parser
     Hakyll.Web.Template.Internal
+    Hakyll.Web.Pandoc.Binary
     Paths_hakyll
 
   Build-Depends:
