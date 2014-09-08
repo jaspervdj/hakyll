@@ -142,7 +142,7 @@ Library
 
   Build-Depends:
     base            >= 4      && < 5,
-    binary          >= 0.5    && < 0.8,
+    binary          >= 0.7    && < 0.8,
     blaze-html      >= 0.5    && < 0.8,
     blaze-markup    >= 0.5.1  && < 0.7,
     bytestring      >= 0.9    && < 0.11,
@@ -228,7 +228,7 @@ Test-suite hakyll-tests
     test-framework-quickcheck2 >= 0.3 && < 0.4,
     -- Copy pasted from hakyll dependencies:
     base            >= 4      && < 5,
-    binary          >= 0.5    && < 0.8,
+    binary          >= 0.7    && < 0.8,
     blaze-html      >= 0.5    && < 0.8,
     blaze-markup    >= 0.5.1  && < 0.7,
     bytestring      >= 0.9    && < 0.11,
