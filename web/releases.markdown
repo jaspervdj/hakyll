@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.5.5.0
+
+- Fix Binary instances for `pandoc` and `pandoc-citeproc`
+- Fix `network-uri` dependency issue
+
 ## Hakyll 4.5.4.0
 
 - Fix issue with HTML entities when running `withUrls` and `demoteHeaders`.

@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.5.4.0
+Version: 4.5.5.0
 
 Synopsis: A static website compiler library
 Description:
@@ -156,7 +156,7 @@ Library
     lrucache        >= 1.1.1  && < 1.2,
     mtl             >= 1      && < 2.3,
     network         >= 2.6    && < 2.7,
-    network-uri	    >= 2.6    && < 2.7,
+    network-uri     >= 2.6    && < 2.7,
     old-locale      >= 1.0    && < 1.1,
     old-time        >= 1.0    && < 1.2,
     pandoc          >= 1.12.4 && < 1.14,
