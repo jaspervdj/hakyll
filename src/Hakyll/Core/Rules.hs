@@ -19,6 +19,7 @@
 module Hakyll.Core.Rules
     ( Rules
     , match
+    , matchMetadata
     , create
     , version
     , compile
@@ -125,6 +126,19 @@ match pattern rules = do
     tellPattern pattern
     flush
     ids <- getMatches pattern
+    tellResources ids
+    Rules $ local (setMatches ids) $ unRules $ rules >> flush
+  where
+    setMatches ids env = env {rulesMatches = ids}
+
+
+--------------------------------------------------------------------------------
+matchMetadata :: Pattern -> (Metadata -> Bool) -> Rules () -> Rules ()
+matchMetadata pattern metadataPred rules = do
+    tellPattern pattern
+    flush
+    idsAndMetadata <- getAllMetadata pattern
+    let ids = map fst . filter (metadataPred . snd) $ idsAndMetadata
     tellResources ids
     Rules $ local (setMatches ids) $ unRules $ rules >> flush
   where
