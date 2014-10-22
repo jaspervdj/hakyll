@@ -33,7 +33,7 @@ import qualified Data.Map                      as M
 import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime, parseTime)
-import           System.FilePath               (takeBaseName, takeFileName)
+import           System.FilePath               (takeBaseName, splitDirectories)
 import           System.Locale                 (TimeLocale, defaultTimeLocale)
 
 
@@ -218,7 +218,11 @@ titleField = mapContext takeBaseName . pathField
 -- Alternatively, when the metadata has a field called @path@ in a
 -- @folder/yyyy-mm-dd-title.extension@ format (the convention for pages)
 -- and no @published@ metadata field set, this function can render
--- the date.
+-- the date. This pattern matches the file name or directory names 
+-- that begins with @yyyy-mm-dd@ . For example:
+-- @folder//yyyy-mm-dd-title//dist//main.extension@ .
+-- In case of multiple matches, the rightmost one is used.
+
 dateField :: String     -- ^ Key in which the rendered date should be placed
           -> String     -- ^ Format to use on the date
           -> Context a  -- ^ Resulting context
@@ -249,12 +253,12 @@ getItemUTC :: MonadMetadata m
 getItemUTC locale id' = do
     metadata <- getMetadata id'
     let tryField k fmt = M.lookup k metadata >>= parseTime' fmt
-        fn             = takeFileName $ toFilePath id'
+        paths          = splitDirectories $ toFilePath id'
 
     maybe empty' return $ msum $
         [tryField "published" fmt | fmt <- formats] ++
         [tryField "date"      fmt | fmt <- formats] ++
-        [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fn]
+        [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fnCand | fnCand <- reverse paths]
   where
     empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
         "could not parse time for " ++ show id'
