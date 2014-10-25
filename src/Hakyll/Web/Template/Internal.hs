@@ -22,6 +22,7 @@ import qualified Text.Parsec.String      as P
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Util.Parser
 import           Hakyll.Core.Writable
+import           Hakyll.Core.Identifier
 
 
 --------------------------------------------------------------------------------
@@ -46,6 +47,7 @@ data TemplateElement
     | If String Template (Maybe Template)   -- key, then branch, else branch
     | For String Template (Maybe Template)  -- key, body, separator
     | Partial String                        -- filename
+    | RouteOf  Identifier                   -- the route of the identifier
     deriving (Show, Eq, Typeable)
 
 
@@ -57,7 +59,7 @@ instance Binary TemplateElement where
     put (If k t f  )   = putWord8 3 >> put k >> put t >> put f
     put (For k b s)    = putWord8 4 >> put k >> put b >> put s
     put (Partial p)    = putWord8 5 >> put p
-
+    put (RouteOf i)    = putWord8 6 >> put i
     get = getWord8 >>= \tag -> case tag of
         0 -> Chunk <$> get
         1 -> Key   <$> get
@@ -65,6 +67,7 @@ instance Binary TemplateElement where
         3 -> If <$> get <*> get <*> get
         4 -> For <$> get <*> get <*> get
         5 -> Partial <$> get
+        6 -> RouteOf <$> get
         _ -> error $
             "Hakyll.Web.Template.Internal: Error reading cached template"
 

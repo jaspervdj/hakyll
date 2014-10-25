@@ -195,6 +195,11 @@ applyTemplate' tpl context x = go tpl
         tpl' <- loadBody (fromFilePath p)
         applyTemplate' tpl' context x
 
+    applyElem (RouteOf i) = getRoute i
+                            >>= maybe err return
+      where err = error $ "Hakyll.Web.Template.applyTemplateWith: "
+                        ++ "identifier"
+                        ++ show i ++ " does not have a valid route"
     getString _ (StringField s) = return s
     getString k (ListField _ _) = fail $
         "Hakyll.Web.Template.applyTemplateWith: expected StringField but " ++
