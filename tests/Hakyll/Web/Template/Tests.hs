@@ -26,9 +26,20 @@ import           TestSuite.Util
 
 --------------------------------------------------------------------------------
 tests :: Test
-tests = testGroup "Hakyll.Core.Template.Tests"
-    [ testCase "case01"                case01
-    , testCase "applyJoinTemplateList" testApplyJoinTemplateList
+tests = testGroup "Hakyll.Core.Template.Tests" $ concat
+    [ [ testCase "case01"                case01
+      , testCase "applyJoinTemplateList" testApplyJoinTemplateList
+      ]
+
+    , fromAssertions "readTemplate"
+        [ Template [Chunk "Hello ", Expr (Call "guest" [])]
+            @=?  readTemplate "Hello $guest()$"
+        , Template
+            [If (Call "a" [StringLiteral "bar"])
+                (Template [Chunk "foo"])
+                Nothing]
+            @=?  readTemplate "$if(a(\"bar\"))$foo$endif$"
+        ]
     ]
 
 
