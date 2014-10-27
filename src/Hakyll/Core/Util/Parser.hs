@@ -16,7 +16,7 @@ import           Text.Parsec.String  (Parser)
 --------------------------------------------------------------------------------
 metadataKey :: Parser String
 metadataKey = do
-    i <- (:) <$> P.letter <*> (P.many $ P.alphaNum <|> P.oneOf " _-.")
+    i <- (:) <$> P.letter <*> (P.many $ P.alphaNum <|> P.oneOf "_-.")
     if i `elem` reservedKeys then mzero else return i
 
 

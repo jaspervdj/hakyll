@@ -69,29 +69,30 @@ data ContextField
 -- @
 -- 'metadataField' \<\> field \"date\" fDate
 -- @
--- 
+--
 newtype Context a = Context
-    { unContext :: String -> Item a -> Compiler ContextField
+    { unContext :: String -> [String] -> Item a -> Compiler ContextField
     }
 
 
 --------------------------------------------------------------------------------
 instance Monoid (Context a) where
     mempty                          = missingField
-    mappend (Context f) (Context g) = Context $ \k i -> f k i <|> g k i
+    mappend (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
 
 
 --------------------------------------------------------------------------------
 field' :: String -> (Item a -> Compiler ContextField) -> Context a
-field' key value = Context $ \k i -> if k == key then value i else empty
+field' key value = Context $ \k _ i -> if k == key then value i else empty
 
 
 --------------------------------------------------------------------------------
 -- | Constructs a new field in the 'Context.'
-field :: String  -- ^ Key
-      -> (Item a -> Compiler String) -- ^ Function that constructs a 
-                                     -- value based on the item
-      -> Context a
+field
+    :: String                      -- ^ Key
+    -> (Item a -> Compiler String) -- ^ Function that constructs a value based
+                                   -- on the item
+    -> Context a
 field key value = field' key (fmap StringField . value)
 
 
@@ -108,17 +109,16 @@ listField key c xs = field' key $ \_ -> fmap (ListField c) xs
 
 --------------------------------------------------------------------------------
 functionField :: String -> ([String] -> Item a -> Compiler String) -> Context a
-functionField name value = Context $ \k i -> case words k of
-    []              -> empty
-    (n : args)
-        | n == name -> StringField <$> value args i
-        | otherwise -> empty
+functionField name value = Context $ \k args i ->
+    if k == name
+        then StringField <$> value args i
+        else empty
 
 
 --------------------------------------------------------------------------------
 mapContext :: (String -> String) -> Context a -> Context a
-mapContext f (Context c) = Context $ \k i -> do
-    fld <- c k i
+mapContext f (Context c) = Context $ \k a i -> do
+    fld <- c k a i
     case fld of
         StringField str -> return $ StringField (f str)
         ListField _ _   -> fail $
@@ -132,12 +132,12 @@ mapContext f (Context c) = Context $ \k i -> do
 --     1. A @$body$@ field
 --
 --     2. Metadata fields
---        
+--
 --     3. A @$url$@ 'urlField'
 --
 --     4. A @$path$@ 'pathField'
 --
---     5. A @$title$@ 'titleField'        
+--     5. A @$title$@ 'titleField'
 defaultContext :: Context String
 defaultContext =
     bodyField     "body"     `mappend`
@@ -162,7 +162,7 @@ bodyField key = field key $ return . itemBody
 --------------------------------------------------------------------------------
 -- | Map any field to its metadata value, if present
 metadataField :: Context a
-metadataField = Context $ \k i -> do
+metadataField = Context $ \k _ i -> do
     value <- getMetadataField (itemIdentifier i) k
     maybe empty (return . StringField) value
 
@@ -310,6 +310,6 @@ teaserField key snapshot = field key $ \item -> do
 
 --------------------------------------------------------------------------------
 missingField :: Context a
-missingField = Context $ \k i -> fail $
+missingField = Context $ \k _ i -> fail $
     "Missing field $" ++ k ++ "$ in context for item " ++
     show (itemIdentifier i)

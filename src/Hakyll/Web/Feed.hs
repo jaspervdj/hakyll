@@ -96,7 +96,7 @@ renderFeed feedPath itemPath config itemContext items = do
     -- recent.
     updatedField = field "updated" $ \_ -> case items of
         []      -> return "Unknown"
-        (x : _) -> unContext itemContext' "updated" x >>= \cf -> case cf of
+        (x : _) -> unContext itemContext' "updated" [] x >>= \cf -> case cf of
             ListField _ _ -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
             StringField s -> return s
 

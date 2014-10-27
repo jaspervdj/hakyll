@@ -51,7 +51,7 @@ testContextDone :: Store -> Provider -> Identifier -> String
 testContextDone store provider identifier key context =
     testCompilerDone store provider identifier $ do
         item <- getResourceBody
-        cf   <- unContext context key item
+        cf   <- unContext context key [] item
         case cf of
             StringField str -> return str
             ListField _ _   -> error $

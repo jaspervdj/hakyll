@@ -115,7 +115,7 @@
 -- That is, calling @$partial$@ is equivalent to just copying and pasting
 -- template code.
 --
-
+{-# LANGUAGE ScopedTypeVariables #-}
 module Hakyll.Web.Template
     ( Template
     , templateCompiler
@@ -161,44 +161,67 @@ applyTemplate tpl context item = do
 
 
 --------------------------------------------------------------------------------
-applyTemplate' :: Template         -- ^ Template
-               -> Context a        -- ^ Context
-               -> Item a           -- ^ Page
-               -> Compiler String  -- ^ Resulting item
+applyTemplate'
+    :: forall a.
+       Template         -- ^ Template
+    -> Context a        -- ^ Context
+    -> Item a           -- ^ Page
+    -> Compiler String  -- ^ Resulting item
 applyTemplate' tpl context x = go tpl
   where
+    context' :: String -> [String] -> Item a -> Compiler ContextField
     context' = unContext (context `mappend` missingField)
+
     go = liftM concat . mapM applyElem . unTemplate
+
+    ---------------------------------------------------------------------------
+
+    applyElem :: TemplateElement -> Compiler String
 
     applyElem (Chunk c) = return c
 
+    applyElem (Expr e) = applyExpr e >>= getString e
+
     applyElem Escaped = return "$"
 
-    applyElem (Key k) = context' k x >>= getString k
-
-    applyElem (If k t mf) = (context' k x >> go t) `catchError` handler
+    applyElem (If e t mf) = (applyExpr e >> go t) `catchError` handler
       where
         handler _ = case mf of
             Nothing -> return ""
             Just f  -> go f
 
-    applyElem (For k b s) = context' k x >>= \cf -> case cf of
+    applyElem (For e b s) = applyExpr e >>= \cf -> case cf of
         StringField _  -> fail $
             "Hakyll.Web.Template.applyTemplateWith: expected ListField but " ++
-            "got StringField for key " ++ show k
+            "got StringField for expr " ++ show e
         ListField c xs -> do
             sep <- maybe (return "") go s
             bs  <- mapM (applyTemplate' b c) xs
             return $ intercalate sep bs
 
-    applyElem (Partial p) = do
+    applyElem (Partial e) = do
+        p    <- applyExpr e >>= getString e
         tpl' <- loadBody (fromFilePath p)
         applyTemplate' tpl' context x
 
+    ---------------------------------------------------------------------------
+
+    applyExpr :: TemplateExpr -> Compiler ContextField
+
+    applyExpr (Ident (TemplateKey k)) = context' k [] x
+
+    applyExpr (Call (TemplateKey k) args) = do
+        args' <- mapM (\e -> applyExpr e >>= getString e) args
+        context' k args' x
+
+    applyExpr (StringLiteral s) = return (StringField s)
+
+    ----------------------------------------------------------------------------
+
     getString _ (StringField s) = return s
-    getString k (ListField _ _) = fail $
+    getString e (ListField _ _) = fail $
         "Hakyll.Web.Template.applyTemplateWith: expected StringField but " ++
-        "got ListField for key " ++ show k
+        "got ListField for expr " ++ show e
 
 
 --------------------------------------------------------------------------------
