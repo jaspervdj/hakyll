@@ -181,10 +181,32 @@ preprocess = Rules . liftIO
 --
 -- A useful utility for this purpose is 'makePatternDependency'.
 rulesExtraDependencies :: [Dependency] -> Rules a -> Rules a
-rulesExtraDependencies deps = Rules . censor addDependencies . unRules
+rulesExtraDependencies deps rules =
+    -- Note that we add the dependencies seemingly twice here. However, this is
+    -- done so that 'rulesExtraDependencies' works both if we have something
+    -- like:
+    --
+    -- > match "*.css" $ rulesExtraDependencies [foo] $ ...
+    --
+    -- and something like:
+    --
+    -- > rulesExtraDependencies [foo] $ match "*.css" $ ...
+    --
+    -- (1) takes care of the latter and (2) of the former.
+    Rules $ censor fixRuleSet $ do
+        x <- unRules rules
+        fixCompiler
+        return x
   where
-    -- Adds the dependencies to the compilers in the ruleset
-    addDependencies ruleSet = ruleSet
+    -- (1) Adds the dependencies to the compilers we are yet to create
+    fixCompiler = modify $ \s -> case rulesCompiler s of
+        Nothing -> s
+        Just c  -> s
+            { rulesCompiler = Just $ compilerTellDependencies deps >> c
+            }
+
+    -- (2) Adds the dependencies to the compilers that are already in the ruleset
+    fixRuleSet ruleSet = ruleSet
         { rulesCompilers =
             [ (i, compilerTellDependencies deps >> c)
             | (i, c) <- rulesCompilers ruleSet
