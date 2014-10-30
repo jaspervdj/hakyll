@@ -4,6 +4,14 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.0.0
+
+- Added `listFieldWith` function
+- Improved `rulesExtraDependencies` behaviour
+- Changed function syntax in templates from `$foo arg1 arg2$` to
+  `$foo("arg1", "arg2")$`
+- Support parsing date from directory names in addition to file names
+
 ## Hakyll 4.5.5.0
 
 - Fix Binary instances for `pandoc` and `pandoc-citeproc`
