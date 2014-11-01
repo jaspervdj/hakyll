@@ -189,7 +189,7 @@ Note that an if-else form is supported as well:
 
 Partials allow you to [DRY] up your templates by putting repetitive actions into
 separate template files. You can then include them using
-`$partial("filename.html")$.
+`$partial("filename.html")$`.
 
 [DRY]: http://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 
