@@ -160,7 +160,7 @@ Library
     old-locale      >= 1.0    && < 1.1,
     old-time        >= 1.0    && < 1.2,
     pandoc          >= 1.12.4 && < 1.14,
-    pandoc-citeproc >= 0.4    && < 0.5,
+    pandoc-citeproc >= 0.4    && < 0.7,
     parsec          >= 3.0    && < 3.2,
     process         >= 1.0    && < 1.3,
     random          >= 1.0    && < 1.2,
@@ -174,7 +174,7 @@ Library
     Build-depends:
       snap-core       >= 0.6   && < 0.10,
       snap-server     >= 0.6   && < 0.10,
-      fsnotify        >= 0.0.6 && < 0.1,
+      fsnotify        >= 0.1   && < 0.2,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DPREVIEW_SERVER
@@ -184,7 +184,7 @@ Library
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.0.6 && < 0.1,
+      fsnotify        >= 0.1   && < 0.2,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DWATCH_SERVER
@@ -247,7 +247,7 @@ Test-suite hakyll-tests
     old-locale      >= 1.0    && < 1.1,
     old-time        >= 1.0    && < 1.2,
     pandoc          >= 1.12.4 && < 1.14,
-    pandoc-citeproc >= 0.4    && < 0.5,
+    pandoc-citeproc >= 0.4    && < 0.7,
     parsec          >= 3.0    && < 3.2,
     process         >= 1.0    && < 1.3,
     random          >= 1.0    && < 1.2,
@@ -261,7 +261,7 @@ Test-suite hakyll-tests
     Build-depends:
       snap-core       >= 0.6   && < 0.10,
       snap-server     >= 0.6   && < 0.10,
-      fsnotify        >= 0.0.6 && < 0.1,
+      fsnotify        >= 0.1   && < 0.2,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DPREVIEW_SERVER
@@ -271,7 +271,7 @@ Test-suite hakyll-tests
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.0.6 && < 0.1,
+      fsnotify        >= 0.1   && < 0.2,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DWATCH_SERVER
