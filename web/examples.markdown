@@ -105,6 +105,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/ruud-v-a/ruudvanasseldonk.com)
 - <http://www.haskell.mn>,
   [source](https://github.com/HaskellMN/www.haskell.mn)
+- <https://axiomatic.neophilus.net/>,
+  [source](https://github.com/Libbum/AxiomaticSemantics)
 
 ## Hakyll 3.X
 
