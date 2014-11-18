@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.1.0
+
+- Bump `fsnotify` and `pandoc-citeproc` dependencies
+- Rewrite polling code a bit
+
 ## Hakyll 4.6.0.0
 
 - Added `listFieldWith` function
