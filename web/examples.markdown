@@ -109,6 +109,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/Libbum/AxiomaticSemantics)
 - <https://tesser.org/>,
   [source](https://github.com/fractalcat/tesser.org)
+- <https://wei2912.github.io/>,
+  [source](https://github.com/wei2912/blog_src)
 
 ## Hakyll 3.X
 
