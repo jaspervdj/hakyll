@@ -107,6 +107,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/HaskellMN/www.haskell.mn)
 - <https://axiomatic.neophilus.net/>,
   [source](https://github.com/Libbum/AxiomaticSemantics)
+- <https://tesser.org/>,
+  [source](https://github.com/fractalcat/tesser.org)
 
 ## Hakyll 3.X
 
