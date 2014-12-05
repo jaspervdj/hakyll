@@ -37,13 +37,16 @@ module Hakyll.Core.Routes
     , constRoute
     , gsubRoute
     , metadataRoute
+    , indexRoute
     , composeRoutes
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Data.Monoid                    (Monoid, mappend, mempty)
-import           System.FilePath                (replaceExtension)
+import           System.FilePath                (dropExtension,
+                                                 replaceExtension,
+                                                 splitFileName)
 
 
 --------------------------------------------------------------------------------
@@ -167,6 +170,32 @@ metadataRoute :: (Metadata -> Routes) -> Routes
 metadataRoute f = Routes $ \r i -> do
     metadata <- resourceMetadata (routesProvider r) (routesUnderlying r)
     unRoutes (f metadata) r i
+
+
+--------------------------------------------------------------------------------
+-- | Route to a directory containing an @index.html@ file
+--
+-- This allows for prettier links by enabling auto-index on your server.
+--
+-- Example:
+--
+-- > runRoutes indexRoute "posts/sub/2014-12-10-slug.md"
+--
+-- Result:
+--
+-- > Just "posts/sub/slug/index.html"
+--
+indexRoute :: Routes
+indexRoute = customRoute $ \i ->
+    let (path, base) = splitFileName $ toFilePath i
+    in path ++ slug base ++ "/index.html"
+
+  where
+    slug :: FilePath -> String
+    slug = drop (length prefix) . dropExtension
+
+    prefix :: String
+    prefix = "YYYY-MM-DD-"
 
 
 --------------------------------------------------------------------------------

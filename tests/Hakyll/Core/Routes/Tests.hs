@@ -39,6 +39,8 @@ tests = testGroup "Hakyll.Core.Routes.Tests" $ fromAssertions "runRoutes"
     , testRoutes "food/example.md" (metadataRoute $ \md -> customRoute $ \id' ->
         M.findWithDefault "?" "subblog" md </> toFilePath id')
         "example.md"
+
+    , testRoutes "a/b/c/index.html" indexRoute "a/b/YYYY-MM-DD-c.md"
     ]
 
 
