@@ -177,6 +177,8 @@ metadataRoute f = Routes $ \r i -> do
 --
 -- This allows for prettier links by enabling auto-index on your server.
 --
+-- See @indexedUrlField@ for adding such links in your contexts.
+--
 -- Example:
 --
 -- > runRoutes indexRoute "posts/sub/2014-12-10-slug.md"
