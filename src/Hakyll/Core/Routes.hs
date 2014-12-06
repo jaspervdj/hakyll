@@ -44,9 +44,7 @@ module Hakyll.Core.Routes
 
 --------------------------------------------------------------------------------
 import           Data.Monoid                    (Monoid, mappend, mempty)
-import           System.FilePath                (dropExtension,
-                                                 replaceExtension,
-                                                 splitFileName)
+import           System.FilePath                (replaceExtension)
 
 
 --------------------------------------------------------------------------------
@@ -181,23 +179,20 @@ metadataRoute f = Routes $ \r i -> do
 --
 -- Example:
 --
--- > runRoutes indexRoute "posts/sub/2014-12-10-slug.md"
+-- > runRoutes (indexRoute dropDate) "posts/sub/2014-12-10-slug.md"
+-- >
+-- >  where
+-- >    dropDate fp =
+-- >        let (path, name) = splitFileName fp
+-- >        in path ++ drop 11 (dropExtension name)
 --
 -- Result:
 --
 -- > Just "posts/sub/slug/index.html"
 --
-indexRoute :: Routes
-indexRoute = customRoute $ \i ->
-    let (path, base) = splitFileName $ toFilePath i
-    in path ++ slug base ++ "/index.html"
-
-  where
-    slug :: FilePath -> String
-    slug = drop (length prefix) . dropExtension
-
-    prefix :: String
-    prefix = "YYYY-MM-DD-"
+indexRoute :: (FilePath -> FilePath) -- ^ Convert the source file to a directory
+           -> Routes
+indexRoute convert = customRoute $ (++ "/index.html") . convert . toFilePath
 
 
 --------------------------------------------------------------------------------

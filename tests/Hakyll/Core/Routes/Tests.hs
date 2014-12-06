@@ -7,7 +7,7 @@ module Hakyll.Core.Routes.Tests
 
 --------------------------------------------------------------------------------
 import qualified Data.Map               as M
-import           System.FilePath        ((</>))
+import           System.FilePath        ((</>), dropExtension, splitFileName)
 import           Test.Framework         (Test, testGroup)
 import           Test.HUnit             (Assertion, (@=?))
 
@@ -40,7 +40,10 @@ tests = testGroup "Hakyll.Core.Routes.Tests" $ fromAssertions "runRoutes"
         M.findWithDefault "?" "subblog" md </> toFilePath id')
         "example.md"
 
-    , testRoutes "a/b/c/index.html" indexRoute "a/b/YYYY-MM-DD-c.md"
+    , testRoutes "a/b/c/index.html" (indexRoute $ \fp ->
+        let (path, name) = splitFileName fp
+        in path ++ drop 11 (dropExtension name))
+        "a/b/YYYY-MM-DD-c.md"
     ]
 
 
