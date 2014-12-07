@@ -30,13 +30,13 @@ module Hakyll.Web.Template.Context
 --------------------------------------------------------------------------------
 import           Control.Applicative           (Alternative (..), (<$>))
 import           Control.Monad                 (msum)
-import           Data.List                     (dropWhileEnd, intercalate)
+import           Data.List                     (intercalate)
 import qualified Data.Map                      as M
 import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime, parseTime)
-import           System.FilePath               (takeBaseName, splitDirectories,
-                                                splitFileName)
+import           System.FilePath               (takeBaseName, splitDirectories)
+import qualified System.FilePath.Posix         as P
 import           System.Locale                 (TimeLocale, defaultTimeLocale)
 
 
@@ -192,8 +192,8 @@ indexedUrlField = mapContext stripIndex . urlField
   where
     stripIndex :: String -> String
     stripIndex url =
-        case splitFileName url of
-            (path, "index.html") -> dropWhileEnd (== '/') path
+        case P.splitFileName url of
+            (path, "index.html") -> P.dropTrailingPathSeparator path
             _ -> url
 
 
