@@ -37,6 +37,7 @@ module Hakyll.Core.Routes
     , constRoute
     , gsubRoute
     , metadataRoute
+    , indexRoute
     , composeRoutes
     ) where
 
@@ -167,6 +168,31 @@ metadataRoute :: (Metadata -> Routes) -> Routes
 metadataRoute f = Routes $ \r i -> do
     metadata <- resourceMetadata (routesProvider r) (routesUnderlying r)
     unRoutes (f metadata) r i
+
+
+--------------------------------------------------------------------------------
+-- | Route to a directory containing an @index.html@ file
+--
+-- This allows for prettier links by enabling auto-index on your server.
+--
+-- See @indexedUrlField@ for adding such links in your contexts.
+--
+-- Example:
+--
+-- > runRoutes (indexRoute dropDate) "posts/sub/2014-12-10-slug.md"
+-- >
+-- >  where
+-- >    dropDate fp =
+-- >        let (path, name) = splitFileName fp
+-- >        in path ++ drop 11 (dropExtension name)
+--
+-- Result:
+--
+-- > Just "posts/sub/slug/index.html"
+--
+indexRoute :: (FilePath -> FilePath) -- ^ Convert the source file to a directory
+           -> Routes
+indexRoute convert = customRoute $ (++ "/index.html") . convert . toFilePath
 
 
 --------------------------------------------------------------------------------

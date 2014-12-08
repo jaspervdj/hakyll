@@ -14,6 +14,7 @@ module Hakyll.Web.Template.Context
     , bodyField
     , metadataField
     , urlField
+    , indexedUrlField
     , pathField
     , titleField
     , dateField
@@ -35,6 +36,7 @@ import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime, parseTime)
 import           System.FilePath               (takeBaseName, splitDirectories)
+import qualified System.FilePath.Posix         as P
 import           System.Locale                 (TimeLocale, defaultTimeLocale)
 
 
@@ -179,6 +181,20 @@ metadataField = Context $ \k _ i -> do
 urlField :: String -> Context a
 urlField key = field key $
     fmap (maybe empty toUrl) . getRoute . itemIdentifier
+
+
+--------------------------------------------------------------------------------
+-- | Absolute url to the resulting item with a trailing @index.html@ removed if
+-- present
+indexedUrlField :: String -> Context a
+indexedUrlField = mapContext stripIndex . urlField
+
+  where
+    stripIndex :: String -> String
+    stripIndex url =
+        case P.splitFileName url of
+            (path, "index.html") -> P.dropTrailingPathSeparator path
+            _ -> url
 
 
 --------------------------------------------------------------------------------
