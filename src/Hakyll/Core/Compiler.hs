@@ -135,7 +135,9 @@ saveSnapshot snapshot item = do
     compilerUnsafeIO $ do
         Logger.debug logger $ "Storing snapshot: " ++ snapshot
         Internal.saveSnapshot store snapshot item
-        return item
+
+    -- Signal that we saved the snapshot.
+    Compiler $ \_ -> return $ CompilerSnapshot snapshot (return item)
 
 
 --------------------------------------------------------------------------------

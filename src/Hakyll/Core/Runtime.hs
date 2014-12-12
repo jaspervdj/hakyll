@@ -71,9 +71,10 @@ run config verbosity rules = do
             , runtimeUniverse      = M.fromList compilers
             }
         state     = RuntimeState
-            { runtimeDone  = S.empty
-            , runtimeTodo  = M.empty
-            , runtimeFacts = oldFacts
+            { runtimeDone      = S.empty
+            , runtimeSnapshots = S.empty
+            , runtimeTodo      = M.empty
+            , runtimeFacts     = oldFacts
             }
 
     -- Run the program and fetch the resulting state
@@ -109,9 +110,10 @@ data RuntimeRead = RuntimeRead
 
 --------------------------------------------------------------------------------
 data RuntimeState = RuntimeState
-    { runtimeDone  :: Set Identifier
-    , runtimeTodo  :: Map Identifier (Compiler SomeItem)
-    , runtimeFacts :: DependencyFacts
+    { runtimeDone      :: Set Identifier
+    , runtimeSnapshots :: Set (Identifier, Snapshot)
+    , runtimeTodo      :: Map Identifier (Compiler SomeItem)
+    , runtimeFacts     :: DependencyFacts
     }
 
 
@@ -204,6 +206,16 @@ chase trail id'
                 "Compiler failed but no info given, try running with -v?"
             CompilerError es -> throwError $ intercalate "; " es
 
+            -- Signal that a snapshot was saved ->
+            CompilerSnapshot snapshot c -> do
+                -- Update info and just continue.
+                modify $ \s -> s
+                    { runtimeSnapshots =
+                        S.insert (id', snapshot) (runtimeSnapshots s)
+                    , runtimeTodo      = M.insert id' c (runtimeTodo s)
+                    }
+                chase trail id'
+
             -- Huge success
             CompilerDone (SomeItem item) cwrite -> do
                 -- Print some info
@@ -243,7 +255,16 @@ chase trail id'
             -- Try something else first
             CompilerRequire dep c -> do
                 -- Update the compiler so we don't execute it twice
-                depDone <- (dep `S.member`) . runtimeDone <$> get
+                let (depId, depSnapshot) = dep
+                done      <- runtimeDone <$> get
+                snapshots <- runtimeSnapshots <$> get
+
+                -- Done if we either completed the entire item (runtimeDone) or
+                -- if we previously saved the snapshot (runtimeSnapshots).
+                let depDone =
+                        depId `S.member` done ||
+                        (depId, depSnapshot) `S.member` snapshots
+
                 modify $ \s -> s
                     { runtimeTodo = M.insert id'
                         (if depDone then c else compilerResult result)
@@ -252,6 +273,7 @@ chase trail id'
 
                 -- If the required item is already compiled, continue, or, start
                 -- chasing that
-                Logger.debug logger $ "Require " ++ show dep ++ ": " ++
+                Logger.debug logger $ "Require " ++ show depId ++
+                    " (snapshot " ++ depSnapshot ++ "): " ++
                     (if depDone then "OK" else "chasing")
-                if depDone then chase trail id' else chase (id' : trail) dep
+                if depDone then chase trail id' else chase (id' : trail) depId

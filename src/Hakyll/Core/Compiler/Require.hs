@@ -32,12 +32,6 @@ import qualified Hakyll.Core.Store              as Store
 
 
 --------------------------------------------------------------------------------
--- | Whilst compiling an item, it possible to save multiple snapshots of it, and
--- not just the final result.
-type Snapshot = String
-
-
---------------------------------------------------------------------------------
 save :: (Binary a, Typeable a) => Store -> Item a -> IO ()
 save store item = saveSnapshot store final item
 
@@ -70,7 +64,7 @@ loadSnapshot id' snapshot = do
     when (id' `S.notMember` universe) $ fail notFound
 
     compilerTellDependencies [IdentifierDependency id']
-    compilerResult $ CompilerRequire id' $ do
+    compilerResult $ CompilerRequire (id', snapshot) $ do
         result <- compilerUnsafeIO $ Store.get store (key id' snapshot)
         case result of
             Store.NotFound      -> fail notFound

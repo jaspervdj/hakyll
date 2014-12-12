@@ -6,7 +6,8 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 module Hakyll.Core.Compiler.Internal
     ( -- * Types
-      CompilerRead (..)
+      Snapshot
+    , CompilerRead (..)
     , CompilerWrite (..)
     , CompilerResult (..)
     , Compiler (..)
@@ -51,6 +52,12 @@ import           Hakyll.Core.Store
 
 
 --------------------------------------------------------------------------------
+-- | Whilst compiling an item, it possible to save multiple snapshots of it, and
+-- not just the final result.
+type Snapshot = String
+
+
+--------------------------------------------------------------------------------
 -- | Environment in which a compiler runs
 data CompilerRead = CompilerRead
     { -- | Main configuration
@@ -86,9 +93,10 @@ instance Monoid CompilerWrite where
 
 --------------------------------------------------------------------------------
 data CompilerResult a where
-    CompilerDone    :: a -> CompilerWrite -> CompilerResult a
-    CompilerError   :: [String] -> CompilerResult a
-    CompilerRequire :: Identifier -> Compiler a -> CompilerResult a
+    CompilerDone     :: a -> CompilerWrite -> CompilerResult a
+    CompilerSnapshot :: Snapshot -> Compiler a -> CompilerResult a
+    CompilerError    :: [String] -> CompilerResult a
+    CompilerRequire  :: (Identifier, Snapshot) -> Compiler a -> CompilerResult a
 
 
 --------------------------------------------------------------------------------
@@ -104,9 +112,10 @@ instance Functor Compiler where
     fmap f (Compiler c) = Compiler $ \r -> do
         res <- c r
         return $ case res of
-            CompilerDone x w     -> CompilerDone (f x) w
-            CompilerError e      -> CompilerError e
-            CompilerRequire i c' -> CompilerRequire i (fmap f c')
+            CompilerDone x w      -> CompilerDone (f x) w
+            CompilerSnapshot s c' -> CompilerSnapshot s (fmap f c')
+            CompilerError e       -> CompilerError e
+            CompilerRequire i c'  -> CompilerRequire i (fmap f c')
     {-# INLINE fmap #-}
 
 
@@ -121,14 +130,16 @@ instance Monad Compiler where
             CompilerDone x w    -> do
                 res' <- unCompiler (f x) r
                 return $ case res' of
-                    CompilerDone y w'    -> CompilerDone y (w `mappend` w')
-                    CompilerError e      -> CompilerError e
-                    CompilerRequire i c' -> CompilerRequire i $ do
+                    CompilerDone y w'     -> CompilerDone y (w `mappend` w')
+                    CompilerSnapshot s c' -> CompilerSnapshot s c'
+                    CompilerError e       -> CompilerError e
+                    CompilerRequire i c'  -> CompilerRequire i $ do
                         compilerTell w  -- Save dependencies!
                         c'
 
-            CompilerError e      -> return $ CompilerError e
-            CompilerRequire i c' -> return $ CompilerRequire i $ c' >>= f
+            CompilerSnapshot s c' -> return $ CompilerSnapshot s (c' >>= f)
+            CompilerError e       -> return $ CompilerError e
+            CompilerRequire i c'  -> return $ CompilerRequire i (c' >>= f)
     {-# INLINE (>>=) #-}
 
     fail = compilerThrow . return
@@ -198,9 +209,10 @@ compilerCatch :: Compiler a -> ([String] -> Compiler a) -> Compiler a
 compilerCatch (Compiler x) f = Compiler $ \r -> do
     res <- x r
     case res of
-        CompilerDone res' w -> return (CompilerDone res' w)
-        CompilerError e     -> unCompiler (f e) r
-        CompilerRequire i c -> return (CompilerRequire i (compilerCatch c f))
+        CompilerDone res' w  -> return (CompilerDone res' w)
+        CompilerSnapshot s c -> return (CompilerSnapshot s (compilerCatch c f))
+        CompilerError e      -> unCompiler (f e) r
+        CompilerRequire i c  -> return (CompilerRequire i (compilerCatch c f))
 {-# INLINE compilerCatch #-}
 
 
