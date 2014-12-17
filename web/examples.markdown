@@ -111,6 +111,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/fractalcat/tesser.org)
 - <https://wei2912.github.io/>,
   [source](https://github.com/wei2912/blog_src)
+- <http://www.metasepi.org/>,
+  [source](https://github.com/metasepi/metasepi-website)
 
 ## Hakyll 3.X
 
