@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.2.0
+
+- Loosen `binary` dependency
+- Make dependency handling more granular so you can depend on specific snapshots
+  of an item
+
 ## Hakyll 4.6.1.0
 
 - Bump `fsnotify` and `pandoc-citeproc` dependencies
