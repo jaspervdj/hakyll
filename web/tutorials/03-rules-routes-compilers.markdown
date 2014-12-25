@@ -36,7 +36,7 @@ match "css/*" $ do
 
 ```
 
-This is a declarative DSL: the order in which you write the rules make little
+This is a declarative DSL: the order in which you write the rules makes little
 difference, Hakyll will use dependency tracking to determine the correct order.
 
 We group the different rules using `match`. The first argument for `match` is a
