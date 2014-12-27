@@ -101,7 +101,7 @@ this list. This list has no particular ordering.
   [source](https://github.com/alemedeiros/homepage)
 - <http://blog.ssanj.net/>,
   [source](https://github.com/ssanj/babyloncandle)
-- <http://ruudvanasseldonk.com/>,
+- <https://ruudvanasseldonk.com/>,
   [source](https://github.com/ruud-v-a/ruudvanasseldonk.com)
 - <http://www.haskell.mn>,
   [source](https://github.com/HaskellMN/www.haskell.mn)
