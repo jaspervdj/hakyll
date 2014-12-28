@@ -131,7 +131,9 @@ instance Monad Compiler where
                 res' <- unCompiler (f x) r
                 return $ case res' of
                     CompilerDone y w'     -> CompilerDone y (w `mappend` w')
-                    CompilerSnapshot s c' -> CompilerSnapshot s c'
+                    CompilerSnapshot s c' -> CompilerSnapshot s $ do
+                        compilerTell w  -- Save dependencies!
+                        c'
                     CompilerError e       -> CompilerError e
                     CompilerRequire i c'  -> CompilerRequire i $ do
                         compilerTell w  -- Save dependencies!

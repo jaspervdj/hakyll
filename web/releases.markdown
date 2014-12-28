@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.3.0
+
+- Fix dependency handling bug
+
 ## Hakyll 4.6.2.0
 
 - Loosen `binary` dependency
