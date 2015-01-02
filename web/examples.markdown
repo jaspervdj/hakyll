@@ -119,6 +119,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/ssanj/babyloncandle)
 - <https://rockymadden.com/>,
   [source](https://github.com/rockymadden/rockymadden-web)
+- <http://blog.dshevchenko.biz/>,
+  [source](https://github.com/denisshevchenko/blog)
 
 ## Hakyll 3.X
 
