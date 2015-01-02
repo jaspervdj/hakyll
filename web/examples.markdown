@@ -113,6 +113,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/wei2912/blog_src)
 - <http://www.metasepi.org/>,
   [source](https://github.com/metasepi/metasepi-website)
+- <http://gisli.hamstur.is/>,
+  [source](https://github.com/gislik/gisli.hamstur.is)
 
 ## Hakyll 3.X
 
