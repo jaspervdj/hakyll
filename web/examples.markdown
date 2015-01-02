@@ -115,6 +115,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/metasepi/metasepi-website)
 - <http://gisli.hamstur.is/>,
   [source](https://github.com/gislik/gisli.hamstur.is)
+- <http://blog.ssanj.net/>,
+  [source](https://github.com/ssanj/babyloncandle)
 
 ## Hakyll 3.X
 
