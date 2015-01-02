@@ -117,6 +117,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/gislik/gisli.hamstur.is)
 - <http://blog.ssanj.net/>,
   [source](https://github.com/ssanj/babyloncandle)
+- <https://rockymadden.com/>,
+  [source](https://github.com/rockymadden/rockymadden-web)
 
 ## Hakyll 3.X
 
