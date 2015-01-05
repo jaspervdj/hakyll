@@ -121,28 +121,25 @@ flush = Rules $ do
 
 
 --------------------------------------------------------------------------------
-match :: Pattern -> Rules () -> Rules ()
-match pattern rules = do
+matchInternal :: Pattern -> Rules [Identifier] -> Rules () -> Rules ()
+matchInternal pattern getIDs rules = do
     tellPattern pattern
     flush
-    ids <- getMatches pattern
+    ids <- getIDs
     tellResources ids
     Rules $ local (setMatches ids) $ unRules $ rules >> flush
   where
     setMatches ids env = env {rulesMatches = ids}
+
+--------------------------------------------------------------------------------
+match :: Pattern -> Rules () -> Rules ()
+match pattern = matchInternal pattern $ getMatches pattern
 
 
 --------------------------------------------------------------------------------
 matchMetadata :: Pattern -> (Metadata -> Bool) -> Rules () -> Rules ()
-matchMetadata pattern metadataPred rules = do
-    tellPattern pattern
-    flush
-    idsAndMetadata <- getAllMetadata pattern
-    let ids = map fst . filter (metadataPred . snd) $ idsAndMetadata
-    tellResources ids
-    Rules $ local (setMatches ids) $ unRules $ rules >> flush
-  where
-    setMatches ids env = env {rulesMatches = ids}
+matchMetadata pattern metadataPred = matchInternal pattern $
+    map fst . filter (metadataPred . snd) <$> getAllMetadata pattern
 
 
 --------------------------------------------------------------------------------
