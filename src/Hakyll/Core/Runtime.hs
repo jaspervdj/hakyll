@@ -208,13 +208,13 @@ chase trail id'
 
             -- Signal that a snapshot was saved ->
             CompilerSnapshot snapshot c -> do
-                -- Update info and just continue.
+                -- Update info. The next 'chase' will pick us again at some
+                -- point so we can continue then.
                 modify $ \s -> s
                     { runtimeSnapshots =
                         S.insert (id', snapshot) (runtimeSnapshots s)
                     , runtimeTodo      = M.insert id' c (runtimeTodo s)
                     }
-                chase trail id'
 
             -- Huge success
             CompilerDone (SomeItem item) cwrite -> do
