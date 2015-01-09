@@ -18,6 +18,7 @@ module Hakyll.Web.Pandoc.Biblio
     , Biblio (..)
     , biblioCompiler
     , readPandocBiblio
+    , pandocBiblioCompiler
     ) where
 
 
