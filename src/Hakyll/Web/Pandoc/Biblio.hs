@@ -109,6 +109,7 @@ readPandocBiblio ropt csl biblio item = do
 
     return $ fmap (const pandoc') item
 
+--------------------------------------------------------------------------------
 pandocBiblioCompiler :: String -> String -> Compiler (Item String)
 pandocBiblioCompiler cslFileName bibFileName = do
     csl <- load $ fromFilePath cslFileName
