@@ -4,7 +4,7 @@
 -- In order to add a bibliography, you will need a bibliography file (e.g.
 -- @.bib@) and a CSL file (@.csl@). Both need to be compiled with their
 -- respective compilers ('biblioCompiler' and 'cslCompiler'). Then, you can
--- refer to these files when you use 'pageReadPandocBiblio'. This function also
+-- refer to these files when you use 'readPandocBiblio'. This function also
 -- takes the reader options for completeness -- you can use
 -- 'defaultHakyllReaderOptions' if you're unsure.
 -- 'pandocBiblioCompiler' is a convenience wrapper which works like 'pandocCompiler',
