@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.4.0
+
+- Fix another dependency handling bug when using snapshots
+- Add `matchMetadata` for examining metadata when defining rules
+
 ## Hakyll 4.6.3.0
 
 - Fix dependency handling bug
