@@ -7,11 +7,16 @@ module Hakyll.Preview.Server
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad.Trans (liftIO)
+import           Control.Monad.Trans   (liftIO)
 import qualified Data.ByteString.Char8 as B
-import qualified Snap.Core           as Snap
-import qualified Snap.Http.Server    as Snap
-import qualified Snap.Util.FileServe as Snap
+import qualified Snap.Core             as Snap
+import qualified Snap.Http.Server      as Snap
+import qualified Snap.Util.FileServe   as Snap
+
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Logger    (Logger)
+import qualified Hakyll.Core.Logger    as Logger
 
 
 --------------------------------------------------------------------------------
@@ -30,12 +35,14 @@ static directory preServe =
 
 --------------------------------------------------------------------------------
 -- | Main method, runs a static server in the given directory
-staticServer :: FilePath             -- ^ Directory to serve
+staticServer :: Logger               -- ^ Logger
+             -> FilePath             -- ^ Directory to serve
              -> (FilePath -> IO ())  -- ^ Pre-serve hook
              -> String               -- ^ Host to bind on
              -> Int                  -- ^ Port to listen on
              -> IO ()                -- ^ Blocks forever
-staticServer directory preServe host port =
+staticServer logger directory preServe host port = do
+    Logger.header logger $ "Listening on http://" ++ host ++ ":" ++ show port
     Snap.httpServe config $ static directory preServe
   where
     -- Snap server config
@@ -43,4 +50,5 @@ staticServer directory preServe host port =
            $ Snap.setPort      port
            $ Snap.setAccessLog Snap.ConfigNoLog
            $ Snap.setErrorLog  Snap.ConfigNoLog
+           $ Snap.setVerbose   False
            $ Snap.emptyConfig

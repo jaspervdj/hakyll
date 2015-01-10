@@ -40,16 +40,17 @@ hakyllWith conf rules = do
         check'     =
             if internal_links args' then Check.InternalLinks else Check.All
 
+    logger <- Logger.new verbosity'
     case args' of
-        Build   _     -> Commands.build conf verbosity' rules >>= exitWith
-        Check   _ _   -> Commands.check conf verbosity' check'
-        Clean   _     -> Commands.clean conf
+        Build   _     -> Commands.build conf logger rules >>= exitWith
+        Check   _ _   -> Commands.check conf logger check'
+        Clean   _     -> Commands.clean conf logger
         Deploy  _     -> Commands.deploy conf >>= exitWith
         Help    _     -> showHelp
-        Preview _ p   -> Commands.preview conf verbosity' rules p
-        Rebuild _     -> Commands.rebuild conf verbosity' rules >>= exitWith
-        Server  _ _ _   -> Commands.server conf (host args') (port args')
-        Watch   _ _ p s -> Commands.watch conf verbosity' (host args') p (not s) rules
+        Preview _ p   -> Commands.preview conf logger rules p
+        Rebuild _     -> Commands.rebuild conf logger rules >>= exitWith
+        Server  _ _ _   -> Commands.server conf logger (host args') (port args')
+        Watch   _ _ p s -> Commands.watch conf logger (host args') p (not s) rules
 
 
 --------------------------------------------------------------------------------

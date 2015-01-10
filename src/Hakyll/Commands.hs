@@ -14,16 +14,17 @@ module Hakyll.Commands
 
 
 --------------------------------------------------------------------------------
-import           System.Exit                (exitWith, ExitCode)
-import           System.IO.Error            (catchIOError)
 import           Control.Applicative
-import           Control.Monad              (void)
 import           Control.Concurrent
+import           Control.Monad              (void)
+import           System.Exit                (ExitCode, exitWith)
+import           System.IO.Error            (catchIOError)
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check               as Check
 import           Hakyll.Core.Configuration
-import           Hakyll.Core.Logger         (Verbosity)
+import           Hakyll.Core.Logger         (Logger)
+import qualified Hakyll.Core.Logger         as Logger
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
 import           Hakyll.Core.Runtime
@@ -31,7 +32,7 @@ import           Hakyll.Core.Util.File
 
 --------------------------------------------------------------------------------
 #ifdef WATCH_SERVER
-import           Hakyll.Preview.Poll (watchUpdates)
+import           Hakyll.Preview.Poll        (watchUpdates)
 #endif
 
 #ifdef PREVIEW_SERVER
@@ -41,35 +42,36 @@ import           Hakyll.Preview.Server
 
 --------------------------------------------------------------------------------
 -- | Build the site
-build :: Configuration -> Verbosity -> Rules a -> IO ExitCode
-build conf verbosity rules = fst <$> run conf verbosity rules
+build :: Configuration -> Logger -> Rules a -> IO ExitCode
+build conf logger rules = fst <$> run conf logger rules
+
 
 --------------------------------------------------------------------------------
 -- | Run the checker and exit
-check :: Configuration -> Verbosity -> Check.Check -> IO ()
-check config verbosity check' = Check.check config verbosity check' >>= exitWith
+check :: Configuration -> Logger -> Check.Check -> IO ()
+check config logger check' = Check.check config logger check' >>= exitWith
 
 
 --------------------------------------------------------------------------------
 -- | Remove the output directories
-clean :: Configuration -> IO ()
-clean conf = do
+clean :: Configuration -> Logger -> IO ()
+clean conf logger = do
     remove $ destinationDirectory conf
     remove $ storeDirectory conf
     remove $ tmpDirectory conf
   where
     remove dir = do
-        putStrLn $ "Removing " ++ dir ++ "..."
+        Logger.header logger $ "Removing " ++ dir ++ "..."
         removeDirectory dir
 
 
 --------------------------------------------------------------------------------
 -- | Preview the site
-preview :: Configuration -> Verbosity -> Rules a -> Int -> IO ()
+preview :: Configuration -> Logger -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
-preview conf verbosity rules port  = do
+preview conf logger rules port  = do
     deprecatedMessage
-    watch conf verbosity "0.0.0.0" port True rules
+    watch conf logger "0.0.0.0" port True rules
   where
     deprecatedMessage = mapM_ putStrLn [ "The preview command has been deprecated."
                                        , "Use the watch command for recompilation and serving."
@@ -82,9 +84,9 @@ preview _ _ _ _ = previewServerDisabled
 --------------------------------------------------------------------------------
 -- | Watch and recompile for changes
 
-watch :: Configuration -> Verbosity -> String -> Int -> Bool -> Rules a -> IO ()
+watch :: Configuration -> Logger -> String -> Int -> Bool -> Rules a -> IO ()
 #ifdef WATCH_SERVER
-watch conf verbosity host port runServer rules = do
+watch conf logger host port runServer rules = do
 #ifndef mingw32_HOST_OS
     _ <- forkIO $ watchUpdates conf update
 #else
@@ -97,27 +99,27 @@ watch conf verbosity host port runServer rules = do
     server'
   where
     update = do
-        (_, ruleSet) <- run conf verbosity rules
+        (_, ruleSet) <- run conf logger rules
         return $ rulesPattern ruleSet
     loop = threadDelay 100000 >> loop
-    server' = if runServer then server conf host port else loop
+    server' = if runServer then server conf logger host port else loop
 #else
 watch _ _ _ _ _ _ = watchServerDisabled
 #endif
 
 --------------------------------------------------------------------------------
 -- | Rebuild the site
-rebuild :: Configuration -> Verbosity -> Rules a -> IO ExitCode
-rebuild conf verbosity rules =
-    clean conf >> build conf verbosity rules
+rebuild :: Configuration -> Logger -> Rules a -> IO ExitCode
+rebuild conf logger rules =
+    clean conf logger >> build conf logger rules
 
 --------------------------------------------------------------------------------
 -- | Start a server
-server :: Configuration -> String -> Int -> IO ()
+server :: Configuration -> Logger -> String -> Int -> IO ()
 #ifdef PREVIEW_SERVER
-server conf host port = do
+server conf logger host port = do
     let destination = destinationDirectory conf
-    staticServer destination preServeHook host port
+    staticServer logger destination preServeHook host port
   where
     preServeHook _ = return ()
 #else
@@ -156,4 +158,3 @@ watchServerDisabled =
       , "Alternatively, use an external tool to serve your site directory."
       ]
 #endif
-

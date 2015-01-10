@@ -30,7 +30,7 @@ import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Item.SomeItem
-import           Hakyll.Core.Logger            (Logger, Verbosity)
+import           Hakyll.Core.Logger            (Logger)
 import qualified Hakyll.Core.Logger            as Logger
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
@@ -42,10 +42,9 @@ import           Hakyll.Core.Writable
 
 
 --------------------------------------------------------------------------------
-run :: Configuration -> Verbosity -> Rules a -> IO (ExitCode, RuleSet)
-run config verbosity rules = do
+run :: Configuration -> Logger -> Rules a -> IO (ExitCode, RuleSet)
+run config logger rules = do
     -- Initialization
-    logger <- Logger.new verbosity
     Logger.header logger "Initialising..."
     Logger.message logger "Creating store..."
     store <- Store.new (inMemoryCache config) $ storeDirectory config

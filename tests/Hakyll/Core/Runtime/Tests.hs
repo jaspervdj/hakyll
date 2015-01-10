@@ -28,7 +28,8 @@ tests = testGroup "Hakyll.Core.Runtime.Tests" $
 --------------------------------------------------------------------------------
 case01 :: Assertion
 case01 = do
-    _ <- run testConfiguration Logger.Error $ do
+    logger <- Logger.new Logger.Error
+    _      <- run testConfiguration logger $ do
         match "images/*" $ do
             route idRoute
             compile copyFileCompiler
@@ -65,7 +66,8 @@ case01 = do
 --------------------------------------------------------------------------------
 case02 :: Assertion
 case02 = do
-    _ <- run testConfiguration Logger.Error $ do
+    logger <- Logger.new Logger.Error
+    _      <- run testConfiguration logger $ do
         match "images/favicon.ico" $ do
             route   $ gsubRoute "images/" (const "")
             compile $ makeItem ("Test" :: String)

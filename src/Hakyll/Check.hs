@@ -42,7 +42,7 @@ import qualified Paths_hakyll              as Paths_hakyll
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Configuration
-import           Hakyll.Core.Logger        (Logger, Verbosity)
+import           Hakyll.Core.Logger        (Logger)
 import qualified Hakyll.Core.Logger        as Logger
 import           Hakyll.Core.Util.File
 import           Hakyll.Web.Html
@@ -54,9 +54,9 @@ data Check = All | InternalLinks
 
 
 --------------------------------------------------------------------------------
-check :: Configuration -> Verbosity -> Check -> IO ExitCode
-check config verbosity check' = do
-    ((), write) <- runChecker checkDestination config verbosity check'
+check :: Configuration -> Logger -> Check -> IO ExitCode
+check config logger check' = do
+    ((), write) <- runChecker checkDestination config logger check'
     return $ if checkerFaulty write > 0 then ExitFailure 1 else ExitSuccess
 
 
@@ -91,10 +91,9 @@ type Checker a = RWST CheckerRead CheckerWrite CheckerState IO a
 
 
 --------------------------------------------------------------------------------
-runChecker :: Checker a -> Configuration -> Verbosity -> Check
+runChecker :: Checker a -> Configuration -> Logger -> Check
            -> IO (a, CheckerWrite)
-runChecker checker config verbosity check' = do
-    logger <- Logger.new verbosity
+runChecker checker config logger check' = do
     let read' = CheckerRead
                     { checkerConfig = config
                     , checkerLogger = logger
