@@ -5,6 +5,7 @@ module Hakyll.Web.Template.Context
     , Context (..)
     , field
     , constField
+    , maybeField
     , listField
     , listFieldWith
     , functionField
@@ -28,7 +29,7 @@ module Hakyll.Web.Template.Context
 
 --------------------------------------------------------------------------------
 import           Control.Applicative           (Alternative (..), (<$>))
-import           Control.Monad                 (msum)
+import           Control.Monad                 (msum, (<=<))
 import           Data.List                     (intercalate)
 import qualified Data.Map                      as M
 import           Data.Monoid                   (Monoid (..))
@@ -102,6 +103,11 @@ field key value = field' key (fmap StringField . value)
 constField :: String -> String -> Context a
 constField key = field key . const . return
 
+--------------------------------------------------------------------------------
+-- | A 'field' which will only contain value for 'Just's. This
+--   is mostly useful along with conditional template construct @$if(key)$@.
+maybeField :: String -> (Item a -> Compiler (Maybe String)) -> Context a
+maybeField key value = field key $ maybe empty return <=< value
 
 --------------------------------------------------------------------------------
 listField :: String -> Context a -> Compiler [Item a] -> Context b
