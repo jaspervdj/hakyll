@@ -4,6 +4,7 @@ module Hakyll.Web.Template.Context
     ( ContextField (..)
     , Context (..)
     , field
+    , boolField
     , constField
     , listField
     , listFieldWith
@@ -27,7 +28,7 @@ module Hakyll.Web.Template.Context
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           (Alternative (..), (<$>))
+import           Control.Applicative           (Alternative (..), (<$>), pure)
 import           Control.Monad                 (msum)
 import           Data.List                     (intercalate)
 import qualified Data.Map                      as M
@@ -95,6 +96,17 @@ field
                                    -- on the item
     -> Context a
 field key value = field' key (fmap StringField . value)
+
+
+--------------------------------------------------------------------------------
+-- | Creates a 'field' to use with the @$if()$@ template macro.
+boolField
+    :: String
+    -> (Item a -> Bool)
+    -> Context a
+boolField name f = field name (\i -> if f i
+    then pure (error $ unwords ["no string value for bool field:",name])
+    else empty)
 
 
 --------------------------------------------------------------------------------
