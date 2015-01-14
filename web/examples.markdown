@@ -121,6 +121,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/rockymadden/rockymadden-web)
 - <http://blog.dshevchenko.biz/>,
   [source](https://github.com/denisshevchenko/blog)
+- <http://ruhaskell.org/>,
+  [source](https://github.com/ruHaskell/ruhaskell)
 
 ## Hakyll 3.X
 
