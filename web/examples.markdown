@@ -123,6 +123,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/denisshevchenko/blog)
 - <http://ruhaskell.org/>,
   [source](https://github.com/ruHaskell/ruhaskell)
+- <http://www.haskell.od.ua/>,
+  [source](https://github.com/odhug/odhug.github.com)
 
 ## Hakyll 3.X
 
