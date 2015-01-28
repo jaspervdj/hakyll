@@ -127,6 +127,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/odhug/odhug.github.com)
 - <http://blog.rekahsoft.ca/>,
   [source](http://git.rekahsoft.ca/blog-rekahsoft-ca)
+- <http://www.andreascarpino.it>,
+  [source](https://github.com/ilpianista/website)
 
 ## Hakyll 3.X
 
