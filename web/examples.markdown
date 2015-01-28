@@ -125,6 +125,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/ruHaskell/ruhaskell)
 - <http://www.haskell.od.ua/>,
   [source](https://github.com/odhug/odhug.github.com)
+- <http://blog.rekahsoft.ca/>,
+  [source](http://git.rekahsoft.ca/blog-rekahsoft-ca)
 
 ## Hakyll 3.X
 
