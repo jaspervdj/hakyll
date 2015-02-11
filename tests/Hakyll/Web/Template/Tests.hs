@@ -55,8 +55,6 @@ case01 = do
     item <- testCompilerDone store provider "example.md"    $
         pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 
-    writeFile "foo" (itemBody item)
-
     out @=? itemBody item
     cleanTestEnv
 
