@@ -88,7 +88,6 @@ Flag checkExternal
 
 Library
   Ghc-Options:    -Wall
-  Ghc-Prof-Options: -auto-all -caf-all
   Hs-Source-Dirs: src
 
   Exposed-Modules:
