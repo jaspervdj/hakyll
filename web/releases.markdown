@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.5.0
+
+- Bump dependencies
+- Fix garbled "Listening on 0.0.0.0:8000" message
+- Add `boolField` (contribution by Ferenc Wágner)
+
 ## Hakyll 4.6.4.0
 
 - Fix another dependency handling bug when using snapshots
