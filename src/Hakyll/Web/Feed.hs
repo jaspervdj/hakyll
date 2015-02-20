@@ -77,6 +77,8 @@ renderFeed feedPath itemPath config itemContext items = do
 
     itemContext' = mconcat
         [ constField "root" (feedRoot config)
+        , constField "authorName"  (feedAuthorName config)
+        , constField "authorEmail" (feedAuthorEmail config)
         , itemContext
         ]
 
