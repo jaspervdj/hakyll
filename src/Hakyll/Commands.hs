@@ -123,7 +123,7 @@ server conf logger host port = do
   where
     preServeHook _ = return ()
 #else
-server _ _ _ = previewServerDisabled
+server _ _ _ _ = previewServerDisabled
 #endif
 
 
