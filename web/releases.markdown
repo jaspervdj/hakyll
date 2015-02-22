@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.6.0
+
+- Fix compilation error when preview server is disabled (fix by Magnus Therning)
+- Add author name by default to RSS feeds (contribution by Calen Pennington)
+
 ## Hakyll 4.6.5.0
 
 - Bump dependencies
