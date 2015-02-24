@@ -72,7 +72,7 @@ makeName dstDir = do
 
 createCabal :: FilePath -> String -> IO ()
 createCabal path name = do
-    writeFile (path ++ ".cabal") $ unlines [
+    writeFile path $ unlines [
         "name:               " ++ name
       , "version:            0.1.0.0"
       , "build-type:         Simple"
