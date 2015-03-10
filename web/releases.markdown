@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.7.0
+
+- Bump dependencies
+- Fix bug where hakyll-init would create a file called `name.cabal.cabal` (fix
+  by Hans-Peter Deifel)
+
 ## Hakyll 4.6.6.0
 
 - Fix compilation error when preview server is disabled (fix by Magnus Therning)
