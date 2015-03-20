@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.7.1
+
+- Bump dependencies
+
 ## Hakyll 4.6.7.0
 
 - Bump dependencies
