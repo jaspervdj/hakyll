@@ -40,8 +40,7 @@ fileType :: FilePath -> FileType
 fileType = uncurry fileType' . splitExtension
   where
     fileType' _ ".css"      = Css
-    fileType' _ ".docbook"  = DocBook
-    fileType' _ ".db"       = DocBook
+    fileType' _ ".dbk"      = DocBook
     fileType' _ ".htm"      = Html
     fileType' _ ".html"     = Html
     fileType' f ".lhs"      = LiterateHaskell $ case fileType f of
