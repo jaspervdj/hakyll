@@ -23,6 +23,7 @@ module Hakyll.Web.Template.Context
     , modificationTimeField
     , modificationTimeFieldWith
     , teaserField
+    , teaserFieldWithSeperator
     , missingField
     ) where
 
@@ -318,9 +319,18 @@ modificationTimeFieldWith locale key fmt = field key $ \i -> do
 teaserField :: String           -- ^ Key to use
             -> Snapshot         -- ^ Snapshot to load
             -> Context String   -- ^ Resulting context
-teaserField key snapshot = field key $ \item -> do
+teaserField = teaserFieldWithSeperator teaserSeparator
+
+-- | A context with "teaser" key which contain a teaser of the item, defined as the snapshot content before the teaser separator.
+-- The item is loaded from the given snapshot (which should be saved
+-- in the user code before any templates are applied).
+teaserFieldWithSeperator :: String           -- ^ Separator to use
+                         -> String           -- ^ Key to use
+                         -> Snapshot         -- ^ Snapshot to load
+                         -> Context String   -- ^ Resulting context
+teaserFieldWithSeperator separator key snapshot = field key $ \item -> do
     body <- itemBody <$> loadSnapshot (itemIdentifier item) snapshot
-    case needlePrefix teaserSeparator body of
+    case needlePrefix separator body of
         Nothing -> fail $
             "Hakyll.Web.Template.Context: no teaser defined for " ++
             show (itemIdentifier item)
