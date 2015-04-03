@@ -49,6 +49,7 @@ readPandocWith :: ReaderOptions  -- ^ Parser options
 readPandocWith ropt item = fmap (reader ropt (itemFileType item)) item
   where
     reader ro t = case t of
+        DocBook            -> readDocBook ro
         Html               -> readHtml ro
         LaTeX              -> readLaTeX ro
         LiterateHaskell t' -> reader (addExt ro Ext_literate_haskell) t'
