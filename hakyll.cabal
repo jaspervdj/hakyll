@@ -86,6 +86,12 @@ Flag checkExternal
   Description: Include external link checking
   Default:     True
 
+-- Needed to support both network-uri<2.6 and >=2.6
+-- See http://hackage.haskell.org/package/network-uri-2.6.0.0
+Flag network-uri
+   description: Get Network.URI from the network-uri package
+   default: True
+
 Library
   Ghc-Options:    -Wall
   Hs-Source-Dirs: src
@@ -154,8 +160,6 @@ Library
     filepath        >= 1.0    && < 1.5,
     lrucache        >= 1.1.1  && < 1.3,
     mtl             >= 1      && < 2.3,
-    network         >= 2.6    && < 2.7,
-    network-uri     >= 2.6    && < 2.7,
     old-locale      >= 1.0    && < 1.1,
     old-time        >= 1.0    && < 1.2,
     pandoc          >= 1.12.4 && < 1.14,
@@ -196,6 +200,15 @@ Library
       http-types   >= 0.7    && < 0.9
     Cpp-options:
       -DCHECK_EXTERNAL
+
+  If flag(network-uri)
+    Build-Depends:
+      network         >= 2.6    && < 2.7,
+      network-uri     >= 2.6    && < 2.7
+  Else
+    Build-Depends:
+      network         >= 2.5    && < 2.6,
+      network-uri     >= 2.5    && < 2.6
 
 Test-suite hakyll-tests
   Type:           exitcode-stdio-1.0
@@ -241,8 +254,6 @@ Test-suite hakyll-tests
     filepath        >= 1.0    && < 1.5,
     lrucache        >= 1.1.1  && < 1.3,
     mtl             >= 1      && < 2.3,
-    network         >= 2.6    && < 2.7,
-    network-uri     >= 2.6    && < 2.7,
     old-locale      >= 1.0    && < 1.1,
     old-time        >= 1.0    && < 1.2,
     pandoc          >= 1.12.4 && < 1.14,
@@ -283,6 +294,15 @@ Test-suite hakyll-tests
       http-types   >= 0.7    && < 0.9
     Cpp-options:
       -DCHECK_EXTERNAL
+
+  If flag(network-uri)
+    Build-Depends:
+      network         >= 2.6    && < 2.7,
+      network-uri     >= 2.6    && < 2.7
+  Else
+    Build-Depends:
+      network         >= 2.5    && < 2.6,
+      network-uri     >= 2.5    && < 2.6
 
 Executable hakyll-init
   Ghc-options:    -Wall
