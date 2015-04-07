@@ -22,7 +22,7 @@ module Hakyll.Web.Template.List
 import           Control.Monad               (liftM)
 import           Data.List                   (intersperse, sortBy)
 import           Data.Ord                    (comparing)
-import           System.Locale               (defaultTimeLocale)
+import           Data.Time.Locale.Compat     (defaultTimeLocale)
 
 
 --------------------------------------------------------------------------------

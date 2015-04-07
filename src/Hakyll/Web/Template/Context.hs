@@ -36,7 +36,7 @@ import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime, parseTime)
 import           System.FilePath               (takeBaseName, splitDirectories)
-import           System.Locale                 (TimeLocale, defaultTimeLocale)
+import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
 
 
 --------------------------------------------------------------------------------
