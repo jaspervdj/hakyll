@@ -4,6 +4,13 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.8.0
+
+- Fix building on GHC 7.10 (fix by Charles Strahan)
+- Add support for a custom teaser separator (contribution by Tom Sydney
+  Kerckhove)
+- Let Pandoc handle DocBook files (contribution by Joshua SImmons)
+
 ## Hakyll 4.6.7.1
 
 - Bump dependencies
