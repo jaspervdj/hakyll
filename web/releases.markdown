@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.8.1
+
+- Fix test suite dependencies
+
 ## Hakyll 4.6.8.0
 
 - Fix building on GHC 7.10 (fix by Charles Strahan)
