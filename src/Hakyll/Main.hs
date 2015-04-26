@@ -5,6 +5,7 @@
 module Hakyll.Main
     ( hakyll
     , hakyllWith
+    , hakyllWithExitCode
     ) where
 
 
@@ -13,7 +14,7 @@ import           System.Console.CmdArgs
 import qualified System.Console.CmdArgs.Explicit as CA
 import           System.Environment              (getProgName)
 import           System.IO.Unsafe                (unsafePerformIO)
-import           System.Exit                     (exitWith)
+import           System.Exit                     (ExitCode(ExitSuccess), exitWith)
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check                    as Check
@@ -28,12 +29,14 @@ import           Hakyll.Core.Rules
 hakyll :: Rules a -> IO ()
 hakyll = hakyllWith Config.defaultConfiguration
 
-
 --------------------------------------------------------------------------------
 -- | A variant of 'hakyll' which allows the user to specify a custom
 -- configuration
 hakyllWith :: Config.Configuration -> Rules a -> IO ()
-hakyllWith conf rules = do
+hakyllWith conf rules = hakyllWithExitCode conf rules >>= exitWith
+
+hakyllWithExitCode :: Config.Configuration -> Rules a -> IO ExitCode
+hakyllWithExitCode conf rules = do
     args' <- cmdArgs (hakyllArgs conf)
 
     let verbosity' = if verbose args' then Logger.Debug else Logger.Message
@@ -42,15 +45,17 @@ hakyllWith conf rules = do
 
     logger <- Logger.new verbosity'
     case args' of
-        Build   _     -> Commands.build conf logger rules >>= exitWith
-        Check   _ _   -> Commands.check conf logger check'
-        Clean   _     -> Commands.clean conf logger
-        Deploy  _     -> Commands.deploy conf >>= exitWith
-        Help    _     -> showHelp
-        Preview _ p   -> Commands.preview conf logger rules p
-        Rebuild _     -> Commands.rebuild conf logger rules >>= exitWith
-        Server  _ _ _   -> Commands.server conf logger (host args') (port args')
-        Watch   _ _ p s -> Commands.watch conf logger (host args') p (not s) rules
+        Build   _     -> Commands.build conf logger rules
+        Check   _ _   -> Commands.check conf logger check' >> ok
+        Clean   _     -> Commands.clean conf logger >> ok
+        Deploy  _     -> Commands.deploy conf
+        Help    _     -> showHelp >> ok
+        Preview _ p   -> Commands.preview conf logger rules p >> ok
+        Rebuild _     -> Commands.rebuild conf logger rules
+        Server  _ _ _   -> Commands.server conf logger (host args') (port args') >> ok
+        Watch   _ _ p s -> Commands.watch conf logger (host args') p (not s) rules >> ok
+    where
+        ok = return ExitSuccess
 
 
 --------------------------------------------------------------------------------
