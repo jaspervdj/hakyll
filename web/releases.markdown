@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.6.9.0
+
+- Let caller decide exit (fix by Erik Dominikus)
+- Bump pandoc-citeproc dependency
+
 ## Hakyll 4.6.8.1
 
 - Fix test suite dependencies
