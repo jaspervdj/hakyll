@@ -6,6 +6,7 @@ module Hakyll.Core.Compiler
     , getUnderlying
     , getUnderlyingExtension
     , makeItem
+    , makeItems
     , getRoute
     , getResourceBody
     , getResourceString
@@ -67,6 +68,14 @@ makeItem :: a -> Compiler (Item a)
 makeItem x = do
     identifier <- getUnderlying
     return $ Item identifier x
+
+
+--------------------------------------------------------------------------------
+-- | Like @mapM makeItem@ but more efficient.
+makeItems :: Functor f => f a -> Compiler (f (Item a))
+makeItems xs = do
+    identifier <- getUnderlying
+    return $ fmap (Item identifier) xs
 
 
 --------------------------------------------------------------------------------
