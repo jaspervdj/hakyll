@@ -4,6 +4,7 @@ module Hakyll.Web.Template.Context
     ( ContextField (..)
     , Context (..)
     , field
+    , optionalField
     , boolField
     , constField
     , listField
@@ -100,7 +101,26 @@ field key value = field' key (fmap StringField . value)
 
 
 --------------------------------------------------------------------------------
+-- | Constructs a new 'field' which can be used with the @$if()$@
+-- template macro, as well as being used as a regular field. If the
+-- function returns @Nothing@ then @$if()$@ evaluates the
+-- @$else$@-branch, and trying to use the field as a string will
+-- generate an error; otherwise it evaluates the then-branch, and
+-- the field can safely be used as usual.
+optionalField
+    :: String
+    -> (Item a -> Maybe (Compiler String))
+    -> Context a
+optionalField key f = field key $ \i ->
+    case f i of
+    Nothing    -> empty
+    Just value -> value
+
+
+--------------------------------------------------------------------------------
 -- | Creates a 'field' to use with the @$if()$@ template macro.
+-- N.B., this field cannot be used for its string value. If you
+-- want an associated string value, see 'optionalField'.
 boolField
     :: String
     -> (Item a -> Bool)
