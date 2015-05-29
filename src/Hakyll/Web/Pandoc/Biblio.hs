@@ -100,8 +100,8 @@ readPandocBiblio ropt csl biblio item = do
     -- actual page. If we don't do this, pandoc won't even consider them
     -- citations!
     let Biblio refs = itemBody biblio
-        pandoc      = itemBody $ readPandocWith ropt item
-        pandoc'     = processCites style refs pandoc
+    pandoc <- itemBody <$> readPandocWith ropt item
+    let pandoc' = processCites style refs pandoc
 
     return $ fmap (const pandoc') item
 

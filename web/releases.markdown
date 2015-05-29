@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.0.0
+
+- Bump pandoc to 1.14. This will break a lot of sites: since the pandoc parser
+  might now return an error message, it is ran inside the `Compiler` monad where
+  we can nicely handle the error.
+
 ## Hakyll 4.6.9.0
 
 - Let caller decide exit (fix by Erik Dominikus)

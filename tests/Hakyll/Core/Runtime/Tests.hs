@@ -39,7 +39,7 @@ case01 = do
             compile $ do
                 getResourceBody
                     >>= saveSnapshot "raw"
-                    >>= return . renderPandoc
+                    >>= renderPandoc
 
         create ["bodies.txt"] $ do
             route idRoute

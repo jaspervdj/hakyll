@@ -26,6 +26,7 @@ import           Control.Applicative        ((<$>))
 import qualified Data.Set                   as S
 import           Data.Traversable           (traverse)
 import           Text.Pandoc
+import           Text.Pandoc.Error          (PandocError (..))
 
 
 --------------------------------------------------------------------------------
@@ -36,17 +37,25 @@ import           Hakyll.Web.Pandoc.FileType
 
 --------------------------------------------------------------------------------
 -- | Read a string using pandoc, with the default options
-readPandoc :: Item String  -- ^ String to read
-           -> Item Pandoc  -- ^ Resulting document
+readPandoc
+    :: Item String             -- ^ String to read
+    -> Compiler (Item Pandoc)  -- ^ Resulting document
 readPandoc = readPandocWith defaultHakyllReaderOptions
 
 
 --------------------------------------------------------------------------------
 -- | Read a string using pandoc, with the supplied options
-readPandocWith :: ReaderOptions  -- ^ Parser options
-               -> Item String    -- ^ String to read
-               -> Item Pandoc    -- ^ Resulting document
-readPandocWith ropt item = fmap (reader ropt (itemFileType item)) item
+readPandocWith
+    :: ReaderOptions           -- ^ Parser options
+    -> Item String             -- ^ String to read
+    -> Compiler (Item Pandoc)  -- ^ Resulting document
+readPandocWith ropt item =
+    case traverse (reader ropt (itemFileType item)) item of
+        Left (ParseFailure err)  -> fail $
+            "Hakyll.Web.Pandoc.readPandocWith: parse failed: " ++ err
+        Left (ParsecError _ err) -> fail $
+            "Hakyll.Web.Pandoc.readPandocWith: parse failed: " ++ show err
+        Right item'              -> return item'
   where
     reader ro t = case t of
         DocBook            -> readDocBook ro
@@ -81,15 +90,17 @@ writePandocWith wopt = fmap $ writeHtmlString wopt
 
 --------------------------------------------------------------------------------
 -- | Render the resource using pandoc
-renderPandoc :: Item String -> Item String
+renderPandoc :: Item String -> Compiler (Item String)
 renderPandoc =
     renderPandocWith defaultHakyllReaderOptions defaultHakyllWriterOptions
 
 
 --------------------------------------------------------------------------------
 -- | Render the resource using pandoc
-renderPandocWith :: ReaderOptions -> WriterOptions -> Item String -> Item String
-renderPandocWith ropt wopt = writePandocWith wopt . readPandocWith ropt
+renderPandocWith
+    :: ReaderOptions -> WriterOptions -> Item String -> Compiler (Item String)
+renderPandocWith ropt wopt item =
+    writePandocWith wopt <$> readPandocWith ropt item
 
 
 --------------------------------------------------------------------------------
@@ -128,7 +139,7 @@ pandocCompilerWithTransformM :: ReaderOptions -> WriterOptions
                     -> Compiler (Item String)
 pandocCompilerWithTransformM ropt wopt f =
     writePandocWith wopt <$>
-        (traverse f =<< readPandocWith ropt <$> getResourceBody)
+        (traverse f =<< readPandocWith ropt =<< getResourceBody)
 
 
 --------------------------------------------------------------------------------
