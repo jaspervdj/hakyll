@@ -27,6 +27,7 @@ data FileType
     | LaTeX
     | LiterateHaskell FileType
     | Markdown
+    | MediaWiki
     | OrgMode
     | PlainText
     | Rst
@@ -39,30 +40,32 @@ data FileType
 fileType :: FilePath -> FileType
 fileType = uncurry fileType' . splitExtension
   where
-    fileType' _ ".css"      = Css
-    fileType' _ ".dbk"      = DocBook
-    fileType' _ ".htm"      = Html
-    fileType' _ ".html"     = Html
-    fileType' f ".lhs"      = LiterateHaskell $ case fileType f of
+    fileType' _ ".css"       = Css
+    fileType' _ ".dbk"       = DocBook
+    fileType' _ ".htm"       = Html
+    fileType' _ ".html"      = Html
+    fileType' f ".lhs"       = LiterateHaskell $ case fileType f of
         -- If no extension is given, default to Markdown + LiterateHaskell
         Binary -> Markdown
         -- Otherwise, LaTeX + LiterateHaskell or whatever the user specified
         x      -> x
-    fileType' _ ".markdown" = Markdown
-    fileType' _ ".md"       = Markdown
-    fileType' _ ".mdn"      = Markdown
-    fileType' _ ".mdown"    = Markdown
-    fileType' _ ".mdwn"     = Markdown
-    fileType' _ ".mkd"      = Markdown
-    fileType' _ ".mkdwn"    = Markdown
-    fileType' _ ".org"      = OrgMode
-    fileType' _ ".page"     = Markdown
-    fileType' _ ".rst"      = Rst
-    fileType' _ ".tex"      = LaTeX
-    fileType' _ ".text"     = PlainText
-    fileType' _ ".textile"  = Textile
-    fileType' _ ".txt"      = PlainText
-    fileType' _ _           = Binary  -- Treat unknown files as binary
+    fileType' _ ".markdown"  = Markdown
+    fileType' _ ".mediawiki" = MediaWiki
+    fileType' _ ".md"        = Markdown
+    fileType' _ ".mdn"       = Markdown
+    fileType' _ ".mdown"     = Markdown
+    fileType' _ ".mdwn"      = Markdown
+    fileType' _ ".mkd"       = Markdown
+    fileType' _ ".mkdwn"     = Markdown
+    fileType' _ ".org"       = OrgMode
+    fileType' _ ".page"      = Markdown
+    fileType' _ ".rst"       = Rst
+    fileType' _ ".tex"       = LaTeX
+    fileType' _ ".text"      = PlainText
+    fileType' _ ".textile"   = Textile
+    fileType' _ ".txt"       = PlainText
+    fileType' _ ".wiki"      = MediaWiki
+    fileType' _ _            = Binary  -- Treat unknown files as binary
 
 
 --------------------------------------------------------------------------------
