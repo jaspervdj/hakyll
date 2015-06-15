@@ -63,6 +63,7 @@ readPandocWith ropt item =
         LaTeX              -> readLaTeX ro
         LiterateHaskell t' -> reader (addExt ro Ext_literate_haskell) t'
         Markdown           -> readMarkdown ro
+        MediaWiki          -> readMediaWiki ro
         OrgMode            -> readOrg ro
         Rst                -> readRST ro
         Textile            -> readTextile ro
