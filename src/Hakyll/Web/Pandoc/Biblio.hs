@@ -4,9 +4,11 @@
 -- In order to add a bibliography, you will need a bibliography file (e.g.
 -- @.bib@) and a CSL file (@.csl@). Both need to be compiled with their
 -- respective compilers ('biblioCompiler' and 'cslCompiler'). Then, you can
--- refer to these files when you use 'pageReadPandocBiblio'. This function also
+-- refer to these files when you use 'readPandocBiblio'. This function also
 -- takes the reader options for completeness -- you can use
 -- 'defaultHakyllReaderOptions' if you're unsure.
+-- 'pandocBiblioCompiler' is a convenience wrapper which works like 'pandocCompiler',
+-- but also takes paths to compiled bibliography and csl files.
 {-# LANGUAGE Arrows                     #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -16,13 +18,15 @@ module Hakyll.Web.Pandoc.Biblio
     , Biblio (..)
     , biblioCompiler
     , readPandocBiblio
+    , pandocBiblioCompiler
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative    ((<$>))
-import           Control.Monad          (replicateM)
+import           Control.Monad          (replicateM, liftM)
 import           Data.Binary            (Binary (..))
+import           Data.Default           (def)
 import           Data.Typeable          (Typeable)
 import qualified Text.CSL               as CSL
 import           Text.CSL.Pandoc        (processCites)
@@ -105,3 +109,10 @@ readPandocBiblio ropt csl biblio item = do
 
     return $ fmap (const pandoc') item
 
+--------------------------------------------------------------------------------
+pandocBiblioCompiler :: String -> String -> Compiler (Item String)
+pandocBiblioCompiler cslFileName bibFileName = do
+    csl <- load $ fromFilePath cslFileName
+    bib <- load $ fromFilePath bibFileName
+    liftM writePandoc
+        (getResourceBody >>= readPandocBiblio def csl bib)
