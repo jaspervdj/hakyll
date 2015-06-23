@@ -4,6 +4,13 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.1.0
+
+- Drop old-time, old-locale, time-locale-compat dependencies
+- Add convenicence `pandocBiblioCompiler` (contribution by
+  Matthias C. M. Troffaes)
+- Add support for mediawiki (contribution by Chen Lei)
+
 ## Hakyll 4.7.0.0
 
 - Bump pandoc to 1.14. This will break a lot of sites: since the pandoc parser
