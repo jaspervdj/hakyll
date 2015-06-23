@@ -29,15 +29,15 @@ module Hakyll.Web.Template.Context
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           (Alternative (..), (<$>), pure)
+import           Control.Applicative           (Alternative (..), pure, (<$>))
 import           Control.Monad                 (msum)
 import           Data.List                     (intercalate)
 import qualified Data.Map                      as M
 import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
-import           Data.Time.Format              (formatTime, parseTime)
-import           System.FilePath               (takeBaseName, splitDirectories)
-import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
+import           Data.Time.Format              (TimeLocale, defaultTimeLocale,
+                                                formatTime, parseTime)
+import           System.FilePath               (splitDirectories, takeBaseName)
 
 
 --------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
-import           Hakyll.Core.Util.String       (splitAll, needlePrefix)
+import           Hakyll.Core.Util.String       (needlePrefix, splitAll)
 import           Hakyll.Web.Html
 
 
@@ -238,7 +238,7 @@ titleField = mapContext takeBaseName . pathField
 -- Alternatively, when the metadata has a field called @path@ in a
 -- @folder/yyyy-mm-dd-title.extension@ format (the convention for pages)
 -- and no @published@ metadata field set, this function can render
--- the date. This pattern matches the file name or directory names 
+-- the date. This pattern matches the file name or directory names
 -- that begins with @yyyy-mm-dd@ . For example:
 -- @folder//yyyy-mm-dd-title//dist//main.extension@ .
 -- In case of multiple matches, the rightmost one is used.
