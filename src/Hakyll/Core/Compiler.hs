@@ -83,19 +83,20 @@ getRoute identifier = do
 
 
 --------------------------------------------------------------------------------
--- | Get the body of the underlying resource
+-- | Get the full contents of the matched source file as a string,
+-- but without metadata preamble, if there was one.
 getResourceBody :: Compiler (Item String)
 getResourceBody = getResourceWith resourceBody
 
 
 --------------------------------------------------------------------------------
--- | Get the resource we are compiling as a string
+-- | Get the full contents of the matched source file as a string.
 getResourceString :: Compiler (Item String)
 getResourceString = getResourceWith resourceString
 
 
 --------------------------------------------------------------------------------
--- | Get the resource we are compiling as a lazy bytestring
+-- | Get the full contents of the matched source file as a lazy bytestring.
 getResourceLBS :: Compiler (Item ByteString)
 getResourceLBS = getResourceWith resourceLBS
 
