@@ -14,7 +14,7 @@ import           Control.Exception              (AsyncException, fromException,
 import           Control.Monad                  (forever, void, when)
 import           Filesystem.Path.CurrentOS      (decodeString, encodeString)
 import           System.Directory               (canonicalizePath)
-import           System.FilePath                (pathSeparators, (</>))
+import           System.FilePath                (pathSeparators)
 import           System.FSNotify                (Event (..), startManager,
                                                  watchTree)
 
@@ -23,6 +23,7 @@ import           Control.Concurrent             (threadDelay)
 import           Control.Exception              (IOException, throw, try)
 import           System.Directory               (doesFileExist)
 import           System.Exit                    (exitFailure)
+import           System.FilePath                ((</>))
 import           System.IO                      (Handle, IOMode (ReadMode),
                                                  hClose, openFile)
 import           System.IO.Error                (isPermissionError)

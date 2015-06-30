@@ -128,7 +128,7 @@ readTemplate input = case P.parse template "" input of
 --------------------------------------------------------------------------------
 template :: P.Parser Template
 template = Template <$>
-    (P.many1 $ chunk <|> escaped <|> conditional <|> for <|> partial <|> expr)
+    (P.many $ chunk <|> escaped <|> conditional <|> for <|> partial <|> expr)
 
 
 --------------------------------------------------------------------------------

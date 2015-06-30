@@ -36,7 +36,7 @@ import qualified Data.Map                      as M
 import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (TimeLocale, defaultTimeLocale,
-                                                formatTime, parseTime)
+                                                formatTime, parseTimeM)
 import           System.FilePath               (splitDirectories, takeBaseName)
 
 
@@ -282,7 +282,7 @@ getItemUTC locale id' = do
   where
     empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
         "could not parse time for " ++ show id'
-    parseTime' = parseTime locale
+    parseTime' = parseTimeM True locale
     formats    =
         [ "%a, %d %b %Y %H:%M:%S %Z"
         , "%Y-%m-%dT%H:%M:%S%Z"
