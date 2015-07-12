@@ -4,6 +4,13 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.2.0
+
+- Improve documentation of `getResourceXXX` functions (contribution by Matthias
+  C. M. Troffaes)
+- Allow for empty templates
+- Bump pandoc dependency to 1.15
+
 ## Hakyll 4.7.1.0
 
 - Drop old-time, old-locale, time-locale-compat dependencies
