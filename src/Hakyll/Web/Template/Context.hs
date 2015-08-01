@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 module Hakyll.Web.Template.Context
     ( ContextField (..)
@@ -35,10 +36,10 @@ import           Data.List                     (intercalate)
 import qualified Data.Map                      as M
 import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
-import           Data.Time.Format              (TimeLocale, defaultTimeLocale,
-                                                formatTime, parseTimeM)
+import           Data.Time.Format              (formatTime)
+import qualified Data.Time.Format              as TF
+import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
 import           System.FilePath               (splitDirectories, takeBaseName)
-
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
@@ -345,3 +346,10 @@ missingField :: Context a
 missingField = Context $ \k _ i -> fail $
     "Missing field $" ++ k ++ "$ in context for item " ++
     show (itemIdentifier i)
+
+parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime
+#if MIN_VERSION_time(1,5,0)
+parseTimeM = TF.parseTimeM
+#else
+parseTimeM _ = TF.parseTime
+#endif
