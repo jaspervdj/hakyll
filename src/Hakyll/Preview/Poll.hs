@@ -12,7 +12,6 @@ import           Control.Concurrent.MVar        (newEmptyMVar, takeMVar,
 import           Control.Exception              (AsyncException, fromException,
                                                  handle, throw)
 import           Control.Monad                  (forever, void, when)
-import           Filesystem.Path.CurrentOS      (decodeString, encodeString)
 import           System.Directory               (canonicalizePath)
 import           System.FilePath                (pathSeparators)
 import           System.FSNotify                (Event (..), startManager,
@@ -41,7 +40,7 @@ import           Hakyll.Core.Identifier.Pattern
 -- a site as soon as any changes occur
 watchUpdates :: Configuration -> IO Pattern -> IO ()
 watchUpdates conf update = do
-    let providerDir = decodeString $ providerDirectory conf
+    let providerDir = providerDirectory conf
     shouldBuild     <- newEmptyMVar
     pattern         <- update
     fullProviderDir <- canonicalizePath $ providerDirectory conf
@@ -66,7 +65,7 @@ watchUpdates conf update = do
             (\e -> case fromException e of
                 Nothing    -> putStrLn (show e)
                 Just async -> throw (async :: AsyncException))
-            (update' event $ encodeString providerDir)
+            (update' event providerDir)
 
     -- Send an event whenever something occurs so that the thread described
     -- above will do a build.
@@ -107,7 +106,7 @@ watchUpdates conf update = do
 
 --------------------------------------------------------------------------------
 eventPath :: Event -> FilePath
-eventPath evt = encodeString $ evtPath evt
+eventPath evt = evtPath evt
   where
     evtPath (Added p _)    = p
     evtPath (Modified p _) = p

@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.2.1
+
+- Bump fsnotify dependency to 0.2
+
 ## Hakyll 4.7.2.0
 
 - Improve documentation of `getResourceXXX` functions (contribution by Matthias

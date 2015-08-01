@@ -171,7 +171,7 @@ Library
     Build-depends:
       snap-core       >= 0.6   && < 0.10,
       snap-server     >= 0.6   && < 0.10,
-      fsnotify        >= 0.1   && < 0.2,
+      fsnotify        >= 0.2   && < 0.3,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DPREVIEW_SERVER
@@ -181,7 +181,7 @@ Library
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.1   && < 0.2,
+      fsnotify        >= 0.2   && < 0.3,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DWATCH_SERVER
@@ -256,7 +256,7 @@ Test-suite hakyll-tests
     Build-depends:
       snap-core       >= 0.6   && < 0.10,
       snap-server     >= 0.6   && < 0.10,
-      fsnotify        >= 0.1   && < 0.2,
+      fsnotify        >= 0.2   && < 0.3,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DPREVIEW_SERVER
@@ -266,7 +266,7 @@ Test-suite hakyll-tests
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.1   && < 0.2,
+      fsnotify        >= 0.2   && < 0.3,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DWATCH_SERVER
