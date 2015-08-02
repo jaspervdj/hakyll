@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.2.2
+
+- Relax time dependency
+
 ## Hakyll 4.7.2.1
 
 - Bump fsnotify dependency to 0.2
