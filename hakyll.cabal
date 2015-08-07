@@ -251,7 +251,8 @@ Test-suite hakyll-tests
     regex-tdfa      >= 1.1     && < 1.3,
     tagsoup         >= 0.13.1  && < 0.14,
     text            >= 0.11    && < 1.3,
-    time            >= 1.5     && < 1.6
+    time            >= 1.5     && < 1.6,
+    time-locale-compat >= 0.1  && < 0.2
 
   If flag(previewServer)
     Build-depends:
