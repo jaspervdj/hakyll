@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.2.3
+
+- Fix time dependency in tests
+
 ## Hakyll 4.7.2.2
 
 - Relax time dependency
