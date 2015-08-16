@@ -22,6 +22,9 @@ tests = testGroup "Hakyll.Web.Html.RelativizeUrls.Tests" $
             relativizeUrlsWith ".." "<a href=\"/foo\">bar</a>"
         , "<img src=\"../../images/lolcat.png\" />" @=?
             relativizeUrlsWith "../.." "<img src=\"/images/lolcat.png\" />"
+        , "<video poster=\"../../images/lolcat.png\"></video>" @=?
+            relativizeUrlsWith "../.."
+                "<video poster=\"/images/lolcat.png\"></video>"
         , "<a href=\"http://haskell.org\">Haskell</a>" @=?
             relativizeUrlsWith "../.."
                 "<a href=\"http://haskell.org\">Haskell</a>"
