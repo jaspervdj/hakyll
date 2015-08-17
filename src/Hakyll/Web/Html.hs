@@ -55,7 +55,7 @@ demoteHeaders = withTags $ \tag -> case tag of
 
 --------------------------------------------------------------------------------
 isUrlAttribute :: String -> Bool
-isUrlAttribute = (`elem` ["src", "href", "data"])
+isUrlAttribute = (`elem` ["src", "href", "data", "poster"])
 
 
 --------------------------------------------------------------------------------
