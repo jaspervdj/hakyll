@@ -20,7 +20,6 @@ use:
 
 Linux distro packages:
 
-- [Archlinux (AUR)](https://aur.archlinux.org/packages/haskell-hakyll/)
 - [Debian unstable](http://packages.debian.org/source/sid/haskell-hakyll)
 
 Building the example site
