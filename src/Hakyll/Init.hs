@@ -9,7 +9,7 @@ import           Control.Arrow         (first)
 import           Control.Monad         (forM_)
 import           Data.Char             (isAlphaNum, isNumber)
 import           Data.List             (foldl')
-import           Data.List             (intercalate)
+import           Data.List             (intercalate, isPrefixOf)
 import           Data.Version          (Version (..))
 import           System.Directory      (canonicalizePath, copyFile)
 import           System.Environment    (getArgs, getProgName)
@@ -31,7 +31,7 @@ main = do
     files    <- getRecursiveContents (const $ return False) srcDir
 
     case args of
-        [dstDir] -> do
+        [dstDir] | not ("-" `isPrefixOf` dstDir) -> do
             forM_ files $ \file -> do
                 let dst = dstDir </> file
                     src = srcDir </> file
