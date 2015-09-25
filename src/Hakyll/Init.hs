@@ -9,7 +9,7 @@ import           Control.Arrow         (first)
 import           Control.Monad         (forM_)
 import           Data.Char             (isAlphaNum, isNumber)
 import           Data.List             (foldl')
-import           Data.List             (intercalate)
+import           Data.List             (intercalate, isPrefixOf)
 import           Data.Version          (Version (..))
 import           System.Directory      (canonicalizePath, copyFile)
 import           System.Environment    (getArgs, getProgName)
@@ -31,7 +31,13 @@ main = do
     files    <- getRecursiveContents (const $ return False) srcDir
 
     case args of
-        [dstDir] -> do
+        -- When the argument begins with hyphens, it's more likely that the user
+        -- intends to attempt some arguments like ("--help", "-h", "--version", etc.)
+        -- rather than create directory with that name.
+        -- If dstDir begins with hyphens, the guard will prevent it from creating
+        -- directory with that name so we can fall to the second alternative
+        -- which prints a usage info for user.
+        [dstDir] | not ("-" `isPrefixOf` dstDir) -> do
             forM_ files $ \file -> do
                 let dst = dstDir </> file
                     src = srcDir </> file
