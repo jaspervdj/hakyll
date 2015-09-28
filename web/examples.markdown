@@ -129,6 +129,8 @@ this list. This list has no particular ordering.
   [source](http://git.rekahsoft.ca/blog-rekahsoft-ca)
 - <http://www.andreascarpino.it>,
   [source](https://gitlab.com/ilpianista/website)
+- <http://cascadeofinsights.com/>,
+  [source](https://github.com/agbell/agbell.github.io/tree/hakyll)
 
 ## Hakyll 3.X
 
