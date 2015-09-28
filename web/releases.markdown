@@ -4,6 +4,13 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.3.0
+
+- Bump HUnit dependency to 1.3
+- Add `poster` as an URL attribute (contribution by vtduncan)
+- Prevent `hakyll-init` from generating directories with leading hyphen
+  (contribution by Javran Cheng)
+
 ## Hakyll 4.7.2.3
 
 - Fix time dependency in tests
