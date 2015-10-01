@@ -131,6 +131,8 @@ this list. This list has no particular ordering.
   [source](https://gitlab.com/ilpianista/website)
 - <http://cascadeofinsights.com/>,
   [source](https://github.com/agbell/agbell.github.io/tree/hakyll)
+- <http://www.xoltar.org/>,
+  [source](https://github.com/xoltar/xoltar.org)
 
 ## Hakyll 3.X
 
