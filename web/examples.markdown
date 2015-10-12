@@ -133,6 +133,8 @@ this list. This list has no particular ordering.
   [source](https://github.com/agbell/agbell.github.io/tree/hakyll)
 - <http://www.xoltar.org/>,
   [source](https://github.com/xoltar/xoltar.org)
+- <http://sigkill.dk/>
+  [literate source](http://sigkill.dk/programs/sigkill.html)
 
 ## Hakyll 3.X
 
@@ -152,8 +154,6 @@ this list. This list has no particular ordering.
   [source](https://github.com/marcmo/blog.coldflake)
 - <http://deepak.jois.name>,
   [source](https://github.com/deepakjois/website)
-- <http://sigkill.dk/>,
-  [literate source](http://sigkill.dk/programs/sigkill.html)
 - <http://orftz.com>,
   [source](https://github.com/orftz/orftz.com)
 - <http://citationneeded.me/>,
