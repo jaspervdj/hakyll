@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.3.1
+
+- Bump pandoc-citeproc dependency to 0.8
+
 ## Hakyll 4.7.3.0
 
 - Bump HUnit dependency to 1.3
