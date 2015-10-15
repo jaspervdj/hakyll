@@ -21,6 +21,7 @@ module Hakyll.Web.Template.Context
     , dateField
     , dateFieldWith
     , getItemUTC
+    , getItemModificationUTC
     , modificationTimeField
     , modificationTimeFieldWith
     , teaserField
@@ -293,6 +294,15 @@ getItemUTC locale id' = do
         , "%B %e, %Y"
         , "%b %d, %Y"
         ]
+
+--------------------------------------------------------------------------------
+-- | fetch the modification time from an file identifier
+getItemModificationUTC :: Identifier        -- ^ Input page
+                       -> Compiler UTCTime  -- ^ UTCTime
+getItemModificationUTC id' = do
+    provider <- compilerProvider <$> compilerAsk
+    let mtime = resourceModificationTime provider id'
+    return mtime
 
 
 --------------------------------------------------------------------------------
