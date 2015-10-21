@@ -116,6 +116,7 @@ Library
     Hakyll.Web.Tags
     Hakyll.Web.Paginate
     Hakyll.Web.Template
+    Hakyll.Web.Template.Internal
     Hakyll.Web.Template.Context
     Hakyll.Web.Template.List
 
@@ -135,7 +136,6 @@ Library
     Hakyll.Core.Store
     Hakyll.Core.Util.File
     Hakyll.Core.Util.Parser
-    Hakyll.Web.Template.Internal
     Hakyll.Web.Pandoc.Binary
     Paths_hakyll
 
