@@ -118,6 +118,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Hakyll.Web.Template
     ( Template
+    , templateBodyCompiler
     , templateCompiler
     , applyTemplate
     , loadAndApplyTemplate
@@ -143,7 +144,14 @@ import           Hakyll.Web.Template.Internal
 
 
 --------------------------------------------------------------------------------
--- | Read a template.
+-- | Read a template, without metadata header
+templateBodyCompiler :: Compiler (Item Template)
+templateBodyCompiler = cached "Hakyll.Web.Template.templateBodyCompiler" $ do
+    item <- getResourceBody
+    return $ fmap readTemplate item
+
+--------------------------------------------------------------------------------
+-- | Read complete file contents as a template
 templateCompiler :: Compiler (Item Template)
 templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
     item <- getResourceString
