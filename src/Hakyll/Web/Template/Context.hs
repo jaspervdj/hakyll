@@ -21,6 +21,7 @@ module Hakyll.Web.Template.Context
     , dateField
     , dateFieldWith
     , getItemUTC
+    , getItemModificationTime
     , modificationTimeField
     , modificationTimeFieldWith
     , teaserField
@@ -296,6 +297,17 @@ getItemUTC locale id' = do
 
 
 --------------------------------------------------------------------------------
+-- | Get the time on which the actual file was last modified. This only works if
+-- there actually is an underlying file, of couse.
+getItemModificationTime
+    :: Identifier
+    -> Compiler UTCTime
+getItemModificationTime identifier = do
+    provider <- compilerProvider <$> compilerAsk
+    return $ resourceModificationTime provider identifier
+
+
+--------------------------------------------------------------------------------
 modificationTimeField :: String     -- ^ Key
                       -> String     -- ^ Format
                       -> Context  a -- ^ Resuting context
@@ -308,8 +320,7 @@ modificationTimeFieldWith :: TimeLocale  -- ^ Time output locale
                           -> String      -- ^ Format
                           -> Context a   -- ^ Resulting context
 modificationTimeFieldWith locale key fmt = field key $ \i -> do
-    provider <- compilerProvider <$> compilerAsk
-    let mtime = resourceModificationTime provider $ itemIdentifier i
+    mtime <- getItemModificationTime $ itemIdentifier i
     return $ formatTime locale fmt mtime
 
 

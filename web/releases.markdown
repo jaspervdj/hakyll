@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.4.0
+
+- Expose `getItemModificationTime`
+
 ## Hakyll 4.7.3.1
 
 - Bump pandoc-citeproc dependency to 0.8
