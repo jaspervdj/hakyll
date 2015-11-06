@@ -135,6 +135,9 @@ this list. This list has no particular ordering.
   [source](https://github.com/xoltar/xoltar.org)
 - <http://sigkill.dk/>
   [literate source](http://sigkill.dk/programs/sigkill.html)
+- <http://curry-club-augsburg.de/>,
+  [source](https://github.com/curry-club-aux/curry-club-augsburg.de)
+
 
 ## Hakyll 3.X
 
