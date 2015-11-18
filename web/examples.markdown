@@ -9,6 +9,11 @@ interesting resource to learn from as well. If you're using Hakyll for your
 site, and the source code is available, please notify me so I can add you to
 this list. This list has no particular ordering.
 
+Note that there is also a [Hakyll CSS garden] which has some themes you can use
+directly with the default Hakyll site.
+
+[Hakyll CSS garden]: http://katychuang.com/hakyll-cssgarden/gallery/
+
 ## Hakyll 4
 
 - <http://jaspervdj.be/>,
