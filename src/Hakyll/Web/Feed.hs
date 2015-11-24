@@ -76,10 +76,10 @@ renderFeed feedPath itemPath config itemContext items = do
     loadTemplate = fmap readTemplate . readFile <=< getDataFileName
 
     itemContext' = mconcat
-        [ constField "root" (feedRoot config)
+        [ itemContext
+        , constField "root" (feedRoot config)
         , constField "authorName"  (feedAuthorName config)
         , constField "authorEmail" (feedAuthorEmail config)
-        , itemContext
         ]
 
     feedContext = mconcat
