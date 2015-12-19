@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.5.0
+
+- Expose templating engine
+- Fix bug in feed context precedence (contribution by Yuriy Syrovetskiy)
+- Bump http-types dependency to 0.9
+
 ## Hakyll 4.7.4.0
 
 - Expose `getItemModificationTime`
