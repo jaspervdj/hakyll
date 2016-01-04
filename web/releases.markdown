@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.5.1
+
+- Bump pandoc and pandoc-citeproc dependencies to 1.16 and 0.9 respectively
+
 ## Hakyll 4.7.5.0
 
 - Expose templating engine
