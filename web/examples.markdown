@@ -142,7 +142,8 @@ directly with the default Hakyll site.
   [literate source](http://sigkill.dk/programs/sigkill.html)
 - <http://curry-club-augsburg.de/>,
   [source](https://github.com/curry-club-aux/curry-club-augsburg.de)
-
+- <http://ismailmustafa.com/>,
+  [source](https://github.com/ismailmustafa/ismailmustafa.github.io/tree/hakyll)
 
 ## Hakyll 3.X
 
