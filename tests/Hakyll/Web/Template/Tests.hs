@@ -51,7 +51,7 @@ case01 = do
 
     out  <- resourceString provider "template.html.out"
     tpl  <- testCompilerDone store provider "template.html" $
-        templateCompiler
+        templateBodyCompiler
     item <- testCompilerDone store provider "example.md"    $
         pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 

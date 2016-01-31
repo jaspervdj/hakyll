@@ -53,10 +53,10 @@ when the template is applied. If you want an actual dollar sign in the output,
 use `$$`.
 
 You usually compile the templates from disk using the aptly named
-`templateCompiler`:
+`templateBodyCompiler`:
 
 ```haskell
-match "templates/*" $ compile templateCompiler
+match "templates/*" $ compile templateBodyCompiler
 ```
 
 Notice the lack of `route` here: this is because we don't need to write the
