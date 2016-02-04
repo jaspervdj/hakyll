@@ -14,6 +14,7 @@ module Hakyll.Core.Provider.Metadata
 import           Control.Applicative
 import           Control.Arrow                 (second)
 import qualified Data.ByteString.Char8         as BC
+import           Data.Char                     (toLower)
 import           Data.List                     (intercalate)
 import qualified Data.Map                      as M
 import           System.IO                     as IO
@@ -69,17 +70,19 @@ loadMetadataFile fp = do
 
 --------------------------------------------------------------------------------
 -- | Check if a file "probably" has a metadata header. The main goal of this is
--- to exclude binary files (which are unlikely to start with "---").
+-- to exclude binary files (which are unlikely to start with "---" or "#+").
 probablyHasMetadataHeader :: FilePath -> IO Bool
 probablyHasMetadataHeader fp = do
     handle <- IO.openFile fp IO.ReadMode
     bs     <- BC.hGet handle 1024
     IO.hClose handle
-    return $ isMetadataHeader bs
+    return $ isMetadataHeader bs || isOrgMetadataHeader bs
   where
     isMetadataHeader bs =
         let pre = BC.takeWhile (\x -> x /= '\n' && x /= '\r') bs
         in  BC.length pre >= 3 && BC.all (== '-') pre
+    isOrgMetadataHeader bs =
+        (BC.pack "#+") `BC.isPrefixOf` bs
 
 
 --------------------------------------------------------------------------------
@@ -93,6 +96,11 @@ inlineSpace = P.oneOf ['\t', ' '] <?> "space"
 newline :: Parser String
 newline = P.string "\n" <|> P.string "\r\n"
 
+
+--------------------------------------------------------------------------------
+-- | Parse a blank line (only space characters and the final newline).
+blankline :: Parser Char
+blankline = P.skipMany1 inlineSpace *> P.newline
 
 --------------------------------------------------------------------------------
 -- | Parse a single metadata field
@@ -127,9 +135,26 @@ metadataBlock = do
 
 
 --------------------------------------------------------------------------------
+-- | Parse a org-style metadata block, including trailing newlines
+orgMetadataBlock :: Parser [(String, String)]
+orgMetadataBlock = P.try $ P.many1 orgMetaline <* P.skipMany blankline
+
+
+--------------------------------------------------------------------------------
+-- | Parse a org-style metadata definition
+orgMetaline :: Parser (String, String)
+orgMetaline = P.try $ P.string "#+" *> ((,) <$> key <*> value)
+  where
+    key   = map toLower <$> P.many1 P.alphaNum
+                        <* P.char ':'
+                        <* P.skipMany inlineSpace
+    value = P.manyTill P.anyChar newline
+
+
+--------------------------------------------------------------------------------
 -- | Parse a page consisting of a metadata header and a body
 page :: Parser ([(String, String)], String)
 page = do
-    metadata' <- P.option [] metadataBlock
+    metadata' <- P.option [] (orgMetadataBlock <|> metadataBlock)
     body      <- P.many P.anyChar
     return (metadata', body)
