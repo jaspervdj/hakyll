@@ -18,6 +18,7 @@ module Hakyll.Web.Template.Context
     , urlField
     , pathField
     , titleField
+    , snippetField
     , dateField
     , dateFieldWith
     , getItemUTC
@@ -147,6 +148,22 @@ mapContext f (Context c) = Context $ \k a i -> do
             "Hakyll.Web.Template.Context.mapContext: " ++
             "can't map over a ListField!"
 
+--------------------------------------------------------------------------------
+-- | A context that allows snippet inclusion. In processed file, use as:
+--
+-- > ...
+-- > $snippet("path/to/snippet/")$
+-- > ...
+--
+-- The contents of the included file will not be interpolated.
+--
+snippetField :: Context String
+snippetField = functionField "snippet" f
+  where
+    f [contentsPath] _ = loadBody (fromFilePath contentsPath)
+    f _              i = error $
+        "Too many arguments to function 'snippet()' in item " ++
+            show (itemIdentifier i)
 
 --------------------------------------------------------------------------------
 -- | A context that contains (in that order)
