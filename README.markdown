@@ -1,6 +1,6 @@
 # hakyll
 
-[![Build Status](https://secure.travis-ci.org/jaspervdj/hakyll.png?branch=master)](http://travis-ci.org/jaspervdj/hakyll)
+[![Build Status](https://img.shields.io/travis/jaspervdj/hakyll.svg)](http://travis-ci.org/jaspervdj/hakyll)
 
 Hakyll is a static site generator library in Haskell. More information
 (including a tutorial) can be found on
