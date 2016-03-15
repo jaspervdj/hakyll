@@ -30,7 +30,7 @@ import           Hakyll.Core.Compiler
 -- | Use a unix filter as compiler. For example, we could use the 'rev' program
 -- as a compiler.
 --
--- > rev :: Compiler String
+-- > rev :: Compiler (Item String)
 -- > rev = getResourceString >>= withItemBody (unixFilter "rev" [])
 --
 -- A more realistic example: one can use this to call, for example, the sass
