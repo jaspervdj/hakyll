@@ -4,6 +4,14 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.7.5.2
+
+- Bump pandoc dependency to 1.17 (contribution by Felix Yan)
+- Fix `unixFilter` documentation (contribution by Richard Cook)
+- Bump example posts (contribution by Andrew Barchuk)
+- Add a template compiler that only uses the template body (contribution by
+  Bergi)
+
 ## Hakyll 4.7.5.1
 
 - Bump pandoc and pandoc-citeproc dependencies to 1.16 and 0.9 respectively
