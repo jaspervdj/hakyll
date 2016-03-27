@@ -104,8 +104,6 @@ directly with the default Hakyll site.
   [source](https://github.com/rbros/reichertbrothers.com)
 - <http://alemedeiros.sdf.org>,
   [source](https://github.com/alemedeiros/homepage)
-- <http://blog.ssanj.net/>,
-  [source](https://github.com/ssanj/babyloncandle)
 - <https://ruudvanasseldonk.com/>,
   [source](https://github.com/ruud-v-a/ruudvanasseldonk.com)
 - <http://www.haskell.mn>,
