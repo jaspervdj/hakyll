@@ -7,24 +7,24 @@ Building and cleaning
 ---------------------
 
 If you followed along with the previous tutorial, you should now have the
-example site up and running. By running `./site build`, you created two
-directories:
+example site up and running. By running `stack exec site build`, you created
+two directories:
 
 - `_site`, with your site as HTML files, ready to be deployed;
 - `_cache`, which Hakyll uses internally.
 
-`./site clean` removes these directories, and `./site rebuild` performs a
-`clean` and then a `build`.
+`stack exec site clean` removes these directories, and `stack exec site
+rebuild` performs a `clean` and then a `build`.
 
-In general, you want to use `./site build` when you just made changes to the
-contents of your website. If you made important changes to `site.hs`, you need
-to recompile `site.hs` followed by a rebuild:
+In general, you want to use `stack exec site build` when you just made changes
+to the contents of your website. If you made changes to `site.hs`, you need to
+recompile `site.hs` followed by a rebuild:
 
-    ghc --make site.hs
-    ./site rebuild
+    stack build
+    stack exec site rebuild
 
-At this point, feel free to change some files, `./site build` and see what
-happens!
+At this point, feel free to change some files, `stack exec site build` and see
+what happens!
 
 Pages and metadata
 ------------------
