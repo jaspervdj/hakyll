@@ -9,3 +9,7 @@ Hakyll is a static site generator library in Haskell. More information
 You can install this library using cabal:
 
     cabal install hakyll
+
+Or using stack:
+
+    stack install hakyll
