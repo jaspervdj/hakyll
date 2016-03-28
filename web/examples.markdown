@@ -142,6 +142,8 @@ directly with the default Hakyll site.
   [source](https://github.com/curry-club-aux/curry-club-augsburg.de)
 - <http://ismailmustafa.com/>,
   [source](https://github.com/ismailmustafa/ismailmustafa.github.io/tree/hakyll)
+- <http://lettier.github.io/>,
+  [source](https://github.com/lettier/lettier.github.io)
 
 ## Hakyll 3.X
 
