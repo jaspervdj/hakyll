@@ -27,6 +27,18 @@ You should also add this to your `.profile`, or whatever config file you use.
 On Windows, running `chcp 65001` before running your Hakyll executable has been
 reported to work.
 
+Alternatively, you can specify this in your `site.hs`:
+
+```haskell
+import qualified GHC.IO.Encoding as E
+
+main :: IO ()
+main = do
+    E.setLocaleEncoding E.utf8
+    hakyll $ do
+        ...
+```
+
 ## "File name does not match module name" on Mac OS
 
     Hakyll.hs:1:1:
