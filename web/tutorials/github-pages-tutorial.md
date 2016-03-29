@@ -1,4 +1,9 @@
-## Using Hakyll with GitHub Pages
+---
+title: Using Hakyll with GitHub Pages
+author: Erik Stevenson
+---
+
+## Introduction
 
 [GitHub Pages](http://pages.github.com) has become a popular static website hosting solution due to its simplicity. Simply push a couple files to a repository and it's off to the races.
 
@@ -19,7 +24,7 @@ In the interest of keeping this guide as simple as possible, I'll be making a fe
 
 These instructions should be easy to adapt for any situation though.
 
-### GitHub Setup
+## GitHub Setup
 
 1. If required, create a new repository for your blog.
 2. If required, create a ```master``` branch.
@@ -32,7 +37,7 @@ _site/
 .stack-work/
 ```
 
-### Local setup
+## Local setup
 
 1. If required, create a new Hakyll project. If you're a stack user, there is a Hakyll template available that makes this step easy.
 
@@ -53,11 +58,11 @@ git commit -m "initial commit."
 git remote add origin <URL to your GitHub pages repository>
 ```
 
-### Deployment
+## Deployment
 
 So everything's all setup and we're ready to deploy.
 
-> Note: Performing the following commands from your ```develop``` branch is recommended since you will end up back in that branch at the end.
+> **Note:** Performing the following commands from your ```develop``` branch is recommended since you will end up back in that branch at the end.
 
 Temporarily save any uncommitted changes that may exist in the current branch.
 
@@ -84,13 +89,17 @@ Update the local list of remote branches to ensure we're able to checkout the br
 git fetch -all
 ```
 
-Switches to a new branch called "publish" that tracks the origin "master" branch. **Note:** Checking out the publish branch does not overwrite the files that Hakyll just produced because we have '_site' in both .gitignore files.
+Switch to the `master` branch. 
+
+> **Note:** Checking out this branch does not overwrite the files that Hakyll just produced because we have '_site' listed in both .gitignore files.
 
 ```
-git checkout -b publish --track origin/master
+git checkout -b master --track origin/master
 ```
 
-Copy the freshly made contents of '_site' over the old ones. Note that if a file is *no longer* being produced (for example if you deleted a blog posting), it will continue to persist in your published site until it's been removed from that repository as well.
+Next, copy the freshly made contents of '_site' over the old ones.
+
+> **Note:** Deleting a file from your site's source will not remove it from your `master` repository if it has already been published. An alternative to `cp` is discussed at the end of this guide.
 
 ```
 cp -a _site/. .
@@ -100,24 +109,66 @@ Commit our changes.
 
 ```
 git add -A
-git commit -m "publish."
+git commit -m "Publish."
 ```
 
 And send them to GitHub.
 
 ```
-git push origin publish:master
+git push origin master:master
 ```
 
 Final clean up and return to the original state.
 
 ```
 git checkout develop
-git branch -D publish
+git branch -D master
 git stash pop
 ```
 
-### *And that's it.*
+## Putting it all together
 
-A full listing of the "script" is available [here](https://gist.github.com/narrative/5edb976b2f8754a79104).
+Below is a complete listing of all the commands used to automate deployment to Github Pages. A `deployCommand` can be set as part of Hakyll's configuration options. More information and an example is provided [here](https://jaspervdj.be/hakyll/reference/Hakyll-Core-Configuration.html).
 
+```
+# Temporarily store uncommited changes
+git stash
+
+# Verify correct branch
+git checkout develop
+
+# Build new files
+stack exec myblog clean
+stack exec myblog build
+
+# Get previous files
+git fetch -all
+git checkout -b master --track origin/master
+
+# Overwrite existing files with new files
+cp -a _site/. .
+
+# Commit
+git add -A
+git commit -m "Publish."
+
+# Push
+git push origin master:master
+
+# Restoration
+git checkout develop
+git branch -D master
+git stash pop
+```
+
+*And that's it.*
+
+## Removing old files with `rsync`
+
+Earlier it was mentioned a flaw is that deleted files will persist in the published site until deleted manually. This is easily overcome by using `rsync` instead of `cp`.
+
+```
+rsync -a --filter='P _site/' --delete-excluded _site/ .
+```
+
+The only drawback this approach has is the requirement that *every* file in your site "go through" Hakyll. Fortunately, in many cases this is not an issue.
