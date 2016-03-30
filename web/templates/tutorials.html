@@ -1,9 +1,36 @@
 <h1>Tutorials about Hakyll</h1>
 <h2>Tutorial series</h2>
-<ul>$series$</ul>
+<ul>
+    $for(tutorials)$
+        $if(isSeries)$
+            <li>
+                <a href="$url$">$title$</a>
+            </li>
+        $endif$
+    $endfor$
+</ul>
 <h2>Other articles</h2>
 <p>In no particular order:</p>
-<ul>$articles$</ul>
+<ul>
+    $for(tutorials)$
+        $if(isArticle)$
+            <li>
+                <a href="$url$">$title$</a> by <em>$author$</em>
+            </li>
+        $endif$
+    $endfor$
+</ul>
+<h2>External articles</h2>
+<p>In no particular order:</p>
+<ul>
+    $for(tutorials)$
+        $if(isExternal)$
+            <li>
+                <a href="$url$">$title$</a> by <em>$author$</em>
+            </li>
+        $endif$
+    $endfor$
+</ul>
 <p>
     All these tutorials assume you are using the latest stable version of
     Hakyll. If this is not the case, you might want to update using:
@@ -11,3 +38,8 @@
 <pre><code>$$ ghc-pkg unregister hakyll
 $$ cabal update
 $$ cabal install hakyll</code></pre>
+
+<p>
+    Or using stack:
+</p>
+<pre><code>$$ stack install hakyll</code></pre>

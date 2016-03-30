@@ -1,14 +1,13 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import           Control.Applicative ((<$>))
-import           Control.Arrow       (second)
-import           Control.Monad       (forM_)
-import           Data.Char           (isDigit)
-import           Data.List           (isPrefixOf, partition, sortBy)
-import           Data.Monoid         (mappend)
-import           Data.Ord            (comparing)
+import           Control.Arrow   (second)
+import           Control.Monad   (forM_)
+import           Data.Char       (isDigit)
+import           Data.List       (isPrefixOf, sortBy)
+import           Data.Monoid     ((<>))
+import           Data.Ord        (comparing)
 import           Hakyll
-import           System.FilePath     (dropTrailingPathSeparator, splitPath)
+import           System.FilePath (dropTrailingPathSeparator, splitPath)
 import           Text.Pandoc
 
 
@@ -53,18 +52,12 @@ main = hakyllWith config $ do
     create ["tutorials.html"] $ do
         route idRoute
         compile $ do
-            tutorials <- loadAll "tutorials/*"
-            itemTpl   <- loadBody "templates/tutorial-item.html"
-            let (series, articles) = partitionTutorials $
-                    sortBy (comparing itemIdentifier) tutorials
-
-            series'   <- applyTemplateList itemTpl defaultContext series
-            articles' <- applyTemplateList itemTpl defaultContext articles
+            tuts <-
+                sortBy (comparing itemIdentifier) <$> loadAll "tutorials/*"
 
             let tutorialsCtx =
                     constField "title" "Tutorials"  `mappend`
-                    constField "series" series'     `mappend`
-                    constField "articles" articles' `mappend`
+                    listField "tutorials"   tutorialCtx (return tuts) `mappend`
                     defaultContext
 
             makeItem ""
@@ -112,9 +105,27 @@ hackage url
 
 
 --------------------------------------------------------------------------------
--- | Partition tutorials into tutorial series & other articles
-partitionTutorials :: [Item a] -> ([Item a], [Item a])
-partitionTutorials = partition $ \i ->
-    case splitPath (toFilePath $ itemIdentifier i) of
-        [_, (x : _)] -> isDigit x
-        _            -> False
+data TutorialType = SeriesTutorial | ArticlesTutorial | ExternalTutorial
+    deriving (Eq)
+
+
+--------------------------------------------------------------------------------
+-- | Partition tutorials into tutorial series, other articles, external articles
+tutorialCtx :: Context String
+tutorialCtx =
+    field "isSeries"   (isTutorialType SeriesTutorial)   <>
+    field "isArticle"  (isTutorialType ArticlesTutorial) <>
+    field "isExternal" (isTutorialType ExternalTutorial) <>
+    defaultContext
+  where
+    getTutorialType item = do
+        mbExternal <- getMetadataField (itemIdentifier item) "external"
+        return $ case mbExternal of
+            Just _ -> ExternalTutorial
+            _      -> case splitPath (toFilePath $ itemIdentifier item) of
+                [_, (x : _)] -> if isDigit x then SeriesTutorial else ArticlesTutorial
+                _            -> ArticlesTutorial
+
+    isTutorialType ty0 item = do
+        ty1 <- getTutorialType item
+        if ty0 == ty1 then return "yes" else fail "no"
