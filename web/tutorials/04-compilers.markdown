@@ -115,8 +115,10 @@ you to use:
 - `$path$` for the original filepath of the page;
 - `$foo$` where foo is specified in the metadata.
 
-`$date$` is not provided by default, you can see how we add it in the definition
-of `postCtx` in `site.hs`:
+`$date$` is not provided by default. In the scaffold, we use the convenience
+context function `dateField`, which will parse an `Item`'s filename to check if
+it begins with a date. You can see how we add it in the definition of `postCtx`
+in `site.hs`:
 
 ```haskell
 postCtx :: Context String
