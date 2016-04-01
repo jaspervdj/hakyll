@@ -144,6 +144,8 @@ directly with the default Hakyll site.
   [source](https://github.com/ismailmustafa/ismailmustafa.github.io/tree/hakyll)
 - <http://lettier.github.io/>,
   [source](https://github.com/lettier/lettier.github.io)
+- <http://jozefg.bitbucket.org/>,
+  [source](https://github.com/jozefg/blog)
 
 ## Hakyll 3.X
 
