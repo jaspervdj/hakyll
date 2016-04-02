@@ -16,9 +16,11 @@ module Hakyll.Commands
 --------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Concurrent
-import           Control.Monad              (void)
+import           Control.Monad              (void, forM_)
 import           System.Exit                (ExitCode, exitWith)
 import           System.IO.Error            (catchIOError)
+import           System.Directory           (doesDirectoryExist, getDirectoryContents, removeFile)
+import           System.FilePath            ((</>), pathSeparator)
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check               as Check
@@ -56,7 +58,7 @@ check config logger check' = Check.check config logger check' >>= exitWith
 -- | Remove the output directories
 clean :: Configuration -> Logger -> IO ()
 clean conf logger = do
-    remove $ destinationDirectory conf
+    removeGitFriendly $ destinationDirectory conf
     remove $ storeDirectory conf
     remove $ tmpDirectory conf
   where
@@ -64,6 +66,25 @@ clean conf logger = do
         Logger.header logger $ "Removing " ++ dir ++ "..."
         removeDirectory dir
 
+    removeGitFriendly dir = do
+        Logger.header logger $ "Removing " ++ dir ++ " (keeping potential .git)..."
+        containsGitRepo <- doesDirectoryExist (dir ++ [pathSeparator] ++ ".git")
+        if containsGitRepo
+            then do
+                nestedFilePaths <- getNonRecursiveDirContents dir
+                forM_ nestedFilePaths $ \nestedFilePath -> removeFilePath (dir </> nestedFilePath)
+            else do
+                remove dir
+
+    getNonRecursiveDirContents dir = do
+        names <- getDirectoryContents dir
+        return $ filter (`notElem` [".", "..", ".git"]) names
+
+    removeFilePath filePath = do
+        isDirectory <- doesDirectoryExist filePath
+        if isDirectory
+            then removeDirectory filePath
+            else removeFile filePath
 
 --------------------------------------------------------------------------------
 -- | Preview the site
