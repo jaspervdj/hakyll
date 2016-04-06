@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 -- | Internal module to parse metadata
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns    #-}
+{-# LANGUAGE RecordWildCards #-}
 module Hakyll.Core.Provider.Metadata
     ( loadMetadata
     , parsePage
@@ -140,4 +141,14 @@ instance Exception MetadataException
 --------------------------------------------------------------------------------
 instance Show MetadataException where
     show (MetadataException fp err) =
-        fp ++ ": " ++ Yaml.prettyPrintParseException err
+        fp ++ ": " ++ Yaml.prettyPrintParseException err ++ hint
+
+      where
+        hint = case err of
+            Yaml.InvalidYaml (Just (Yaml.YamlParseException {..}))
+                | yamlProblem == problem -> "\n" ++
+                    "Hint: if the metadata value contains characters such\n" ++
+                    "as ':' or '-', try enclosing it in quotes."
+            _ -> ""
+
+        problem = "mapping values are not allowed in this context"
