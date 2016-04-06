@@ -1,5 +1,5 @@
 ---
-title: More on compilers: load, and templates
+title: 'More on compilers: load, and templates'
 author: Jasper Van der Jeugt
 ---
 
