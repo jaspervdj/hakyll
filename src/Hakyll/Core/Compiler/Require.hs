@@ -13,7 +13,6 @@ module Hakyll.Core.Compiler.Require
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative            ((<$>))
 import           Control.Monad                  (when)
 import           Data.Binary                    (Binary)
 import qualified Data.Set                       as S

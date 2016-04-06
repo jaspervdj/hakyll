@@ -8,42 +8,44 @@ module Hakyll.Check
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative       ((<$>))
-import           Control.Monad             (forM_)
-import           Control.Monad.Reader      (ask)
-import           Control.Monad.RWS         (RWST, runRWST)
-import           Control.Monad.Trans       (liftIO)
-import           Control.Monad.Writer      (tell)
-import           Data.List                 (isPrefixOf)
-import           Data.Monoid               (Monoid (..))
-import           Data.Set                  (Set)
-import qualified Data.Set                  as S
-import           Network.URI               (unEscapeString)
-import           System.Directory          (doesDirectoryExist, doesFileExist)
-import           System.Exit               (ExitCode (..))
-import           System.FilePath           (takeDirectory, takeExtension, (</>))
-import qualified Text.HTML.TagSoup         as TS
+import           Control.Monad                (forM_)
+import           Control.Monad.Reader         (ask)
+import           Control.Monad.RWS            (RWST, runRWST)
+import           Control.Monad.Trans          (liftIO)
+import           Control.Monad.Trans.Resource (runResourceT)
+import           Control.Monad.Writer         (tell)
+import           Data.List                    (isPrefixOf)
+import           Data.Set                     (Set)
+import qualified Data.Set                     as S
+import           Network.URI                  (unEscapeString)
+import           System.Directory             (doesDirectoryExist,
+                                               doesFileExist)
+import           System.Exit                  (ExitCode (..))
+import           System.FilePath              (takeDirectory, takeExtension,
+                                               (</>))
+import qualified Text.HTML.TagSoup            as TS
 
 
 --------------------------------------------------------------------------------
 #ifdef CHECK_EXTERNAL
-import           Control.Exception         (AsyncException (..),
-                                            SomeException (..), handle, throw)
-import           Control.Monad.State       (get, modify)
-import           Data.List                 (intercalate)
-import           Data.Typeable             (cast)
-import           Data.Version              (versionBranch)
-import           GHC.Exts                  (fromString)
-import qualified Network.HTTP.Conduit      as Http
-import qualified Network.HTTP.Types        as Http
-import qualified Paths_hakyll              as Paths_hakyll
+import           Control.Exception            (AsyncException (..),
+                                               SomeException (..), handle,
+                                               throw)
+import           Control.Monad.State          (get, modify)
+import           Data.List                    (intercalate)
+import           Data.Typeable                (cast)
+import           Data.Version                 (versionBranch)
+import           GHC.Exts                     (fromString)
+import qualified Network.HTTP.Conduit         as Http
+import qualified Network.HTTP.Types           as Http
+import qualified Paths_hakyll                 as Paths_hakyll
 #endif
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Configuration
-import           Hakyll.Core.Logger        (Logger)
-import qualified Hakyll.Core.Logger        as Logger
+import           Hakyll.Core.Logger           (Logger)
+import qualified Hakyll.Core.Logger           as Logger
 import           Hakyll.Core.Util.File
 import           Hakyll.Web.Html
 
@@ -196,8 +198,9 @@ checkExternalUrl url = do
     if not needsCheck || checked
         then Logger.debug logger "Already checked, skipping"
         else do
-            isOk <- liftIO $ handle (failure logger) $
-                Http.withManager $ \mgr -> do
+            isOk <- liftIO $ handle (failure logger) $ do
+                mgr <- Http.newManager Http.tlsManagerSettings
+                runResourceT $ do
                     request  <- Http.parseUrl urlToCheck
                     response <- Http.http (settings request) mgr
                     let code = Http.statusCode (Http.responseStatus response)

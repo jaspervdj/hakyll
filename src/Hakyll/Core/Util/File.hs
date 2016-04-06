@@ -8,7 +8,6 @@ module Hakyll.Core.Util.File
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative ((<$>))
 import           Control.Monad       (filterM, forM, when)
 import           System.Directory    (createDirectoryIfMissing,
                                       doesDirectoryExist, getDirectoryContents,

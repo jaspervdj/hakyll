@@ -22,9 +22,7 @@ module Hakyll.Web.Pandoc
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative        ((<$>))
 import qualified Data.Set                   as S
-import           Data.Traversable           (traverse)
 import           Text.Pandoc
 import           Text.Pandoc.Error          (PandocError (..))
 

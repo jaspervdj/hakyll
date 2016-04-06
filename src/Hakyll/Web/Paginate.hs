@@ -13,7 +13,6 @@ module Hakyll.Web.Paginate
 --------------------------------------------------------------------------------
 import           Control.Monad                  (forM_)
 import qualified Data.Map                       as M
-import           Data.Monoid                    (mconcat)
 import qualified Data.Set                       as S
 
 

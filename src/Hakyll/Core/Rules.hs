@@ -33,13 +33,11 @@ module Hakyll.Core.Rules
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative            ((<$>))
 import           Control.Monad.Reader           (ask, local)
 import           Control.Monad.State            (get, modify, put)
 import           Control.Monad.Trans            (liftIO)
 import           Control.Monad.Writer           (censor, tell)
 import           Data.Maybe                     (fromMaybe)
-import           Data.Monoid                    (mempty)
 import qualified Data.Set                       as S
 
 

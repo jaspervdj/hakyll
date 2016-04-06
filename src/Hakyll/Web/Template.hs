@@ -54,7 +54,7 @@
 -- The @for@ macro is used for enumerating 'Context' elements that are
 -- lists, i.e. constructed using the 'listField' function. Assume that
 -- in a context we have an element @listField \"key\" c itms@. Then
--- the snippet 
+-- the snippet
 --
 -- > $for(key)$
 -- >   $x$
@@ -70,21 +70,21 @@
 --
 -- > listField "things" (field "thing" (return . itemBody))
 -- >    (sequence [makeItem "fruits", makeItem "vegetables"])
--- 
+--
 -- and a template
 --
 -- >  I like
 -- >  $for(things)$
--- >    fresh $thing$$sep$, and 
+-- >    fresh $thing$$sep$, and
 -- >  $endfor$
 --
 -- the resulting page would look like
 --
 -- > <p>
 -- >  I like
--- > 
--- >   fresh fruits, and 
--- > 
+-- >
+-- >   fresh fruits, and
+-- >
 -- >   fresh vegetables
 -- > </p>
 --
@@ -129,9 +129,8 @@ module Hakyll.Web.Template
 
 --------------------------------------------------------------------------------
 import           Control.Monad                (liftM)
-import           Control.Monad.Error          (MonadError (..))
+import           Control.Monad.Except         (MonadError (..))
 import           Data.List                    (intercalate)
-import           Data.Monoid                  (mappend)
 import           Prelude                      hiding (id)
 
 

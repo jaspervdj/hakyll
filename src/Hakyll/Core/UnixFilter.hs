@@ -16,7 +16,6 @@ import           Control.Monad           (forM_)
 import           Data.ByteString.Lazy    (ByteString)
 import qualified Data.ByteString.Lazy    as LB
 import           Data.IORef              (newIORef, readIORef, writeIORef)
-import           Data.Monoid             (Monoid, mempty)
 import           System.Exit             (ExitCode (..))
 import           System.IO               (Handle, hClose, hFlush, hGetContents,
                                           hPutStr, hSetEncoding, localeEncoding)

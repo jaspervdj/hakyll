@@ -10,10 +10,8 @@ module Hakyll.Core.Item
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           ((<$>), (<*>))
 import           Data.Binary                   (Binary (..))
 import           Data.Foldable                 (Foldable (..))
-import           Data.Traversable              (Traversable (..))
 import           Data.Typeable                 (Typeable)
 import           Prelude                       hiding (foldr)
 

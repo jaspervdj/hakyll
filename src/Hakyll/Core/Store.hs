@@ -16,7 +16,6 @@ module Hakyll.Core.Store
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative  ((<$>))
 import           Control.Exception    (IOException, handle)
 import qualified Crypto.Hash.MD5      as MD5
 import           Data.Binary          (Binary, decode, encodeFile)

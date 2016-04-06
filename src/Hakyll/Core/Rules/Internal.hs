@@ -12,12 +12,10 @@ module Hakyll.Core.Rules.Internal
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative            (Applicative, (<$>))
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
 import           Control.Monad.Trans            (liftIO)
 import qualified Data.Map                       as M
-import           Data.Monoid                    (Monoid, mappend, mempty)
 import           Data.Set                       (Set)
 
 

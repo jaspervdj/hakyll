@@ -57,13 +57,11 @@ module Hakyll.Core.Identifier.Pattern
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative    (pure, (<$>), (<*>))
 import           Control.Arrow          ((&&&), (>>>))
 import           Control.Monad          (msum)
 import           Data.Binary            (Binary (..), getWord8, putWord8)
 import           Data.List              (inits, isPrefixOf, tails)
 import           Data.Maybe             (isJust)
-import           Data.Monoid            (Monoid, mappend, mempty)
 import           Data.Set               (Set)
 import qualified Data.Set               as S
 

@@ -7,7 +7,7 @@ module Hakyll.Core.Util.Parser
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative ((<$>), (<*>), (<|>))
+import           Control.Applicative ((<|>))
 import           Control.Monad       (mzero)
 import qualified Text.Parsec         as P
 import           Text.Parsec.String  (Parser)

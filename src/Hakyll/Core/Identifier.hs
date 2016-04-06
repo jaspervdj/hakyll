@@ -19,7 +19,6 @@ module Hakyll.Core.Identifier
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative ((<$>), (<*>))
 import           Control.DeepSeq     (NFData (..))
 import           Data.List           (intercalate)
 import           System.FilePath     (dropTrailingPathSeparator, splitPath)

@@ -11,13 +11,10 @@ module Hakyll.Core.Provider.Metadata
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative
 import           Control.Arrow                 (second)
 import           Control.Exception             (Exception, throwIO)
 import           Control.Monad                 (guard)
 import qualified Data.ByteString.Char8         as BC
-import qualified Data.HashMap.Strict           as HMS
-import           Data.List                     (intercalate)
 import           Data.List.Extended            (breakWhen)
 import qualified Data.Map                      as M
 import           Data.Maybe                    (fromMaybe)
@@ -28,8 +25,6 @@ import qualified Data.Yaml                     as Yaml
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
-import           Hakyll.Core.Util.Parser
-import           Hakyll.Core.Util.String
 import           System.IO                     as IO
 
 

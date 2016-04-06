@@ -12,7 +12,7 @@ module Hakyll.Web.Template.Internal
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative     (pure, (<$), (<$>), (<*>), (<|>))
+import           Control.Applicative     ((<|>))
 import           Control.Monad           (void)
 import           Data.Binary             (Binary, get, getWord8, put, putWord8)
 import           Data.Typeable           (Typeable)

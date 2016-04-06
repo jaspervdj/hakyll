@@ -11,7 +11,6 @@ module Hakyll.Core.File
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           ((<$>))
 import           Data.Binary                   (Binary (..))
 import           Data.Typeable                 (Typeable)
 import           System.Directory              (copyFile, doesFileExist,

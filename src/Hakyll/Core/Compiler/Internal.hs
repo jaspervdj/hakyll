@@ -28,12 +28,10 @@ module Hakyll.Core.Compiler.Internal
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative            (Alternative (..),
-                                                 Applicative (..), (<$>))
+import           Control.Applicative            (Alternative (..))
 import           Control.Exception              (SomeException, handle)
 import           Control.Monad                  (forM_)
-import           Control.Monad.Error            (MonadError (..))
-import           Data.Monoid                    (Monoid (..))
+import           Control.Monad.Except            (MonadError (..))
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
 

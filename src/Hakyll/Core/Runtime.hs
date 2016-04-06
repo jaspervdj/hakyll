@@ -6,7 +6,7 @@ module Hakyll.Core.Runtime
 
 --------------------------------------------------------------------------------
 import           Control.Monad                 (unless)
-import           Control.Monad.Error           (ErrorT, runErrorT, throwError)
+import           Control.Monad.Except          (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader          (ask)
 import           Control.Monad.RWS             (RWST, runRWST)
 import           Control.Monad.State           (get, modify)
@@ -75,7 +75,7 @@ run config logger rules = do
             }
 
     -- Run the program and fetch the resulting state
-    result <- runErrorT $ runRWST build read' state
+    result <- runExceptT $ runRWST build read' state
     case result of
         Left e          -> do
             Logger.error logger e
@@ -115,7 +115,7 @@ data RuntimeState = RuntimeState
 
 
 --------------------------------------------------------------------------------
-type Runtime a = RWST RuntimeRead () RuntimeState (ErrorT String IO) a
+type Runtime a = RWST RuntimeRead () RuntimeState (ExceptT String IO) a
 
 
 --------------------------------------------------------------------------------

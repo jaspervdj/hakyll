@@ -28,7 +28,6 @@ module Hakyll.Core.Compiler
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           ((<$>))
 import           Control.Monad                 (when)
 import           Data.Binary                   (Binary)
 import           Data.ByteString.Lazy          (ByteString)

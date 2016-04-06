@@ -14,11 +14,8 @@ module Hakyll.Commands
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative
 import           Control.Concurrent
-import           Control.Monad              (void)
 import           System.Exit                (ExitCode, exitWith)
-import           System.IO.Error            (catchIOError)
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check               as Check

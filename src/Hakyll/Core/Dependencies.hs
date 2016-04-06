@@ -8,7 +8,6 @@ module Hakyll.Core.Dependencies
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative            ((<$>), (<*>))
 import           Control.Monad                  (foldM, forM_, unless, when)
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWS, runRWS)
