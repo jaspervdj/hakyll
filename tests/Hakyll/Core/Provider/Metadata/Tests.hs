@@ -5,14 +5,13 @@ module Hakyll.Core.Provider.Metadata.Tests
 
 
 --------------------------------------------------------------------------------
+import qualified Data.HashMap.Strict           as HMS
+import qualified Data.Text                     as T
+import qualified Data.Yaml                     as Yaml
+import           Hakyll.Core.Metadata
+import           Hakyll.Core.Provider.Metadata
 import           Test.Framework                (Test, testGroup)
 import           Test.HUnit                    (Assertion, (@=?))
-import           Text.Parsec                   as P
-import           Text.Parsec.String            (Parser)
-
-
---------------------------------------------------------------------------------
-import           Hakyll.Core.Provider.Metadata
 import           TestSuite.Util
 
 
@@ -22,9 +21,11 @@ tests = testGroup "Hakyll.Core.Provider.Metadata.Tests" $
     fromAssertions "page" [testPage01, testPage02]
 
 
+
 --------------------------------------------------------------------------------
 testPage01 :: Assertion
-testPage01 = testParse page ([("foo", "bar")], "qux\n")
+testPage01 =
+    Right (meta [("foo", "bar")], "qux\n") @=? parsePage
     "---\n\
     \foo: bar\n\
     \---\n\
@@ -33,21 +34,21 @@ testPage01 = testParse page ([("foo", "bar")], "qux\n")
 
 --------------------------------------------------------------------------------
 testPage02 :: Assertion
-testPage02 = testParse page
-    ([("description", descr)], "Hello I am dog\n")
+testPage02 =
+    Right (meta [("description", descr)], "Hello I am dog\n") @=?
+    parsePage
     "---\n\
     \description: A long description that would look better if it\n\
     \             spanned multiple lines and was indented\n\
     \---\n\
     \Hello I am dog\n"
   where
+    descr :: String
     descr =
         "A long description that would look better if it \
         \spanned multiple lines and was indented"
 
 
 --------------------------------------------------------------------------------
-testParse :: (Eq a, Show a) => Parser a -> a -> String -> Assertion
-testParse parser expected input = case P.parse parser "<inline>" input of
-    Left err -> error $ show err
-    Right x  -> expected @=? x
+meta :: Yaml.ToJSON a => [(String, a)] -> Metadata
+meta pairs = HMS.fromList [(T.pack k, Yaml.toJSON v) | (k, v) <- pairs]

@@ -1,33 +1,32 @@
 --------------------------------------------------------------------------------
 -- | Internal module to parse metadata
+{-# LANGUAGE BangPatterns #-}
 module Hakyll.Core.Provider.Metadata
     ( loadMetadata
-    , metadata
-    , page
-
-      -- This parser can be reused in some places
-    , metadataKey
+    , parsePage
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Arrow                 (second)
+import           Control.Monad                 (guard)
 import qualified Data.ByteString.Char8         as BC
+import qualified Data.HashMap.Strict           as HMS
 import           Data.List                     (intercalate)
+import           Data.List.Extended            (breakWhen)
 import qualified Data.Map                      as M
-import           System.IO                     as IO
-import           Text.Parsec                   ((<?>))
-import qualified Text.Parsec                   as P
-import           Text.Parsec.String            (Parser)
-
-
---------------------------------------------------------------------------------
+import           Data.Maybe                    (fromMaybe)
+import           Data.Monoid                   ((<>))
+import qualified Data.Text                     as T
+import qualified Data.Text.Encoding            as T
+import qualified Data.Yaml                     as Yaml
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
 import           Hakyll.Core.Util.Parser
 import           Hakyll.Core.Util.String
+import           System.IO                     as IO
 
 
 --------------------------------------------------------------------------------
@@ -36,13 +35,13 @@ loadMetadata p identifier = do
     hasHeader  <- probablyHasMetadataHeader fp
     (md, body) <- if hasHeader
         then second Just <$> loadMetadataHeader fp
-        else return (M.empty, Nothing)
+        else return (mempty, Nothing)
 
     emd <- case mi of
-        Nothing  -> return M.empty
+        Nothing  -> return mempty
         Just mi' -> loadMetadataFile $ resourceFilePath p mi'
 
-    return (M.union md emd, body)
+    return (md <> emd, body)
   where
     normal = setVersion Nothing identifier
     fp     = resourceFilePath p identifier
@@ -52,19 +51,15 @@ loadMetadata p identifier = do
 --------------------------------------------------------------------------------
 loadMetadataHeader :: FilePath -> IO (Metadata, String)
 loadMetadataHeader fp = do
-    contents <- readFile fp
-    case P.parse page fp contents of
-        Left err      -> error (show err)
-        Right (md, b) -> return (M.fromList md, b)
+    fileContent <- readFile fp
+    either fail return (parsePage fileContent)
 
 
 --------------------------------------------------------------------------------
 loadMetadataFile :: FilePath -> IO Metadata
 loadMetadataFile fp = do
-    contents <- readFile fp
-    case P.parse metadata fp contents of
-        Left err  -> error (show err)
-        Right md  -> return $ M.fromList md
+    errOrMeta <- Yaml.decodeFileEither fp
+    either (fail . show) return errOrMeta
 
 
 --------------------------------------------------------------------------------
@@ -83,53 +78,41 @@ probablyHasMetadataHeader fp = do
 
 
 --------------------------------------------------------------------------------
--- | Space or tab, no newline
-inlineSpace :: Parser Char
-inlineSpace = P.oneOf ['\t', ' '] <?> "space"
-
-
---------------------------------------------------------------------------------
--- | Parse Windows newlines as well (i.e. "\n" or "\r\n")
-newline :: Parser String
-newline = P.string "\n" <|> P.string "\r\n"
-
-
---------------------------------------------------------------------------------
--- | Parse a single metadata field
-metadataField :: Parser (String, String)
-metadataField = do
-    key <- metadataKey
-    _   <- P.char ':'
-    P.skipMany1 inlineSpace <?> "space followed by metadata for: " ++ key
-    value     <- P.manyTill P.anyChar newline
-    trailing' <- P.many trailing
-    return (key, trim $ intercalate " " $ value : trailing')
+-- | Parse the page metadata and body.
+splitMetadata :: String -> (Maybe String, String)
+splitMetadata str0 = fromMaybe (Nothing, str0) $ do
+    guard $ leading >= 3
+    let !(!meta, !content0) = breakWhen isTrailing (drop leading str0)
+    guard $ not $ null content0
+    let !content1 = drop (leading + 1) content0
+        !content2 = dropWhile isNewline $ dropWhile isInlineSpace content1
+    return (Just meta, content2)
   where
-    trailing = P.many1 inlineSpace *> P.manyTill P.anyChar newline
+    -- Parse the leading "---"
+    !leading = length $ takeWhile (== '-') str0
+
+    -- Predicate to recognize the trailing "---" or "..."
+    isTrailing []       = False
+    isTrailing (x : xs) =
+        isNewline x && length (takeWhile isDash xs) == leading
+
+    -- Characters
+    isNewline     c = c == '\n' || c == '\r'
+    isDash        c = c == '-'  || c == '.'
+    isInlineSpace c = c == '\t' || c == ' '
 
 
 --------------------------------------------------------------------------------
--- | Parse a metadata block
-metadata :: Parser [(String, String)]
-metadata = P.many metadataField
+parseMetadata :: String -> Either String Metadata
+parseMetadata = Yaml.decodeEither . T.encodeUtf8 . T.pack
 
 
 --------------------------------------------------------------------------------
--- | Parse a metadata block, including delimiters and trailing newlines
-metadataBlock :: Parser [(String, String)]
-metadataBlock = do
-    open      <- P.many1 (P.char '-') <* P.many inlineSpace <* newline
-    metadata' <- metadata
-    _         <- P.choice $ map (P.string . replicate (length open)) ['-', '.']
-    P.skipMany inlineSpace
-    P.skipMany1 newline
-    return metadata'
-
-
---------------------------------------------------------------------------------
--- | Parse a page consisting of a metadata header and a body
-page :: Parser ([(String, String)], String)
-page = do
-    metadata' <- P.option [] metadataBlock
-    body      <- P.many P.anyChar
-    return (metadata', body)
+parsePage :: String -> Either String (Metadata, String)
+parsePage fileContent = case mbMetaBlock of
+    Nothing        -> return (mempty, content)
+    Just metaBlock -> case parseMetadata metaBlock of
+        Left  err  -> Left   err
+        Right meta -> return (meta, content)
+  where
+    !(!mbMetaBlock, !content) = splitMetadata fileContent

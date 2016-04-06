@@ -31,18 +31,13 @@ module Hakyll.Web.Template.Context
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           (Alternative (..), pure, (<$>))
+import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
 import           Data.List                     (intercalate)
-import qualified Data.Map                      as M
-import           Data.Monoid                   (Monoid (..))
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime)
 import qualified Data.Time.Format              as TF
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
-import           System.FilePath               (splitDirectories, takeBaseName)
-
---------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
@@ -51,6 +46,7 @@ import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Util.String       (needlePrefix, splitAll)
 import           Hakyll.Web.Html
+import           System.FilePath               (splitDirectories, takeBaseName)
 
 
 --------------------------------------------------------------------------------
@@ -274,7 +270,7 @@ getItemUTC :: MonadMetadata m
            -> m UTCTime         -- ^ Parsed UTCTime
 getItemUTC locale id' = do
     metadata <- getMetadata id'
-    let tryField k fmt = M.lookup k metadata >>= parseTime' fmt
+    let tryField k fmt = lookupString k metadata >>= parseTime' fmt
         paths          = splitDirectories $ toFilePath id'
 
     maybe empty' return $ msum $

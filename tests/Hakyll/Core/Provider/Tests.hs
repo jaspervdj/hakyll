@@ -6,14 +6,11 @@ module Hakyll.Core.Provider.Tests
 
 
 --------------------------------------------------------------------------------
-import qualified Data.Map                       as M
+import           Hakyll.Core.Metadata
+import           Hakyll.Core.Provider
 import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
 import           Test.HUnit                     (Assertion, assert, (@=?))
-
-
---------------------------------------------------------------------------------
-import           Hakyll.Core.Provider
 import           TestSuite.Util
 
 
@@ -32,9 +29,9 @@ case01 = do
     assert $ resourceExists provider "example.md"
 
     metadata <- resourceMetadata provider "example.md"
-    Just "An example"    @=? M.lookup "title"    metadata
-    Just "External data" @=? M.lookup "external" metadata
+    Just "An example"    @=? lookupString "title"    metadata
+    Just "External data" @=? lookupString "external" metadata
 
     doesntExist <- resourceMetadata provider "doesntexist.md"
-    M.empty @=? doesntExist
+    mempty @=? doesntExist
     cleanTestEnv

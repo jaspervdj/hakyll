@@ -8,22 +8,19 @@ module Hakyll.Core.Rules.Tests
 --------------------------------------------------------------------------------
 import           Data.IORef                     (IORef, newIORef, readIORef,
                                                  writeIORef)
-import qualified Data.Map                       as M
 import qualified Data.Set                       as S
-import           System.FilePath                ((</>))
-import           Test.Framework                 (Test, testGroup)
-import           Test.HUnit                     (Assertion, assert, (@=?))
-
-
---------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.File
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
+import           Hakyll.Core.Metadata
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
 import           Hakyll.Web.Pandoc
+import           System.FilePath                ((</>))
+import           Test.Framework                 (Test, testGroup)
+import           Test.HUnit                     (Assertion, assert, (@=?))
 import           TestSuite.Util
 
 
@@ -89,7 +86,7 @@ rules01 ioref = do
         compile getResourceString
 
     version "metadataMatch" $
-        matchMetadata "*.md" (\md -> M.lookup "subblog" md == Just "food") $ do
+        matchMetadata "*.md" (\md -> lookupString "subblog" md == Just "food") $ do
             route $ customRoute $ \id' -> "food" </> toFilePath id'
             compile getResourceString
 

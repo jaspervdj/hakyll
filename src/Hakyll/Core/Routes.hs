@@ -42,7 +42,6 @@ module Hakyll.Core.Routes
 
 
 --------------------------------------------------------------------------------
-import           Data.Monoid                    (Monoid, mappend, mempty)
 import           System.FilePath                (replaceExtension)
 
 

@@ -1,0 +1,12 @@
+resolver: lts-5.11
+extra-deps: []
+extra-package-dbs: []
+
+flags:
+  hakyll:
+    previewServer: True
+    watchServer:   True
+    checkExternal: True
+
+packages:
+  - '.'

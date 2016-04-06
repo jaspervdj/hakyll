@@ -5,7 +5,6 @@ module Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           ((<$>))
 import           Control.Monad                 (unless)
 import           Control.Monad.Error           (ErrorT, runErrorT, throwError)
 import           Control.Monad.Reader          (ask)
@@ -15,7 +14,6 @@ import           Control.Monad.Trans           (liftIO)
 import           Data.List                     (intercalate)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as M
-import           Data.Monoid                   (mempty)
 import           Data.Set                      (Set)
 import qualified Data.Set                      as S
 import           System.Exit                   (ExitCode (..))

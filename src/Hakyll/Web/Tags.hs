@@ -63,13 +63,12 @@ module Hakyll.Web.Tags
 
 --------------------------------------------------------------------------------
 import           Control.Arrow                   ((&&&))
-import           Control.Monad                   (foldM, forM, forM_)
+import           Control.Monad                   (foldM, forM, forM_, mplus)
 import           Data.Char                       (toLower)
 import           Data.List                       (intercalate, intersperse,
                                                   sortBy)
 import qualified Data.Map                        as M
 import           Data.Maybe                      (catMaybes, fromMaybe)
-import           Data.Monoid                     (mconcat)
 import           Data.Ord                        (comparing)
 import qualified Data.Set                        as S
 import           System.FilePath                 (takeBaseName, takeDirectory)
@@ -88,8 +87,8 @@ import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Util.String
-import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Html
+import           Hakyll.Web.Template.Context
 
 
 --------------------------------------------------------------------------------
@@ -103,11 +102,14 @@ data Tags = Tags
 
 --------------------------------------------------------------------------------
 -- | Obtain tags from a page in the default way: parse them from the @tags@
--- metadata field.
+-- metadata field. This can either be a list or a comma-separated string.
 getTags :: MonadMetadata m => Identifier -> m [String]
 getTags identifier = do
     metadata <- getMetadata identifier
-    return $ maybe [] (map trim . splitAll ",") $ M.lookup "tags" metadata
+    return $ fromMaybe [] $
+        (lookupStringList "tags" metadata) `mplus`
+        (map trim . splitAll "," <$> lookupString "tags" metadata)
+
 
 --------------------------------------------------------------------------------
 -- | Obtain categories from a page.

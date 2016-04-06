@@ -23,22 +23,19 @@ module Hakyll.Web.Pandoc.Biblio
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative    ((<$>))
-import           Control.Monad          (replicateM, liftM)
-import           Data.Binary            (Binary (..))
-import           Data.Default           (def)
-import           Data.Typeable          (Typeable)
-import qualified Text.CSL               as CSL
-import           Text.CSL.Pandoc        (processCites)
-import           Text.Pandoc            (Pandoc, ReaderOptions (..))
-
---------------------------------------------------------------------------------
+import           Control.Monad            (liftM, replicateM)
+import           Data.Binary              (Binary (..))
+import           Data.Default             (def)
+import           Data.Typeable            (Typeable)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Writable
 import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Pandoc.Binary ()
+import qualified Text.CSL                 as CSL
+import           Text.CSL.Pandoc          (processCites)
+import           Text.Pandoc              (Pandoc, ReaderOptions (..))
 
 
 --------------------------------------------------------------------------------

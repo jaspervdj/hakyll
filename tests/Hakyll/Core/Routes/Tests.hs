@@ -6,15 +6,13 @@ module Hakyll.Core.Routes.Tests
 
 
 --------------------------------------------------------------------------------
-import qualified Data.Map               as M
+import           Data.Maybe             (fromMaybe)
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Metadata
+import           Hakyll.Core.Routes
 import           System.FilePath        ((</>))
 import           Test.Framework         (Test, testGroup)
 import           Test.HUnit             (Assertion, (@=?))
-
-
---------------------------------------------------------------------------------
-import           Hakyll.Core.Identifier
-import           Hakyll.Core.Routes
 import           TestSuite.Util
 
 
@@ -37,7 +35,7 @@ tests = testGroup "Hakyll.Core.Routes.Tests" $ fromAssertions "runRoutes"
         "tags/rss/bar"
 
     , testRoutes "food/example.md" (metadataRoute $ \md -> customRoute $ \id' ->
-        M.findWithDefault "?" "subblog" md </> toFilePath id')
+        fromMaybe "?" (lookupString "subblog" md) </> toFilePath id')
         "example.md"
     ]
 

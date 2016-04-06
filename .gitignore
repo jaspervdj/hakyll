@@ -1,4 +1,4 @@
-# Ignore swap files and cabal output.
+# Ignore swap files and stack/cabal output.
 *.hi
 *.o
 *.swo
@@ -10,6 +10,7 @@ dist
 tags
 cabal.sandbox.config
 .cabal-sandbox/
+.stack-work
 
 # Ignore test builds.
 tests/Main

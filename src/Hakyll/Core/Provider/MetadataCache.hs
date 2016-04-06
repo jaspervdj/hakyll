@@ -8,9 +8,6 @@ module Hakyll.Core.Provider.MetadataCache
 
 --------------------------------------------------------------------------------
 import           Control.Monad                 (unless)
-import qualified Data.Map                      as M
-
---------------------------------------------------------------------------------
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
@@ -21,11 +18,11 @@ import qualified Hakyll.Core.Store             as Store
 --------------------------------------------------------------------------------
 resourceMetadata :: Provider -> Identifier -> IO Metadata
 resourceMetadata p r
-    | not (resourceExists p r) = return M.empty
+    | not (resourceExists p r) = return mempty
     | otherwise                = do
         -- TODO keep time in md cache
         load p r
-        Store.Found md <- Store.get (providerStore p)
+        Store.Found (BinaryMetadata md) <- Store.get (providerStore p)
             [name, toFilePath r, "metadata"]
         return md
 
@@ -52,7 +49,7 @@ load p r = do
     mmof <- Store.isMember store mdk
     unless mmof $ do
         (md, body) <- loadMetadata p r
-        Store.set store mdk md
+        Store.set store mdk (BinaryMetadata md)
         Store.set store bk  body
   where
     store = providerStore p
