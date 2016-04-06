@@ -142,7 +142,7 @@ Library
     Paths_hakyll
 
   Build-Depends:
-    base                 >= 4      && < 5,
+    base                 >= 4.8    && < 5,
     binary               >= 0.5    && < 0.8,
     blaze-html           >= 0.5    && < 0.9,
     blaze-markup         >= 0.5.1  && < 0.8,
@@ -231,7 +231,7 @@ Test-suite hakyll-tests
     test-framework-hunit       >= 0.3 && < 0.4,
     test-framework-quickcheck2 >= 0.3 && < 0.4,
     -- Copy pasted from hakyll dependencies:
-    base                 >= 4      && < 5,
+    base                 >= 4.8    && < 5,
     binary               >= 0.5    && < 0.8,
     blaze-html           >= 0.5    && < 0.9,
     blaze-markup         >= 0.5.1  && < 0.8,
