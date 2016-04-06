@@ -4,12 +4,15 @@
 module Hakyll.Core.Provider.Metadata
     ( loadMetadata
     , parsePage
+
+    , MetadataException (..)
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Arrow                 (second)
+import           Control.Exception             (Exception, throwIO)
 import           Control.Monad                 (guard)
 import qualified Data.ByteString.Char8         as BC
 import qualified Data.HashMap.Strict           as HMS
@@ -52,7 +55,9 @@ loadMetadata p identifier = do
 loadMetadataHeader :: FilePath -> IO (Metadata, String)
 loadMetadataHeader fp = do
     fileContent <- readFile fp
-    either fail return (parsePage fileContent)
+    case parsePage fileContent of
+        Right x   -> return x
+        Left  err -> throwIO $ MetadataException fp err
 
 
 --------------------------------------------------------------------------------
@@ -82,11 +87,15 @@ probablyHasMetadataHeader fp = do
 splitMetadata :: String -> (Maybe String, String)
 splitMetadata str0 = fromMaybe (Nothing, str0) $ do
     guard $ leading >= 3
-    let !(!meta, !content0) = breakWhen isTrailing (drop leading str0)
+    let !str1 = drop leading str0
+    guard $ all isNewline (take 1 str1)
+    let !(!meta, !content0) = breakWhen isTrailing str1
     guard $ not $ null content0
     let !content1 = drop (leading + 1) content0
         !content2 = dropWhile isNewline $ dropWhile isInlineSpace content1
-    return (Just meta, content2)
+    -- Adding this newline fixes the line numbers reported by the YAML parser.
+    -- It's a bit ugly but it works.
+    return (Just ('\n' : meta), content2)
   where
     -- Parse the leading "---"
     !leading = length $ takeWhile (== '-') str0
@@ -103,12 +112,12 @@ splitMetadata str0 = fromMaybe (Nothing, str0) $ do
 
 
 --------------------------------------------------------------------------------
-parseMetadata :: String -> Either String Metadata
-parseMetadata = Yaml.decodeEither . T.encodeUtf8 . T.pack
+parseMetadata :: String -> Either Yaml.ParseException Metadata
+parseMetadata = Yaml.decodeEither' . T.encodeUtf8 . T.pack
 
 
 --------------------------------------------------------------------------------
-parsePage :: String -> Either String (Metadata, String)
+parsePage :: String -> Either Yaml.ParseException (Metadata, String)
 parsePage fileContent = case mbMetaBlock of
     Nothing        -> return (mempty, content)
     Just metaBlock -> case parseMetadata metaBlock of
@@ -116,3 +125,19 @@ parsePage fileContent = case mbMetaBlock of
         Right meta -> return (meta, content)
   where
     !(!mbMetaBlock, !content) = splitMetadata fileContent
+
+
+--------------------------------------------------------------------------------
+-- | Thrown in the IO monad if things go wrong. Provides a nice-ish error
+-- message.
+data MetadataException = MetadataException FilePath Yaml.ParseException
+
+
+--------------------------------------------------------------------------------
+instance Exception MetadataException
+
+
+--------------------------------------------------------------------------------
+instance Show MetadataException where
+    show (MetadataException fp err) =
+        fp ++ ": " ++ Yaml.prettyPrintParseException err
