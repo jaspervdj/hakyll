@@ -4,6 +4,13 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.8.0.0
+
+- Support full YAML in page metadata
+- Bump data-default dependency to 0.6
+- Add snippet field for literal includes in templates (contribution by Nicolas
+  Mattia)
+
 ## Hakyll 4.7.5.2
 
 - Bump pandoc dependency to 1.17 (contribution by Felix Yan)
