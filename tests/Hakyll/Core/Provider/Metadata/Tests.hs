@@ -11,7 +11,7 @@ import qualified Data.Yaml                     as Yaml
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Metadata
 import           Test.Framework                (Test, testGroup)
-import           Test.HUnit                    (Assertion, (@=?))
+import           Test.HUnit                    (Assertion, (@=?), assertFailure)
 import           TestSuite.Util
 
 
@@ -25,7 +25,7 @@ tests = testGroup "Hakyll.Core.Provider.Metadata.Tests" $
 --------------------------------------------------------------------------------
 testPage01 :: Assertion
 testPage01 =
-    Right (meta [("foo", "bar")], "qux\n") @=? parsePage
+    (meta [("foo", "bar")], "qux\n") `expectRight` parsePage
     "---\n\
     \foo: bar\n\
     \---\n\
@@ -35,7 +35,7 @@ testPage01 =
 --------------------------------------------------------------------------------
 testPage02 :: Assertion
 testPage02 =
-    Right (meta [("description", descr)], "Hello I am dog\n") @=?
+    (meta [("description", descr)], "Hello I am dog\n") `expectRight`
     parsePage
     "---\n\
     \description: A long description that would look better if it\n\
@@ -52,3 +52,11 @@ testPage02 =
 --------------------------------------------------------------------------------
 meta :: Yaml.ToJSON a => [(String, a)] -> Metadata
 meta pairs = HMS.fromList [(T.pack k, Yaml.toJSON v) | (k, v) <- pairs]
+
+
+--------------------------------------------------------------------------------
+-- | This is useful when the 'Left' side of 'Either' doesn't have an 'Eq'
+-- instance.
+expectRight :: (Eq b, Show a, Show b) => b -> Either a b -> Assertion
+expectRight _        (Left  err) = assertFailure (show err)
+expectRight expected (Right res) = expected @=? res
