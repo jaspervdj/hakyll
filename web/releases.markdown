@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.8.0.1
+
+- Fix issue with test suite
+
 ## Hakyll 4.8.0.0
 
 - Support full YAML in page metadata
