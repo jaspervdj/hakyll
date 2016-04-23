@@ -146,6 +146,8 @@ directly with the default Hakyll site.
   [source](https://github.com/lettier/lettier.github.io)
 - <http://jozefg.bitbucket.org/>,
   [source](https://github.com/jozefg/blog)
+- <http://hal2016.haskell.org/>,
+  [source](https://github.com/nomeata/hal2016-website/)
 
 ## Hakyll 3.X
 
