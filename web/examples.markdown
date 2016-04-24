@@ -146,6 +146,8 @@ directly with the default Hakyll site.
   [source](https://github.com/lettier/lettier.github.io)
 - <http://jozefg.bitbucket.org/>,
   [source](https://github.com/jozefg/blog)
+- <http://raindev.io>,
+  [source](https://github.com/raindev/raindev.github.io)
 
 ## Hakyll 3.X
 
