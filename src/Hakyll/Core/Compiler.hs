@@ -6,6 +6,7 @@ module Hakyll.Core.Compiler
     , getUnderlying
     , getUnderlyingExtension
     , makeItem
+    , changeIdentifier
     , getRoute
     , getResourceBody
     , getResourceString
@@ -66,6 +67,11 @@ makeItem :: a -> Compiler (Item a)
 makeItem x = do
     identifier <- getUnderlying
     return $ Item identifier x
+
+
+--------------------------------------------------------------------------------
+changeIdentifier :: Identifier -> Item a -> Compiler (Item a)
+changeIdentifier x item = return $ itemSetIdentifier x item
 
 
 --------------------------------------------------------------------------------
