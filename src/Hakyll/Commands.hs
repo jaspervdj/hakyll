@@ -36,6 +36,11 @@ import           Hakyll.Preview.Poll        (watchUpdates)
 import           Hakyll.Preview.Server
 #endif
 
+#ifdef mingw32_HOST_OS
+import           Control.Exception          (catchIOError)
+import           Control.Monad              (void)
+#endif
+
 
 --------------------------------------------------------------------------------
 -- | Build the site
