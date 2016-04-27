@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.8.1.0
+
+- Fix compilation on windows
+
 ## Hakyll 4.8.0.1
 
 - Fix issue with test suite
