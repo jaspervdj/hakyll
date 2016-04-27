@@ -37,8 +37,8 @@ import           Hakyll.Preview.Server
 #endif
 
 #ifdef mingw32_HOST_OS
-import           Control.Exception          (catchIOError)
 import           Control.Monad              (void)
+import           System.IO.Error            (catchIOError)
 #endif
 
 
