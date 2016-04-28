@@ -97,7 +97,7 @@ data Tags = Tags
     { tagsMap        :: [(String, [Identifier])]
     , tagsMakeId     :: String -> Identifier
     , tagsDependency :: Dependency
-    } deriving (Show)
+    }
 
 
 --------------------------------------------------------------------------------
