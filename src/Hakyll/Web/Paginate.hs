@@ -37,7 +37,7 @@ data Paginate = Paginate
     { paginateMap        :: M.Map PageNumber [Identifier]
     , paginateMakeId     :: PageNumber -> Identifier
     , paginateDependency :: Dependency
-    } deriving (Show)
+    }
 
 
 --------------------------------------------------------------------------------
