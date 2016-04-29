@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.8.3.0
+
+- Fix another compilation issue wrt. orphan `Show` instance from regex-tdfa
+  (contribution by Sergei Trofimovich)
+
 ## Hakyll 4.8.2.0
 
 - Fix compilation issue wrt. orphan `Show` instance from regex-tdfa
