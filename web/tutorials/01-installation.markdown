@@ -38,6 +38,7 @@ The file `site.hs` holds the configuration of your site, as an executable
 haskell program. We can compile and run it like this:
 
     $ cd my-site
+    $ stack init  # Optional, if you haven't used stack before
     $ stack build
     $ stack exec site build
 
