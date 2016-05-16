@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.8.3.1
+
+- Bump scientific dependency to 0.3.4
+
 ## Hakyll 4.8.3.0
 
 - Fix another compilation issue wrt. orphan `Show` instance from regex-tdfa
