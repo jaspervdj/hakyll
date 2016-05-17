@@ -14,6 +14,7 @@ module Hakyll.Core.Provider.Metadata
 import           Control.Arrow                 (second)
 import           Control.Exception             (Exception, throwIO)
 import           Control.Monad                 (guard)
+import qualified Data.ByteString               as B
 import qualified Data.ByteString.Char8         as BC
 import           Data.List.Extended            (breakWhen)
 import qualified Data.Map                      as M
@@ -59,7 +60,8 @@ loadMetadataHeader fp = do
 --------------------------------------------------------------------------------
 loadMetadataFile :: FilePath -> IO Metadata
 loadMetadataFile fp = do
-    errOrMeta <- Yaml.decodeFileEither fp
+    fileContent <- B.readFile fp
+    let errOrMeta = Yaml.decodeEither' fileContent
     either (fail . show) return errOrMeta
 
 
