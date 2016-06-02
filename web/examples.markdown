@@ -150,6 +150,8 @@ directly with the default Hakyll site.
   [source](https://github.com/raindev/raindev.github.io)
 - <http://hal2016.haskell.org/>,
   [source](https://github.com/nomeata/hal2016-website/)
+- <http://acehack.org/>,
+  [source](https://github.com/sakshamsharma/acehack/)
 
 ## Hakyll 3.X
 
