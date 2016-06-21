@@ -152,6 +152,8 @@ directly with the default Hakyll site.
   [source](https://github.com/nomeata/hal2016-website/)
 - <http://acehack.org/>,
   [source](https://github.com/sakshamsharma/acehack/)
+- <https://nek0.eu/>,
+  [source](https://github.com/nek0/nek0.eu)
 
 ## Hakyll 3.X
 
