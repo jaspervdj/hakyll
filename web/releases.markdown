@@ -4,6 +4,16 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.8.3.2
+
+This release is compatible with GHC 8.0.1, although `previewServer` might not
+work yet on some setups.
+
+- Allow data-default 0.7, pandoc-citeproc 0.10, and tagsoup 0.14 (contributions
+  by Paul van der Walt and Felix Yan)
+- Allow binary 0.8, process 1.4, time 1.6 (contribution by Sergei Trofimovich)
+- Fix issue with `.metadata` file reading
+
 ## Hakyll 4.8.3.1
 
 - Bump scientific dependency to 0.3.4
