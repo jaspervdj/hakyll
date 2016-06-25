@@ -14,6 +14,7 @@ import           Control.Monad.RWS            (RWST, runRWST)
 import           Control.Monad.Trans          (liftIO)
 import           Control.Monad.Trans.Resource (runResourceT)
 import           Control.Monad.Writer         (tell)
+import           Data.ByteString.Char8        (unpack)
 import           Data.List                    (isPrefixOf)
 import           Data.Set                     (Set)
 import qualified Data.Set                     as S
@@ -28,9 +29,8 @@ import qualified Text.HTML.TagSoup            as TS
 
 --------------------------------------------------------------------------------
 #ifdef CHECK_EXTERNAL
-import           Control.Exception            (AsyncException (..),
-                                               SomeException (..), handle,
-                                               throw)
+import           Control.Exception            (SomeAsyncException (..),
+                                               SomeException (..), try, throw)
 import           Control.Monad.State          (get, modify)
 import           Data.List                    (intercalate)
 import           Data.Typeable                (cast)
@@ -162,11 +162,14 @@ skip reason = do
     tell $ mempty {checkerOk = 1}
 
 --------------------------------------------------------------------------------
-faulty :: String -> Checker ()
-faulty url = do
+faulty :: String -> Maybe String -> Checker ()
+faulty url reason = do
     logger <- checkerLogger <$> ask
-    Logger.error logger $ "Broken link to " ++ show url
+    Logger.error logger $ "Broken link to " ++ show url ++ explanation
     tell $ mempty {checkerFaulty = 1}
+  where
+    formatExplanation = (" (" ++) . (++ ")")
+    explanation = maybe "" formatExplanation reason
 
 
 --------------------------------------------------------------------------------
@@ -182,7 +185,7 @@ checkInternalUrl base url = case url' of
                 | otherwise             = dir </> url'
 
         exists <- checkFileExists filePath
-        if exists then ok url else faulty url
+        if exists then ok url else faulty url Nothing
   where
     url' = stripFragments $ unEscapeString url
 
@@ -198,7 +201,7 @@ checkExternalUrl url = do
     if not needsCheck || checked
         then Logger.debug logger "Already checked, skipping"
         else do
-            isOk <- liftIO $ handle (failure logger) $ do
+            result <- liftIO $ try $ do
                 mgr <- Http.newManager Http.tlsManagerSettings
                 runResourceT $ do
                     request  <- Http.parseUrl urlToCheck
@@ -209,7 +212,12 @@ checkExternalUrl url = do
             modify $ if schemeRelative url
                          then S.insert urlToCheck . S.insert url
                          else S.insert url
-            if isOk then ok url else faulty url
+            case result of
+                Left (SomeException e) ->
+                    case (cast e :: Maybe SomeAsyncException) of
+                        Just ae -> throw ae
+                        _ -> faulty url (Just $ showException e)
+                Right _ -> ok url
   where
     -- Add additional request info
     settings r = r
@@ -222,14 +230,15 @@ checkExternalUrl url = do
     ua = fromString $ "hakyll-check/" ++
         (intercalate "." $ map show $ versionBranch $ Paths_hakyll.version)
 
-    -- Catch all the things except UserInterrupt
-    failure logger (SomeException e) = case cast e of
-        Just UserInterrupt -> throw UserInterrupt
-        _                  -> Logger.error logger (show e) >> return False
-
     -- Check scheme-relative links
     schemeRelative = isPrefixOf "//"
     urlToCheck     = if schemeRelative url then "http:" ++ url else url
+
+    -- Convert exception to a concise form
+    showException e = case cast e of
+        Just (Http.StatusCodeException (Http.Status code msg) _ _) ->
+            show code ++ " " ++ unpack msg
+        _ -> head $ words $ show e
 #else
 checkExternalUrl _ = return ()
 #endif
