@@ -154,6 +154,8 @@ directly with the default Hakyll site.
   [source](https://github.com/sakshamsharma/acehack/)
 - <https://nek0.eu/>,
   [source](https://github.com/nek0/nek0.eu)
+- <http://static-dust.klpn.se/>,
+  [source](https://github.com/klpn/static-dust)
 
 ## Hakyll 3.X
 
