@@ -156,6 +156,8 @@ directly with the default Hakyll site.
   [source](https://github.com/nek0/nek0.eu)
 - <http://static-dust.klpn.se/>,
   [source](https://github.com/klpn/static-dust)
+- <http://www.kuznero.com/>,
+  [source](https://github.com/kuznero/kuznero.github.io)
 
 ## Hakyll 3.X
 
