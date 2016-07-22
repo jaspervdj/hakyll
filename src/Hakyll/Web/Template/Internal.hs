@@ -64,6 +64,8 @@ data TemplateElement
     | If TemplateExpr Template (Maybe Template)   -- expr, then, else
     | For TemplateExpr Template (Maybe Template)  -- expr, body, separator
     | Partial TemplateExpr                        -- filename
+    | TrimL
+    | TrimR
     deriving (Show, Eq, Typeable)
 
 
@@ -71,10 +73,12 @@ data TemplateElement
 instance Binary TemplateElement where
     put (Chunk string) = putWord8 0 >> put string
     put (Expr e)       = putWord8 1 >> put e
-    put (Escaped)      = putWord8 2
-    put (If e t f  )   = putWord8 3 >> put e >> put t >> put f
+    put  Escaped       = putWord8 2
+    put (If e t f)     = putWord8 3 >> put e >> put t >> put f
     put (For e b s)    = putWord8 4 >> put e >> put b >> put s
     put (Partial e)    = putWord8 5 >> put e
+    put  TrimL         = putWord8 6
+    put  TrimR         = putWord8 7
 
     get = getWord8 >>= \tag -> case tag of
         0 -> Chunk <$> get
@@ -83,8 +87,9 @@ instance Binary TemplateElement where
         3 -> If <$> get <*> get <*> get
         4 -> For <$> get <*> get <*> get
         5 -> Partial <$> get
-        _ -> error $
-            "Hakyll.Web.Template.Internal: Error reading cached template"
+        6 -> pure TrimL
+        7 -> pure TrimR
+        _ -> error "Hakyll.Web.Template.Internal: Error reading cached template"
 
 
 --------------------------------------------------------------------------------
@@ -114,8 +119,7 @@ instance Binary TemplateExpr where
         0 -> Ident         <$> get
         1 -> Call          <$> get <*> get
         2 -> StringLiteral <$> get
-        _ -> error $
-            "Hakyll.Web.Tamplte.Internal: Error reading cached template"
+        _ -> error "Hakyll.Web.Template.Internal: Error reading cached template"
 
 
 --------------------------------------------------------------------------------

@@ -39,6 +39,21 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
                 (Template [Chunk "foo"])
                 Nothing]
             @=?  readTemplate "$if(a(\"bar\"))$foo$endif$"
+        -- 'If' 'Trim_' test.
+        , Template
+            [ TrimL
+            , If (Ident (TemplateKey "body"))
+                 (Template [ TrimR
+                           , Expr (Ident (TemplateKey "body"))
+                           ])
+                 (Just (Template [ TrimL
+                                 , TrimR
+                                 , Expr (Ident (TemplateKey "body"))
+                                 ]))
+            , TrimL
+            , TrimR
+            ]
+            @=? readTemplate "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
         ]
     ]
 
