@@ -35,7 +35,7 @@ compressCss = compressSeparators . stripComments . compressWhitespace
 compressSeparators :: String -> String
 compressSeparators =
     replaceAll "; *}" (const "}") .
-    replaceAll " *([{};:]) *" (take 1 . dropWhile isSpace) .
+    replaceAll " *([{};]) *" (take 1 . dropWhile isSpace) .
     replaceAll ";+" (const ";")
 
 

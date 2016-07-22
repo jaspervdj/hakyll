@@ -121,9 +121,7 @@ server :: Configuration -> Logger -> String -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 server conf logger host port = do
     let destination = destinationDirectory conf
-    staticServer logger destination preServeHook host port
-  where
-    preServeHook _ = return ()
+    staticServer logger destination host port
 #else
 server _ _ _ _ = previewServerDisabled
 #endif

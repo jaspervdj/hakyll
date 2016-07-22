@@ -177,8 +177,10 @@ Library
 
   If flag(previewServer)
     Build-depends:
-      snap-core       >= 0.6   && < 0.10,
-      snap-server     >= 0.6   && < 0.10,
+      wai             >= 3.2   && < 3.3,
+      warp            >= 3.2   && < 3.3,
+      wai-app-static  >= 3.1   && < 3.2,
+      http-types      >= 0.9   && < 0.10,
       fsnotify        >= 0.2   && < 0.3,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
@@ -268,8 +270,10 @@ Test-suite hakyll-tests
 
   If flag(previewServer)
     Build-depends:
-      snap-core       >= 0.6   && < 0.10,
-      snap-server     >= 0.6   && < 0.10,
+      wai             >= 3.2   && < 3.3,
+      warp            >= 3.2   && < 3.3,
+      wai-app-static  >= 3.1   && < 3.2,
+      http-types      >= 0.9   && < 0.10,
       fsnotify        >= 0.2   && < 0.3,
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
