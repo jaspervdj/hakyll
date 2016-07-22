@@ -120,15 +120,22 @@ instance Binary TemplateExpr where
 
 --------------------------------------------------------------------------------
 readTemplate :: String -> Template
-readTemplate input = case P.parse template "" input of
+readTemplate input = case P.parse topLevelTemplate "" input of
     Left err -> error $ "Cannot parse template: " ++ show err
     Right t  -> t
 
+--------------------------------------------------------------------------------
+topLevelTemplate :: P.Parser Template
+topLevelTemplate = Template <$>
+    P.manyTill templateElement P.eof
 
 --------------------------------------------------------------------------------
 template :: P.Parser Template
-template = Template <$>
-    (P.many $ chunk <|> escaped <|> conditional <|> for <|> partial <|> expr)
+template = Template <$> P.many templateElement
+
+--------------------------------------------------------------------------------
+templateElement :: P.Parser TemplateElement
+templateElement = chunk <|> escaped <|> conditional <|> for <|> partial <|> expr
 
 
 --------------------------------------------------------------------------------
