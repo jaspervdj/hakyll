@@ -69,7 +69,6 @@ testContext = mconcat
         return [n1, n2]
     , functionField "rev" $ \args _ -> return $ unwords $ map reverse args
     ]
-  where
 
 
 --------------------------------------------------------------------------------
