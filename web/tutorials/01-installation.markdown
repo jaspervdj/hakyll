@@ -38,7 +38,7 @@ The file `site.hs` holds the configuration of your site, as an executable
 haskell program. We can compile and run it like this:
 
     $ cd my-site
-    $ stack init  # To create stack.yaml
+    $ stack init  # creates stack.yaml file based on my-site.cabal
     $ stack build
     $ stack exec site build
 
