@@ -142,7 +142,7 @@ template = mconcat <$> P.many (P.choice [ lift chunk
                                         , lift escaped
                                         , conditional
                                         , for
-                                        , lift partial
+                                        , partial
                                         , lift expr
                                         ])
     where lift = fmap (Template . (:[]))
@@ -246,12 +246,18 @@ for = P.try $ do
 
 
 --------------------------------------------------------------------------------
-partial :: P.Parser TemplateElement
+partial :: P.Parser Template
 partial = P.try $ do
-    void $ P.string "$partial("
+    trimLPartial <- trimOpen
+    void $ P.string "partial("
     e <- expr'
-    void $ P.string ")$"
-    return $ Partial e
+    void $ P.char ')'
+    trimRPartial <- trimClose
+
+    pure $ Template $ mconcat [ [TrimL | trimLPartial]
+                              , [Partial e]
+                              , [TrimR | trimRPartial]
+                              ]
 
 
 --------------------------------------------------------------------------------

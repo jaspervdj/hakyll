@@ -68,6 +68,13 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
             , TrimR
             ]
             @=? readTemplate "$-for(authors)-$\n   body   \n$-endfor-$"
+        -- 'Partial' trim check.
+        , Template
+            [ TrimL
+            , Partial (StringLiteral "path")
+            , TrimR
+            ]
+            @=? readTemplate "$-partial(\"path\")-$"
         ]
     ]
 
