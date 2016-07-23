@@ -33,6 +33,7 @@ import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
+import           Hakyll.Web.Template.Internal
 import           Hakyll.Web.Template.List
 
 
@@ -72,7 +73,10 @@ renderFeed feedPath itemPath config itemContext items = do
     applyTemplate feedTpl feedContext body
   where
     -- Auxiliary: load a template from a datafile
-    loadTemplate = fmap readTemplate . readFile <=< getDataFileName
+    loadTemplate path = do
+        file <- getDataFileName path
+        templ <- readFile file
+        return $ readTemplateFile file templ
 
     itemContext' = mconcat
         [ itemContext
