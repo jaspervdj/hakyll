@@ -39,16 +39,20 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
                 (Template [Chunk "foo"])
                 Nothing]
             @=?  readTemplate "$if(a(\"bar\"))$foo$endif$"
-        -- 'If' 'Trim_' test.
+        -- 'If' trim check.
         , Template
             [ TrimL
+            , TrimR
             , If (Ident (TemplateKey "body"))
-                 (Template [ TrimR
+                 (Template [ Chunk "\n"
                            , Expr (Ident (TemplateKey "body"))
+                           , Chunk "\n"
                            ])
                  (Just (Template [ TrimL
                                  , TrimR
+                                 , Chunk "\n"
                                  , Expr (Ident (TemplateKey "body"))
+                                 , Chunk "\n"
                                  ]))
             , TrimL
             , TrimR
@@ -65,9 +69,8 @@ case01 = do
     provider <- newTestProvider store
 
     out  <- resourceString provider "template.html.out"
-    tpl  <- testCompilerDone store provider "template.html" $
-        templateBodyCompiler
-    item <- testCompilerDone store provider "example.md"    $
+    tpl  <- testCompilerDone store provider "template.html" templateBodyCompiler
+    item <- testCompilerDone store provider "example.md" $
         pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 
     out @=? itemBody item

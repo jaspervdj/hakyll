@@ -15,8 +15,9 @@ module Hakyll.Web.Template.Internal
 import           Control.Applicative     ((<|>))
 import           Control.Monad           (void)
 import           Data.Binary             (Binary, get, getWord8, put, putWord8)
+import           Data.List               (intercalate)
+import           Data.Maybe              (isJust)
 import           Data.Typeable           (Typeable)
-import           Data.List (intercalate)
 import           GHC.Exts                (IsString (..))
 import qualified Text.Parsec             as P
 import qualified Text.Parsec.String      as P
@@ -32,6 +33,12 @@ import           Hakyll.Core.Writable
 newtype Template = Template
     { unTemplate :: [TemplateElement]
     } deriving (Show, Eq, Binary, Typeable)
+
+
+--------------------------------------------------------------------------------
+instance Monoid Template where
+    mempty = Template []
+    (Template xs) `mappend` (Template ys) = Template (xs `mappend` ys)
 
 
 --------------------------------------------------------------------------------
@@ -131,13 +138,19 @@ readTemplate input = case P.parse template "" input of
 
 --------------------------------------------------------------------------------
 template :: P.Parser Template
-template = Template <$>
-    (P.many $ chunk <|> escaped <|> conditional <|> for <|> partial <|> expr)
+template = mconcat <$> P.many (P.choice [ lift chunk
+                                        , lift escaped
+                                        , conditional
+                                        , lift for
+                                        , lift partial
+                                        , lift expr
+                                        ])
+    where lift = fmap (Template . (:[]))
 
 
 --------------------------------------------------------------------------------
 chunk :: P.Parser TemplateElement
-chunk = Chunk <$> (P.many1 $ P.noneOf "$")
+chunk = Chunk <$> P.many1 (P.noneOf "$")
 
 
 --------------------------------------------------------------------------------
@@ -156,19 +169,56 @@ expr' = stringLiteral <|> call <|> ident
 
 --------------------------------------------------------------------------------
 escaped :: P.Parser TemplateElement
-escaped = Escaped <$ (P.try $ P.string "$$")
+escaped = Escaped <$ P.try (P.string "$$")
 
 
 --------------------------------------------------------------------------------
-conditional :: P.Parser TemplateElement
+trimOpen :: P.Parser Bool
+trimOpen = do
+    void $ P.char '$'
+    trimLIf <- P.optionMaybe $ P.try (P.char '-')
+    pure $ isJust trimLIf
+
+
+--------------------------------------------------------------------------------
+trimClose :: P.Parser Bool
+trimClose = do
+    trimIfR <- P.optionMaybe $ P.try (P.char '-')
+    void $ P.char '$'
+    pure $ isJust trimIfR
+
+
+--------------------------------------------------------------------------------
+conditional :: P.Parser Template
 conditional = P.try $ do
-    void $ P.string "$if("
+    trimLIf <- trimOpen
+    void $ P.string "if("
     e <- expr'
-    void $ P.string ")$"
+    void $ P.char ')'
+    trimRIf <- trimClose
+
     thenBranch <- template
-    elseBranch <- P.optionMaybe $ P.try (P.string "$else$") >> template
-    void $ P.string "$endif$"
-    return $ If e thenBranch elseBranch
+
+    elseBranch <- P.optionMaybe $ P.try $ do
+        trimLElse <- trimOpen
+        void $ P.string "else"
+        trimRElse <- trimClose
+        elseBody <- template
+        pure $ mconcat $ concat [ [Template [TrimL] | trimLElse]
+                                , [Template [TrimR] | trimRElse]
+                                , [elseBody]
+                                ]
+
+    trimLEnd <- trimOpen
+    void $ P.string "endif"
+    trimREnd <- trimClose
+
+    pure $ Template $ mconcat [ [TrimL | trimLIf]
+                              , [TrimR | trimRIf]
+                              , [If e thenBranch elseBranch]
+                              , [TrimL | trimLEnd]
+                              , [TrimR | trimREnd]
+                              ]
 
 
 --------------------------------------------------------------------------------
