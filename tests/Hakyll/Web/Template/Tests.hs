@@ -6,7 +6,6 @@ module Hakyll.Web.Template.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.Monoid                    (mconcat)
 import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
 import           Test.HUnit                     (Assertion, (@=?), (@?=))
@@ -33,12 +32,12 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
 
     , fromAssertions "readTemplate"
         [ Template [Chunk "Hello ", Expr (Call "guest" [])]
-            @=?  readTemplate "Hello $guest()$"
+            @=? readTemplate "Hello $guest()$"
         , Template
             [If (Call "a" [StringLiteral "bar"])
                 (Template [Chunk "foo"])
                 Nothing]
-            @=?  readTemplate "$if(a(\"bar\"))$foo$endif$"
+            @=? readTemplate "$if(a(\"bar\"))$foo$endif$"
         -- 'If' trim check.
         , Template
             [ TrimL
@@ -58,6 +57,17 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
             , TrimR
             ]
             @=? readTemplate "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
+        -- 'For' trim check.
+        , Template
+            [ TrimL
+            , TrimR
+            , For (Ident (TemplateKey "authors"))
+                  (Template [Chunk "\n   body   \n"])
+                  Nothing
+            , TrimL
+            , TrimR
+            ]
+            @=? readTemplate "$-for(authors)-$\n   body   \n$-endfor-$"
         ]
     ]
 

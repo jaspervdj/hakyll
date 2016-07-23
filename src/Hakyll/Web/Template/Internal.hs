@@ -141,7 +141,7 @@ template :: P.Parser Template
 template = mconcat <$> P.many (P.choice [ lift chunk
                                         , lift escaped
                                         , conditional
-                                        , lift for
+                                        , for
                                         , lift partial
                                         , lift expr
                                         ])
@@ -222,15 +222,27 @@ conditional = P.try $ do
 
 
 --------------------------------------------------------------------------------
-for :: P.Parser TemplateElement
+for :: P.Parser Template
 for = P.try $ do
-    void $ P.string "$for("
+    trimLFor <- trimOpen
+    void $ P.string "for("
     e <- expr'
-    void $ P.string ")$"
+    void $ P.char ')'
+    trimRFor <- trimClose
+
     body <- template
     sep  <- P.optionMaybe $ P.try (P.string "$sep$") >> template
-    void $ P.string "$endfor$"
-    return $ For e body sep
+
+    trimLEnd <- trimOpen
+    void $ P.string "endfor"
+    trimREnd <- trimClose
+
+    pure $ Template $ mconcat [ [TrimL | trimLFor]
+                              , [TrimR | trimRFor]
+                              , [For e body sep]
+                              , [TrimL | trimLEnd]
+                              , [TrimR | trimREnd]
+                              ]
 
 
 --------------------------------------------------------------------------------
