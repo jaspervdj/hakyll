@@ -143,7 +143,7 @@ template = mconcat <$> P.many (P.choice [ lift chunk
                                         , conditional
                                         , for
                                         , partial
-                                        , lift expr
+                                        , expr
                                         ])
     where lift = fmap (Template . (:[]))
 
@@ -154,12 +154,15 @@ chunk = Chunk <$> P.many1 (P.noneOf "$")
 
 
 --------------------------------------------------------------------------------
-expr :: P.Parser TemplateElement
+expr :: P.Parser Template
 expr = P.try $ do
-    void $ P.char '$'
+    trimLExpr <- trimOpen
     e <- expr'
-    void $ P.char '$'
-    return $ Expr e
+    trimRExpr <- trimClose
+    return $ Template $ mconcat [ [TrimL | trimLExpr]
+                                , [Expr e]
+                                , [TrimR | trimRExpr]
+                                ]
 
 
 --------------------------------------------------------------------------------

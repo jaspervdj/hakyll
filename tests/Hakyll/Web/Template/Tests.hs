@@ -75,6 +75,13 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
             , TrimR
             ]
             @=? readTemplate "$-partial(\"path\")-$"
+        -- 'Expr' trim check.
+        , Template
+            [ TrimL
+            , Expr (Ident (TemplateKey "foo"))
+            , TrimR
+            ]
+            @=? readTemplate "$-foo-$"
         ]
     ]
 
