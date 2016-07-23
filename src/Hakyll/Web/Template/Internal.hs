@@ -8,6 +8,7 @@ module Hakyll.Web.Template.Internal
     , TemplateExpr (..)
     , TemplateElement (..)
     , readTemplate
+    , readTemplateFile
     ) where
 
 
@@ -120,9 +121,15 @@ instance Binary TemplateExpr where
 
 --------------------------------------------------------------------------------
 readTemplate :: String -> Template
-readTemplate input = case P.parse topLevelTemplate "" input of
+readTemplate = readTemplateFile "{literal}"
+
+
+--------------------------------------------------------------------------------
+readTemplateFile :: FilePath -> String -> Template
+readTemplateFile file input = case P.parse topLevelTemplate file input of
     Left err -> error $ "Cannot parse template: " ++ show err
     Right t  -> t
+
 
 --------------------------------------------------------------------------------
 topLevelTemplate :: P.Parser Template
