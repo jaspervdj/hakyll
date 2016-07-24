@@ -130,6 +130,20 @@ instance Binary TemplateExpr where
 
 
 --------------------------------------------------------------------------------
+(.~) :: [TemplateElement] -> Template -> Template
+ts .~ (Template t) = Template (ts ++ t)
+
+infixr 6 .~
+
+
+--------------------------------------------------------------------------------
+(~.) :: Template -> [TemplateElement] -> Template
+(Template t) ~. ts = Template (t ++ ts)
+
+infixl 5 ~.
+
+
+--------------------------------------------------------------------------------
 readTemplate :: String -> Template
 readTemplate input = case P.parse template "" input of
     Left err -> error $ "Cannot parse template: " ++ show err
@@ -159,10 +173,7 @@ expr = P.try $ do
     trimLExpr <- trimOpen
     e <- expr'
     trimRExpr <- trimClose
-    return $ Template $ mconcat [ [TrimL | trimLExpr]
-                                , [Expr e]
-                                , [TrimR | trimRExpr]
-                                ]
+    return $ [TrimL | trimLExpr] .~ Template [Expr e] ~. [TrimR | trimRExpr]
 
 
 --------------------------------------------------------------------------------
@@ -194,73 +205,87 @@ trimClose = do
 --------------------------------------------------------------------------------
 conditional :: P.Parser Template
 conditional = P.try $ do
+    -- if
     trimLIf <- trimOpen
     void $ P.string "if("
     e <- expr'
     void $ P.char ')'
     trimRIf <- trimClose
-
+    -- then
     thenBranch <- template
-
-    elseBranch <- P.optionMaybe $ P.try $ do
-        trimLElse <- trimOpen
-        void $ P.string "else"
-        trimRElse <- trimClose
-        elseBody <- template
-        pure $ mconcat $ concat [ [Template [TrimL] | trimLElse]
-                                , [Template [TrimR] | trimRElse]
-                                , [elseBody]
-                                ]
-
+    -- else
+    elseParse <- opt "else"
+    -- endif
     trimLEnd <- trimOpen
     void $ P.string "endif"
     trimREnd <- trimClose
 
-    pure $ Template $ mconcat [ [TrimL | trimLIf]
-                              , [TrimR | trimRIf]
-                              , [If e thenBranch elseBranch]
-                              , [TrimL | trimLEnd]
-                              , [TrimR | trimREnd]
-                              ]
+    -- As else is optional we need to sort out where any Trim_s need to go.
+    let (thenBody, elseBody) = maybe (thenNoElse, Nothing) thenElse elseParse
+            where thenNoElse =
+                      [TrimR | trimRIf] .~ thenBranch ~. [TrimL | trimLEnd]
+
+                  thenElse (trimLElse, elseBranch, trimRElse) = (thenB, elseB)
+                      where thenB = [TrimR | trimRIf]
+                                 .~ thenBranch
+                                 ~. [TrimL | trimLElse]
+
+                            elseB = Just $ [TrimR | trimRElse]
+                                        .~ elseBranch
+                                        ~. [TrimL | trimLEnd]
+
+    pure $ [TrimL | trimLIf]
+        .~ Template [If e thenBody elseBody]
+        ~. [TrimR | trimREnd]
 
 
 --------------------------------------------------------------------------------
 for :: P.Parser Template
 for = P.try $ do
+    -- for
     trimLFor <- trimOpen
     void $ P.string "for("
     e <- expr'
     void $ P.char ')'
     trimRFor <- trimClose
-
-    body <- template
-    sep  <- P.optionMaybe $ P.try (P.string "$sep$") >> template
-
+    -- body
+    bodyBranch <- template
+    -- sep
+    sepParse <- opt "sep"
+    -- endfor
     trimLEnd <- trimOpen
     void $ P.string "endfor"
     trimREnd <- trimClose
 
-    pure $ Template $ mconcat [ [TrimL | trimLFor]
-                              , [TrimR | trimRFor]
-                              , [For e body sep]
-                              , [TrimL | trimLEnd]
-                              , [TrimR | trimREnd]
-                              ]
+    -- As sep is optional we need to sort out where any Trim_s need to go.
+    let (forBody, sepBody) = maybe (forNoSep, Nothing) forSep sepParse
+            where forNoSep =
+                      [TrimR | trimRFor] .~ bodyBranch ~. [TrimL | trimLEnd]
+
+                  forSep (trimLSep, sepBranch, trimRSep) = (forB, sepB)
+                      where forB = [TrimR | trimRFor]
+                                .~ bodyBranch
+                                ~. [TrimL | trimLSep]
+
+                            sepB = Just $ [TrimR | trimRSep]
+                                       .~ sepBranch
+                                       ~. [TrimL | trimLEnd]
+
+    pure $ [TrimL | trimLFor]
+        .~ Template [For e forBody sepBody]
+        ~. [TrimR | trimREnd]
 
 
 --------------------------------------------------------------------------------
 partial :: P.Parser Template
 partial = P.try $ do
-    trimLPartial <- trimOpen
+    trimLPart <- trimOpen
     void $ P.string "partial("
     e <- expr'
     void $ P.char ')'
-    trimRPartial <- trimClose
+    trimRPart <- trimClose
 
-    pure $ Template $ mconcat [ [TrimL | trimLPartial]
-                              , [Partial e]
-                              , [TrimR | trimRPartial]
-                              ]
+    pure $ [TrimL | trimLPart] .~ Template [Partial e] ~. [TrimR | trimRPart]
 
 
 --------------------------------------------------------------------------------
@@ -294,3 +319,14 @@ stringLiteral = do
 --------------------------------------------------------------------------------
 key :: P.Parser TemplateKey
 key = TemplateKey <$> metadataKey
+
+
+--------------------------------------------------------------------------------
+opt :: String -> P.Parser (Maybe (Bool, Template, Bool))
+opt clause = P.optionMaybe $ P.try $ do
+    trimL <- trimOpen
+    void $ P.string clause
+    trimR <- trimClose
+    branch <- template
+    pure (trimL, branch, trimR)
+

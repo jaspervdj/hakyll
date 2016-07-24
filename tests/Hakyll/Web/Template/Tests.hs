@@ -41,30 +41,30 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
         -- 'If' trim check.
         , Template
             [ TrimL
-            , TrimR
             , If (Ident (TemplateKey "body"))
-                 (Template [ Chunk "\n"
+                 (Template [ TrimR
+                           , Chunk "\n"
                            , Expr (Ident (TemplateKey "body"))
                            , Chunk "\n"
+                           , TrimL
                            ])
-                 (Just (Template [ TrimL
-                                 , TrimR
+                 (Just (Template [ TrimR
                                  , Chunk "\n"
                                  , Expr (Ident (TemplateKey "body"))
                                  , Chunk "\n"
+                                 , TrimL
                                  ]))
-            , TrimL
             , TrimR
             ]
             @=? readTemplate "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
         -- 'For' trim check.
         , Template
             [ TrimL
-            , TrimR
             , For (Ident (TemplateKey "authors"))
-                  (Template [Chunk "\n   body   \n"])
+                  (Template [ TrimR
+                            , Chunk "\n   body   \n"
+                            , TrimL])
                   Nothing
-            , TrimL
             , TrimR
             ]
             @=? readTemplate "$-for(authors)-$\n   body   \n$-endfor-$"
