@@ -31,57 +31,48 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
       ]
 
     , fromAssertions "readTemplate"
-        [ Template [Chunk "Hello ", Expr (Call "guest" [])]
-            @=? readTemplate "Hello $guest()$"
-        , Template
-            [If (Call "a" [StringLiteral "bar"])
-                (Template [Chunk "foo"])
-                Nothing]
-            @=? readTemplate "$if(a(\"bar\"))$foo$endif$"
+        [ [Chunk "Hello ", Expr (Call "guest" [])]
+            @=? readTemplateElems "Hello $guest()$"
+        , [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]
+            @=? readTemplateElems "$if(a(\"bar\"))$foo$endif$"
         -- 'If' trim check.
-        , Template
-            [ TrimL
-            , If (Ident (TemplateKey "body"))
-                 (Template [ TrimR
-                           , Chunk "\n"
-                           , Expr (Ident (TemplateKey "body"))
-                           , Chunk "\n"
-                           , TrimL
-                           ])
-                 (Just (Template [ TrimR
-                                 , Chunk "\n"
-                                 , Expr (Ident (TemplateKey "body"))
-                                 , Chunk "\n"
-                                 , TrimL
-                                 ]))
-            , TrimR
-            ]
-            @=? readTemplate "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
+        , [ TrimL
+          , If (Ident (TemplateKey "body"))
+               [ TrimR
+               , Chunk "\n"
+               , Expr (Ident (TemplateKey "body"))
+               , Chunk "\n"
+               , TrimL
+               ]
+               (Just [ TrimR
+                     , Chunk "\n"
+                     , Expr (Ident (TemplateKey "body"))
+                     , Chunk "\n"
+                     , TrimL
+                     ])
+          , TrimR
+          ]
+          @=? readTemplateElems "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
         -- 'For' trim check.
-        , Template
-            [ TrimL
-            , For (Ident (TemplateKey "authors"))
-                  (Template [ TrimR
-                            , Chunk "\n   body   \n"
-                            , TrimL])
-                  Nothing
-            , TrimR
-            ]
-            @=? readTemplate "$-for(authors)-$\n   body   \n$-endfor-$"
+        , [ TrimL
+          , For (Ident (TemplateKey "authors"))
+                [TrimR, Chunk "\n   body   \n", TrimL]
+                Nothing
+          , TrimR
+          ]
+          @=? readTemplateElems "$-for(authors)-$\n   body   \n$-endfor-$"
         -- 'Partial' trim check.
-        , Template
-            [ TrimL
-            , Partial (StringLiteral "path")
-            , TrimR
-            ]
-            @=? readTemplate "$-partial(\"path\")-$"
+        , [ TrimL
+          , Partial (StringLiteral "path")
+          , TrimR
+          ]
+          @=? readTemplateElems "$-partial(\"path\")-$"
         -- 'Expr' trim check.
-        , Template
-            [ TrimL
-            , Expr (Ident (TemplateKey "foo"))
-            , TrimR
-            ]
-            @=? readTemplate "$-foo-$"
+        , [ TrimL
+          , Expr (Ident (TemplateKey "foo"))
+          , TrimR
+          ]
+          @=? readTemplateElems "$-foo-$"
         ]
     ]
 
@@ -126,4 +117,4 @@ testApplyJoinTemplateList = do
   where
     i1  = Item "item1" "Hello"
     i2  = Item "item2" "World"
-    tpl = Template [Chunk "<b>", Expr (Ident "body"), Chunk "</b>"]
+    tpl = readTemplate "<b>$body$</b>"

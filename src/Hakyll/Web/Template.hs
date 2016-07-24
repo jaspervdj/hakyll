@@ -115,7 +115,8 @@
 -- That is, calling @$partial$@ is equivalent to just copying and pasting
 -- template code.
 --
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 module Hakyll.Web.Template
     ( Template
     , templateBodyCompiler
@@ -128,9 +129,11 @@ module Hakyll.Web.Template
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                (liftM)
 import           Control.Monad.Except         (MonadError (..))
+import           Data.Binary                  (Binary)
 import           Data.List                    (intercalate)
+import           Data.Typeable                (Typeable)
+import           GHC.Exts                     (IsString (..))
 import           Prelude                      hiding (id)
 
 
@@ -138,8 +141,33 @@ import           Prelude                      hiding (id)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
+import           Hakyll.Core.Writable
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
+import           Hakyll.Web.Template.Trim
+
+
+--------------------------------------------------------------------------------
+-- | Datatype used for template substitutions.
+newtype Template = Template
+    { unTemplate :: [TemplateElement]
+    } deriving (Show, Eq, Binary, Typeable)
+
+
+--------------------------------------------------------------------------------
+instance Writable Template where
+    -- Writing a template is impossible
+    write _ _ = return ()
+
+
+--------------------------------------------------------------------------------
+instance IsString Template where
+    fromString = readTemplate
+
+
+--------------------------------------------------------------------------------
+readTemplate :: String -> Template
+readTemplate = Template . trim . readTemplateElems
 
 
 --------------------------------------------------------------------------------
@@ -163,23 +191,23 @@ applyTemplate :: Template                -- ^ Template
               -> Item a                  -- ^ Page
               -> Compiler (Item String)  -- ^ Resulting item
 applyTemplate tpl context item = do
-    body <- applyTemplate' tpl context item
+    body <- applyTemplate' (unTemplate tpl) context item
     return $ itemSetBody body item
 
 
 --------------------------------------------------------------------------------
 applyTemplate'
     :: forall a.
-       Template         -- ^ Template
-    -> Context a        -- ^ Context
-    -> Item a           -- ^ Page
-    -> Compiler String  -- ^ Resulting item
-applyTemplate' tpl context x = go tpl
+       [TemplateElement] -- ^ Unwrapped Template
+    -> Context a         -- ^ Context
+    -> Item a            -- ^ Page
+    -> Compiler String   -- ^ Resulting item
+applyTemplate' tes context x = go tes
   where
     context' :: String -> [String] -> Item a -> Compiler ContextField
     context' = unContext (context `mappend` missingField)
 
-    go = liftM concat . mapM applyElem . unTemplate
+    go = fmap concat . mapM applyElem
 
     ---------------------------------------------------------------------------
 

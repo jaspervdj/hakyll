@@ -1,13 +1,12 @@
 --------------------------------------------------------------------------------
 -- | Module containing the template data structure
-{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Web.Template.Internal
-    ( Template (..)
-    , TemplateKey (..)
+    ( TemplateKey (..)
     , TemplateExpr (..)
     , TemplateElement (..)
-    , readTemplate
+    , templateElems
+    , readTemplateElems
     ) where
 
 
@@ -25,31 +24,6 @@ import qualified Text.Parsec.String      as P
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Util.Parser
-import           Hakyll.Core.Writable
-
-
---------------------------------------------------------------------------------
--- | Datatype used for template substitutions.
-newtype Template = Template
-    { unTemplate :: [TemplateElement]
-    } deriving (Show, Eq, Binary, Typeable)
-
-
---------------------------------------------------------------------------------
-instance Monoid Template where
-    mempty = Template []
-    (Template xs) `mappend` (Template ys) = Template (xs `mappend` ys)
-
-
---------------------------------------------------------------------------------
-instance Writable Template where
-    -- Writing a template is impossible
-    write _ _ = return ()
-
-
---------------------------------------------------------------------------------
-instance IsString Template where
-    fromString = readTemplate
 
 
 --------------------------------------------------------------------------------
@@ -68,9 +42,12 @@ data TemplateElement
     = Chunk String
     | Expr TemplateExpr
     | Escaped
-    | If TemplateExpr Template (Maybe Template)   -- expr, then, else
-    | For TemplateExpr Template (Maybe Template)  -- expr, body, separator
-    | Partial TemplateExpr                        -- filename
+      -- expr, then, else
+    | If TemplateExpr [TemplateElement] (Maybe [TemplateElement])
+      -- expr, body, separator
+    | For TemplateExpr [TemplateElement] (Maybe [TemplateElement])
+      -- filename
+    | Partial TemplateExpr
     | TrimL
     | TrimR
     deriving (Show, Eq, Typeable)
@@ -130,36 +107,22 @@ instance Binary TemplateExpr where
 
 
 --------------------------------------------------------------------------------
-(.~) :: [TemplateElement] -> Template -> Template
-ts .~ (Template t) = Template (ts ++ t)
-
-infixr 6 .~
-
-
---------------------------------------------------------------------------------
-(~.) :: Template -> [TemplateElement] -> Template
-(Template t) ~. ts = Template (t ++ ts)
-
-infixl 5 ~.
-
-
---------------------------------------------------------------------------------
-readTemplate :: String -> Template
-readTemplate input = case P.parse template "" input of
+readTemplateElems :: String -> [TemplateElement]
+readTemplateElems input = case P.parse templateElems "" input of
     Left err -> error $ "Cannot parse template: " ++ show err
     Right t  -> t
 
 
 --------------------------------------------------------------------------------
-template :: P.Parser Template
-template = mconcat <$> P.many (P.choice [ lift chunk
+templateElems :: P.Parser [TemplateElement]
+templateElems = mconcat <$> P.many (P.choice [ lift chunk
                                         , lift escaped
                                         , conditional
                                         , for
                                         , partial
                                         , expr
                                         ])
-    where lift = fmap (Template . (:[]))
+    where lift = fmap (:[])
 
 
 --------------------------------------------------------------------------------
@@ -168,12 +131,12 @@ chunk = Chunk <$> P.many1 (P.noneOf "$")
 
 
 --------------------------------------------------------------------------------
-expr :: P.Parser Template
+expr :: P.Parser [TemplateElement]
 expr = P.try $ do
     trimLExpr <- trimOpen
     e <- expr'
     trimRExpr <- trimClose
-    return $ [TrimL | trimLExpr] .~ Template [Expr e] ~. [TrimR | trimRExpr]
+    return $ [TrimL | trimLExpr] ++ [Expr e] ++ [TrimR | trimRExpr]
 
 
 --------------------------------------------------------------------------------
@@ -203,7 +166,7 @@ trimClose = do
 
 
 --------------------------------------------------------------------------------
-conditional :: P.Parser Template
+conditional :: P.Parser [TemplateElement]
 conditional = P.try $ do
     -- if
     trimLIf <- trimOpen
@@ -212,7 +175,7 @@ conditional = P.try $ do
     void $ P.char ')'
     trimRIf <- trimClose
     -- then
-    thenBranch <- template
+    thenBranch <- templateElems
     -- else
     elseParse <- opt "else"
     -- endif
@@ -223,24 +186,22 @@ conditional = P.try $ do
     -- As else is optional we need to sort out where any Trim_s need to go.
     let (thenBody, elseBody) = maybe (thenNoElse, Nothing) thenElse elseParse
             where thenNoElse =
-                      [TrimR | trimRIf] .~ thenBranch ~. [TrimL | trimLEnd]
+                      [TrimR | trimRIf] ++ thenBranch ++ [TrimL | trimLEnd]
 
                   thenElse (trimLElse, elseBranch, trimRElse) = (thenB, elseB)
                       where thenB = [TrimR | trimRIf]
-                                 .~ thenBranch
-                                 ~. [TrimL | trimLElse]
+                                 ++ thenBranch
+                                 ++ [TrimL | trimLElse]
 
                             elseB = Just $ [TrimR | trimRElse]
-                                        .~ elseBranch
-                                        ~. [TrimL | trimLEnd]
+                                        ++ elseBranch
+                                        ++ [TrimL | trimLEnd]
 
-    pure $ [TrimL | trimLIf]
-        .~ Template [If e thenBody elseBody]
-        ~. [TrimR | trimREnd]
+    pure $ [TrimL | trimLIf] ++ [If e thenBody elseBody] ++ [TrimR | trimREnd]
 
 
 --------------------------------------------------------------------------------
-for :: P.Parser Template
+for :: P.Parser [TemplateElement]
 for = P.try $ do
     -- for
     trimLFor <- trimOpen
@@ -249,7 +210,7 @@ for = P.try $ do
     void $ P.char ')'
     trimRFor <- trimClose
     -- body
-    bodyBranch <- template
+    bodyBranch <- templateElems
     -- sep
     sepParse <- opt "sep"
     -- endfor
@@ -260,24 +221,22 @@ for = P.try $ do
     -- As sep is optional we need to sort out where any Trim_s need to go.
     let (forBody, sepBody) = maybe (forNoSep, Nothing) forSep sepParse
             where forNoSep =
-                      [TrimR | trimRFor] .~ bodyBranch ~. [TrimL | trimLEnd]
+                      [TrimR | trimRFor] ++ bodyBranch ++ [TrimL | trimLEnd]
 
                   forSep (trimLSep, sepBranch, trimRSep) = (forB, sepB)
                       where forB = [TrimR | trimRFor]
-                                .~ bodyBranch
-                                ~. [TrimL | trimLSep]
+                                ++ bodyBranch
+                                ++ [TrimL | trimLSep]
 
                             sepB = Just $ [TrimR | trimRSep]
-                                       .~ sepBranch
-                                       ~. [TrimL | trimLEnd]
+                                       ++ sepBranch
+                                       ++ [TrimL | trimLEnd]
 
-    pure $ [TrimL | trimLFor]
-        .~ Template [For e forBody sepBody]
-        ~. [TrimR | trimREnd]
+    pure $ [TrimL | trimLFor] ++ [For e forBody sepBody] ++ [TrimR | trimREnd]
 
 
 --------------------------------------------------------------------------------
-partial :: P.Parser Template
+partial :: P.Parser [TemplateElement]
 partial = P.try $ do
     trimLPart <- trimOpen
     void $ P.string "partial("
@@ -285,7 +244,7 @@ partial = P.try $ do
     void $ P.char ')'
     trimRPart <- trimClose
 
-    pure $ [TrimL | trimLPart] .~ Template [Partial e] ~. [TrimR | trimRPart]
+    pure $ [TrimL | trimLPart] ++ [Partial e] ++ [TrimR | trimRPart]
 
 
 --------------------------------------------------------------------------------
@@ -322,11 +281,11 @@ key = TemplateKey <$> metadataKey
 
 
 --------------------------------------------------------------------------------
-opt :: String -> P.Parser (Maybe (Bool, Template, Bool))
+opt :: String -> P.Parser (Maybe (Bool, [TemplateElement], Bool))
 opt clause = P.optionMaybe $ P.try $ do
     trimL <- trimOpen
     void $ P.string clause
     trimR <- trimClose
-    branch <- template
+    branch <- templateElems
     pure (trimL, branch, trimR)
 
