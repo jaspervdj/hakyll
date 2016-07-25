@@ -128,7 +128,7 @@
 -- > <p>
 -- >     $for(counts)-$
 -- >       $count$
--- >       $-sep-$...
+-- >       $-sep$...
 -- >     $-endfor$
 -- > </p>
 --
@@ -148,6 +148,7 @@ module Hakyll.Web.Template
     , loadAndApplyTemplate
     , applyAsTemplate
     , readTemplate
+    , unsafeReadTemplateFile
     ) where
 
 
@@ -189,23 +190,30 @@ instance IsString Template where
 
 
 --------------------------------------------------------------------------------
+-- | Wrap the constructor to ensure trim is called.
+template :: [TemplateElement] -> Template
+template = Template . trim
+
+
+--------------------------------------------------------------------------------
 readTemplate :: String -> Template
 readTemplate = Template . trim . readTemplateElems
-
 
 --------------------------------------------------------------------------------
 -- | Read a template, without metadata header
 templateBodyCompiler :: Compiler (Item Template)
 templateBodyCompiler = cached "Hakyll.Web.Template.templateBodyCompiler" $ do
     item <- getResourceBody
-    return $ fmap readTemplate item
+    file <- getResourceFilePath
+    return $ fmap (template . readTemplateElemsFile file) item
 
 --------------------------------------------------------------------------------
 -- | Read complete file contents as a template
 templateCompiler :: Compiler (Item Template)
 templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
     item <- getResourceString
-    return $ fmap readTemplate item
+    file <- getResourceFilePath
+    return $ fmap (template . readTemplateElemsFile file) item
 
 
 --------------------------------------------------------------------------------
@@ -317,5 +325,14 @@ applyAsTemplate :: Context String          -- ^ Context
                 -> Item String             -- ^ Item and template
                 -> Compiler (Item String)  -- ^ Resulting item
 applyAsTemplate context item =
-    let tpl = readTemplate $ itemBody item
+    let tpl = template $ readTemplateElemsFile file (itemBody item)
+        file = toFilePath $ itemIdentifier item
     in applyTemplate tpl context item
+
+
+--------------------------------------------------------------------------------
+unsafeReadTemplateFile :: FilePath -> Compiler Template
+unsafeReadTemplateFile file = do
+    tpl <- unsafeCompiler $ readFile file
+    pure $ template $ readTemplateElemsFile file tpl
+

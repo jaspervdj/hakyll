@@ -7,6 +7,7 @@ module Hakyll.Web.Template.Internal
     , TemplateElement (..)
     , templateElems
     , readTemplateElems
+    , readTemplateElemsFile
     ) where
 
 
@@ -108,7 +109,12 @@ instance Binary TemplateExpr where
 
 --------------------------------------------------------------------------------
 readTemplateElems :: String -> [TemplateElement]
-readTemplateElems input = case P.parse templateElems "" input of
+readTemplateElems = readTemplateElemsFile "{literal}"
+
+
+--------------------------------------------------------------------------------
+readTemplateElemsFile :: FilePath -> String -> [TemplateElement]
+readTemplateElemsFile file input = case P.parse templateElems file input of
     Left err -> error $ "Cannot parse template: " ++ show err
     Right t  -> t
 
@@ -116,12 +122,12 @@ readTemplateElems input = case P.parse templateElems "" input of
 --------------------------------------------------------------------------------
 templateElems :: P.Parser [TemplateElement]
 templateElems = mconcat <$> P.many (P.choice [ lift chunk
-                                        , lift escaped
-                                        , conditional
-                                        , for
-                                        , partial
-                                        , expr
-                                        ])
+                                             , lift escaped
+                                             , conditional
+                                             , for
+                                             , partial
+                                             , expr
+                                             ])
     where lift = fmap (:[])
 
 
