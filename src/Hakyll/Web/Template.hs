@@ -115,7 +115,7 @@
 -- That is, calling @$partial$@ is equivalent to just copying and pasting
 -- template code.
 --
--- In the examples above you can see that outputs contain a lot of leftover
+-- In the examples above you can see that the outputs contain a lot of leftover
 -- whitespace that you may wish to remove. Using @'$-'@ or @'-$'@ instead of
 -- @'$'@ in a macro strips all whitespace to the left or right of that clause
 -- respectively. Given the context
