@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- | Module for trimming whitespace.
+-- | Module for trimming whitespace
 module Hakyll.Web.Template.Trim
     ( trim
     ) where
@@ -20,15 +20,22 @@ trim = cleanse . canonicalize
 
 
 --------------------------------------------------------------------------------
+-- | Apply the Trim nodes to the Chunks.
 cleanse :: [TemplateElement] -> [TemplateElement]
 cleanse = recurse cleanse . process
     where process [] = []
-          process (TrimR:Chunk str:ts) = Chunk (lstrip str):process ts
-          process (Chunk str:TrimL:ts) = Chunk (rstrip str):process ts
-          process (t:ts) = t:process ts
+          process (TrimR:Chunk str:ts) = let str' = dropWhile isSpace str
+                                         in if null str'
+                                                then process ts
+                                                -- Might need to TrimL.
+                                                else process $ Chunk str':ts
 
-          lstrip = dropWhile isSpace
-          rstrip = dropWhileEnd isSpace
+          process (Chunk str:TrimL:ts) = let str' = dropWhileEnd isSpace str
+                                         in if null str'
+                                                then process ts
+                                                else Chunk str':process ts
+
+          process (t:ts) = t:process ts
 
 --------------------------------------------------------------------------------
 -- | Enforce the invariant that:
@@ -75,6 +82,7 @@ dedupe = recurse dedupe . process
 
 
 --------------------------------------------------------------------------------
+-- | @'recurse' f t@ applies f to every '[TemplateElement]' in t.
 recurse :: ([TemplateElement] -> [TemplateElement])
         -> [TemplateElement]
         -> [TemplateElement]

@@ -115,6 +115,29 @@
 -- That is, calling @$partial$@ is equivalent to just copying and pasting
 -- template code.
 --
+-- In the examples above you can see that outputs contain a lot of leftover
+-- whitespace that you may wish to remove. Using @'$-'@ or @'-$'@ instead of
+-- @'$'@ in a macro strips all whitespace to the left or right of that clause
+-- respectively. Given the context
+--
+-- > listField "counts" (field "count" (return . itemBody))
+-- >    (sequence [makeItem "3", makeItem "2", makeItem "1"])
+--
+-- and a template
+--
+-- > <p>
+-- >     $for(counts)-$
+-- >       $count$
+-- >       $-sep-$...
+-- >     $-endfor$
+-- > </p>
+--
+-- the resulting page would look like
+--
+-- > <p>
+-- >     3...2...1
+-- > </p>
+--
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 module Hakyll.Web.Template
@@ -209,9 +232,16 @@ applyTemplate' tes context x = go tes
 
     go = fmap concat . mapM applyElem
 
+    trimError = error $ "Hakyll.Web.Template.applyTemplate: template not " ++
+        "fully trimmed."
+
     ---------------------------------------------------------------------------
 
     applyElem :: TemplateElement -> Compiler String
+
+    applyElem TrimL = trimError
+
+    applyElem TrimR = trimError
 
     applyElem (Chunk c) = return c
 

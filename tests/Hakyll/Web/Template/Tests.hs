@@ -13,6 +13,7 @@ import           Test.HUnit                     (Assertion, (@=?), (@?=))
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Provider
 import           Hakyll.Web.Pandoc
@@ -26,7 +27,8 @@ import           TestSuite.Util
 --------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Hakyll.Core.Template.Tests" $ concat
-    [ [ testCase "case01"                case01
+    [ [ testCase "case01" $ test ("template.html.out", "template.html", "example.md")
+      , testCase "case02" $ test ("strip.html.out", "strip.html", "example.md")
       , testCase "applyJoinTemplateList" testApplyJoinTemplateList
       ]
 
@@ -78,14 +80,14 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
 
 
 --------------------------------------------------------------------------------
-case01 :: Assertion
-case01 = do
+test :: (Identifier, Identifier, Identifier) -> Assertion
+test (outf, tplf, itemf) = do
     store    <- newTestStore
     provider <- newTestProvider store
 
-    out  <- resourceString provider "template.html.out"
-    tpl  <- testCompilerDone store provider "template.html" templateBodyCompiler
-    item <- testCompilerDone store provider "example.md" $
+    out  <- resourceString provider outf
+    tpl  <- testCompilerDone store provider tplf templateBodyCompiler
+    item <- testCompilerDone store provider itemf $
         pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 
     out @=? itemBody item
