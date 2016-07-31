@@ -115,7 +115,31 @@
 -- That is, calling @$partial$@ is equivalent to just copying and pasting
 -- template code.
 --
-{-# LANGUAGE ScopedTypeVariables #-}
+-- In the examples above you can see that the outputs contain a lot of leftover
+-- whitespace that you may wish to remove. Using @'$-'@ or @'-$'@ instead of
+-- @'$'@ in a macro strips all whitespace to the left or right of that clause
+-- respectively. Given the context
+--
+-- > listField "counts" (field "count" (return . itemBody))
+-- >    (sequence [makeItem "3", makeItem "2", makeItem "1"])
+--
+-- and a template
+--
+-- > <p>
+-- >     $for(counts)-$
+-- >       $count$
+-- >       $-sep$...
+-- >     $-endfor$
+-- > </p>
+--
+-- the resulting page would look like
+--
+-- > <p>
+-- >     3...2...1
+-- > </p>
+--
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 module Hakyll.Web.Template
     ( Template
     , templateBodyCompiler
@@ -124,13 +148,16 @@ module Hakyll.Web.Template
     , loadAndApplyTemplate
     , applyAsTemplate
     , readTemplate
+    , unsafeReadTemplateFile
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                (liftM)
 import           Control.Monad.Except         (MonadError (..))
+import           Data.Binary                  (Binary)
 import           Data.List                    (intercalate)
+import           Data.Typeable                (Typeable)
+import           GHC.Exts                     (IsString (..))
 import           Prelude                      hiding (id)
 
 
@@ -138,9 +165,39 @@ import           Prelude                      hiding (id)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
+import           Hakyll.Core.Writable
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
+import           Hakyll.Web.Template.Trim
 
+
+--------------------------------------------------------------------------------
+-- | Datatype used for template substitutions.
+newtype Template = Template
+    { unTemplate :: [TemplateElement]
+    } deriving (Show, Eq, Binary, Typeable)
+
+
+--------------------------------------------------------------------------------
+instance Writable Template where
+    -- Writing a template is impossible
+    write _ _ = return ()
+
+
+--------------------------------------------------------------------------------
+instance IsString Template where
+    fromString = readTemplate
+
+
+--------------------------------------------------------------------------------
+-- | Wrap the constructor to ensure trim is called.
+template :: [TemplateElement] -> Template
+template = Template . trim
+
+
+--------------------------------------------------------------------------------
+readTemplate :: String -> Template
+readTemplate = Template . trim . readTemplateElems
 
 --------------------------------------------------------------------------------
 -- | Read a template, without metadata header
@@ -148,7 +205,7 @@ templateBodyCompiler :: Compiler (Item Template)
 templateBodyCompiler = cached "Hakyll.Web.Template.templateBodyCompiler" $ do
     item <- getResourceBody
     file <- getResourceFilePath
-    return $ fmap (readTemplateFile file) item
+    return $ fmap (template . readTemplateElemsFile file) item
 
 --------------------------------------------------------------------------------
 -- | Read complete file contents as a template
@@ -156,7 +213,7 @@ templateCompiler :: Compiler (Item Template)
 templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
     item <- getResourceString
     file <- getResourceFilePath
-    return $ fmap (readTemplateFile file) item
+    return $ fmap (template . readTemplateElemsFile file) item
 
 
 --------------------------------------------------------------------------------
@@ -165,27 +222,34 @@ applyTemplate :: Template                -- ^ Template
               -> Item a                  -- ^ Page
               -> Compiler (Item String)  -- ^ Resulting item
 applyTemplate tpl context item = do
-    body <- applyTemplate' tpl context item
+    body <- applyTemplate' (unTemplate tpl) context item
     return $ itemSetBody body item
 
 
 --------------------------------------------------------------------------------
 applyTemplate'
     :: forall a.
-       Template         -- ^ Template
-    -> Context a        -- ^ Context
-    -> Item a           -- ^ Page
-    -> Compiler String  -- ^ Resulting item
-applyTemplate' tpl context x = go tpl
+       [TemplateElement] -- ^ Unwrapped Template
+    -> Context a         -- ^ Context
+    -> Item a            -- ^ Page
+    -> Compiler String   -- ^ Resulting item
+applyTemplate' tes context x = go tes
   where
     context' :: String -> [String] -> Item a -> Compiler ContextField
     context' = unContext (context `mappend` missingField)
 
-    go = liftM concat . mapM applyElem . unTemplate
+    go = fmap concat . mapM applyElem
+
+    trimError = error $ "Hakyll.Web.Template.applyTemplate: template not " ++
+        "fully trimmed."
 
     ---------------------------------------------------------------------------
 
     applyElem :: TemplateElement -> Compiler String
+
+    applyElem TrimL = trimError
+
+    applyElem TrimR = trimError
 
     applyElem (Chunk c) = return c
 
@@ -261,6 +325,14 @@ applyAsTemplate :: Context String          -- ^ Context
                 -> Item String             -- ^ Item and template
                 -> Compiler (Item String)  -- ^ Resulting item
 applyAsTemplate context item =
-    let tpl = readTemplateFile file (itemBody item)
+    let tpl = template $ readTemplateElemsFile file (itemBody item)
         file = toFilePath $ itemIdentifier item
     in applyTemplate tpl context item
+
+
+--------------------------------------------------------------------------------
+unsafeReadTemplateFile :: FilePath -> Compiler Template
+unsafeReadTemplateFile file = do
+    tpl <- unsafeCompiler $ readFile file
+    pure $ template $ readTemplateElemsFile file tpl
+

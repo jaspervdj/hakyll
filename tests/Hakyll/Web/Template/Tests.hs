@@ -6,7 +6,6 @@ module Hakyll.Web.Template.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.Monoid                    (mconcat)
 import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
 import           Test.HUnit                     (Assertion, (@=?), (@?=))
@@ -14,6 +13,7 @@ import           Test.HUnit                     (Assertion, (@=?), (@?=))
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Provider
 import           Hakyll.Web.Pandoc
@@ -27,32 +27,67 @@ import           TestSuite.Util
 --------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Hakyll.Core.Template.Tests" $ concat
-    [ [ testCase "case01"                case01
+    [ [ testCase "case01" $ test ("template.html.out", "template.html", "example.md")
+      , testCase "case02" $ test ("strip.html.out", "strip.html", "example.md")
       , testCase "applyJoinTemplateList" testApplyJoinTemplateList
       ]
 
     , fromAssertions "readTemplate"
-        [ Template [Chunk "Hello ", Expr (Call "guest" [])]
-            @=?  readTemplate "Hello $guest()$"
-        , Template
-            [If (Call "a" [StringLiteral "bar"])
-                (Template [Chunk "foo"])
-                Nothing]
-            @=?  readTemplate "$if(a(\"bar\"))$foo$endif$"
+        [ [Chunk "Hello ", Expr (Call "guest" [])]
+            @=? readTemplateElems "Hello $guest()$"
+        , [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]
+            @=? readTemplateElems "$if(a(\"bar\"))$foo$endif$"
+        -- 'If' trim check.
+        , [ TrimL
+          , If (Ident (TemplateKey "body"))
+               [ TrimR
+               , Chunk "\n"
+               , Expr (Ident (TemplateKey "body"))
+               , Chunk "\n"
+               , TrimL
+               ]
+               (Just [ TrimR
+                     , Chunk "\n"
+                     , Expr (Ident (TemplateKey "body"))
+                     , Chunk "\n"
+                     , TrimL
+                     ])
+          , TrimR
+          ]
+          @=? readTemplateElems "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
+        -- 'For' trim check.
+        , [ TrimL
+          , For (Ident (TemplateKey "authors"))
+                [TrimR, Chunk "\n   body   \n", TrimL]
+                Nothing
+          , TrimR
+          ]
+          @=? readTemplateElems "$-for(authors)-$\n   body   \n$-endfor-$"
+        -- 'Partial' trim check.
+        , [ TrimL
+          , Partial (StringLiteral "path")
+          , TrimR
+          ]
+          @=? readTemplateElems "$-partial(\"path\")-$"
+        -- 'Expr' trim check.
+        , [ TrimL
+          , Expr (Ident (TemplateKey "foo"))
+          , TrimR
+          ]
+          @=? readTemplateElems "$-foo-$"
         ]
     ]
 
 
 --------------------------------------------------------------------------------
-case01 :: Assertion
-case01 = do
+test :: (Identifier, Identifier, Identifier) -> Assertion
+test (outf, tplf, itemf) = do
     store    <- newTestStore
     provider <- newTestProvider store
 
-    out  <- resourceString provider "template.html.out"
-    tpl  <- testCompilerDone store provider "template.html" $
-        templateBodyCompiler
-    item <- testCompilerDone store provider "example.md"    $
+    out  <- resourceString provider outf
+    tpl  <- testCompilerDone store provider tplf templateBodyCompiler
+    item <- testCompilerDone store provider itemf $
         pandocCompiler >>= applyTemplate (itemBody tpl) testContext
 
     out @=? itemBody item
@@ -69,7 +104,6 @@ testContext = mconcat
         return [n1, n2]
     , functionField "rev" $ \args _ -> return $ unwords $ map reverse args
     ]
-  where
 
 
 --------------------------------------------------------------------------------
@@ -85,4 +119,4 @@ testApplyJoinTemplateList = do
   where
     i1  = Item "item1" "Hello"
     i2  = Item "item2" "World"
-    tpl = Template [Chunk "<b>", Expr (Ident "body"), Chunk "</b>"]
+    tpl = readTemplate "<b>$body$</b>"

@@ -1,14 +1,13 @@
 --------------------------------------------------------------------------------
 -- | Module containing the template data structure
-{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Web.Template.Internal
-    ( Template (..)
-    , TemplateKey (..)
+    ( TemplateKey (..)
     , TemplateExpr (..)
     , TemplateElement (..)
-    , readTemplate
-    , readTemplateFile
+    , templateElems
+    , readTemplateElems
+    , readTemplateElemsFile
     ) where
 
 
@@ -16,8 +15,9 @@ module Hakyll.Web.Template.Internal
 import           Control.Applicative     ((<|>))
 import           Control.Monad           (void)
 import           Data.Binary             (Binary, get, getWord8, put, putWord8)
+import           Data.List               (intercalate)
+import           Data.Maybe              (isJust)
 import           Data.Typeable           (Typeable)
-import           Data.List (intercalate)
 import           GHC.Exts                (IsString (..))
 import qualified Text.Parsec             as P
 import qualified Text.Parsec.String      as P
@@ -25,25 +25,6 @@ import qualified Text.Parsec.String      as P
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Util.Parser
-import           Hakyll.Core.Writable
-
-
---------------------------------------------------------------------------------
--- | Datatype used for template substitutions.
-newtype Template = Template
-    { unTemplate :: [TemplateElement]
-    } deriving (Show, Eq, Binary, Typeable)
-
-
---------------------------------------------------------------------------------
-instance Writable Template where
-    -- Writing a template is impossible
-    write _ _ = return ()
-
-
---------------------------------------------------------------------------------
-instance IsString Template where
-    fromString = readTemplate
 
 
 --------------------------------------------------------------------------------
@@ -62,9 +43,14 @@ data TemplateElement
     = Chunk String
     | Expr TemplateExpr
     | Escaped
-    | If TemplateExpr Template (Maybe Template)   -- expr, then, else
-    | For TemplateExpr Template (Maybe Template)  -- expr, body, separator
-    | Partial TemplateExpr                        -- filename
+      -- expr, then, else
+    | If TemplateExpr [TemplateElement] (Maybe [TemplateElement])
+      -- expr, body, separator
+    | For TemplateExpr [TemplateElement] (Maybe [TemplateElement])
+      -- filename
+    | Partial TemplateExpr
+    | TrimL
+    | TrimR
     deriving (Show, Eq, Typeable)
 
 
@@ -72,10 +58,12 @@ data TemplateElement
 instance Binary TemplateElement where
     put (Chunk string) = putWord8 0 >> put string
     put (Expr e)       = putWord8 1 >> put e
-    put (Escaped)      = putWord8 2
-    put (If e t f  )   = putWord8 3 >> put e >> put t >> put f
+    put  Escaped       = putWord8 2
+    put (If e t f)     = putWord8 3 >> put e >> put t >> put f
     put (For e b s)    = putWord8 4 >> put e >> put b >> put s
     put (Partial e)    = putWord8 5 >> put e
+    put  TrimL         = putWord8 6
+    put  TrimR         = putWord8 7
 
     get = getWord8 >>= \tag -> case tag of
         0 -> Chunk <$> get
@@ -84,8 +72,9 @@ instance Binary TemplateElement where
         3 -> If <$> get <*> get <*> get
         4 -> For <$> get <*> get <*> get
         5 -> Partial <$> get
-        _ -> error $
-            "Hakyll.Web.Template.Internal: Error reading cached template"
+        6 -> pure TrimL
+        7 -> pure TrimR
+        _ -> error "Hakyll.Web.Template.Internal: Error reading cached template"
 
 
 --------------------------------------------------------------------------------
@@ -115,48 +104,45 @@ instance Binary TemplateExpr where
         0 -> Ident         <$> get
         1 -> Call          <$> get <*> get
         2 -> StringLiteral <$> get
-        _ -> error $
-            "Hakyll.Web.Tamplte.Internal: Error reading cached template"
+        _ -> error "Hakyll.Web.Template.Internal: Error reading cached template"
 
 
 --------------------------------------------------------------------------------
-readTemplate :: String -> Template
-readTemplate = readTemplateFile "{literal}"
+readTemplateElems :: String -> [TemplateElement]
+readTemplateElems = readTemplateElemsFile "{literal}"
 
 
 --------------------------------------------------------------------------------
-readTemplateFile :: FilePath -> String -> Template
-readTemplateFile file input = case P.parse topLevelTemplate file input of
+readTemplateElemsFile :: FilePath -> String -> [TemplateElement]
+readTemplateElemsFile file input = case P.parse templateElems file input of
     Left err -> error $ "Cannot parse template: " ++ show err
     Right t  -> t
 
 
 --------------------------------------------------------------------------------
-topLevelTemplate :: P.Parser Template
-topLevelTemplate = Template <$>
-    P.manyTill templateElement P.eof
-
---------------------------------------------------------------------------------
-template :: P.Parser Template
-template = Template <$> P.many templateElement
-
---------------------------------------------------------------------------------
-templateElement :: P.Parser TemplateElement
-templateElement = chunk <|> escaped <|> conditional <|> for <|> partial <|> expr
+templateElems :: P.Parser [TemplateElement]
+templateElems = mconcat <$> P.many (P.choice [ lift chunk
+                                             , lift escaped
+                                             , conditional
+                                             , for
+                                             , partial
+                                             , expr
+                                             ])
+    where lift = fmap (:[])
 
 
 --------------------------------------------------------------------------------
 chunk :: P.Parser TemplateElement
-chunk = Chunk <$> (P.many1 $ P.noneOf "$")
+chunk = Chunk <$> P.many1 (P.noneOf "$")
 
 
 --------------------------------------------------------------------------------
-expr :: P.Parser TemplateElement
+expr :: P.Parser [TemplateElement]
 expr = P.try $ do
-    void $ P.char '$'
+    trimLExpr <- trimOpen
     e <- expr'
-    void $ P.char '$'
-    return $ Expr e
+    trimRExpr <- trimClose
+    return $ [TrimL | trimLExpr] ++ [Expr e] ++ [TrimR | trimRExpr]
 
 
 --------------------------------------------------------------------------------
@@ -166,40 +152,105 @@ expr' = stringLiteral <|> call <|> ident
 
 --------------------------------------------------------------------------------
 escaped :: P.Parser TemplateElement
-escaped = Escaped <$ (P.try $ P.string "$$")
+escaped = Escaped <$ P.try (P.string "$$")
 
 
 --------------------------------------------------------------------------------
-conditional :: P.Parser TemplateElement
+trimOpen :: P.Parser Bool
+trimOpen = do
+    void $ P.char '$'
+    trimLIf <- P.optionMaybe $ P.try (P.char '-')
+    pure $ isJust trimLIf
+
+
+--------------------------------------------------------------------------------
+trimClose :: P.Parser Bool
+trimClose = do
+    trimIfR <- P.optionMaybe $ P.try (P.char '-')
+    void $ P.char '$'
+    pure $ isJust trimIfR
+
+
+--------------------------------------------------------------------------------
+conditional :: P.Parser [TemplateElement]
 conditional = P.try $ do
-    void $ P.string "$if("
+    -- if
+    trimLIf <- trimOpen
+    void $ P.string "if("
     e <- expr'
-    void $ P.string ")$"
-    thenBranch <- template
-    elseBranch <- P.optionMaybe $ P.try (P.string "$else$") >> template
-    void $ P.string "$endif$"
-    return $ If e thenBranch elseBranch
+    void $ P.char ')'
+    trimRIf <- trimClose
+    -- then
+    thenBranch <- templateElems
+    -- else
+    elseParse <- opt "else"
+    -- endif
+    trimLEnd <- trimOpen
+    void $ P.string "endif"
+    trimREnd <- trimClose
+
+    -- As else is optional we need to sort out where any Trim_s need to go.
+    let (thenBody, elseBody) = maybe (thenNoElse, Nothing) thenElse elseParse
+            where thenNoElse =
+                      [TrimR | trimRIf] ++ thenBranch ++ [TrimL | trimLEnd]
+
+                  thenElse (trimLElse, elseBranch, trimRElse) = (thenB, elseB)
+                      where thenB = [TrimR | trimRIf]
+                                 ++ thenBranch
+                                 ++ [TrimL | trimLElse]
+
+                            elseB = Just $ [TrimR | trimRElse]
+                                        ++ elseBranch
+                                        ++ [TrimL | trimLEnd]
+
+    pure $ [TrimL | trimLIf] ++ [If e thenBody elseBody] ++ [TrimR | trimREnd]
 
 
 --------------------------------------------------------------------------------
-for :: P.Parser TemplateElement
+for :: P.Parser [TemplateElement]
 for = P.try $ do
-    void $ P.string "$for("
+    -- for
+    trimLFor <- trimOpen
+    void $ P.string "for("
     e <- expr'
-    void $ P.string ")$"
-    body <- template
-    sep  <- P.optionMaybe $ P.try (P.string "$sep$") >> template
-    void $ P.string "$endfor$"
-    return $ For e body sep
+    void $ P.char ')'
+    trimRFor <- trimClose
+    -- body
+    bodyBranch <- templateElems
+    -- sep
+    sepParse <- opt "sep"
+    -- endfor
+    trimLEnd <- trimOpen
+    void $ P.string "endfor"
+    trimREnd <- trimClose
+
+    -- As sep is optional we need to sort out where any Trim_s need to go.
+    let (forBody, sepBody) = maybe (forNoSep, Nothing) forSep sepParse
+            where forNoSep =
+                      [TrimR | trimRFor] ++ bodyBranch ++ [TrimL | trimLEnd]
+
+                  forSep (trimLSep, sepBranch, trimRSep) = (forB, sepB)
+                      where forB = [TrimR | trimRFor]
+                                ++ bodyBranch
+                                ++ [TrimL | trimLSep]
+
+                            sepB = Just $ [TrimR | trimRSep]
+                                       ++ sepBranch
+                                       ++ [TrimL | trimLEnd]
+
+    pure $ [TrimL | trimLFor] ++ [For e forBody sepBody] ++ [TrimR | trimREnd]
 
 
 --------------------------------------------------------------------------------
-partial :: P.Parser TemplateElement
+partial :: P.Parser [TemplateElement]
 partial = P.try $ do
-    void $ P.string "$partial("
+    trimLPart <- trimOpen
+    void $ P.string "partial("
     e <- expr'
-    void $ P.string ")$"
-    return $ Partial e
+    void $ P.char ')'
+    trimRPart <- trimClose
+
+    pure $ [TrimL | trimLPart] ++ [Partial e] ++ [TrimR | trimRPart]
 
 
 --------------------------------------------------------------------------------
@@ -233,3 +284,14 @@ stringLiteral = do
 --------------------------------------------------------------------------------
 key :: P.Parser TemplateKey
 key = TemplateKey <$> metadataKey
+
+
+--------------------------------------------------------------------------------
+opt :: String -> P.Parser (Maybe (Bool, [TemplateElement], Bool))
+opt clause = P.optionMaybe $ P.try $ do
+    trimL <- trimOpen
+    void $ P.string clause
+    trimR <- trimClose
+    branch <- templateElems
+    pure (trimL, branch, trimR)
+
