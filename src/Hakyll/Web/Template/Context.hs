@@ -22,6 +22,7 @@ module Hakyll.Web.Template.Context
     , dateField
     , dateFieldWith
     , getItemUTC
+    , getItemTime
     , getItemModificationTime
     , modificationTimeField
     , modificationTimeFieldWith
@@ -36,8 +37,9 @@ import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
 import           Data.List                     (intercalate)
 import           Data.Time.Clock               (UTCTime (..))
-import           Data.Time.Format              (formatTime)
+import           Data.Time.Format              (ParseTime, formatTime)
 import qualified Data.Time.Format              as TF
+import           Data.Time.LocalTime           (ZonedTime (..))
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
@@ -275,7 +277,7 @@ dateFieldWith :: TimeLocale  -- ^ Output time locale
               -> String      -- ^ Format to use on the date
               -> Context a   -- ^ Resulting context
 dateFieldWith locale key format = field key $ \i -> do
-    time <- getItemUTC locale $ itemIdentifier i
+    time <- getItemTime locale $ itemIdentifier i :: Compiler ZonedTime
     return $ formatTime locale format time
 
 
@@ -287,7 +289,14 @@ getItemUTC :: MonadMetadata m
            => TimeLocale        -- ^ Output time locale
            -> Identifier        -- ^ Input page
            -> m UTCTime         -- ^ Parsed UTCTime
-getItemUTC locale id' = do
+getItemUTC = getItemTime
+
+-- | General version of `getItemUTC` that returns an instance of `ParseTime`
+getItemTime :: (MonadMetadata m, ParseTime t)
+           => TimeLocale        -- ^ Output time locale
+           -> Identifier        -- ^ Input page
+           -> m t               -- ^ Parsed time
+getItemTime locale id' = do
     metadata <- getMetadata id'
     let tryField k fmt = lookupString k metadata >>= parseTime' fmt
         paths          = splitDirectories $ toFilePath id'
@@ -297,7 +306,7 @@ getItemUTC locale id' = do
         [tryField "date"      fmt | fmt <- formats] ++
         [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fnCand | fnCand <- reverse paths]
   where
-    empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
+    empty'     = fail $ "Hakyll.Web.Template.Context.getItemTime: " ++
         "could not parse time for " ++ show id'
     parseTime' = parseTimeM True locale
     formats    =
@@ -374,7 +383,7 @@ missingField = Context $ \k _ i -> fail $
     "Missing field $" ++ k ++ "$ in context for item " ++
     show (itemIdentifier i)
 
-parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime
+parseTimeM :: ParseTime t => Bool -> TimeLocale -> String -> String -> Maybe t
 #if MIN_VERSION_time(1,5,0)
 parseTimeM = TF.parseTimeM
 #else
