@@ -239,6 +239,8 @@ titleField = mapContext takeBaseName . pathField
 --
 --   * @2010-09-06 00:01:00+0000@
 --
+--   * @2010-09-06 00:01:00 +0000@
+--
 --   * @2010-09-06 00:01:00@
 --
 --   * @September 06, 2010 00:01 AM@
@@ -302,6 +304,7 @@ getItemUTC locale id' = do
         [ "%a, %d %b %Y %H:%M:%S %Z"
         , "%Y-%m-%dT%H:%M:%S%Z"
         , "%Y-%m-%d %H:%M:%S%Z"
+        , "%Y-%m-%d %H:%M:%S %Z"
         , "%Y-%m-%d"
         , "%B %e, %Y %l:%M %p"
         , "%B %e, %Y"
