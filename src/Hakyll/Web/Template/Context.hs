@@ -293,9 +293,9 @@ getItemUTC = getItemTime
 
 -- | General version of `getItemUTC` that returns an instance of `ParseTime`
 getItemTime :: (MonadMetadata m, ParseTime t)
-           => TimeLocale        -- ^ Output time locale
-           -> Identifier        -- ^ Input page
-           -> m t               -- ^ Parsed time
+            => TimeLocale        -- ^ Output time locale
+            -> Identifier        -- ^ Input page
+            -> m t               -- ^ Parsed time
 getItemTime locale id' = do
     metadata <- getMetadata id'
     let tryField k fmt = lookupString k metadata >>= parseTime' fmt
