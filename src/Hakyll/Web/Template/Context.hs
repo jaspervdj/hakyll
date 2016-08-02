@@ -4,6 +4,7 @@
 module Hakyll.Web.Template.Context
     ( ContextField (..)
     , Context (..)
+    , DateFormat (..)
     , field
     , boolField
     , constField
@@ -41,6 +42,8 @@ import           Data.Time.Format              (ParseTime, formatTime)
 import qualified Data.Time.Format              as TF
 import           Data.Time.LocalTime           (ZonedTime (..))
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
+import           Data.Time.RFC822              (formatTimeRFC822)
+import           Data.Time.RFC3339             (formatTimeRFC3339)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
@@ -57,6 +60,13 @@ import           System.FilePath               (splitDirectories, takeBaseName)
 data ContextField
     = StringField String
     | forall a. ListField (Context a) [Item a]
+
+--------------------------------------------------------------------------------
+-- | Date format: RFC822 for RSS, RFC3339 for Atom, or custom format string
+data DateFormat
+    = RFC822
+    | RFC3339
+    | DateFormat String
 
 
 --------------------------------------------------------------------------------
@@ -263,7 +273,7 @@ titleField = mapContext takeBaseName . pathField
 -- In case of multiple matches, the rightmost one is used.
 
 dateField :: String     -- ^ Key in which the rendered date should be placed
-          -> String     -- ^ Format to use on the date
+          -> DateFormat -- ^ Format to use on the date
           -> Context a  -- ^ Resulting context
 dateField = dateFieldWith defaultTimeLocale
 
@@ -274,11 +284,14 @@ dateField = dateFieldWith defaultTimeLocale
 -- details, see 'dateField'.
 dateFieldWith :: TimeLocale  -- ^ Output time locale
               -> String      -- ^ Destination key
-              -> String      -- ^ Format to use on the date
+              -> DateFormat  -- ^ Format to use on the date
               -> Context a   -- ^ Resulting context
 dateFieldWith locale key format = field key $ \i -> do
     time <- getItemTime locale $ itemIdentifier i :: Compiler ZonedTime
-    return $ formatTime locale format time
+    return $ case format of
+                 RFC822         -> formatTimeRFC822 time
+                 RFC3339        -> formatTimeRFC3339 time
+                 DateFormat str -> formatTime locale str time
 
 
 --------------------------------------------------------------------------------

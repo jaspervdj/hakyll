@@ -114,7 +114,7 @@ renderRss :: FeedConfiguration       -- ^ Feed configuration
           -> Compiler (Item String)  -- ^ Resulting feed
 renderRss config context = renderFeed
     "templates/rss.xml" "templates/rss-item.xml" config
-    (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
+    (makeItemContext RFC822 context)
 
 
 --------------------------------------------------------------------------------
@@ -125,11 +125,11 @@ renderAtom :: FeedConfiguration       -- ^ Feed configuration
            -> Compiler (Item String)  -- ^ Resulting feed
 renderAtom config context = renderFeed
     "templates/atom.xml" "templates/atom-item.xml" config
-    (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
+    (makeItemContext RFC3339 context)
 
 
 --------------------------------------------------------------------------------
 -- | Copies @$updated$@ from @$published$@ if it is not already set.
-makeItemContext :: String -> Context a -> Context a
+makeItemContext :: DateFormat -> Context a -> Context a
 makeItemContext fmt context = mconcat
     [dateField "published" fmt, context, dateField "updated" fmt]
