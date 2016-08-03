@@ -27,7 +27,7 @@ compressCssCompiler = fmap compressCss <$> getResourceString
 --------------------------------------------------------------------------------
 -- | Compress CSS to speed up your site.
 compressCss :: String -> String
-compressCss = compressSeparators . stripComments . compressWhitespace
+compressCss = compressSeparators . compressWhitespace . stripComments
 
 
 --------------------------------------------------------------------------------
@@ -35,14 +35,15 @@ compressCss = compressSeparators . stripComments . compressWhitespace
 compressSeparators :: String -> String
 compressSeparators =
     replaceAll "; *}" (const "}") .
-    replaceAll " *([{};]) *" (take 1 . dropWhile isSpace) .
+    replaceAll " *([{};,>+~]) *" (take 1 . dropWhile isSpace) .
+    replaceAll "(:) *" (take 1) . -- not destroying pseudo selectors (#323)
     replaceAll ";+" (const ";")
 
 
 --------------------------------------------------------------------------------
 -- | Compresses all whitespace.
 compressWhitespace :: String -> String
-compressWhitespace = replaceAll "[ \t\n\r]+" (const " ")
+compressWhitespace = replaceAll "[ \t\n\r]+" (const " ") . dropWhile isSpace
 
 
 --------------------------------------------------------------------------------
