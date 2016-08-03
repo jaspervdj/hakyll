@@ -1,17 +1,17 @@
 --------------------------------------------------------------------------------
--- | Module for trimming whitespace
-module Hakyll.Web.Template.Trim
+-- | Module for trimming whitespace from tempaltes.
+module Hakyll.Web.Template.Internal.Trim
     ( trim
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Data.Char                    (isSpace)
-import           Data.List                    (dropWhileEnd)
+import           Data.Char                            (isSpace)
+import           Data.List                            (dropWhileEnd)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Web.Template.Internal
+import           Hakyll.Web.Template.Internal.Element
 
 
 --------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ redundant = recurse redundant . process
           -- Remove trailing 'TrimR's.
           process ts = foldr trailing [] ts
               where trailing TrimR [] = []
-                    trailing x xs = x:xs
+                    trailing x xs     = x:xs
 
 
 --------------------------------------------------------------------------------
@@ -66,19 +66,19 @@ redundant = recurse redundant . process
 -- [TrimL, TrimR]
 swap :: [TemplateElement] -> [TemplateElement]
 swap = recurse swap . process
-    where process [] = []
+    where process []               = []
           process (TrimR:TrimL:ts) = TrimL:process (TrimR:ts)
-          process (t:ts) = t:process ts
+          process (t:ts)           = t:process ts
 
 
 --------------------------------------------------------------------------------
 -- | Remove 'TrimR' and 'TrimL' duplication.
 dedupe :: [TemplateElement] -> [TemplateElement]
 dedupe = recurse dedupe . process
-    where process [] = []
+    where process []               = []
           process (TrimR:TrimR:ts) = process (TrimR:ts)
           process (TrimL:TrimL:ts) = process (TrimL:ts)
-          process (t:ts) = t:process ts
+          process (t:ts)           = t:process ts
 
 
 --------------------------------------------------------------------------------

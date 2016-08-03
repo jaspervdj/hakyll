@@ -116,9 +116,10 @@ Library
     Hakyll.Web.Tags
     Hakyll.Web.Paginate
     Hakyll.Web.Template
-    Hakyll.Web.Template.Internal
-    Hakyll.Web.Template.Trim
     Hakyll.Web.Template.Context
+    Hakyll.Web.Template.Internal
+    Hakyll.Web.Template.Internal.Element
+    Hakyll.Web.Template.Internal.Trim
     Hakyll.Web.Template.List
 
   Other-Modules:
