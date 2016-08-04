@@ -20,6 +20,7 @@ import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
+import           Hakyll.Web.Template.Internal.Element
 import           Hakyll.Web.Template.List
 import           TestSuite.Util
 
@@ -34,9 +35,9 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
 
     , fromAssertions "readTemplate"
         [ [Chunk "Hello ", Expr (Call "guest" [])]
-            @=? readTemplateElems "Hello $guest()$"
+            @=? readTemplateElemsFile "" "Hello $guest()$"
         , [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]
-            @=? readTemplateElems "$if(a(\"bar\"))$foo$endif$"
+            @=? readTemplateElemsFile "" "$if(a(\"bar\"))$foo$endif$"
         -- 'If' trim check.
         , [ TrimL
           , If (Ident (TemplateKey "body"))
@@ -54,7 +55,7 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
                      ])
           , TrimR
           ]
-          @=? readTemplateElems "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
+          @=? readTemplateElemsFile "" "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
         -- 'For' trim check.
         , [ TrimL
           , For (Ident (TemplateKey "authors"))
@@ -62,19 +63,19 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
                 Nothing
           , TrimR
           ]
-          @=? readTemplateElems "$-for(authors)-$\n   body   \n$-endfor-$"
+          @=? readTemplateElemsFile "" "$-for(authors)-$\n   body   \n$-endfor-$"
         -- 'Partial' trim check.
         , [ TrimL
           , Partial (StringLiteral "path")
           , TrimR
           ]
-          @=? readTemplateElems "$-partial(\"path\")-$"
+          @=? readTemplateElemsFile "" "$-partial(\"path\")-$"
         -- 'Expr' trim check.
         , [ TrimL
           , Expr (Ident (TemplateKey "foo"))
           , TrimR
           ]
-          @=? readTemplateElems "$-foo-$"
+          @=? readTemplateElemsFile "" "$-foo-$"
         ]
     ]
 

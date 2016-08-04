@@ -182,8 +182,7 @@ defaultContext =
     metadataField            `mappend`
     urlField      "url"      `mappend`
     pathField     "path"     `mappend`
-    titleField    "title"    `mappend`
-    missingField
+    titleField    "title"
 
 
 --------------------------------------------------------------------------------
@@ -374,9 +373,8 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
 
 --------------------------------------------------------------------------------
 missingField :: Context a
-missingField = Context $ \k _ i -> fail $
-    "Missing field $" ++ k ++ "$ in context for item " ++
-    show (itemIdentifier i)
+missingField = Context $ \k _ _ -> fail $
+    "Missing field '" ++ k ++ "' in context"
 
 parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime
 #if MIN_VERSION_time(1,5,0)

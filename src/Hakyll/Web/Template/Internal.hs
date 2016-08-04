@@ -1,15 +1,20 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveGeneric              #-}
+
 module Hakyll.Web.Template.Internal
-    ( Template (..)
+    ( Template
     , template
+    , unTemplate
+    , getOrigin
     , templateBodyCompiler
     , templateCompiler
     , applyTemplate
-    , applyTemplate'
     , loadAndApplyTemplate
     , applyAsTemplate
     , readTemplate
+    , readTemplateItem
     , unsafeReadTemplateFile
 
     , module Hakyll.Web.Template.Internal.Element
@@ -23,6 +28,7 @@ import           Data.Binary                          (Binary)
 import           Data.List                            (intercalate)
 import           Data.Typeable                        (Typeable)
 import           GHC.Exts                             (IsString (..))
+import           GHC.Generics                         (Generic)
 import           Prelude                              hiding (id)
 
 
@@ -38,9 +44,10 @@ import           Hakyll.Web.Template.Internal.Trim
 
 --------------------------------------------------------------------------------
 -- | Datatype used for template substitutions.
-newtype Template = Template
+data Template = Template
     { unTemplate :: [TemplateElement]
-    } deriving (Show, Eq, Binary, Typeable)
+    , getOrigin  :: FilePath
+    } deriving (Show, Eq, Generic, Binary, Typeable)
 
 
 --------------------------------------------------------------------------------
@@ -56,13 +63,22 @@ instance IsString Template where
 
 --------------------------------------------------------------------------------
 -- | Wrap the constructor to ensure trim is called.
-template :: [TemplateElement] -> Template
-template = Template . trim
+template :: FilePath -> [TemplateElement] -> Template
+template p = flip Template p . trim
 
 
 --------------------------------------------------------------------------------
 readTemplate :: String -> Template
-readTemplate = Template . trim . readTemplateElems
+readTemplate = readTemplateFile "{literal}"
+
+--------------------------------------------------------------------------------
+readTemplateItem :: Item String -> Template
+readTemplateItem item = let file = show $ itemIdentifier item
+                        in readTemplateFile file (itemBody item)
+
+--------------------------------------------------------------------------------
+readTemplateFile :: FilePath -> String -> Template
+readTemplateFile origin =  template origin . readTemplateElemsFile origin
 
 --------------------------------------------------------------------------------
 -- | Read a template, without metadata header
@@ -70,7 +86,7 @@ templateBodyCompiler :: Compiler (Item Template)
 templateBodyCompiler = cached "Hakyll.Web.Template.templateBodyCompiler" $ do
     item <- getResourceBody
     file <- getResourceFilePath
-    return $ fmap (template . readTemplateElemsFile file) item
+    return $ fmap (readTemplateFile file) item
 
 --------------------------------------------------------------------------------
 -- | Read complete file contents as a template
@@ -78,7 +94,7 @@ templateCompiler :: Compiler (Item Template)
 templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
     item <- getResourceString
     file <- getResourceFilePath
-    return $ fmap (template . readTemplateElemsFile file) item
+    return $ fmap (readTemplateFile file) item
 
 
 --------------------------------------------------------------------------------
@@ -87,7 +103,7 @@ applyTemplate :: Template                -- ^ Template
               -> Item a                  -- ^ Page
               -> Compiler (Item String)  -- ^ Resulting item
 applyTemplate tpl context item = do
-    body <- applyTemplate' (unTemplate tpl) context item
+    body <- applyTemplate' (unTemplate tpl) (getOrigin tpl) context item
     return $ itemSetBody body item
 
 
@@ -95,17 +111,25 @@ applyTemplate tpl context item = do
 applyTemplate'
     :: forall a.
        [TemplateElement] -- ^ Unwrapped Template
+    -> FilePath          -- ^ template name
     -> Context a         -- ^ Context
     -> Item a            -- ^ Page
     -> Compiler String   -- ^ Resulting item
-applyTemplate' tes context x = go tes
+applyTemplate' tes name context x = go tes `catchError` handler
   where
     context' :: String -> [String] -> Item a -> Compiler ContextField
     context' = unContext (context `mappend` missingField)
 
+    itemName = show $ itemIdentifier x
+    handler es = fail $ "Hakyll.Web.Template.applyTemplate: Failed to " ++
+        (if name == itemName
+          then "interpolate template in item " ++ name
+          else "apply template " ++ name ++ " to item " ++ itemName) ++
+        ":\n" ++ intercalate ",\n" es
+
     go = fmap concat . mapM applyElem
 
-    trimError = error $ "Hakyll.Web.Template.applyTemplate: template not " ++
+    trimError = fail $ "Hakyll.Web.Template.applyTemplate: template not " ++
         "fully trimmed."
 
     ---------------------------------------------------------------------------
@@ -134,13 +158,13 @@ applyTemplate' tes context x = go tes
             "got StringField for expr " ++ show e
         ListField c xs -> do
             sep <- maybe (return "") go s
-            bs  <- mapM (applyTemplate' b c) xs
+            bs  <- mapM (applyTemplate' b name c) xs
             return $ intercalate sep bs
 
     applyElem (Partial e) = do
-        p             <- applyExpr e >>= getString e
-        Template tpl' <- loadBody (fromFilePath p)
-        applyTemplate' tpl' context x
+        p    <- applyExpr e >>= getString e
+        tpl' <- loadBody (fromFilePath p)
+        applyTemplate' (unTemplate tpl') (getOrigin tpl') context x
 
     ---------------------------------------------------------------------------
 
@@ -189,15 +213,12 @@ loadAndApplyTemplate identifier context item = do
 applyAsTemplate :: Context String          -- ^ Context
                 -> Item String             -- ^ Item and template
                 -> Compiler (Item String)  -- ^ Resulting item
-applyAsTemplate context item =
-    let tpl = template $ readTemplateElemsFile file (itemBody item)
-        file = toFilePath $ itemIdentifier item
-    in applyTemplate tpl context item
+applyAsTemplate context item = applyTemplate (readTemplateItem item) context item
 
 
 --------------------------------------------------------------------------------
 unsafeReadTemplateFile :: FilePath -> Compiler Template
 unsafeReadTemplateFile file = do
     tpl <- unsafeCompiler $ readFile file
-    pure $ template $ readTemplateElemsFile file tpl
+    pure $ readTemplateFile file tpl
 

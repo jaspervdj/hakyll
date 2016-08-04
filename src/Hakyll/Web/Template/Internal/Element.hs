@@ -7,7 +7,6 @@ module Hakyll.Web.Template.Internal.Element
     , TemplateExpr (..)
     , TemplateElement (..)
     , templateElems
-    , readTemplateElems
     , readTemplateElemsFile
     ) where
 
@@ -106,12 +105,6 @@ instance Binary TemplateExpr where
         1 -> Call          <$> get <*> get
         2 -> StringLiteral <$> get
         _ -> error "Hakyll.Web.Template.Internal: Error reading cached template"
-
-
---------------------------------------------------------------------------------
-readTemplateElems :: String -> [TemplateElement]
-readTemplateElems = readTemplateElemsFile "{literal}"
-
 
 --------------------------------------------------------------------------------
 readTemplateElemsFile :: FilePath -> String -> [TemplateElement]
