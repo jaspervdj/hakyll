@@ -85,7 +85,10 @@ instance Monoid (Context a) where
 
 --------------------------------------------------------------------------------
 field' :: String -> (Item a -> Compiler ContextField) -> Context a
-field' key value = Context $ \k _ i -> if k == key then value i else empty
+field' key value = Context $ \k _ i ->
+    if k == key
+        then value i
+        else fail $ "Tried field " ++ key
 
 
 --------------------------------------------------------------------------------
@@ -106,7 +109,7 @@ boolField
     -> Context a
 boolField name f = field name (\i -> if f i
     then pure (error $ unwords ["no string value for bool field:",name])
-    else empty)
+    else fail $ "Field " ++ name ++ " is false")
 
 
 --------------------------------------------------------------------------------
@@ -131,7 +134,7 @@ functionField :: String -> ([String] -> Item a -> Compiler String) -> Context a
 functionField name value = Context $ \k args i ->
     if k == name
         then StringField <$> value args i
-        else empty
+        else fail $ "Tried function field " ++ name
 
 
 --------------------------------------------------------------------------------
@@ -157,7 +160,7 @@ snippetField :: Context String
 snippetField = functionField "snippet" f
   where
     f [contentsPath] _ = loadBody (fromFilePath contentsPath)
-    f _              i = error $
+    f _              i = fail $
         "Too many arguments to function 'snippet()' in item " ++
             show (itemIdentifier i)
 
@@ -198,15 +201,19 @@ bodyField key = field key $ return . itemBody
 -- | Map any field to its metadata value, if present
 metadataField :: Context a
 metadataField = Context $ \k _ i -> do
-    value <- getMetadataField (itemIdentifier i) k
-    maybe empty (return . StringField) value
+    let id = itemIdentifier i
+        empty' = fail $ "No '" ++ k ++ "' field in metadata of item " ++ show id
+    value <- getMetadataField id k
+    maybe empty' (return . StringField) value
 
 
 --------------------------------------------------------------------------------
 -- | Absolute url to the resulting item
 urlField :: String -> Context a
-urlField key = field key $
-    fmap (maybe empty toUrl) . getRoute . itemIdentifier
+urlField key = field key $ \i -> do
+    let id = itemIdentifier i
+        empty' = fail $ "No route url found for item " ++ show id
+    fmap (maybe empty' toUrl) $ getRoute id
 
 
 --------------------------------------------------------------------------------

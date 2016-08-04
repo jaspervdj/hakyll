@@ -31,7 +31,7 @@ module Hakyll.Core.Compiler.Internal
 import           Control.Applicative            (Alternative (..))
 import           Control.Exception              (SomeException, handle)
 import           Control.Monad                  (forM_)
-import           Control.Monad.Except            (MonadError (..))
+import           Control.Monad.Except           (MonadError (..))
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
 
@@ -182,7 +182,7 @@ instance Alternative Compiler where
         logger <- compilerLogger <$> compilerAsk
         forM_ es $ \e -> compilerUnsafeIO $ Logger.debug logger $
             "Hakyll.Core.Compiler.Internal: Alternative failed: " ++ e
-        y
+        compilerCatch y $ compilerThrow . (es++)
     {-# INLINE (<|>) #-}
 
 
