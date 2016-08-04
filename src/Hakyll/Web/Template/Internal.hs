@@ -138,8 +138,8 @@ applyTemplate' tes context x = go tes
             return $ intercalate sep bs
 
     applyElem (Partial e) = do
-        p    <- applyExpr e >>= getString e
-        tpl' <- loadBody (fromFilePath p)
+        p             <- applyExpr e >>= getString e
+        Template tpl' <- loadBody (fromFilePath p)
         applyTemplate' tpl' context x
 
     ---------------------------------------------------------------------------
