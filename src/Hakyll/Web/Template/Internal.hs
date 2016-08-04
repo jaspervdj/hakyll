@@ -78,7 +78,13 @@ readTemplateItem item = let file = show $ itemIdentifier item
 
 --------------------------------------------------------------------------------
 readTemplateFile :: FilePath -> String -> Template
-readTemplateFile origin =  template origin . readTemplateElemsFile origin
+readTemplateFile origin = either error (template origin)
+                        . parseTemplateElemsFile origin
+
+--------------------------------------------------------------------------------
+compileTemplateFile :: FilePath -> String -> Compiler Template
+compileTemplateFile origin = either fail (return . template origin)
+                           . parseTemplateElemsFile origin
 
 --------------------------------------------------------------------------------
 -- | Read a template, without metadata header
@@ -86,7 +92,7 @@ templateBodyCompiler :: Compiler (Item Template)
 templateBodyCompiler = cached "Hakyll.Web.Template.templateBodyCompiler" $ do
     item <- getResourceBody
     file <- getResourceFilePath
-    return $ fmap (readTemplateFile file) item
+    withItemBody (compileTemplateFile file) item
 
 --------------------------------------------------------------------------------
 -- | Read complete file contents as a template
@@ -94,7 +100,7 @@ templateCompiler :: Compiler (Item Template)
 templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
     item <- getResourceString
     file <- getResourceFilePath
-    return $ fmap (readTemplateFile file) item
+    withItemBody (compileTemplateFile file) item
 
 
 --------------------------------------------------------------------------------
@@ -220,5 +226,5 @@ applyAsTemplate context item = applyTemplate (readTemplateItem item) context ite
 unsafeReadTemplateFile :: FilePath -> Compiler Template
 unsafeReadTemplateFile file = do
     tpl <- unsafeCompiler $ readFile file
-    pure $ readTemplateFile file tpl
+    compileTemplateFile file tpl
 
