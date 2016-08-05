@@ -146,7 +146,7 @@ module Hakyll.Web.Template
     , loadAndApplyTemplate
     , applyAsTemplate
     , readTemplate
-    , readTemplateItem
+    , compileTemplateItem
     , unsafeReadTemplateFile
     ) where
 

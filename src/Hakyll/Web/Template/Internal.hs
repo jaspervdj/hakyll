@@ -14,7 +14,7 @@ module Hakyll.Web.Template.Internal
     , loadAndApplyTemplate
     , applyAsTemplate
     , readTemplate
-    , readTemplateItem
+    , compileTemplateItem
     , unsafeReadTemplateFile
 
     , module Hakyll.Web.Template.Internal.Element
@@ -68,13 +68,17 @@ template p = flip Template p . trim
 
 
 --------------------------------------------------------------------------------
+-- | Parse a string into a template.
+-- You should prefer 'compileTemplateItem' over this.
 readTemplate :: String -> Template
 readTemplate = readTemplateFile "{literal}"
 
 --------------------------------------------------------------------------------
-readTemplateItem :: Item String -> Template
-readTemplateItem item = let file = show $ itemIdentifier item
-                        in readTemplateFile file (itemBody item)
+-- | Parse an item body into a template.
+-- Provides useful error messages in the 'Compiler' monad.
+compileTemplateItem :: Item String -> Compiler Template
+compileTemplateItem item = let file = show $ itemIdentifier item
+                           in compileTemplateFile file (itemBody item)
 
 --------------------------------------------------------------------------------
 readTemplateFile :: FilePath -> String -> Template
@@ -104,6 +108,7 @@ templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
 
 
 --------------------------------------------------------------------------------
+-- | Interpolate template expressions from context values in a page
 applyTemplate :: Template                -- ^ Template
               -> Context a               -- ^ Context
               -> Item a                  -- ^ Page
@@ -219,7 +224,9 @@ loadAndApplyTemplate identifier context item = do
 applyAsTemplate :: Context String          -- ^ Context
                 -> Item String             -- ^ Item and template
                 -> Compiler (Item String)  -- ^ Resulting item
-applyAsTemplate context item = applyTemplate (readTemplateItem item) context item
+applyAsTemplate context item = do
+    tpl <- compileTemplateItem item
+    applyTemplate tpl context item
 
 
 --------------------------------------------------------------------------------

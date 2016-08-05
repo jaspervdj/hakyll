@@ -62,6 +62,7 @@ getUnderlyingExtension = takeExtension . toFilePath <$> getUnderlying
 
 
 --------------------------------------------------------------------------------
+-- | Create an item from the underlying identifier and a given value.
 makeItem :: a -> Compiler (Item a)
 makeItem x = do
     identifier <- getUnderlying
@@ -141,6 +142,10 @@ saveSnapshot snapshot item = do
 
 
 --------------------------------------------------------------------------------
+-- | Turn on caching for a compilation value to avoid recomputing it
+-- on subsequent Hakyll runs.
+-- The storage key consists of the underlying identifier of the compiled
+-- ressource and the given name.
 cached :: (Binary a, Typeable a)
        => String
        -> Compiler a
