@@ -77,7 +77,7 @@ testCompilerDone store provider underlying compiler = do
     result <- testCompiler store provider underlying compiler
     case result of
         CompilerDone x _    -> return x
-        CompilerError e     -> error $
+        CompilerError _ e   -> error $
             "TestSuite.Util.testCompilerDone: compiler " ++ show underlying ++
             " threw: " ++ intercalate "; " e
         CompilerRequire i _ -> error $

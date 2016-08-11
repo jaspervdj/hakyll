@@ -107,15 +107,15 @@ field' :: String -> (Item a -> Compiler ContextField) -> Context a
 field' key value = Context $ \k _ i ->
     if k == key
         then value i
-        else fail $ "Tried field " ++ key
+        else compilerFail $ "Tried field " ++ key
 
 
 --------------------------------------------------------------------------------
 -- | Constructs a new field for a 'Context'.
 -- If the key matches, the compiler is run and its result is substituted in the
 -- template.
--- If the compiler returns an error ('fail', 'empty' etc), the field will be
--- considered non-existent.
+-- If the compiler returns 'empty', the field will be considered non-existent.
+-- If the compiler throws an error ('fail'), the template breaks.
 field
     :: String                      -- ^ Key
     -> (Item a -> Compiler String) -- ^ Function that constructs a value based
@@ -132,7 +132,7 @@ boolField
     -> Context a
 boolField name f = field name (\i -> if f i
     then pure (error $ unwords ["no string value for bool field:",name])
-    else fail $ "Field " ++ name ++ " is false")
+    else compilerFail $ "Field " ++ name ++ " is false")
 
 
 --------------------------------------------------------------------------------
@@ -171,7 +171,7 @@ functionField :: String                                  -- ^ Key
 functionField name value = Context $ \k args i ->
     if k == name
         then StringField <$> value args i
-        else fail $ "Tried function field " ++ name
+        else compilerFail $ "Tried function field " ++ name
 
 
 --------------------------------------------------------------------------------
@@ -248,7 +248,7 @@ bodyField key = field key $ return . itemBody
 metadataField :: Context a
 metadataField = Context $ \k _ i -> do
     let id = itemIdentifier i
-        empty' = fail $ "No '" ++ k ++ "' field in metadata of item " ++ show id
+        empty' = compilerFail $ "No '" ++ k ++ "' field in metadata of item " ++ show id
     value <- getMetadataField id k
     maybe empty' (return . StringField) value
 
@@ -425,7 +425,7 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
 -- | Constantly reports any field as missing. Mostly for internal usage,
 -- it is the last choice in every context used in a template application.
 missingField :: Context a
-missingField = Context $ \k _ _ -> fail $
+missingField = Context $ \k _ _ -> compilerFail $
     "Missing field '" ++ k ++ "' in context"
 
 parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime

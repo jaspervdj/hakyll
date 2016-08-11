@@ -17,6 +17,7 @@ module Hakyll.Core.Compiler.Internal
     , compilerTell
     , compilerAsk
     , compilerThrow
+    , compilerFail
     , compilerCatch
     , compilerResult
     , compilerUnsafeIO
@@ -41,7 +42,7 @@ import           Hakyll.Core.Configuration
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
-import           Hakyll.Core.Logger             (Logger)
+import           Hakyll.Core.Logger             (Logger, Verbosity)
 import qualified Hakyll.Core.Logger             as Logger
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
@@ -93,7 +94,7 @@ instance Monoid CompilerWrite where
 data CompilerResult a where
     CompilerDone     :: a -> CompilerWrite -> CompilerResult a
     CompilerSnapshot :: Snapshot -> Compiler a -> CompilerResult a
-    CompilerError    :: [String] -> CompilerResult a
+    CompilerError    :: Verbosity -> [String] -> CompilerResult a
     CompilerRequire  :: (Identifier, Snapshot) -> Compiler a -> CompilerResult a
 
 
@@ -112,7 +113,7 @@ instance Functor Compiler where
         return $ case res of
             CompilerDone x w      -> CompilerDone (f x) w
             CompilerSnapshot s c' -> CompilerSnapshot s (fmap f c')
-            CompilerError e       -> CompilerError e
+            CompilerError v e     -> CompilerError v e
             CompilerRequire i c'  -> CompilerRequire i (fmap f c')
     {-# INLINE fmap #-}
 
@@ -132,13 +133,13 @@ instance Monad Compiler where
                     CompilerSnapshot s c' -> CompilerSnapshot s $ do
                         compilerTell w  -- Save dependencies!
                         c'
-                    CompilerError e       -> CompilerError e
+                    CompilerError v e     -> CompilerError v e
                     CompilerRequire i c'  -> CompilerRequire i $ do
                         compilerTell w  -- Save dependencies!
                         c'
 
             CompilerSnapshot s c' -> return $ CompilerSnapshot s (c' >>= f)
-            CompilerError e       -> return $ CompilerError e
+            CompilerError v e     -> return $ CompilerError v e
             CompilerRequire i c'  -> return $ CompilerRequire i (c' >>= f)
     {-# INLINE (>>=) #-}
 
@@ -164,7 +165,10 @@ instance MonadMetadata Compiler where
 --------------------------------------------------------------------------------
 instance MonadError [String] Compiler where
   throwError = compilerThrow
-  catchError = compilerCatch
+  catchError = (. matchErr) . compilerCatch
+    where
+      matchErr f Logger.Error es = f es
+      matchErr f _            _  = f []
 
 
 --------------------------------------------------------------------------------
@@ -172,17 +176,17 @@ runCompiler :: Compiler a -> CompilerRead -> IO (CompilerResult a)
 runCompiler compiler read' = handle handler $ unCompiler compiler read'
   where
     handler :: SomeException -> IO (CompilerResult a)
-    handler e = return $ CompilerError [show e]
+    handler e = return $ CompilerError Logger.Error [show e]
 
 
 --------------------------------------------------------------------------------
 instance Alternative Compiler where
-    empty   = compilerThrow []
-    x <|> y = compilerCatch x $ \es -> do
-        logger <- compilerLogger <$> compilerAsk
-        forM_ es $ \e -> compilerUnsafeIO $ Logger.debug logger $
-            "Hakyll.Core.Compiler.Internal: Alternative failed: " ++ e
-        compilerCatch y $ compilerThrow . (es++)
+    empty   = compilerError Logger.Debug []
+    x <|> y = compilerCatch x $ \vx es -> compilerCatch y $ \vy ->
+        case vx `compare` vy of
+            LT -> compilerError vx . const es
+            EQ -> compilerError vx . (es++)
+            GT -> compilerError vy
     {-# INLINE (<|>) #-}
 
 
@@ -199,19 +203,25 @@ compilerTell deps = Compiler $ \_ -> return $ CompilerDone () deps
 
 
 --------------------------------------------------------------------------------
+compilerError :: Verbosity -> [String] -> Compiler a
+compilerError v es = Compiler $ \_ -> return $ CompilerError v es
+{-# INLINE compilerError #-}
+
 compilerThrow :: [String] -> Compiler a
-compilerThrow es = Compiler $ \_ -> return $ CompilerError es
-{-# INLINE compilerThrow #-}
+compilerThrow = compilerError Logger.Error
+
+compilerFail :: String -> Compiler a
+compilerFail = compilerError Logger.Message . return
 
 
 --------------------------------------------------------------------------------
-compilerCatch :: Compiler a -> ([String] -> Compiler a) -> Compiler a
+compilerCatch :: Compiler a -> (Verbosity -> [String] -> Compiler a) -> Compiler a
 compilerCatch (Compiler x) f = Compiler $ \r -> do
     res <- x r
     case res of
         CompilerDone res' w  -> return (CompilerDone res' w)
         CompilerSnapshot s c -> return (CompilerSnapshot s (compilerCatch c f))
-        CompilerError e      -> unCompiler (f e) r
+        CompilerError v e    -> unCompiler (f v e) r
         CompilerRequire i c  -> return (CompilerRequire i (compilerCatch c f))
 {-# INLINE compilerCatch #-}
 

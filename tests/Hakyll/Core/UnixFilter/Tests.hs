@@ -16,6 +16,7 @@ import qualified Test.HUnit                     as H
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
+import           Hakyll.Core.Logger
 import           Hakyll.Core.UnixFilter
 import           TestSuite.Util
 
@@ -49,8 +50,8 @@ unixFilterFalse = do
     provider <- newTestProvider store
     result   <- testCompiler store provider "russian.md" compiler
     H.assert $ case result of
-        CompilerError es -> any ("exit code" `isInfixOf`) es
-        _                -> False
+        CompilerError Error es -> any ("exit code" `isInfixOf`) es
+        _                      -> False
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "false" [])

@@ -23,7 +23,6 @@ module Hakyll.Web.Template.Internal
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad.Except                 (MonadError (..))
 import           Data.Binary                          (Binary)
 import           Data.List                            (intercalate)
 import           Data.Typeable                        (Typeable)
@@ -34,8 +33,10 @@ import           Prelude                              hiding (id)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
+import           Hakyll.Core.Logger                   (Verbosity (Error))
 import           Hakyll.Core.Writable
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal.Element
@@ -126,13 +127,13 @@ applyTemplate'
     -> Context a         -- ^ Context
     -> Item a            -- ^ Page
     -> Compiler String   -- ^ Resulting item
-applyTemplate' tes name context x = go tes `catchError` handler
+applyTemplate' tes name context x = go tes `compilerCatch` handler
   where
     context' :: String -> [String] -> Item a -> Compiler ContextField
     context' = unContext (context `mappend` missingField)
 
     itemName = show $ itemIdentifier x
-    handler es = fail $ "Hakyll.Web.Template.applyTemplate: Failed to " ++
+    handler _ es = fail $ "Hakyll.Web.Template.applyTemplate: Failed to " ++
         (if name == itemName
           then "interpolate template in item " ++ name
           else "apply template " ++ name ++ " to item " ++ itemName) ++
@@ -157,11 +158,14 @@ applyTemplate' tes name context x = go tes `catchError` handler
 
     applyElem Escaped = return "$"
 
-    applyElem (If e t mf) = (applyExpr e >> go t) `catchError` handler
+    applyElem (If e t mf) = do
+        c <- (applyExpr e >> return True) `compilerCatch` handler
+        if c
+            then go t
+            else maybe (return "") go mf
       where
-        handler _ = case mf of
-            Nothing -> return ""
-            Just f  -> go f
+        handler Error es = compilerThrow es
+        handler _     _  = return False
 
     applyElem (For e b s) = applyExpr e >>= \cf -> case cf of
         StringField _  -> fail $

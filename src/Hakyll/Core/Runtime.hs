@@ -199,9 +199,9 @@ chase trail id'
         result <- liftIO $ runCompiler compiler read'
         case result of
             -- Rethrow error
-            CompilerError [] -> throwError
+            CompilerError _ [] -> throwError $
                 "Compiler failed but no info given, try running with -v?"
-            CompilerError es -> throwError $ intercalate "; " es
+            CompilerError _ es -> throwError $ intercalate "; " es
 
             -- Signal that a snapshot was saved ->
             CompilerSnapshot snapshot c -> do
