@@ -223,6 +223,7 @@ Test-suite hakyll-tests
     Hakyll.Core.Store.Tests
     Hakyll.Core.UnixFilter.Tests
     Hakyll.Core.Util.String.Tests
+    Hakyll.Web.CompressCss.Tests
     Hakyll.Web.Html.RelativizeUrls.Tests
     Hakyll.Web.Html.Tests
     Hakyll.Web.Pandoc.FileType.Tests
