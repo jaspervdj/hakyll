@@ -33,16 +33,24 @@ compressCss = compressSeparators . stripComments . compressWhitespace
 --------------------------------------------------------------------------------
 -- | Compresses certain forms of separators.
 compressSeparators :: String -> String
-compressSeparators =
-    replaceAll "; *}" (const "}") .
-    replaceAll " *([{};]) *" (take 1 . dropWhile isSpace) .
-    replaceAll ";+" (const ";")
-
+compressSeparators [] = []
+compressSeparators str
+    | isPrefixOf "\"" str = head str : retainConstants compressSeparators "\"" (drop 1 str)
+    | isPrefixOf "'" str = head str : retainConstants compressSeparators "'" (drop 1 str)
+    | otherwise =
+        replaceAll "; *}" (const "}") $
+        replaceAll " *([{};]) *" (take 1 . dropWhile isSpace) $
+        replaceAll ";+" (const ";") str
+  where
 
 --------------------------------------------------------------------------------
 -- | Compresses all whitespace.
 compressWhitespace :: String -> String
-compressWhitespace = replaceAll "[ \t\n\r]+" (const " ")
+compressWhitespace [] = []
+compressWhitespace str
+    | isPrefixOf "\"" str = head str : retainConstants compressWhitespace "\"" (drop 1 str)
+    | isPrefixOf "'" str = head str : retainConstants compressWhitespace "'" (drop 1 str)
+    | otherwise = replaceAll "[ \t\n\r]+" (const " ") str
 
 
 --------------------------------------------------------------------------------
@@ -57,3 +65,11 @@ stripComments str
         | null str' = []
         | isPrefixOf "*/" str' = drop 2 str'
         | otherwise = eatComments $ drop 1 str'
+
+--------------------------------------------------------------------------------
+-- | Helper function to handle string constants correctly.
+retainConstants :: (String -> String) -> String -> String -> String
+retainConstants f delim str
+    | null str = []
+    | isPrefixOf delim str = head str : f (drop 1 str)
+    | otherwise = head str : retainConstants f delim (drop 1 str)
