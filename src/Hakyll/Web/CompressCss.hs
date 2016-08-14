@@ -37,13 +37,12 @@ compressSeparators [] = []
 compressSeparators str
     | isPrefixOf "\"" str = head str : retainConstants compressSeparators "\"" (drop 1 str)
     | isPrefixOf "'" str = head str : retainConstants compressSeparators "'" (drop 1 str)
-    | stripFirst = compressSeparators (drop 1 str)
+    | stripFirst  = compressSeparators (drop 1 str)
     | stripSecond = compressSeparators (head str : (drop 2 str))
-    | otherwise = head str : compressSeparators (drop 1 str)
+    | otherwise   = head str : compressSeparators (drop 1 str)
   where
-    prefix p = isPrefixOf p str
-    stripFirst = or $ map prefix ["  ", " {", " }", ";;", ";}"]
-    stripSecond = or $ map prefix ["{ ", "} ", "; "]
+    stripFirst  = or $ map (isOfPrefix str) ["  ", " {", " }", ";;", ";}"]
+    stripSecond = or $ map (isOfPrefix str) ["{ ", "} ", "; "]
 
 --------------------------------------------------------------------------------
 -- | Compresses all whitespace.
@@ -56,9 +55,8 @@ compressWhitespace str
     | replaceTwo = compressWhitespace (' ' : (drop 2 str))
     | otherwise = head str : compressWhitespace (drop 1 str)
   where
-    prefix p = isPrefixOf p str
-    replaceOne = or $ map prefix ["\t", "\n", "\r"]
-    replaceTwo = or $ map prefix [" \t", " \n", " \r", "  "]
+    replaceOne = or $ map (isOfPrefix str) ["\t", "\n", "\r"]
+    replaceTwo = or $ map (isOfPrefix str) [" \t", " \n", " \r", "  "]
 
 --------------------------------------------------------------------------------
 -- | Function that strips CSS comments away.
@@ -82,3 +80,8 @@ retainConstants f delim str
     | null str = []
     | isPrefixOf delim str = head str : f (drop 1 str)
     | otherwise = head str : retainConstants f delim (drop 1 str)
+
+--------------------------------------------------------------------------------
+-- | Helper function to determine whether a string is a substring.
+isOfPrefix :: String -> String -> Bool
+isOfPrefix = flip isPrefixOf
