@@ -35,12 +35,12 @@ compressCss = compressSeparators . stripComments . compressWhitespace
 compressSeparators :: String -> String
 compressSeparators [] = []
 compressSeparators str
-    | isPrefixOf "\"" str = head str : retainConstants compressSeparators "\"" (drop 1 str)
-    | isPrefixOf "'" str = head str : retainConstants compressSeparators "'" (drop 1 str)
+    | isConstant = head str : retainConstants compressSeparators (head str) (drop 1 str)
     | stripFirst  = compressSeparators (drop 1 str)
     | stripSecond = compressSeparators (head str : (drop 2 str))
     | otherwise   = head str : compressSeparators (drop 1 str)
   where
+    isConstant  = or $ map (isOfPrefix str) ["\"", "'"]
     stripFirst  = or $ map (isOfPrefix str) ["  ", " {", " }", ";;", ";}"]
     stripSecond = or $ map (isOfPrefix str) ["{ ", "} ", "; "]
 
@@ -49,12 +49,12 @@ compressSeparators str
 compressWhitespace :: String -> String
 compressWhitespace [] = []
 compressWhitespace str
-    | isPrefixOf "\"" str = head str : retainConstants compressWhitespace "\"" (drop 1 str)
-    | isPrefixOf "'" str = head str : retainConstants compressWhitespace "'" (drop 1 str)
+    | isConstant = head str : retainConstants compressWhitespace (head str) (drop 1 str)
     | replaceOne = compressWhitespace (' ' : (drop 1 str))
     | replaceTwo = compressWhitespace (' ' : (drop 2 str))
     | otherwise = head str : compressWhitespace (drop 1 str)
   where
+    isConstant = or $ map (isOfPrefix str) ["\"", "'"]
     replaceOne = or $ map (isOfPrefix str) ["\t", "\n", "\r"]
     replaceTwo = or $ map (isOfPrefix str) [" \t", " \n", " \r", "  "]
 
@@ -63,11 +63,11 @@ compressWhitespace str
 stripComments :: String -> String
 stripComments [] = []
 stripComments str
-    | isPrefixOf "\"" str = head str : retainConstants stripComments "\"" (drop 1 str)
-    | isPrefixOf "'" str = head str : retainConstants stripComments "'" (drop 1 str)
+    | isConstant = head str : retainConstants stripComments (head str) (drop 1 str)
     | isPrefixOf "/*" str = stripComments $ eatComments $ drop 2 str
     | otherwise = head str : stripComments (drop 1 str)
   where
+    isConstant  = or $ map (isOfPrefix str) ["\"", "'"]
     eatComments str'
         | null str' = []
         | isPrefixOf "*/" str' = drop 2 str'
@@ -75,10 +75,10 @@ stripComments str
 
 --------------------------------------------------------------------------------
 -- | Helper function to handle string constants correctly.
-retainConstants :: (String -> String) -> String -> String -> String
+retainConstants :: (String -> String) -> Char -> String -> String
 retainConstants f delim str
     | null str = []
-    | isPrefixOf delim str = head str : f (drop 1 str)
+    | isPrefixOf [delim] str = head str : f (drop 1 str)
     | otherwise = head str : retainConstants f delim (drop 1 str)
 
 --------------------------------------------------------------------------------
