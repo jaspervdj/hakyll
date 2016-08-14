@@ -52,16 +52,13 @@ compressWhitespace [] = []
 compressWhitespace str
     | isPrefixOf "\"" str = head str : retainConstants compressWhitespace "\"" (drop 1 str)
     | isPrefixOf "'" str = head str : retainConstants compressWhitespace "'" (drop 1 str)
-    | isPrefixOf "\t" str = compressWhitespace (' ' : (drop 1 str))
-    | isPrefixOf "\n" str = compressWhitespace (' ' : (drop 1 str))
-    | isPrefixOf "\r" str = compressWhitespace (' ' : (drop 1 str))
-
-    | isPrefixOf " \t" str = compressWhitespace (' ' : (drop 2 str))
-    | isPrefixOf " \n" str = compressWhitespace (' ' : (drop 2 str))
-    | isPrefixOf " \r" str = compressWhitespace (' ' : (drop 2 str))
-    | isPrefixOf "  " str = compressWhitespace (' ' : (drop 2 str))
+    | replaceOne = compressWhitespace (' ' : (drop 1 str))
+    | replaceTwo = compressWhitespace (' ' : (drop 2 str))
     | otherwise = head str : compressWhitespace (drop 1 str)
-
+  where
+    prefix p = isPrefixOf p str
+    replaceOne = or $ map prefix ["\t", "\n", "\r"]
+    replaceTwo = or $ map prefix [" \t", " \n", " \r", "  "]
 
 --------------------------------------------------------------------------------
 -- | Function that strips CSS comments away.
