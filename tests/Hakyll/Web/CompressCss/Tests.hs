@@ -30,7 +30,10 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
             compressCss "abc '  \t\n\r  ' xyz"
 
           -- strip comments
-        , ""              @=? compressCss "/* abc { } ;; \n\t\r */"
+        , "before after"  @=? compressCss "before /* abc { } ;; \n\t\r */ after"
+          -- don't strip comments inside constants
+        , "before \"/* abc { } ;; \n\t\r */\" after" 
+                          @=? compressCss "before \"/* abc { } ;; \n\t\r */\" after"
 
           -- compress separators
         , "}"             @=? compressCss ";   }"

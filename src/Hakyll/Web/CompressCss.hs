@@ -65,6 +65,8 @@ compressWhitespace str
 stripComments :: String -> String
 stripComments [] = []
 stripComments str
+    | isPrefixOf "\"" str = head str : retainConstants stripComments "\"" (drop 1 str)
+    | isPrefixOf "'" str = head str : retainConstants stripComments "'" (drop 1 str)
     | isPrefixOf "/*" str = stripComments $ eatComments $ drop 2 str
     | otherwise = head str : stripComments (drop 1 str)
   where
