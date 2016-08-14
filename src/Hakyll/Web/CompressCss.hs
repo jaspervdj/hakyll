@@ -8,14 +8,12 @@ module Hakyll.Web.CompressCss
 
 
 --------------------------------------------------------------------------------
-import           Data.Char               (isSpace)
 import           Data.List               (isPrefixOf)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Item
-import           Hakyll.Core.Util.String
 
 
 --------------------------------------------------------------------------------
