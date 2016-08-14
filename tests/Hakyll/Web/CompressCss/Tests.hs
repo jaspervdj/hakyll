@@ -51,6 +51,8 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
           -- don't compress whitespace around separators in constants in the middle of a string
         , "abc '{ '"      @=? compressCss "abc '{ '"
         , "abc \"{ \""    @=? compressCss "abc \"{ \""
+          -- compress whitespace after colons
+        , "abc:xyz"       @=? compressCss "abc : xyz"
           -- compress multiple semicolons
         , ";"             @=? compressCss ";;;;;;;"
         ]
