@@ -23,6 +23,11 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
           -- compress whitespace
           " something something " @=?
             compressCss " something  \n\t\r  something "
+          -- do not compress whitespace in constants
+        , "abc \"  \t\n\r  \" xyz" @=?
+            compressCss "abc \"  \t\n\r  \" xyz"
+        , "abc '  \t\n\r  ' xyz" @=?
+            compressCss "abc '  \t\n\r  ' xyz"
 
           -- strip comments
         , ""              @=? compressCss "/* abc { } ;; \n\t\r */"
@@ -40,7 +45,7 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
           -- don't get irritated by the wrong constant terminator
         , "\"   '   \""   @=? compressCss "\"   '   \""
         , "'   \"   '"    @=? compressCss "'   \"   '"
-          -- don't compress whitespace in constants in the middle of a string
+          -- don't compress whitespace around separators in constants in the middle of a string
         , "abc '{ '"      @=? compressCss "abc '{ '"
         , "abc \"{ \""    @=? compressCss "abc \"{ \""
           -- compress multiple semicolons

@@ -52,7 +52,15 @@ compressWhitespace [] = []
 compressWhitespace str
     | isPrefixOf "\"" str = head str : retainConstants compressWhitespace "\"" (drop 1 str)
     | isPrefixOf "'" str = head str : retainConstants compressWhitespace "'" (drop 1 str)
-    | otherwise = replaceAll "[ \t\n\r]+" (const " ") str
+    | isPrefixOf "\t" str = compressWhitespace (' ' : (drop 1 str))
+    | isPrefixOf "\n" str = compressWhitespace (' ' : (drop 1 str))
+    | isPrefixOf "\r" str = compressWhitespace (' ' : (drop 1 str))
+
+    | isPrefixOf " \t" str = compressWhitespace (' ' : (drop 2 str))
+    | isPrefixOf " \n" str = compressWhitespace (' ' : (drop 2 str))
+    | isPrefixOf " \r" str = compressWhitespace (' ' : (drop 2 str))
+    | isPrefixOf "  " str = compressWhitespace (' ' : (drop 2 str))
+    | otherwise = head str : compressWhitespace (drop 1 str)
 
 
 --------------------------------------------------------------------------------
