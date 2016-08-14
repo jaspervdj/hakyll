@@ -25,34 +25,23 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
             compressCss " something  \n\t\r  something "
 
           -- strip comments
-        , "" @=?
-            compressCss "/* abc { } ;; \n\t\r */"
+        , ""              @=? compressCss "/* abc { } ;; \n\t\r */"
 
           -- compress separators
-        , "}" @=?
-            compressCss ";   }"
-        , "{};" @=?
-            compressCss "  {  }  ;  "
+        , "}"             @=? compressCss ";   }"
+        , "{};"           @=? compressCss "  {  }  ;  "
           -- but do not compress separators inside of constants
-        , "\"  { } ;  \"" @=?
-            compressCss "\"  { } ;  \""
+        , "\"  { } ;  \"" @=? compressCss "\"  { } ;  \""
           -- don't compress separators at the start or end of constants
-        , "\" }\"" @=?
-            compressCss "\" }\""
-        , "\"{ \"" @=?
-            compressCss "\"{ \""
+        , "\" }\""        @=? compressCss "\" }\""
+        , "\"{ \""        @=? compressCss "\"{ \""
           -- don't get irritated by the wrong constant terminator
-        , "\"   '   \"" @=?
-            compressCss "\"   '   \""
-        , "'   \"   '" @=?
-            compressCss "'   \"   '"
+        , "\"   '   \""   @=? compressCss "\"   '   \""
+        , "'   \"   '"    @=? compressCss "'   \"   '"
           -- don't compress whitespace in constants in the middle of a string
-        , "abc '{ '" @=?
-            compressCss "abc '{ '"
-        , "abc \"{ \"" @=?
-            compressCss "abc \"{ \""
+        , "abc '{ '"      @=? compressCss "abc '{ '"
+        , "abc \"{ \""    @=? compressCss "abc \"{ \""
           -- compress multiple semicolons
-        , ";" @=?
-            compressCss ";;;;;;;"
+        , ";"             @=? compressCss ";;;;;;;"
         ]
     ]
