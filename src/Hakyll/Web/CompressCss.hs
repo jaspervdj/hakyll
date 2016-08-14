@@ -39,11 +39,10 @@ compressSeparators str
     | isPrefixOf "'" str = head str : retainConstants compressSeparators "'" (drop 1 str)
     | stripFirst = compressSeparators (drop 1 str)
     | stripSecond = compressSeparators (head str : (drop 2 str))
-    | isPrefixOf ";}" str = '}' : compressSeparators (drop 2 str)
     | otherwise = head str : compressSeparators (drop 1 str)
   where
     prefix p = isPrefixOf p str
-    stripFirst = or $ map prefix ["  ", " {", " }", ";;"]
+    stripFirst = or $ map prefix ["  ", " {", " }", ";;", ";}"]
     stripSecond = or $ map prefix ["{ ", "} ", "; "]
 
 --------------------------------------------------------------------------------
