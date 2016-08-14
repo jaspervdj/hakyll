@@ -46,11 +46,13 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
             compressCss "\"   '   \""
         , "'   \"   '" @=?
             compressCss "'   \"   '"
+          -- don't compress whitespace in constants in the middle of a string
+        , "abc '{ '" @=?
+            compressCss "abc '{ '"
+        , "abc \"{ \"" @=?
+            compressCss "abc \"{ \""
+          -- compress multiple semicolons
         , ";" @=?
             compressCss ";;;;;;;"
-
-          -- some real-life css
-        , "a:after{content: \" (\" attr(href) \")\"}" @=?
-            compressCss "a:after {  content: \" (\" attr(href) \")\"; }"
         ]
     ]

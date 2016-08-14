@@ -37,11 +37,17 @@ compressSeparators [] = []
 compressSeparators str
     | isPrefixOf "\"" str = head str : retainConstants compressSeparators "\"" (drop 1 str)
     | isPrefixOf "'" str = head str : retainConstants compressSeparators "'" (drop 1 str)
-    | otherwise =
-        replaceAll "; *}" (const "}") $
-        replaceAll " *([{};]) *" (take 1 . dropWhile isSpace) $
-        replaceAll ";+" (const ";") str
-  where
+    | isPrefixOf "  " str = compressSeparators (drop 1 str)
+    | isPrefixOf " {" str = compressSeparators (drop 1 str)
+    | isPrefixOf " }" str = compressSeparators (drop 1 str)
+    | isPrefixOf " ;" str = compressSeparators (drop 1 str)
+    | isPrefixOf ";;" str = compressSeparators (drop 1 str)
+    | isPrefixOf "{ " str = compressSeparators (head str : (drop 2 str))
+    | isPrefixOf "} " str = compressSeparators (head str : (drop 2 str))
+    | isPrefixOf "; " str = compressSeparators (head str : (drop 2 str))
+    | isPrefixOf ";}" str = '}' : compressSeparators (drop 2 str)
+    | otherwise = head str : compressSeparators (drop 1 str)
+
 
 --------------------------------------------------------------------------------
 -- | Compresses all whitespace.
