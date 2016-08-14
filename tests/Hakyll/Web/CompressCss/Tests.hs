@@ -36,6 +36,11 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
           -- but do not compress separators inside of constants
         , "\"  { } ;  \"" @=?
             compressCss "\"  { } ;  \""
+          -- don't compress separators at the start or end of constants
+        , "\" }\"" @=?
+            compressCss "\" }\""
+        , "\"{ \"" @=?
+            compressCss "\"{ \""
           -- don't get irritated by the wrong constant terminator
         , "\"   '   \"" @=?
             compressCss "\"   '   \""
