@@ -158,6 +158,8 @@ directly with the default Hakyll site.
   [source](https://github.com/klpn/static-dust)
 - <http://www.kuznero.com/>,
   [source](https://github.com/kuznero/kuznero.github.io)
+- <http://nicolerauch.de/>,
+  [source](https://github.com/NicoleRauch/BusinessWebsite)
 
 ## Hakyll 3.X
 
