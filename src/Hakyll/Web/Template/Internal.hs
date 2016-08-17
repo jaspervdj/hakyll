@@ -72,31 +72,30 @@ template p = flip Template p . trim
 -- | Parse a string into a template.
 -- You should prefer 'compileTemplateItem' over this.
 readTemplate :: String -> Template
-readTemplate = readTemplateFile "{literal}"
+readTemplate = either error (template origin) . parseTemplateElemsFile origin
+  where
+    origin = "{literal}"
 
 --------------------------------------------------------------------------------
 -- | Parse an item body into a template.
 -- Provides useful error messages in the 'Compiler' monad.
 compileTemplateItem :: Item String -> Compiler Template
-compileTemplateItem item = let file = show $ itemIdentifier item
+compileTemplateItem item = let file = itemIdentifier item
                            in compileTemplateFile file (itemBody item)
 
 --------------------------------------------------------------------------------
-readTemplateFile :: FilePath -> String -> Template
-readTemplateFile origin = either error (template origin)
-                        . parseTemplateElemsFile origin
-
---------------------------------------------------------------------------------
-compileTemplateFile :: FilePath -> String -> Compiler Template
-compileTemplateFile origin = either fail (return . template origin)
-                           . parseTemplateElemsFile origin
+compileTemplateFile :: Identifier -> String -> Compiler Template
+compileTemplateFile file = either fail (return . template origin)
+                         . parseTemplateElemsFile origin
+  where
+    origin = show file
 
 --------------------------------------------------------------------------------
 -- | Read a template, without metadata header
 templateBodyCompiler :: Compiler (Item Template)
 templateBodyCompiler = cached "Hakyll.Web.Template.templateBodyCompiler" $ do
     item <- getResourceBody
-    file <- getResourceFilePath
+    file <- getUnderlying
     withItemBody (compileTemplateFile file) item
 
 --------------------------------------------------------------------------------
@@ -104,7 +103,7 @@ templateBodyCompiler = cached "Hakyll.Web.Template.templateBodyCompiler" $ do
 templateCompiler :: Compiler (Item Template)
 templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
     item <- getResourceString
-    file <- getResourceFilePath
+    file <- getUnderlying
     withItemBody (compileTemplateFile file) item
 
 
@@ -141,9 +140,6 @@ applyTemplate' tes name context x = go tes `compilerCatch` handler
 
     go = fmap concat . mapM applyElem
 
-    trimError = fail $ "Hakyll.Web.Template.applyTemplate: template not " ++
-        "fully trimmed."
-
     ---------------------------------------------------------------------------
 
     applyElem :: TemplateElement -> Compiler String
@@ -170,9 +166,8 @@ applyTemplate' tes name context x = go tes `compilerCatch` handler
         handler _     _  = return False
 
     applyElem (For e b s) = applyExpr e >>= \cf -> case cf of
-        StringField _  -> fail $
-            "Hakyll.Web.Template.applyTemplateWith: expected ListField but " ++
-            "got StringField for expr " ++ show e
+        NoField        -> expected "ListField" "boolField" e
+        StringField _  -> expected "ListField" "StringField" e
         ListField c xs -> do
             sep <- maybe (return "") go s
             bs  <- mapM (applyTemplate' b name c) xs
@@ -197,10 +192,16 @@ applyTemplate' tes name context x = go tes `compilerCatch` handler
 
     ----------------------------------------------------------------------------
 
+    getString e NoField         = expected "StringField" "boolField" e
     getString _ (StringField s) = return s
-    getString e (ListField _ _) = fail $
-        "Hakyll.Web.Template.applyTemplateWith: expected StringField but " ++
-        "got ListField for expr " ++ show e
+    getString e (ListField _ _) = expected "StringField" "ListField" e
+
+    expected typ act e = fail $ unwords ["Hakyll.Web.Template.applyTemplate:",
+        "expected", typ, "but got", act, "for expr", show e]
+
+    -- expected to never happen with all templates constructed by 'template'
+    trimError = fail $
+        "Hakyll.Web.Template.applyTemplate: template not fully trimmed."
 
 
 --------------------------------------------------------------------------------
@@ -239,5 +240,4 @@ applyAsTemplate context item = do
 unsafeReadTemplateFile :: FilePath -> Compiler Template
 unsafeReadTemplateFile file = do
     tpl <- unsafeCompiler $ readFile file
-    compileTemplateFile file tpl
-
+    compileTemplateFile (fromFilePath file) tpl

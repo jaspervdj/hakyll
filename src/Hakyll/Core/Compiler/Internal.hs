@@ -17,7 +17,7 @@ module Hakyll.Core.Compiler.Internal
     , compilerTell
     , compilerAsk
     , compilerThrow
-    , compilerFail
+    , compilerFailMessage
     , compilerCatch
     , compilerResult
     , compilerUnsafeIO
@@ -214,8 +214,8 @@ compilerError v es = Compiler $ \_ -> return $ CompilerError v es
 compilerThrow :: [String] -> Compiler a
 compilerThrow = compilerError Logger.Error
 
-compilerFail :: String -> Compiler a
-compilerFail = compilerError Logger.Message . return
+compilerFailMessage :: String -> Compiler a
+compilerFailMessage = compilerError Logger.Message . return
 
 
 --------------------------------------------------------------------------------
