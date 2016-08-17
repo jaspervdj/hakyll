@@ -21,6 +21,7 @@ module Hakyll.Core.Compiler.Internal
     , compilerCatch
     , compilerResult
     , compilerUnsafeIO
+    , compilerDebugLog
 
       -- * Utilities
     , compilerTellDependencies
@@ -182,11 +183,14 @@ runCompiler compiler read' = handle handler $ unCompiler compiler read'
 --------------------------------------------------------------------------------
 instance Alternative Compiler where
     empty   = compilerError Logger.Debug []
-    x <|> y = compilerCatch x $ \vx es -> compilerCatch y $ \vy ->
+    x <|> y = compilerCatch x $ \vx exs -> compilerCatch y $ \vy eys ->
         case vx `compare` vy of
-            LT -> compilerError vx . const es
-            EQ -> compilerError vx . (es++)
-            GT -> compilerError vy
+            LT -> log eys >> compilerError vx exs
+            EQ ->            compilerError vx (exs ++ eys)
+            GT -> log exs >> compilerError vy eys
+      where
+        log = compilerDebugLog . map
+            ("Hakyll.Core.Compiler.Internal: Alternative fail suppressed: " ++)
     {-# INLINE (<|>) #-}
 
 
@@ -240,13 +244,17 @@ compilerUnsafeIO io = Compiler $ \_ -> do
     return $ CompilerDone x mempty
 {-# INLINE compilerUnsafeIO #-}
 
+--------------------------------------------------------------------------------
+compilerDebugLog :: [String] -> Compiler ()
+compilerDebugLog ms = do
+  logger <- compilerLogger <$> compilerAsk
+  compilerUnsafeIO $ forM_ ms $ Logger.debug logger
 
 --------------------------------------------------------------------------------
 compilerTellDependencies :: [Dependency] -> Compiler ()
 compilerTellDependencies ds = do
-  logger <- compilerLogger <$> compilerAsk
-  forM_ ds $ \d -> compilerUnsafeIO $ Logger.debug logger $
-      "Hakyll.Core.Compiler.Internal: Adding dependency: " ++ show d
+  compilerDebugLog $ map (\d ->
+      "Hakyll.Core.Compiler.Internal: Adding dependency: " ++ show d) ds
   compilerTell mempty {compilerDependencies = ds}
 {-# INLINE compilerTellDependencies #-}
 

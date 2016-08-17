@@ -164,7 +164,9 @@ applyTemplate' tes name context x = go tes `compilerCatch` handler
             then go t
             else maybe (return "") go mf
       where
-        handler Error es = compilerThrow es
+        handler Error es = compilerDebugLog (map (\err ->
+            "Hakyll.Web.Template.applyTemplate: [ERROR] in 'if' condition " ++
+            "for expr " ++ show e ++ ": " ++ err) es) >> return False
         handler _     _  = return False
 
     applyElem (For e b s) = applyExpr e >>= \cf -> case cf of
