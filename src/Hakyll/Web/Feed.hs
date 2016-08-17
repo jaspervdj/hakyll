@@ -27,6 +27,7 @@ module Hakyll.Web.Feed
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
+import           Hakyll.Core.Util.String (replaceAll)
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.List
@@ -64,9 +65,14 @@ renderFeed feedPath itemPath config itemContext items = do
     feedTpl <- loadTemplate feedPath
     itemTpl <- loadTemplate itemPath
 
-    body <- makeItem =<< applyTemplateList itemTpl itemContext' items
+    protectedItems <- mapM (applyFilter protectCDATA) items
+    body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
     applyTemplate feedTpl feedContext body
   where
+    applyFilter :: (Monad m,Functor f) => (String -> String) -> f String -> m (f String)
+    applyFilter tr str = return $ fmap tr str
+    protectCDATA :: String -> String
+    protectCDATA = replaceAll "]]>" (const "]]&gt;")
     -- Auxiliary: load a template from a datafile
     loadTemplate path = do
         file <- compilerUnsafeIO $ getDataFileName path
