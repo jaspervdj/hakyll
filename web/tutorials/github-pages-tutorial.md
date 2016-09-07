@@ -86,7 +86,7 @@ stack exec myblog build
 Update the local list of remote branches to ensure we're able to checkout the branch we want in the next step.
 
 ```
-git fetch -all
+git fetch --all
 ```
 
 Switch to the `master` branch. 
@@ -142,7 +142,7 @@ stack exec myblog clean
 stack exec myblog build
 
 # Get previous files
-git fetch -all
+git fetch --all
 git checkout -b master --track origin/master
 
 # Overwrite existing files with new files
@@ -168,7 +168,13 @@ git stash pop
 Earlier it was mentioned a flaw is that deleted files will persist in the published site until deleted manually. This is easily overcome by using `rsync` instead of `cp`.
 
 ```
-rsync -a --filter='P _site/' --filter='P _cache/' --filter='P .git/' --filter='P .gitignore' --delete-excluded _site/ .
+rsync -a --filter='P _site/'      \
+         --filter='P _cache/'     \
+         --filter='P .git/'       \
+         --filter='P .gitignore'  \
+         --filter='P .stack-work' \
+         --delete-excluded        \
+         _site/ .
 ```
 
 The only drawback this approach has is the requirement that *every* file in your site "go through" Hakyll. Fortunately, in many cases this is not an issue.
