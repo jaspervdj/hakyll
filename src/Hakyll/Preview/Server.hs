@@ -24,11 +24,12 @@ staticServer :: Logger               -- ^ Logger
              -> IO ()                -- ^ Blocks forever
 staticServer logger directory host port = do
     Logger.header logger $ "Listening on http://" ++ host ++ ":" ++ show port
-    let settings = Warp.setLogger noLog
-                 $ Warp.setHost (fromString host)
-                 $ Warp.setPort port Warp.defaultSettings
-        waiApp = Static.staticApp (Static.defaultWebAppSettings directory)
-    Warp.runSettings settings waiApp
+    Warp.runSettings warpSettings $
+        Static.staticApp (Static.defaultFileServerSettings directory)
+  where
+    warpSettings = Warp.setLogger noLog
+        $ Warp.setHost (fromString host)
+        $ Warp.setPort port Warp.defaultSettings
 
 noLog :: Wai.Request -> Status -> Maybe Integer -> IO ()
 noLog _ _ _ = return ()

@@ -41,6 +41,15 @@ case01 = do
                     >>= saveSnapshot "raw"
                     >>= renderPandoc
 
+        match (fromList ["partial.html", "partial-helper.html"]) $
+            compile templateCompiler
+        create ["partial.html.out"] $ do
+            route idRoute
+            compile $ do
+                example <- loadSnapshotBody "example.md" "raw"
+                makeItem example
+                    >>= loadAndApplyTemplate "partial.html" defaultContext
+
         create ["bodies.txt"] $ do
             route idRoute
             compile $ do
@@ -59,6 +68,10 @@ case01 = do
 
     bodies <- readFile $ destinationDirectory testConfiguration </> "bodies.txt"
     head (lines bodies) @?=  "This is an example."
+
+    partial  <- readFile $ providerDirectory    testConfiguration </> "partial.html.out"
+    partial' <- readFile $ destinationDirectory testConfiguration </> "partial.html.out"
+    partial @?= partial'
 
     cleanTestEnv
 

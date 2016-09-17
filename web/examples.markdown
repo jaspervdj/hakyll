@@ -66,8 +66,6 @@ directly with the default Hakyll site.
   [literate source](http://scr.stunts.hu/hakyll.html)
 - <http://www.eanalytica.com/>,
   [literate source](http://www.eanalytica.com/site/)
-- <http://dikmax.name/>,
-  [source](https://github.com/dikmax/dikmax.name)
 - <http://cse.iitk.ac.in/users/ppk>,
   [source](https://github.com/piyush-kurur-pages/website)
 - <http://web.engr.oregonstate.edu/~walkiner/>,
@@ -158,6 +156,10 @@ directly with the default Hakyll site.
   [source](https://github.com/klpn/static-dust)
 - <http://www.kuznero.com/>,
   [source](https://github.com/kuznero/kuznero.github.io)
+- <http://nicolerauch.de/>,
+  [source](https://github.com/NicoleRauch/BusinessWebsite)
+- <http://johnduhamel.io/>,
+  [source](https://github.com/jjduhamel/blog)
 
 ## Hakyll 3.X
 

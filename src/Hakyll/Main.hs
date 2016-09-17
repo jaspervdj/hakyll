@@ -10,11 +10,14 @@ module Hakyll.Main
 
 
 --------------------------------------------------------------------------------
-import           System.Console.CmdArgs
-import qualified System.Console.CmdArgs.Explicit as CA
 import           System.Environment              (getProgName)
 import           System.IO.Unsafe                (unsafePerformIO)
 import           System.Exit                     (ExitCode(ExitSuccess), exitWith)
+
+
+--------------------------------------------------------------------------------
+import Options.Applicative
+
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Check                    as Check
@@ -37,88 +40,66 @@ hakyllWith conf rules = hakyllWithExitCode conf rules >>= exitWith
 
 hakyllWithExitCode :: Config.Configuration -> Rules a -> IO ExitCode
 hakyllWithExitCode conf rules = do
-    args' <- cmdArgs (hakyllArgs conf)
+    args' <- customExecParser (prefs showHelpOnError) (info (helper <*> optionParser conf) (fullDesc <> progDesc (progName ++ " - Static site compiler created with Hakyll")))
+    let args'' = optCommand args'
 
-    let verbosity' = if verbose args' then Logger.Debug else Logger.Message
+    let verbosity' = if verbosity args' then Logger.Debug else Logger.Message
         check'     =
-            if internal_links args' then Check.InternalLinks else Check.All
+            if internal_links args'' then Check.InternalLinks else Check.All
 
     logger <- Logger.new verbosity'
-    case args' of
-        Build   _     -> Commands.build conf logger rules
-        Check   _ _   -> Commands.check conf logger check' >> ok
-        Clean   _     -> Commands.clean conf logger >> ok
-        Deploy  _     -> Commands.deploy conf
-        Help    _     -> showHelp >> ok
-        Preview _ p   -> Commands.preview conf logger rules p >> ok
-        Rebuild _     -> Commands.rebuild conf logger rules
-        Server  _ _ _   -> Commands.server conf logger (host args') (port args') >> ok
-        Watch   _ _ p s -> Commands.watch conf logger (host args') p (not s) rules >> ok
+
+    case args'' of
+        Build       -> Commands.build conf logger rules
+        Check   _   -> Commands.check conf logger check' >> ok
+        Clean       -> Commands.clean conf logger >> ok
+        Deploy      -> Commands.deploy conf
+        Preview p   -> Commands.preview conf logger rules p >> ok
+        Rebuild     -> Commands.rebuild conf logger rules
+        Server  _ _   -> Commands.server conf logger (host args'') (port args'') >> ok
+        Watch   _ p s -> Commands.watch conf logger (host args'') p (not s) rules >> ok
     where
         ok = return ExitSuccess
 
 
 --------------------------------------------------------------------------------
--- | Show usage information.
-showHelp :: IO ()
-showHelp = print $ CA.helpText [] CA.HelpFormatOne $ cmdArgsMode (hakyllArgs Config.defaultConfiguration)
 
+data Options = Options {verbosity :: Bool, optCommand :: Command}
+    deriving (Show)
 
---------------------------------------------------------------------------------
-data HakyllArgs
-    = Build   {verbose :: Bool}
-    | Check   {verbose :: Bool, internal_links :: Bool}
-    | Clean   {verbose :: Bool}
-    | Deploy  {verbose :: Bool}
-    | Help    {verbose :: Bool}
-    | Preview {verbose :: Bool, port :: Int}
-    | Rebuild {verbose :: Bool}
-    | Server  {verbose :: Bool, host :: String, port :: Int}
-    | Watch   {verbose :: Bool, host :: String, port :: Int, no_server :: Bool }
-    deriving (Data, Typeable, Show)
+data Command
+    = Build
+    | Check   {internal_links :: Bool}
+    | Clean
+    | Deploy
+    | Preview {port :: Int}
+    | Rebuild
+    | Server  {host :: String, port :: Int}
+    | Watch   {host :: String, port :: Int, no_server :: Bool }
+    deriving (Show)
 
-
---------------------------------------------------------------------------------
-hakyllArgs :: Config.Configuration -> HakyllArgs
-hakyllArgs conf = modes
-    [ (Build $ verboseFlag def) &= help "Generate the site"
-    , (Check (verboseFlag def) (False &= help "Check internal links only")) &=
-        help "Validate the site output"
-    , (Clean $ verboseFlag def) &= help "Clean up and remove cache"
-    , (Deploy $ verboseFlag def) &= help "Upload/deploy your site"
-    , (Help $ verboseFlag def) &= help "Show this message" &= auto
-    , (Preview (verboseFlag def) (portFlag defaultPort)) &=
-        help "[Deprecated] Please use the watch command"
-    , (Rebuild $ verboseFlag def) &= help "Clean and build again"
-    , (Server (verboseFlag def) (hostFlag defaultHost) (portFlag defaultPort)) &=
-        help "Start a preview server"
-    , (Watch (verboseFlag def) (hostFlag defaultHost) (portFlag defaultPort) (noServerFlag False) &=
-       help "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server.")
-    ] &= help "Hakyll static site compiler" &= program progName
+optionParser :: Config.Configuration -> Parser Options
+optionParser conf = Options <$> verboseParser <*> (commandParser conf)
     where
-        defaultHost = Config.previewHost conf
-        defaultPort = Config.previewPort conf
-
---------------------------------------------------------------------------------
-verboseFlag :: Data a => a -> a
-verboseFlag x = x &= help "Run in verbose mode"
-{-# INLINE verboseFlag #-}
+    verboseParser = switch (long "verbose" <> short 'v' <> help "Run in verbose mode")
 
 
---------------------------------------------------------------------------------
-noServerFlag :: Data a => a -> a
-noServerFlag x = x &= help "Disable the built-in web server"
-{-# INLINE noServerFlag #-}
-
---------------------------------------------------------------------------------
-hostFlag :: Data a => a -> a
-hostFlag x = x &= help "Host to bind on"
-{-# INLINE hostFlag #-}
-
---------------------------------------------------------------------------------
-portFlag :: Data a => a -> a
-portFlag x = x &= help "Port to listen on"
-{-# INLINE portFlag #-}
+commandParser :: Config.Configuration -> Parser Command
+commandParser conf = subparser $ foldr ((<>) . produceCommand) mempty commands
+    where
+    produceCommand (a,b) = command a (info (helper <*> (fst b)) (snd b))
+    portParser = option auto (long "port" <> help "Port to listen on" <> value (Config.previewPort conf))
+    hostParser = strOption (long "host" <> help "Host to bind on" <> value (Config.previewHost conf))
+    commands = [
+        ("build",(pure Build,fullDesc <> progDesc "Generate the site")),
+        ("check",(pure Check <*> switch (long "internal-links" <> help "Check internal links only"), fullDesc <> progDesc "Validate the site output")),
+        ("clean",(pure Clean,fullDesc <> progDesc "Clean up and remove cache")),
+        ("deploy",(pure Deploy,fullDesc <> progDesc "Upload/deploy your site")),
+        ("preview",(pure Preview <*> portParser,fullDesc <> progDesc "[DEPRECATED] Please use the watch command")),
+        ("rebuild",(pure Rebuild,fullDesc <> progDesc "Clean and build again")),
+        ("server",(pure Server <*> hostParser <*> portParser,fullDesc <> progDesc "Start a preview server")),
+        ("watch",(pure Watch <*> hostParser <*> portParser <*> switch (long "no-server" <> help "Disable the built-in web server"),fullDesc <> progDesc "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server."))
+        ]
 
 
 --------------------------------------------------------------------------------

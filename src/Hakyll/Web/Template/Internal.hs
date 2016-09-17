@@ -1,31 +1,39 @@
---------------------------------------------------------------------------------
--- | Module containing the template data structure
-{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 module Hakyll.Web.Template.Internal
     ( Template (..)
-    , TemplateKey (..)
-    , TemplateExpr (..)
-    , TemplateElement (..)
+    , template
+    , templateBodyCompiler
+    , templateCompiler
+    , applyTemplate
+    , applyTemplate'
+    , loadAndApplyTemplate
+    , applyAsTemplate
     , readTemplate
-    , readTemplateFile
+    , unsafeReadTemplateFile
+
+    , module Hakyll.Web.Template.Internal.Element
+    , module Hakyll.Web.Template.Internal.Trim
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative     ((<|>))
-import           Control.Monad           (void)
-import           Data.Binary             (Binary, get, getWord8, put, putWord8)
-import           Data.Typeable           (Typeable)
-import           Data.List (intercalate)
-import           GHC.Exts                (IsString (..))
-import qualified Text.Parsec             as P
-import qualified Text.Parsec.String      as P
+import           Control.Monad.Except                 (MonadError (..))
+import           Data.Binary                          (Binary)
+import           Data.List                            (intercalate)
+import           Data.Typeable                        (Typeable)
+import           GHC.Exts                             (IsString (..))
+import           Prelude                              hiding (id)
 
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Util.Parser
+import           Hakyll.Core.Compiler
+import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
 import           Hakyll.Core.Writable
+import           Hakyll.Web.Template.Context
+import           Hakyll.Web.Template.Internal.Element
+import           Hakyll.Web.Template.Internal.Trim
 
 
 --------------------------------------------------------------------------------
@@ -47,189 +55,149 @@ instance IsString Template where
 
 
 --------------------------------------------------------------------------------
-newtype TemplateKey = TemplateKey String
-    deriving (Binary, Show, Eq, Typeable)
-
-
---------------------------------------------------------------------------------
-instance IsString TemplateKey where
-    fromString = TemplateKey
-
-
---------------------------------------------------------------------------------
--- | Elements of a template.
-data TemplateElement
-    = Chunk String
-    | Expr TemplateExpr
-    | Escaped
-    | If TemplateExpr Template (Maybe Template)   -- expr, then, else
-    | For TemplateExpr Template (Maybe Template)  -- expr, body, separator
-    | Partial TemplateExpr                        -- filename
-    deriving (Show, Eq, Typeable)
-
-
---------------------------------------------------------------------------------
-instance Binary TemplateElement where
-    put (Chunk string) = putWord8 0 >> put string
-    put (Expr e)       = putWord8 1 >> put e
-    put (Escaped)      = putWord8 2
-    put (If e t f  )   = putWord8 3 >> put e >> put t >> put f
-    put (For e b s)    = putWord8 4 >> put e >> put b >> put s
-    put (Partial e)    = putWord8 5 >> put e
-
-    get = getWord8 >>= \tag -> case tag of
-        0 -> Chunk <$> get
-        1 -> Expr <$> get
-        2 -> pure Escaped
-        3 -> If <$> get <*> get <*> get
-        4 -> For <$> get <*> get <*> get
-        5 -> Partial <$> get
-        _ -> error $
-            "Hakyll.Web.Template.Internal: Error reading cached template"
-
-
---------------------------------------------------------------------------------
--- | Expression in a template
-data TemplateExpr
-    = Ident TemplateKey
-    | Call TemplateKey [TemplateExpr]
-    | StringLiteral String
-    deriving (Eq, Typeable)
-
-
---------------------------------------------------------------------------------
-instance Show TemplateExpr where
-    show (Ident (TemplateKey k))   = k
-    show (Call (TemplateKey k) as) =
-        k ++ "(" ++ intercalate ", " (map show as) ++ ")"
-    show (StringLiteral s)         = show s
-
-
---------------------------------------------------------------------------------
-instance Binary TemplateExpr where
-    put (Ident k)         = putWord8 0 >> put k
-    put (Call k as)       = putWord8 1 >> put k >> put as
-    put (StringLiteral s) = putWord8 2 >> put s
-
-    get = getWord8 >>= \tag -> case tag of
-        0 -> Ident         <$> get
-        1 -> Call          <$> get <*> get
-        2 -> StringLiteral <$> get
-        _ -> error $
-            "Hakyll.Web.Tamplte.Internal: Error reading cached template"
+-- | Wrap the constructor to ensure trim is called.
+template :: [TemplateElement] -> Template
+template = Template . trim
 
 
 --------------------------------------------------------------------------------
 readTemplate :: String -> Template
-readTemplate = readTemplateFile "{literal}"
+readTemplate = Template . trim . readTemplateElems
+
+--------------------------------------------------------------------------------
+-- | Read a template, without metadata header
+templateBodyCompiler :: Compiler (Item Template)
+templateBodyCompiler = cached "Hakyll.Web.Template.templateBodyCompiler" $ do
+    item <- getResourceBody
+    file <- getResourceFilePath
+    return $ fmap (template . readTemplateElemsFile file) item
+
+--------------------------------------------------------------------------------
+-- | Read complete file contents as a template
+templateCompiler :: Compiler (Item Template)
+templateCompiler = cached "Hakyll.Web.Template.templateCompiler" $ do
+    item <- getResourceString
+    file <- getResourceFilePath
+    return $ fmap (template . readTemplateElemsFile file) item
 
 
 --------------------------------------------------------------------------------
-readTemplateFile :: FilePath -> String -> Template
-readTemplateFile file input = case P.parse topLevelTemplate file input of
-    Left err -> error $ "Cannot parse template: " ++ show err
-    Right t  -> t
+applyTemplate :: Template                -- ^ Template
+              -> Context a               -- ^ Context
+              -> Item a                  -- ^ Page
+              -> Compiler (Item String)  -- ^ Resulting item
+applyTemplate tpl context item = do
+    body <- applyTemplate' (unTemplate tpl) context item
+    return $ itemSetBody body item
 
 
 --------------------------------------------------------------------------------
-topLevelTemplate :: P.Parser Template
-topLevelTemplate = Template <$>
-    P.manyTill templateElement P.eof
+applyTemplate'
+    :: forall a.
+       [TemplateElement] -- ^ Unwrapped Template
+    -> Context a         -- ^ Context
+    -> Item a            -- ^ Page
+    -> Compiler String   -- ^ Resulting item
+applyTemplate' tes context x = go tes
+  where
+    context' :: String -> [String] -> Item a -> Compiler ContextField
+    context' = unContext (context `mappend` missingField)
 
---------------------------------------------------------------------------------
-template :: P.Parser Template
-template = Template <$> P.many templateElement
+    go = fmap concat . mapM applyElem
 
---------------------------------------------------------------------------------
-templateElement :: P.Parser TemplateElement
-templateElement = chunk <|> escaped <|> conditional <|> for <|> partial <|> expr
+    trimError = error $ "Hakyll.Web.Template.applyTemplate: template not " ++
+        "fully trimmed."
 
+    ---------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
-chunk :: P.Parser TemplateElement
-chunk = Chunk <$> (P.many1 $ P.noneOf "$")
+    applyElem :: TemplateElement -> Compiler String
 
+    applyElem TrimL = trimError
 
---------------------------------------------------------------------------------
-expr :: P.Parser TemplateElement
-expr = P.try $ do
-    void $ P.char '$'
-    e <- expr'
-    void $ P.char '$'
-    return $ Expr e
+    applyElem TrimR = trimError
 
+    applyElem (Chunk c) = return c
 
---------------------------------------------------------------------------------
-expr' :: P.Parser TemplateExpr
-expr' = stringLiteral <|> call <|> ident
+    applyElem (Expr e) = applyExpr e >>= getString e
 
+    applyElem Escaped = return "$"
 
---------------------------------------------------------------------------------
-escaped :: P.Parser TemplateElement
-escaped = Escaped <$ (P.try $ P.string "$$")
+    applyElem (If e t mf) = (applyExpr e >> go t) `catchError` handler
+      where
+        handler _ = case mf of
+            Nothing -> return ""
+            Just f  -> go f
 
+    applyElem (For e b s) = applyExpr e >>= \cf -> case cf of
+        StringField _  -> fail $
+            "Hakyll.Web.Template.applyTemplateWith: expected ListField but " ++
+            "got StringField for expr " ++ show e
+        ListField c xs -> do
+            sep <- maybe (return "") go s
+            bs  <- mapM (applyTemplate' b c) xs
+            return $ intercalate sep bs
 
---------------------------------------------------------------------------------
-conditional :: P.Parser TemplateElement
-conditional = P.try $ do
-    void $ P.string "$if("
-    e <- expr'
-    void $ P.string ")$"
-    thenBranch <- template
-    elseBranch <- P.optionMaybe $ P.try (P.string "$else$") >> template
-    void $ P.string "$endif$"
-    return $ If e thenBranch elseBranch
+    applyElem (Partial e) = do
+        p             <- applyExpr e >>= getString e
+        Template tpl' <- loadBody (fromFilePath p)
+        applyTemplate' tpl' context x
 
+    ---------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
-for :: P.Parser TemplateElement
-for = P.try $ do
-    void $ P.string "$for("
-    e <- expr'
-    void $ P.string ")$"
-    body <- template
-    sep  <- P.optionMaybe $ P.try (P.string "$sep$") >> template
-    void $ P.string "$endfor$"
-    return $ For e body sep
+    applyExpr :: TemplateExpr -> Compiler ContextField
 
+    applyExpr (Ident (TemplateKey k)) = context' k [] x
 
---------------------------------------------------------------------------------
-partial :: P.Parser TemplateElement
-partial = P.try $ do
-    void $ P.string "$partial("
-    e <- expr'
-    void $ P.string ")$"
-    return $ Partial e
+    applyExpr (Call (TemplateKey k) args) = do
+        args' <- mapM (\e -> applyExpr e >>= getString e) args
+        context' k args' x
 
+    applyExpr (StringLiteral s) = return (StringField s)
 
---------------------------------------------------------------------------------
-ident :: P.Parser TemplateExpr
-ident = P.try $ Ident <$> key
+    ----------------------------------------------------------------------------
+
+    getString _ (StringField s) = return s
+    getString e (ListField _ _) = fail $
+        "Hakyll.Web.Template.applyTemplateWith: expected StringField but " ++
+        "got ListField for expr " ++ show e
 
 
 --------------------------------------------------------------------------------
-call :: P.Parser TemplateExpr
-call = P.try $ do
-    f <- key
-    void $ P.char '('
-    P.spaces
-    as <- P.sepBy expr' (P.spaces >> P.char ',' >> P.spaces)
-    P.spaces
-    void $ P.char ')'
-    return $ Call f as
+-- | The following pattern is so common:
+--
+-- > tpl <- loadBody "templates/foo.html"
+-- > someCompiler
+-- >     >>= applyTemplate tpl context
+--
+-- That we have a single function which does this:
+--
+-- > someCompiler
+-- >     >>= loadAndApplyTemplate "templates/foo.html" context
+loadAndApplyTemplate :: Identifier              -- ^ Template identifier
+                     -> Context a               -- ^ Context
+                     -> Item a                  -- ^ Page
+                     -> Compiler (Item String)  -- ^ Resulting item
+loadAndApplyTemplate identifier context item = do
+    tpl <- loadBody identifier
+    applyTemplate tpl context item
 
 
 --------------------------------------------------------------------------------
-stringLiteral :: P.Parser TemplateExpr
-stringLiteral = do
-    void $ P.char '\"'
-    str <- P.many $ do
-        x <- P.noneOf "\""
-        if x == '\\' then P.anyChar else return x
-    void $ P.char '\"'
-    return $ StringLiteral str
+-- | It is also possible that you want to substitute @$key$@s within the body of
+-- an item. This function does that by interpreting the item body as a template,
+-- and then applying it to itself.
+applyAsTemplate :: Context String          -- ^ Context
+                -> Item String             -- ^ Item and template
+                -> Compiler (Item String)  -- ^ Resulting item
+applyAsTemplate context item =
+    let tpl = template $ readTemplateElemsFile file (itemBody item)
+        file = toFilePath $ itemIdentifier item
+    in applyTemplate tpl context item
 
 
 --------------------------------------------------------------------------------
-key :: P.Parser TemplateKey
-key = TemplateKey <$> metadataKey
+unsafeReadTemplateFile :: FilePath -> Compiler Template
+unsafeReadTemplateFile file = do
+    tpl <- unsafeCompiler $ readFile file
+    pure $ template $ readTemplateElemsFile file tpl
+

@@ -116,8 +116,10 @@ Library
     Hakyll.Web.Tags
     Hakyll.Web.Paginate
     Hakyll.Web.Template
-    Hakyll.Web.Template.Internal
     Hakyll.Web.Template.Context
+    Hakyll.Web.Template.Internal
+    Hakyll.Web.Template.Internal.Element
+    Hakyll.Web.Template.Internal.Trim
     Hakyll.Web.Template.List
 
   Other-Modules:
@@ -147,7 +149,6 @@ Library
     blaze-html           >= 0.5    && < 0.9,
     blaze-markup         >= 0.5.1  && < 0.8,
     bytestring           >= 0.9    && < 0.11,
-    cmdargs              >= 0.10   && < 0.11,
     containers           >= 0.3    && < 0.6,
     cryptohash           >= 0.7    && < 0.12,
     data-default         >= 0.4    && < 0.8,
@@ -174,7 +175,8 @@ Library
     time-locale-compat   >= 0.1    && < 0.2,
     unordered-containers >= 0.2    && < 0.3,
     vector               >= 0.11   && < 0.12,
-    yaml                 >= 0.8    && < 0.9
+    yaml                 >= 0.8    && < 0.9,
+    optparse-applicative >= 0.12   && < 0.13
 
   If flag(previewServer)
     Build-depends:
@@ -268,7 +270,8 @@ Test-suite hakyll-tests
     time-locale-compat   >= 0.1    && < 0.2,
     unordered-containers >= 0.2    && < 0.3,
     vector               >= 0.11   && < 0.12,
-    yaml                 >= 0.8    && < 0.9
+    yaml                 >= 0.8.11    && < 0.9,
+    optparse-applicative >= 0.12   && < 0.13
 
   If flag(previewServer)
     Build-depends:

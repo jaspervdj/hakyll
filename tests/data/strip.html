@@ -1,0 +1,34 @@
+<div>
+    I'm so rich I have $$3.
+
+    $rev("foo")$
+    $-rev(rev("foo"))$
+
+    $if(body)-$
+    I have body
+    $else-$
+    or no
+    $-endif-$
+
+    $if(unbound)$
+    should not be printed
+    $endif$
+
+    $-if(body)-$
+    should be printed
+    $-endif$
+
+    <ul>
+    $for(authors)-$
+        <li>$name$</li>
+    $endfor-$
+    </ul>
+
+    $for(authors)-$
+        $name-$
+        $sep$,
+    $-endfor$
+
+    $body$
+</div>
+
