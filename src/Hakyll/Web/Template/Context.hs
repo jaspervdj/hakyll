@@ -44,6 +44,7 @@ import           Data.Time.LocalTime           (ZonedTime (..))
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
 import           Data.Time.RFC822              (formatTimeRFC822)
 import           Data.Time.RFC3339             (formatTimeRFC3339)
+import           GHC.Exts                      (IsString, fromString)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
@@ -67,6 +68,9 @@ data DateFormat
     = RFC822
     | RFC3339
     | DateFormat String
+
+instance IsString DateFormat where
+    fromString = DateFormat
 
 
 --------------------------------------------------------------------------------
