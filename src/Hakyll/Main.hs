@@ -16,7 +16,8 @@ import           System.Exit                     (ExitCode(ExitSuccess), exitWit
 
 
 --------------------------------------------------------------------------------
-import Options.Applicative
+import           Data.Monoid                     ((<>))
+import           Options.Applicative
 
 
 --------------------------------------------------------------------------------
