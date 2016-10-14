@@ -202,7 +202,7 @@ Library
 
   If flag(checkExternal)
     Build-depends:
-      http-conduit >= 2.1    && < 2.2,
+      http-conduit >= 2.2    && < 2.3,
       http-types   >= 0.7    && < 0.10
     Cpp-options:
       -DCHECK_EXTERNAL

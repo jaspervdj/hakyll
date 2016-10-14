@@ -204,7 +204,7 @@ checkExternalUrl url = do
             result <- liftIO $ try $ do
                 mgr <- Http.newManager Http.tlsManagerSettings
                 runResourceT $ do
-                    request  <- Http.parseUrl urlToCheck
+                    request  <- Http.parseRequest urlToCheck
                     response <- Http.http (settings request) mgr
                     let code = Http.statusCode (Http.responseStatus response)
                     return $ code >= 200 && code < 300
@@ -236,8 +236,7 @@ checkExternalUrl url = do
 
     -- Convert exception to a concise form
     showException e = case cast e of
-        Just (Http.StatusCodeException (Http.Status code msg) _ _) ->
-            show code ++ " " ++ unpack msg
+        Just (Http.HttpExceptionRequest _ e') -> show e'
         _ -> head $ words $ show e
 #else
 checkExternalUrl _ = return ()
