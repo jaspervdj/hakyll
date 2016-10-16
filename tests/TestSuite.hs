@@ -19,6 +19,7 @@ import qualified Hakyll.Core.Runtime.Tests
 import qualified Hakyll.Core.Store.Tests
 import qualified Hakyll.Core.UnixFilter.Tests
 import qualified Hakyll.Core.Util.String.Tests
+import qualified Hakyll.Web.CompressCss.Tests
 import qualified Hakyll.Web.Html.RelativizeUrls.Tests
 import qualified Hakyll.Web.Html.Tests
 import qualified Hakyll.Web.Pandoc.FileType.Tests
@@ -39,6 +40,7 @@ main = defaultMain
     , Hakyll.Core.Store.Tests.tests
     , Hakyll.Core.UnixFilter.Tests.tests
     , Hakyll.Core.Util.String.Tests.tests
+    , Hakyll.Web.CompressCss.Tests.tests
     , Hakyll.Web.Html.RelativizeUrls.Tests.tests
     , Hakyll.Web.Html.Tests.tests
     , Hakyll.Web.Pandoc.FileType.Tests.tests
