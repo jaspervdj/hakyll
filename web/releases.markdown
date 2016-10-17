@@ -4,6 +4,26 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.0.0
+
+This release switches over some dependencies to alternatives, in order to clean
+up some stuff and build on a wider variety of setups (stack/cabal).
+
+- Move from `test-framework` to `tasty`
+- Fix feed generator when item contains CDATA (contribution by Yann Esposito)
+- Fix CompressCSS to not modify string constants (contribution by Nicole Rauch)
+- Fix YAML dependency issue (contribution by Jens Peterson)
+- Move from `cmdargs` to `optparse-applicative` (contribution by sk3r)
+- Allow for trimming whitespace in templates (contribution by Sam Davis)
+- Improve error messages for template parsing (contribution by Lorenzo
+  Tabacchini)
+- Improvements to the installation instructions (contribution by Thomas Koch)
+- Move from `snap` to `warp` for preview servier (contribution by Arguggi)
+- Fix error in CompressCSS (contribution by Luca Molteni)
+- Move example from XHTML to HTML5 (contribution by Peter Doherty)
+- Make errors in check less verbose (contribution by Jan Tojnar)
+- Work on building with GHC 8.0.1 (contribution by Rohan Jain)
+
 ## Hakyll 4.8.3.2
 
 This release is compatible with GHC 8.0.1, although `previewServer` might not
