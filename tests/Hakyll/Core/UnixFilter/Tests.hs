@@ -6,10 +6,10 @@ module Hakyll.Core.UnixFilter.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.List                      (isInfixOf)
-import           Test.Framework                 (Test, testGroup)
-import           Test.Framework.Providers.HUnit (testCase)
-import qualified Test.HUnit                     as H
+import           Data.List                     (isInfixOf)
+import           Test.Tasty                    (TestTree, testGroup)
+import           Test.Tasty.HUnit              (testCase)
+import qualified Test.Tasty.HUnit              as H
 
 
 --------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.UnixFilter.Tests"
     [ testCase "unixFilter rev"   unixFilterRev
     , testCase "unixFilter false" unixFilterFalse

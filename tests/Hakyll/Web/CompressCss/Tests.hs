@@ -5,9 +5,9 @@ module Hakyll.Web.CompressCss.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.Char       (toUpper)
-import           Test.Framework  (Test, testGroup)
-import           Test.HUnit      (assert, (@=?))
+import           Data.Char              (toUpper)
+import           Test.Tasty             (TestTree, testGroup)
+import           Test.Tasty.HUnit       (assert, (@=?))
 
 
 --------------------------------------------------------------------------------
@@ -16,10 +16,10 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
     [ fromAssertions "compressCss"
-        [ 
+        [
           -- compress whitespace
           " something something " @=?
             compressCss " something  \n\t\r  something "
@@ -32,7 +32,7 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
           -- strip comments
         , "before after"  @=? compressCss "before /* abc { } ;; \n\t\r */ after"
           -- don't strip comments inside constants
-        , "before \"/* abc { } ;; \n\t\r */\" after" 
+        , "before \"/* abc { } ;; \n\t\r */\" after"
                           @=? compressCss "before \"/* abc { } ;; \n\t\r */\" after"
 
           -- compress separators

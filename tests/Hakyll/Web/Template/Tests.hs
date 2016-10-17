@@ -6,9 +6,9 @@ module Hakyll.Web.Template.Tests
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework                 (Test, testGroup)
-import           Test.Framework.Providers.HUnit (testCase)
-import           Test.HUnit                     (Assertion, (@=?), (@?=))
+import           Test.Tasty                   (TestTree, testGroup)
+import           Test.Tasty.HUnit             (Assertion, testCase, (@=?),
+                                               (@?=))
 
 
 --------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Template.Tests" $ concat
     [ [ testCase "case01" $ test ("template.html.out", "template.html", "example.md")
       , testCase "case02" $ test ("strip.html.out", "strip.html", "example.md")

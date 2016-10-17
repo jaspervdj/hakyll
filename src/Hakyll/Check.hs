@@ -204,7 +204,7 @@ checkExternalUrl url = do
             result <- liftIO $ try $ do
                 mgr <- Http.newManager Http.tlsManagerSettings
                 runResourceT $ do
-                    request  <- Http.parseUrl urlToCheck
+                    request  <- Http.parseRequest urlToCheck
                     response <- Http.http (settings request) mgr
                     let code = Http.statusCode (Http.responseStatus response)
                     return $ code >= 200 && code < 300

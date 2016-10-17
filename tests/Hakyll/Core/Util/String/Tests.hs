@@ -5,8 +5,8 @@ module Hakyll.Core.Util.String.Tests
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework          (Test, testGroup)
-import           Test.HUnit              ((@=?))
+import           Test.Tasty              (TestTree, testGroup)
+import           Test.Tasty.HUnit        ((@=?))
 
 
 --------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Util.String.Tests" $ concat
     [ fromAssertions "trim"
         [ "foo" @=? trim " foo\n\t "

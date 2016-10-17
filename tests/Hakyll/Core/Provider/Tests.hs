@@ -8,14 +8,13 @@ module Hakyll.Core.Provider.Tests
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
-import           Test.Framework                 (Test, testGroup)
-import           Test.Framework.Providers.HUnit (testCase)
-import           Test.HUnit                     (Assertion, assert, (@=?))
+import           Test.Tasty           (TestTree, testGroup)
+import           Test.Tasty.HUnit     (Assertion, assert, testCase, (@=?))
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Provider.Tests"
     [ testCase "case01" case01
     ]

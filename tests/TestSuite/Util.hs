@@ -12,30 +12,29 @@ module TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-import           Data.List                      (intercalate)
-import           Data.Monoid                    (mempty)
-import qualified Data.Set                       as S
-import           Test.Framework
-import           Test.Framework.Providers.HUnit
-import           Test.HUnit                     hiding (Test)
-import           Text.Printf                    (printf)
+import           Data.List                     (intercalate)
+import           Data.Monoid                   (mempty)
+import qualified Data.Set                      as S
+import           Test.Tasty
+import           Test.Tasty.HUnit
+import           Text.Printf                   (printf)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Identifier
-import qualified Hakyll.Core.Logger             as Logger
+import qualified Hakyll.Core.Logger            as Logger
 import           Hakyll.Core.Provider
-import           Hakyll.Core.Store              (Store)
-import qualified Hakyll.Core.Store              as Store
+import           Hakyll.Core.Store             (Store)
+import qualified Hakyll.Core.Store             as Store
 import           Hakyll.Core.Util.File
 
 
 --------------------------------------------------------------------------------
 fromAssertions :: String       -- ^ Name
                -> [Assertion]  -- ^ Cases
-               -> [Test]       -- ^ Result tests
+               -> [TestTree]   -- ^ Result tests
 fromAssertions name =
     zipWith testCase [printf "[%2d] %s" n name | n <- [1 :: Int ..]]
 

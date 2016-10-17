@@ -8,8 +8,8 @@ module Hakyll.Core.Runtime.Tests
 --------------------------------------------------------------------------------
 import qualified Data.ByteString     as B
 import           System.FilePath     ((</>))
-import           Test.Framework      (Test, testGroup)
-import           Test.HUnit          (Assertion, (@?=))
+import           Test.Tasty          (TestTree, testGroup)
+import           Test.Tasty.HUnit    (Assertion, (@?=))
 
 
 --------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Runtime.Tests" $
     fromAssertions "run" [case01, case02]
 

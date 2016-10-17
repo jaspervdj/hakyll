@@ -6,22 +6,22 @@ module Hakyll.Core.Store.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.Typeable                        (typeOf)
-import           Test.Framework                       (Test, testGroup)
-import           Test.Framework.Providers.HUnit       (testCase)
-import           Test.Framework.Providers.QuickCheck2 (testProperty)
-import qualified Test.HUnit                           as H
-import qualified Test.QuickCheck                      as Q
-import qualified Test.QuickCheck.Monadic              as Q
+import           Data.Typeable           (typeOf)
+import qualified Test.QuickCheck         as Q
+import qualified Test.QuickCheck.Monadic as Q
+import           Test.Tasty              (TestTree, testGroup)
+import           Test.Tasty.HUnit        (testCase)
+import qualified Test.Tasty.HUnit        as H
+import           Test.Tasty.QuickCheck   (testProperty)
 
 
 --------------------------------------------------------------------------------
-import qualified Hakyll.Core.Store                    as Store
+import qualified Hakyll.Core.Store       as Store
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Store.Tests"
     [ testProperty "simple get . set"     simpleSetGet
     , testProperty "persistent get . set" persistentSetGet

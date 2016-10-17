@@ -5,9 +5,9 @@ module Hakyll.Web.Html.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.Char       (toUpper)
-import           Test.Framework  (Test, testGroup)
-import           Test.HUnit      (assert, (@=?))
+import           Data.Char        (toUpper)
+import           Test.Tasty       (TestTree, testGroup)
+import           Test.Tasty.HUnit (assert, (@=?))
 
 
 --------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Web.Html.Tests" $ concat
     [ fromAssertions "demoteHeaders"
         [ "<h2>A h1 title</h2>" @=?

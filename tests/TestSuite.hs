@@ -5,7 +5,7 @@ module Main
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework                       (defaultMain)
+import           Test.Tasty                           (defaultMain, testGroup)
 
 
 --------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ import qualified Hakyll.Web.Template.Tests
 
 --------------------------------------------------------------------------------
 main :: IO ()
-main = defaultMain
+main = defaultMain $ testGroup "Hakyll"
     [ Hakyll.Core.Dependencies.Tests.tests
     , Hakyll.Core.Identifier.Tests.tests
     , Hakyll.Core.Provider.Metadata.Tests.tests

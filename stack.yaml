@@ -1,6 +1,6 @@
-resolver: lts-5.11
-extra-deps: []
+resolver: lts-6.22
 extra-package-dbs: []
+extra-deps: []
 
 flags:
   hakyll:

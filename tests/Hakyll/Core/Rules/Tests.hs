@@ -19,13 +19,13 @@ import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
 import           Hakyll.Web.Pandoc
 import           System.FilePath                ((</>))
-import           Test.Framework                 (Test, testGroup)
-import           Test.HUnit                     (Assertion, assert, (@=?))
+import           Test.Tasty                     (TestTree, testGroup)
+import           Test.Tasty.HUnit               (Assertion, assert, (@=?))
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Rules.Tests" $ fromAssertions "runRules"
     [case01]
 

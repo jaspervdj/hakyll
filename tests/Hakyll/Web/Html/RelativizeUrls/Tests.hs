@@ -6,8 +6,9 @@ module Hakyll.Web.Html.RelativizeUrls.Tests
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework                 (Test, testGroup)
-import           Test.HUnit                     ((@=?))
+import           Test.Tasty                     (TestTree, testGroup)
+import           Test.Tasty.HUnit               ((@=?))
+
 
 --------------------------------------------------------------------------------
 import           Hakyll.Web.Html.RelativizeUrls
@@ -15,7 +16,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Web.Html.RelativizeUrls.Tests" $
     fromAssertions "relativizeUrls"
         [ "<a href=\"../foo\">bar</a>" @=?
