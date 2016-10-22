@@ -33,14 +33,14 @@ compressCss = compressSeparators . stripComments . compressWhitespace
 compressSeparators :: String -> String
 compressSeparators [] = []
 compressSeparators str
-    | isConstant = head str : retainConstants compressSeparators (head str) (drop 1 str)
+    | isConstant  = head str : retainConstants compressSeparators (head str) (drop 1 str)
     | stripFirst  = compressSeparators (drop 1 str)
     | stripSecond = compressSeparators (head str : (drop 2 str))
     | otherwise   = head str : compressSeparators (drop 1 str)
   where
     isConstant  = or $ map (isOfPrefix str) ["\"", "'"]
-    stripFirst  = or $ map (isOfPrefix str) ["  ", " {", " }", " :", ";;", ";}"]
-    stripSecond = or $ map (isOfPrefix str) ["{ ", "} ", ": ", "; "]
+    stripFirst  = or $ map (isOfPrefix str) ["  ", " {", " }", " :", ";;", ";}", " ,"]
+    stripSecond = or $ map (isOfPrefix str) ["{ ", "} ", ": ", "; ", ", "]
 
 --------------------------------------------------------------------------------
 -- | Compresses all whitespace.
@@ -50,7 +50,7 @@ compressWhitespace str
     | isConstant = head str : retainConstants compressWhitespace (head str) (drop 1 str)
     | replaceOne = compressWhitespace (' ' : (drop 1 str))
     | replaceTwo = compressWhitespace (' ' : (drop 2 str))
-    | otherwise = head str : compressWhitespace (drop 1 str)
+    | otherwise  = head str : compressWhitespace (drop 1 str)
   where
     isConstant = or $ map (isOfPrefix str) ["\"", "'"]
     replaceOne = or $ map (isOfPrefix str) ["\t", "\n", "\r"]
@@ -61,9 +61,9 @@ compressWhitespace str
 stripComments :: String -> String
 stripComments [] = []
 stripComments str
-    | isConstant = head str : retainConstants stripComments (head str) (drop 1 str)
+    | isConstant          = head str : retainConstants stripComments (head str) (drop 1 str)
     | isPrefixOf "/*" str = stripComments $ eatComments $ drop 2 str
-    | otherwise = head str : stripComments (drop 1 str)
+    | otherwise           = head str : stripComments (drop 1 str)
   where
     isConstant  = or $ map (isOfPrefix str) ["\"", "'"]
     eatComments str'
