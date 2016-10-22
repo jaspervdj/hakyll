@@ -39,8 +39,9 @@ compressSeparators str
     | otherwise   = head str : compressSeparators (drop 1 str)
   where
     isConstant  = or $ map (isOfPrefix str) ["\"", "'"]
-    stripFirst  = or $ map (isOfPrefix str) ["  ", " {", " }", " :", ";;", ";}", " ,", " >", " +", " !"]
-    stripSecond = or $ map (isOfPrefix str) ["{ ", "} ", ": ", "; ", ", ", "> ", "+ ", "! "]
+    stripFirst  = or $ map (isOfPrefix str) $ [";;", ";}"] ++ (map (\c -> " " ++ c) separators)
+    stripSecond = or $ map (isOfPrefix str) $ map (\c -> c ++ " ") separators
+    separators  = [" ", "{", "}", ":", ";", ",", ">", "+", "!"]
 
 --------------------------------------------------------------------------------
 -- | Compresses all whitespace.

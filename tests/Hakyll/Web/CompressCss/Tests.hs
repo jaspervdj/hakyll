@@ -37,7 +37,7 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
 
           -- compress separators
         , "}"             @=? compressCss ";   }"
-        , "{};"           @=? compressCss "  {  }  ;  "
+        , ";{};"          @=? compressCss " ;  {  }  ;  "
         , "text,"         @=? compressCss "text  ,  "
         , "a>b"           @=? compressCss "a > b"
         , "a+b"           @=? compressCss "a + b"
