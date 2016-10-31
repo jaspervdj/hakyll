@@ -236,8 +236,7 @@ checkExternalUrl url = do
 
     -- Convert exception to a concise form
     showException e = case cast e of
-        Just (Http.StatusCodeException (Http.Status code msg) _ _) ->
-            show code ++ " " ++ unpack msg
+        Just (Http.HttpExceptionRequest _ e') -> show e'
         _ -> head $ words $ show e
 #else
 checkExternalUrl _ = return ()
