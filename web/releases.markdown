@@ -4,6 +4,13 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.1.0
+
+- Allow optparse-applicative 0.13, QuickCheck 2.9, and pandoc 1.18
+  (contributions by Chris Wong and Felix Yan)
+- Fix extra test files for packaging source files (contribution by Julien
+  Langlois)
+
 ## Hakyll 4.9.0.0
 
 This release switches over some dependencies to alternatives, in order to clean
