@@ -179,8 +179,8 @@ Library
     time-locale-compat   >= 0.1    && < 0.2,
     unordered-containers >= 0.2    && < 0.3,
     vector               >= 0.11   && < 0.12,
-    yaml                 >= 0.8    && < 0.9,
-    optparse-applicative >= 0.13   && < 0.14
+    yaml                 >= 0.8.11 && < 0.9,
+    optparse-applicative >= 0.12   && < 0.14
 
   If flag(previewServer)
     Build-depends:
@@ -237,7 +237,7 @@ Test-suite hakyll-tests
     TestSuite.Util
 
   Build-Depends:
-    QuickCheck                 >= 2.8  && < 2.9,
+    QuickCheck                 >= 2.8  && < 2.10,
     tasty                      >= 0.11 && < 0.12,
     tasty-hunit                >= 0.9  && < 0.10,
     tasty-quickcheck           >= 0.8  && < 0.9,
@@ -273,7 +273,7 @@ Test-suite hakyll-tests
     unordered-containers >= 0.2    && < 0.3,
     vector               >= 0.11   && < 0.12,
     yaml                 >= 0.8.11 && < 0.9,
-    optparse-applicative >= 0.12   && < 0.13
+    optparse-applicative >= 0.12   && < 0.14
 
   If flag(previewServer)
     Build-depends:
@@ -300,7 +300,7 @@ Test-suite hakyll-tests
 
   If flag(checkExternal)
     Build-depends:
-      http-conduit >= 2.1    && < 2.2,
+      http-conduit >= 2.2    && < 2.3,
       http-types   >= 0.7    && < 0.10
     Cpp-options:
       -DCHECK_EXTERNAL

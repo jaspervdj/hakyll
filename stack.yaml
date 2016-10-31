@@ -1,6 +1,7 @@
-resolver: lts-6.22
+resolver: nightly-2016-10-31
 extra-package-dbs: []
-extra-deps: []
+extra-deps:
+  - 'QuickCheck-2.9.2'
 
 flags:
   hakyll:
