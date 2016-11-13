@@ -160,6 +160,8 @@ directly with the default Hakyll site.
   [source](https://github.com/NicoleRauch/BusinessWebsite)
 - <http://johnduhamel.io/>,
   [source](https://github.com/jjduhamel/blog)
+- <http://alexanderlobov.ru/>,
+  [source](https://github.com/alexanderlobov/homepage)
 
 ## Hakyll 3.X
 
