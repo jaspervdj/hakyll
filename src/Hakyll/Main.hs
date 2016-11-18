@@ -1,10 +1,11 @@
 --------------------------------------------------------------------------------
 -- | Module providing the main hakyll function and command-line argument parsing
 {-# LANGUAGE CPP                #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+
 module Hakyll.Main
     ( hakyll
     , hakyllWith
+    , hakyllWithArgs
     , hakyllWithExitCode
     ) where
 
@@ -16,7 +17,6 @@ import           System.Exit                     (ExitCode(ExitSuccess), exitWit
 
 
 --------------------------------------------------------------------------------
-import           Data.Monoid                     ((<>))
 import           Options.Applicative
 
 
@@ -29,7 +29,7 @@ import           Hakyll.Core.Rules
 
 
 --------------------------------------------------------------------------------
--- | This usualy is the function with which the user runs the hakyll compiler
+-- | This usually is the function with which the user runs the hakyll compiler
 hakyll :: Rules a -> IO ()
 hakyll = hakyllWith Config.defaultConfiguration
 
@@ -39,26 +39,53 @@ hakyll = hakyllWith Config.defaultConfiguration
 hakyllWith :: Config.Configuration -> Rules a -> IO ()
 hakyllWith conf rules = hakyllWithExitCode conf rules >>= exitWith
 
+--------------------------------------------------------------------------------
+-- | A variant of 'hakyll' which returns an 'ExitCode'
 hakyllWithExitCode :: Config.Configuration -> Rules a -> IO ExitCode
-hakyllWithExitCode conf rules = do
-    args' <- customExecParser (prefs showHelpOnError) (info (helper <*> optionParser conf) (fullDesc <> progDesc (progName ++ " - Static site compiler created with Hakyll")))
-    let args'' = optCommand args'
+hakyllWithExitCode conf rules =  do
+    args <- defaultParser conf
+    hakyllWithExitCodeAndArgs conf args rules
 
-    let verbosity' = if verbosity args' then Logger.Debug else Logger.Message
-        check'     =
-            if internal_links args'' then Check.InternalLinks else Check.All
+--------------------------------------------------------------------------------
+-- | A variant of 'hakyll' which expects a 'Configuration' and command-line
+-- 'Options'. This gives freedom to implement your own parsing.
+hakyllWithArgs :: Config.Configuration -> Options -> Rules a -> IO ()
+hakyllWithArgs conf args rules =
+    hakyllWithExitCodeAndArgs conf args rules >>= exitWith
+
+--------------------------------------------------------------------------------
+hakyllWithExitCodeAndArgs :: Config.Configuration ->
+                              Options -> Rules a -> IO ExitCode
+hakyllWithExitCodeAndArgs conf args rules = do
+    let args' = optCommand args
+        verbosity' = if verbosity args then Logger.Debug else Logger.Message
+        check     =
+            if internal_links args' then Check.InternalLinks else Check.All
 
     logger <- Logger.new verbosity'
+    invokeCommands args' conf check logger rules
 
-    case args'' of
-        Build       -> Commands.build conf logger rules
-        Check   _   -> Commands.check conf logger check' >> ok
-        Clean       -> Commands.clean conf logger >> ok
-        Deploy      -> Commands.deploy conf
-        Preview p   -> Commands.preview conf logger rules p >> ok
-        Rebuild     -> Commands.rebuild conf logger rules
-        Server  _ _   -> Commands.server conf logger (host args'') (port args'') >> ok
-        Watch   _ p s -> Commands.watch conf logger (host args'') p (not s) rules >> ok
+--------------------------------------------------------------------------------
+defaultParser :: Config.Configuration -> IO Options
+defaultParser conf =
+    customExecParser (prefs showHelpOnError)
+        (info (helper <*> optionParser conf)
+        (fullDesc <> progDesc
+        (progName ++ " - Static site compiler created with Hakyll")))
+
+--------------------------------------------------------------------------------
+invokeCommands :: Command -> Config.Configuration ->
+                  Check.Check -> Logger.Logger -> Rules a -> IO ExitCode
+invokeCommands args conf check logger rules =
+    case args of
+        Build          -> Commands.build conf logger rules
+        Check   _      -> Commands.check conf logger check >> ok
+        Clean          -> Commands.clean conf logger >> ok
+        Deploy         -> Commands.deploy conf
+        Preview p      -> Commands.preview conf logger rules p >> ok
+        Rebuild        -> Commands.rebuild conf logger rules
+        Server  _ _    -> Commands.server conf logger (host args) (port args) >> ok
+        Watch   _ p s  -> Commands.watch conf logger (host args) p (not s) rules >> ok
     where
         ok = return ExitSuccess
 
@@ -80,7 +107,7 @@ data Command
     deriving (Show)
 
 optionParser :: Config.Configuration -> Parser Options
-optionParser conf = Options <$> verboseParser <*> (commandParser conf)
+optionParser conf = Options <$> verboseParser <*> commandParser conf
     where
     verboseParser = switch (long "verbose" <> short 'v' <> help "Run in verbose mode")
 
@@ -88,18 +115,18 @@ optionParser conf = Options <$> verboseParser <*> (commandParser conf)
 commandParser :: Config.Configuration -> Parser Command
 commandParser conf = subparser $ foldr ((<>) . produceCommand) mempty commands
     where
-    produceCommand (a,b) = command a (info (helper <*> (fst b)) (snd b))
+    produceCommand (a,b) = command a (info (helper <*> fst b) (snd b))
     portParser = option auto (long "port" <> help "Port to listen on" <> value (Config.previewPort conf))
     hostParser = strOption (long "host" <> help "Host to bind on" <> value (Config.previewHost conf))
     commands = [
-        ("build",(pure Build,fullDesc <> progDesc "Generate the site")),
-        ("check",(pure Check <*> switch (long "internal-links" <> help "Check internal links only"), fullDesc <> progDesc "Validate the site output")),
-        ("clean",(pure Clean,fullDesc <> progDesc "Clean up and remove cache")),
-        ("deploy",(pure Deploy,fullDesc <> progDesc "Upload/deploy your site")),
-        ("preview",(pure Preview <*> portParser,fullDesc <> progDesc "[DEPRECATED] Please use the watch command")),
-        ("rebuild",(pure Rebuild,fullDesc <> progDesc "Clean and build again")),
-        ("server",(pure Server <*> hostParser <*> portParser,fullDesc <> progDesc "Start a preview server")),
-        ("watch",(pure Watch <*> hostParser <*> portParser <*> switch (long "no-server" <> help "Disable the built-in web server"),fullDesc <> progDesc "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server."))
+        ("build",   (pure Build,fullDesc <> progDesc "Generate the site")),
+        ("check",   (pure Check <*> switch (long "internal-links" <> help "Check internal links only"), fullDesc <> progDesc "Validate the site output")),
+        ("clean",   (pure Clean,fullDesc <> progDesc "Clean up and remove cache")),
+        ("deploy",  (pure Deploy,fullDesc <> progDesc "Upload/deploy your site")),
+        ("preview", (pure Preview <*> portParser,fullDesc <> progDesc "[DEPRECATED] Please use the watch command")),
+        ("rebuild", (pure Rebuild,fullDesc <> progDesc "Clean and build again")),
+        ("server",  (pure Server <*> hostParser <*> portParser,fullDesc <> progDesc "Start a preview server")),
+        ("watch",   (pure Watch <*> hostParser <*> portParser <*> switch (long "no-server" <> help "Disable the built-in web server"),fullDesc <> progDesc "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server."))
         ]
 
 
