@@ -65,6 +65,8 @@ Extra-source-files:
   tests/data/example.md
   tests/data/example.md.metadata
   tests/data/images/favicon.ico
+  tests/data/just-meta.html
+  tests/data/just-meta.html.out
   tests/data/partial-helper.html
   tests/data/partial.html
   tests/data/partial.html.out
