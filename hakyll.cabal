@@ -99,6 +99,7 @@ Library
 
   Exposed-Modules:
     Hakyll
+    Hakyll.Commands
     Hakyll.Core.Compiler
     Hakyll.Core.Configuration
     Hakyll.Core.Dependencies
@@ -133,7 +134,6 @@ Library
     Data.List.Extended
     Data.Yaml.Extended
     Hakyll.Check
-    Hakyll.Commands
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.Compiler.Require
     Hakyll.Core.Item.SomeItem
