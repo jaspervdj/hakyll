@@ -73,6 +73,7 @@ defaultParser conf =
         (fullDesc <> progDesc
         (progName ++ " - Static site compiler created with Hakyll")))
 
+
 --------------------------------------------------------------------------------
 invokeCommands :: Command -> Config.Configuration ->
                   Check.Check -> Logger.Logger -> Rules a -> IO ExitCode

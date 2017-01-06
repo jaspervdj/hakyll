@@ -50,8 +50,8 @@ build conf logger rules = fst <$> run conf logger rules
 
 --------------------------------------------------------------------------------
 -- | Run the checker and exit
-check :: Configuration -> Logger -> Check.Check -> IO ()
-check config logger check' = Check.check config logger check' >>= exitWith
+check :: Configuration -> Logger -> Check.Check -> IO ExitCode
+check = Check.check
 
 
 --------------------------------------------------------------------------------

@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.2.0
+
+- Fix integer fields in YAML metadata (Fix by Nikolaos S. Papaspyrou)
+- Bump pandoc dependency to 1.19
+
 ## Hakyll 4.9.1.0
 
 - Allow optparse-applicative 0.13, QuickCheck 2.9, and pandoc 1.18

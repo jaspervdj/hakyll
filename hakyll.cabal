@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.9.1.0
+Version: 4.9.2.0
 
 Synopsis: A static website compiler library
 Description:
@@ -65,6 +65,8 @@ Extra-source-files:
   tests/data/example.md
   tests/data/example.md.metadata
   tests/data/images/favicon.ico
+  tests/data/just-meta.html
+  tests/data/just-meta.html.out
   tests/data/partial-helper.html
   tests/data/partial.html
   tests/data/partial.html.out
@@ -97,6 +99,7 @@ Library
 
   Exposed-Modules:
     Hakyll
+    Hakyll.Commands
     Hakyll.Core.Compiler
     Hakyll.Core.Configuration
     Hakyll.Core.Dependencies
@@ -131,7 +134,6 @@ Library
     Data.List.Extended
     Data.Yaml.Extended
     Hakyll.Check
-    Hakyll.Commands
     Hakyll.Core.Compiler.Internal
     Hakyll.Core.Compiler.Require
     Hakyll.Core.Item.SomeItem
@@ -164,7 +166,7 @@ Library
     mtl                  >= 1      && < 2.3,
     network              >= 2.6    && < 2.7,
     network-uri          >= 2.6    && < 2.7,
-    pandoc               >= 1.14   && < 1.19,
+    pandoc               >= 1.14   && < 1.20,
     pandoc-citeproc      >= 0.4    && < 0.11,
     parsec               >= 3.0    && < 3.2,
     process              >= 1.0    && < 1.5,
@@ -257,7 +259,7 @@ Test-suite hakyll-tests
     mtl                  >= 1      && < 2.3,
     network              >= 2.6    && < 2.7,
     network-uri          >= 2.6    && < 2.7,
-    pandoc               >= 1.14   && < 1.19,
+    pandoc               >= 1.14   && < 1.20,
     pandoc-citeproc      >= 0.4    && < 0.11,
     parsec               >= 3.0    && < 3.2,
     process              >= 1.0    && < 1.5,
