@@ -35,7 +35,10 @@ import           Hakyll.Core.Writable   (Writable (..))
 --
 -- An example of a valid association list would be:
 --
--- > brokenLinks = [("/Black-market archive", "/Black-market%20archives")]
+-- > brokenLinks =
+-- >     [ ("projects.html", "http://github.com/gwern")
+-- >     , ("/Black-market archive", "Black-market%20archives")
+-- >     ]
 --
 -- In which case the functionality can then be used in `main` with a line like:
 --
