@@ -121,6 +121,7 @@ Library
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.Biblio
     Hakyll.Web.Pandoc.FileType
+    Hakyll.Web.Redirect
     Hakyll.Web.Tags
     Hakyll.Web.Paginate
     Hakyll.Web.Template
