@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.3.0
+
+- Add a `Hakyll.Web.Redirect` module (contribution by gwern)
+- Expose `Hakyll.Commands`
+- Fix the exit code behaviour of `./site check`
+
 ## Hakyll 4.9.2.0
 
 - Fix integer fields in YAML metadata (Fix by Nikolaos S. Papaspyrou)
