@@ -42,7 +42,9 @@ import           Hakyll.Core.Writable   (Writable (..))
 --
 -- In which case the functionality can then be used in `main` with a line like:
 --
--- > createRedirects brokenLinks
+-- > version "redirects" $ createRedirects brokenLinks
+--
+-- The 'version' is recommended to separate these items from your other pages.
 --
 -- The on-disk files can then be uploaded with HTML mimetypes
 -- (either explicitly by generating and uploading them separately, by
