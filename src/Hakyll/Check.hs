@@ -8,22 +8,21 @@ module Hakyll.Check
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                (forM_)
-import           Control.Monad.Reader         (ask)
-import           Control.Monad.RWS            (RWST, runRWST)
+import           Control.Monad                (forM_, foldM)
+import           Control.Monad.Reader         (ask, ReaderT, runReaderT)
 import           Control.Monad.Trans          (liftIO)
 import           Control.Monad.Trans.Resource (runResourceT)
-import           Control.Monad.Writer         (tell)
 import           Data.ByteString.Char8        (unpack)
 import           Data.List                    (isPrefixOf)
-import           Data.Set                     (Set)
-import qualified Data.Set                     as S
+import qualified Data.Map.Lazy                as Map
 import           Network.URI                  (unEscapeString)
 import           System.Directory             (doesDirectoryExist,
                                                doesFileExist)
 import           System.Exit                  (ExitCode (..))
 import           System.FilePath              (takeDirectory, takeExtension,
                                                (</>))
+import           Control.Concurrent.MVar      (MVar, newEmptyMVar, putMVar,
+                                               readMVar)
 import qualified Text.HTML.TagSoup            as TS
 
 
@@ -31,7 +30,7 @@ import qualified Text.HTML.TagSoup            as TS
 #ifdef CHECK_EXTERNAL
 import           Control.Exception            (SomeAsyncException (..),
                                                SomeException (..), try, throw)
-import           Control.Monad.State          (get, modify)
+import           Control.Monad.State          (get, modify, StateT, runStateT)
 import           Data.List                    (intercalate)
 import           Data.Typeable                (cast)
 import           Data.Version                 (versionBranch)
@@ -58,8 +57,17 @@ data Check = All | InternalLinks
 --------------------------------------------------------------------------------
 check :: Configuration -> Logger -> Check -> IO ExitCode
 check config logger check' = do
-    ((), write) <- runChecker checkDestination config logger check'
-    return $ if checkerFaulty write > 0 then ExitFailure 1 else ExitSuccess
+    ((), state) <- runChecker checkDestination config logger check'
+    failed <- countFailedLinks state
+    return $ if failed > 0 then ExitFailure 1 else ExitSuccess
+
+
+--------------------------------------------------------------------------------
+countFailedLinks :: CheckerState -> IO Int
+countFailedLinks state = foldM addIfFailure 0 (Map.elems state)
+    where addIfFailure failures mvar = do
+              checkerWrite <- readMVar mvar
+              return $ failures + checkerFaulty checkerWrite
 
 
 --------------------------------------------------------------------------------
@@ -85,26 +93,28 @@ instance Monoid CheckerWrite where
 
 
 --------------------------------------------------------------------------------
-type CheckerState = Set String
+type CheckerState = Map.Map URL (MVar CheckerWrite)
 
 
 --------------------------------------------------------------------------------
-type Checker a = RWST CheckerRead CheckerWrite CheckerState IO a
+type Checker a = ReaderT CheckerRead (StateT CheckerState IO) a
+
+
+--------------------------------------------------------------------------------
+type URL = String
 
 
 --------------------------------------------------------------------------------
 runChecker :: Checker a -> Configuration -> Logger -> Check
-           -> IO (a, CheckerWrite)
+           -> IO (a, CheckerState)
 runChecker checker config logger check' = do
     let read' = CheckerRead
                     { checkerConfig = config
                     , checkerLogger = logger
                     , checkerCheck  = check'
                     }
-
-    (x, _, write) <- runRWST checker read' S.empty
     Logger.flush logger
-    return (x, write)
+    runStateT (runReaderT checker read') Map.empty
 
 
 --------------------------------------------------------------------------------
@@ -133,14 +143,31 @@ checkFile filePath = do
     let urls = getUrls $ TS.parseTags contents
     forM_ urls $ \url -> do
         Logger.debug logger $ "Checking link " ++ url
-        checkUrl filePath url
+        m <- liftIO newEmptyMVar
+        checkUrlIfNeeded filePath (canonicalizeUrl url) m
+    where
+        -- Check scheme-relative links
+        canonicalizeUrl url = if schemeRelative url then "http:" ++ url else url
+        schemeRelative = isPrefixOf "//"
 
 
 --------------------------------------------------------------------------------
-checkUrl :: FilePath -> String -> Checker ()
+checkUrlIfNeeded :: FilePath -> URL -> MVar CheckerWrite -> Checker ()
+checkUrlIfNeeded filepath url m = do
+    logger     <- checkerLogger           <$> ask
+    needsCheck <- (== All) . checkerCheck <$> ask
+    checked    <- (url `Map.member`)      <$> get
+    if not needsCheck || checked
+        then Logger.debug logger "Already checked, skipping"
+        else do modify $ Map.insert url m
+                checkUrl filepath url
+
+
+--------------------------------------------------------------------------------
+checkUrl :: FilePath -> URL -> Checker ()
 checkUrl filePath url
     | isExternal url  = checkExternalUrl url
-    | hasProtocol url = skip "Unknown protocol, skipping"
+    | hasProtocol url = skip url $ Just "Unknown protocol, skipping"
     | otherwise       = checkInternalUrl filePath url
   where
     validProtoChars = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9'] ++ "+-."
@@ -150,30 +177,45 @@ checkUrl filePath url
 
 
 --------------------------------------------------------------------------------
-ok :: String -> Checker ()
-ok _ = tell $ mempty {checkerOk = 1}
+ok :: URL -> Checker ()
+ok url = putCheckResult url mempty {checkerOk = 1}
 
 
 --------------------------------------------------------------------------------
-skip :: String -> Checker ()
-skip reason = do
+skip :: URL -> Maybe String -> Checker ()
+skip url maybeReason = do
     logger <- checkerLogger <$> ask
-    Logger.debug logger $ reason
-    tell $ mempty {checkerOk = 1}
+    case maybeReason of
+        Nothing -> return ()
+        Just reason -> Logger.debug logger reason
+    putCheckResult url mempty {checkerOk = 1}
+
 
 --------------------------------------------------------------------------------
-faulty :: String -> Maybe String -> Checker ()
+faulty :: URL -> Maybe String -> Checker ()
 faulty url reason = do
     logger <- checkerLogger <$> ask
     Logger.error logger $ "Broken link to " ++ show url ++ explanation
-    tell $ mempty {checkerFaulty = 1}
+    putCheckResult url mempty {checkerFaulty = 1}
   where
     formatExplanation = (" (" ++) . (++ ")")
     explanation = maybe "" formatExplanation reason
 
 
 --------------------------------------------------------------------------------
-checkInternalUrl :: FilePath -> String -> Checker ()
+putCheckResult :: URL -> CheckerWrite -> Checker ()
+putCheckResult url result = do
+    state <- get
+    let maybeMVar = Map.lookup url state
+    case maybeMVar of
+        Just m -> liftIO $ putMVar m result
+        Nothing -> do
+            logger <- checkerLogger <$> ask
+            Logger.debug logger "Failed to find existing entry for checked URL"
+
+
+--------------------------------------------------------------------------------
+checkInternalUrl :: FilePath -> URL -> Checker ()
 checkInternalUrl base url = case url' of
     "" -> ok url
     _  -> do
@@ -191,57 +233,46 @@ checkInternalUrl base url = case url' of
 
 
 --------------------------------------------------------------------------------
-checkExternalUrl :: String -> Checker ()
+checkExternalUrl :: URL -> Checker ()
 #ifdef CHECK_EXTERNAL
 checkExternalUrl url = do
-    logger     <- checkerLogger           <$> ask
-    needsCheck <- (== All) . checkerCheck <$> ask
-    checked    <- (url `S.member`)        <$> get
-
-    if not needsCheck || checked
-        then Logger.debug logger "Already checked, skipping"
-        else do
-            result <- liftIO $ try $ do
-                mgr <- Http.newManager Http.tlsManagerSettings
-                runResourceT $ do
-                    request  <- Http.parseRequest urlToCheck
-                    response <- Http.http (settings request) mgr
-                    let code = Http.statusCode (Http.responseStatus response)
-                    return $ code >= 200 && code < 300
-
-            modify $ if schemeRelative url
-                         then S.insert urlToCheck . S.insert url
-                         else S.insert url
-            case result of
-                Left (SomeException e) ->
-                    case (cast e :: Maybe SomeAsyncException) of
-                        Just ae -> throw ae
-                        _ -> faulty url (Just $ showException e)
-                Right _ -> ok url
-  where
-    -- Add additional request info
-    settings r = r
-        { Http.method         = "HEAD"
-        , Http.redirectCount  = 10
-        , Http.requestHeaders = ("User-Agent", ua) : Http.requestHeaders r
-        }
-
-    -- Nice user agent info
-    ua = fromString $ "hakyll-check/" ++
-        (intercalate "." $ map show $ versionBranch $ Paths_hakyll.version)
-
-    -- Check scheme-relative links
-    schemeRelative = isPrefixOf "//"
-    urlToCheck     = if schemeRelative url then "http:" ++ url else url
-
-    -- Convert exception to a concise form
-    showException e = case cast e of
-        Just (Http.HttpExceptionRequest _ e') -> show e'
-        _ -> head $ words $ show e
+    result <- requestExternalUrl url
+    case result of
+        Left (SomeException e) ->
+            case (cast e :: Maybe SomeAsyncException) of
+                Just ae -> throw ae
+                _ -> faulty url (Just $ showException e)
+        Right _ -> ok url
+    where
+        -- Convert exception to a concise form
+        showException e = case cast e of
+            Just (Http.HttpExceptionRequest _ e') -> show e'
+            _ -> head $ words $ show e
 #else
-checkExternalUrl _ = return ()
+checkExternalUrl url = skip url Nothing
 #endif
 
+
+--------------------------------------------------------------------------------
+requestExternalUrl :: URL -> Checker (Either SomeException Bool)
+requestExternalUrl url = liftIO $ try $ do
+    mgr <- Http.newManager Http.tlsManagerSettings
+    runResourceT $ do
+        request  <- Http.parseRequest url
+        response <- Http.http (settings request) mgr
+        let code = Http.statusCode (Http.responseStatus response)
+        return $ code >= 200 && code < 300
+    where
+        -- Add additional request info
+        settings r = r
+            { Http.method         = "HEAD"
+            , Http.redirectCount  = 10
+            , Http.requestHeaders = ("User-Agent", ua) : Http.requestHeaders r
+            }
+
+        -- Nice user agent info
+        ua = fromString $ "hakyll-check/" ++
+             (intercalate "." $ map show $ versionBranch Paths_hakyll.version)
 
 
 --------------------------------------------------------------------------------
