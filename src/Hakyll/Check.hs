@@ -242,9 +242,14 @@ checkExternalUrl url = do
             case (cast e :: Maybe SomeAsyncException) of
                 Just ae -> throw ae
                 _ -> faulty url (Just $ showException e)
-        Right _ -> ok url
+        Right statusCode ->
+          case statusCode >= 200 && statusCode < 300 of
+            True -> ok url
+            False -> faulty url (Just $ statusCodeError statusCode)
     where
         -- Convert exception to a concise form
+        statusCodeError statusCode =
+          "Request failed with status code " ++ show statusCode
         showException e = case cast e of
             Just (Http.HttpExceptionRequest _ e') -> show e'
             _ -> head $ words $ show e
@@ -254,14 +259,13 @@ checkExternalUrl url = skip url Nothing
 
 
 --------------------------------------------------------------------------------
-requestExternalUrl :: URL -> Checker (Either SomeException Bool)
+requestExternalUrl :: URL -> Checker (Either SomeException Int)
 requestExternalUrl url = liftIO $ try $ do
     mgr <- Http.newManager Http.tlsManagerSettings
     runResourceT $ do
         request  <- Http.parseRequest url
         response <- Http.http (settings request) mgr
-        let code = Http.statusCode (Http.responseStatus response)
-        return $ code >= 200 && code < 300
+        return $ Http.statusCode (Http.responseStatus response) 
     where
         -- Add additional request info
         settings r = r
