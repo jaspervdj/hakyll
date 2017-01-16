@@ -164,6 +164,8 @@ directly with the default Hakyll site.
   [source](https://github.com/alexanderlobov/homepage)
 - <http://rahul.nu/>,
   [source](https://github.com/rp/rp.github.io/tree/dev)
+- <http://haskanything.com/>,
+[source](https://github.com/beerendlauwers/HaskAnything)
 
 ## Hakyll 3.X
 
