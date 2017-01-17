@@ -236,6 +236,20 @@ This uses the `$for(foo)$` construct. This construct allows you loop over a
 list, in this case, `$posts$`. Inside the body of this for loop, all fields
 refer to the current post, e.g.: `$url$`, `$title$` and `$date$`.
 
+You can also add a simple separator with the special `$sep$` field. 
+Everything between `$sep$` and `$endfor$` will be regarded as a separator
+that will only be shown if there is more than one item in the list.
+
+```html
+<ul>
+    $for(posts)$
+        $x$
+        $sep$,
+    $endfor$
+</ul>
+```
+
+
 Of course, $posts$ does not magically appear. We have to specify this in
 `site.hs`. Let's look at how `archive.html` is generated:
 
