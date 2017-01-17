@@ -4,6 +4,7 @@
 module Hakyll.Web.Template.Context
     ( ContextField (..)
     , Context (..)
+    , DateFormat (..)
     , field
     , boolField
     , constField
@@ -22,6 +23,7 @@ module Hakyll.Web.Template.Context
     , dateField
     , dateFieldWith
     , getItemUTC
+    , getItemTime
     , getItemModificationTime
     , modificationTimeField
     , modificationTimeFieldWith
@@ -36,9 +38,13 @@ import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
 import           Data.List                     (intercalate)
 import           Data.Time.Clock               (UTCTime (..))
-import           Data.Time.Format              (formatTime)
+import           Data.Time.Format              (ParseTime, formatTime)
 import qualified Data.Time.Format              as TF
+import           Data.Time.LocalTime           (ZonedTime (..))
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
+import           Data.Time.RFC822              (formatTimeRFC822)
+import           Data.Time.RFC3339             (formatTimeRFC3339)
+import           GHC.Exts                      (IsString, fromString)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
@@ -55,6 +61,16 @@ import           System.FilePath               (splitDirectories, takeBaseName)
 data ContextField
     = StringField String
     | forall a. ListField (Context a) [Item a]
+
+--------------------------------------------------------------------------------
+-- | Date format: RFC822 for RSS, RFC3339 for Atom, or custom format string
+data DateFormat
+    = RFC822
+    | RFC3339
+    | DateFormat String
+
+instance IsString DateFormat where
+    fromString = DateFormat
 
 
 --------------------------------------------------------------------------------
@@ -239,6 +255,8 @@ titleField = mapContext takeBaseName . pathField
 --
 --   * @2010-09-06 00:01:00+0000@
 --
+--   * @2010-09-06 00:01:00 +0000@
+--
 --   * @2010-09-06 00:01:00@
 --
 --   * @September 06, 2010 00:01 AM@
@@ -259,7 +277,7 @@ titleField = mapContext takeBaseName . pathField
 -- In case of multiple matches, the rightmost one is used.
 
 dateField :: String     -- ^ Key in which the rendered date should be placed
-          -> String     -- ^ Format to use on the date
+          -> DateFormat -- ^ Format to use on the date
           -> Context a  -- ^ Resulting context
 dateField = dateFieldWith defaultTimeLocale
 
@@ -270,11 +288,14 @@ dateField = dateFieldWith defaultTimeLocale
 -- details, see 'dateField'.
 dateFieldWith :: TimeLocale  -- ^ Output time locale
               -> String      -- ^ Destination key
-              -> String      -- ^ Format to use on the date
+              -> DateFormat  -- ^ Format to use on the date
               -> Context a   -- ^ Resulting context
 dateFieldWith locale key format = field key $ \i -> do
-    time <- getItemUTC locale $ itemIdentifier i
-    return $ formatTime locale format time
+    time <- getItemTime locale $ itemIdentifier i :: Compiler ZonedTime
+    return $ case format of
+                 RFC822         -> formatTimeRFC822 time
+                 RFC3339        -> formatTimeRFC3339 time
+                 DateFormat str -> formatTime locale str time
 
 
 --------------------------------------------------------------------------------
@@ -285,7 +306,14 @@ getItemUTC :: MonadMetadata m
            => TimeLocale        -- ^ Output time locale
            -> Identifier        -- ^ Input page
            -> m UTCTime         -- ^ Parsed UTCTime
-getItemUTC locale id' = do
+getItemUTC = getItemTime
+
+-- | General version of `getItemUTC` that returns an instance of `ParseTime`
+getItemTime :: (MonadMetadata m, ParseTime t)
+            => TimeLocale        -- ^ Output time locale
+            -> Identifier        -- ^ Input page
+            -> m t               -- ^ Parsed time
+getItemTime locale id' = do
     metadata <- getMetadata id'
     let tryField k fmt = lookupString k metadata >>= parseTime' fmt
         paths          = splitDirectories $ toFilePath id'
@@ -295,13 +323,14 @@ getItemUTC locale id' = do
         [tryField "date"      fmt | fmt <- formats] ++
         [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fnCand | fnCand <- reverse paths]
   where
-    empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
+    empty'     = fail $ "Hakyll.Web.Template.Context.getItemTime: " ++
         "could not parse time for " ++ show id'
     parseTime' = parseTimeM True locale
     formats    =
         [ "%a, %d %b %Y %H:%M:%S %Z"
         , "%Y-%m-%dT%H:%M:%S%Z"
         , "%Y-%m-%d %H:%M:%S%Z"
+        , "%Y-%m-%d %H:%M:%S %Z"
         , "%Y-%m-%d"
         , "%B %e, %Y %l:%M %p"
         , "%B %e, %Y"
@@ -371,7 +400,7 @@ missingField = Context $ \k _ i -> fail $
     "Missing field $" ++ k ++ "$ in context for item " ++
     show (itemIdentifier i)
 
-parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime
+parseTimeM :: ParseTime t => Bool -> TimeLocale -> String -> String -> Maybe t
 #if MIN_VERSION_time(1,5,0)
 parseTimeM = TF.parseTimeM
 #else

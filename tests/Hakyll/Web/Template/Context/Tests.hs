@@ -11,6 +11,8 @@ import           Test.Tasty.HUnit            (Assertion, testCase, (@=?))
 
 
 --------------------------------------------------------------------------------
+import           Data.Time.Format              (TimeLocale (..), defaultTimeLocale)
+import           Data.Time.LocalTime           (TimeZone (..))
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Provider
@@ -40,6 +42,12 @@ testDateField = do
         "posts/2010-08-26-birthday.md" "date" $
             dateField "date" "%B %e, %Y"
     date2 @=? "August 26, 2010"
+
+    let jst = defaultTimeLocale { knownTimeZones = [TimeZone (9 * 60) False "JST"] }
+    date3 <- testContextDone store provider
+        "posts/2016-08-02-localtime.md" "date" $
+            dateFieldWith jst "date" "%Y-%m-%d %H:%M:%S %z"
+    "2016-08-02 23:01:03 +0900" @=? date3
 
     cleanTestEnv
 

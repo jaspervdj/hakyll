@@ -19,8 +19,15 @@
 module Hakyll.Web.Feed
     ( FeedConfiguration (..)
     , renderRss
+    , renderRssWith
     , renderAtom
+    , renderAtomWith
     ) where
+
+
+--------------------------------------------------------------------------------
+import           Control.Monad                 ((<=<))
+import           Data.Time.Format              (TimeLocale (..), defaultTimeLocale)
 
 
 --------------------------------------------------------------------------------
@@ -112,9 +119,14 @@ renderRss :: FeedConfiguration       -- ^ Feed configuration
           -> Context String          -- ^ Item context
           -> [Item String]           -- ^ Feed items
           -> Compiler (Item String)  -- ^ Resulting feed
-renderRss config context = renderFeed
+renderRss = renderRssWith defaultTimeLocale
+
+-- | This is an extended version of 'renderRss' that allows you to
+-- specify a time locale that is used for parsing the date.
+renderRssWith :: TimeLocale -> FeedConfiguration -> Context String -> [Item String] -> Compiler (Item String)
+renderRssWith locale config context = renderFeed
     "templates/rss.xml" "templates/rss-item.xml" config
-    (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
+    (makeItemContext locale RFC822 context)
 
 
 --------------------------------------------------------------------------------
@@ -123,13 +135,18 @@ renderAtom :: FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Item context
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
-renderAtom config context = renderFeed
+renderAtom = renderAtomWith defaultTimeLocale
+
+-- | This is an extended version of 'renderAtom' that allows you to
+-- specify a time locale that is used for parsing the date.
+renderAtomWith :: TimeLocale -> FeedConfiguration -> Context String -> [Item String] -> Compiler (Item String)
+renderAtomWith locale config context = renderFeed
     "templates/atom.xml" "templates/atom-item.xml" config
-    (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
+    (makeItemContext locale RFC3339 context)
 
 
 --------------------------------------------------------------------------------
 -- | Copies @$updated$@ from @$published$@ if it is not already set.
-makeItemContext :: String -> Context a -> Context a
-makeItemContext fmt context = mconcat
-    [dateField "published" fmt, context, dateField "updated" fmt]
+makeItemContext :: TimeLocale -> DateFormat -> Context a -> Context a
+makeItemContext locale fmt context = mconcat
+    [dateFieldWith locale "published" fmt, context, dateFieldWith locale "updated" fmt]
