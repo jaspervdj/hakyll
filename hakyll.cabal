@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.9.3.0
+Version: 4.9.4.0
 
 Synopsis: A static website compiler library
 Description:
@@ -62,6 +62,7 @@ Data-files:
   templates/rss.xml
 
 Extra-source-files:
+  CHANGELOG.md
   tests/data/example.md
   tests/data/example.md.metadata
   tests/data/images/favicon.ico

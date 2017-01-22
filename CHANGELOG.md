@@ -4,6 +4,13 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.4.0
+
+- Make `./site check` concurrent
+- Bump directory dependency to 1.3
+- Bump time dependency to 1.7
+- Bump vector dependency to 0.12
+
 ## Hakyll 4.9.3.0
 
 - Add a `Hakyll.Web.Redirect` module (contribution by gwern)
