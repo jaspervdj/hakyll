@@ -8,8 +8,13 @@ module Hakyll.Check
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                (forM_, foldM)
-import           Control.Monad.Reader         (ask, ReaderT, runReaderT)
+import           Control.Concurrent.MVar      (MVar, newEmptyMVar, putMVar,
+                                               readMVar)
+import           Control.Exception            (SomeAsyncException (..),
+                                               SomeException (..), throw, try)
+import           Control.Monad                (foldM, forM_)
+import           Control.Monad.Reader         (ReaderT, ask, runReaderT)
+import           Control.Monad.State          (StateT, get, modify, runStateT)
 import           Control.Monad.Trans          (liftIO)
 import           Control.Monad.Trans.Resource (runResourceT)
 import           Data.ByteString.Char8        (unpack)
@@ -21,16 +26,11 @@ import           System.Directory             (doesDirectoryExist,
 import           System.Exit                  (ExitCode (..))
 import           System.FilePath              (takeDirectory, takeExtension,
                                                (</>))
-import           Control.Concurrent.MVar      (MVar, newEmptyMVar, putMVar,
-                                               readMVar)
 import qualified Text.HTML.TagSoup            as TS
 
 
 --------------------------------------------------------------------------------
 #ifdef CHECK_EXTERNAL
-import           Control.Exception            (SomeAsyncException (..),
-                                               SomeException (..), try, throw)
-import           Control.Monad.State          (get, modify, StateT, runStateT)
 import           Data.List                    (intercalate)
 import           Data.Typeable                (cast)
 import           Data.Version                 (versionBranch)
@@ -186,7 +186,7 @@ skip :: URL -> Maybe String -> Checker ()
 skip url maybeReason = do
     logger <- checkerLogger <$> ask
     case maybeReason of
-        Nothing -> return ()
+        Nothing     -> return ()
         Just reason -> Logger.debug logger reason
     putCheckResult url mempty {checkerOk = 1}
 
@@ -241,19 +241,14 @@ checkExternalUrl url = do
         Left (SomeException e) ->
             case (cast e :: Maybe SomeAsyncException) of
                 Just ae -> throw ae
-                _ -> faulty url (Just $ showException e)
+                _       -> faulty url (Just $ showException e)
         Right _ -> ok url
     where
         -- Convert exception to a concise form
         showException e = case cast e of
             Just (Http.HttpExceptionRequest _ e') -> show e'
-            _ -> head $ words $ show e
-#else
-checkExternalUrl url = skip url Nothing
-#endif
+            _                                     -> head $ words $ show e
 
-
---------------------------------------------------------------------------------
 requestExternalUrl :: URL -> Checker (Either SomeException Bool)
 requestExternalUrl url = liftIO $ try $ do
     mgr <- Http.newManager Http.tlsManagerSettings
@@ -273,6 +268,9 @@ requestExternalUrl url = liftIO $ try $ do
         -- Nice user agent info
         ua = fromString $ "hakyll-check/" ++
              (intercalate "." $ map show $ versionBranch Paths_hakyll.version)
+#else
+checkExternalUrl url = skip url Nothing
+#endif
 
 
 --------------------------------------------------------------------------------
