@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.5.0
+
+- Fix compilation issue with `Hakyll.Check` if `checkExternal` is disabled
+  (Fix by Magnus Therning)
+
 ## Hakyll 4.9.4.0
 
 - Make `./site check` concurrent
