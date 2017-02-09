@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.5.1
+
+- Bump blaze-html dependency to 0.9
+- Bump blaze-markup dependency to 0.8
+- Bump process dependency to 1.5
+
 ## Hakyll 4.9.5.0
 
 - Fix compilation issue with `Hakyll.Check` if `checkExternal` is disabled
