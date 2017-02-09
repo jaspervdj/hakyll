@@ -13,8 +13,3 @@ You can install this library using cabal:
 Or using stack:
 
     stack install hakyll
-
-## hakyll-init
-
-`hakyll-init` is a simple executable that can generate a sample site to get
-started with.  You can find it [here](https://github.com/jaspervdj/hakyll-init).
