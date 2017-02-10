@@ -49,7 +49,6 @@ instance Writable CopyFile where
 #else
     write dst (Item _ (CopyFile src)) = copyFile src dst
 #endif
-
 --------------------------------------------------------------------------------
 copyFileCompiler :: Compiler (Item CopyFile)
 copyFileCompiler = do
