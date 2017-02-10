@@ -166,6 +166,8 @@ directly with the default Hakyll site.
   [source](https://github.com/rp/rp.github.io/tree/dev)
 - <http://haskanything.com/>,
 [source](https://github.com/beerendlauwers/HaskAnything)
+- <https://anler.me/>,
+[source](https://github.com/anler/anler.me)
 
 ## Hakyll 3.X
 
