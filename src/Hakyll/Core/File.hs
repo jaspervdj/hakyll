@@ -13,7 +13,7 @@ module Hakyll.Core.File
 --------------------------------------------------------------------------------
 import           Data.Binary                   (Binary (..))
 import           Data.Typeable                 (Typeable)
-import           System.Directory              (copyFile, doesFileExist,
+import           System.Directory              (copyFileWithMetadata, doesFileExist,
                                                 renameFile)
 import           System.FilePath               ((</>))
 import           System.Random                 (randomIO)
@@ -38,7 +38,7 @@ newtype CopyFile = CopyFile FilePath
 
 --------------------------------------------------------------------------------
 instance Writable CopyFile where
-    write dst (Item _ (CopyFile src)) = copyFile src dst
+    write dst (Item _ (CopyFile src)) = copyFileWithMetadata src dst
 
 
 --------------------------------------------------------------------------------
