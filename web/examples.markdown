@@ -166,6 +166,8 @@ directly with the default Hakyll site.
   [source](https://github.com/rp/rp.github.io/tree/dev)
 - <http://haskanything.com/>,
 [source](https://github.com/beerendlauwers/HaskAnything)
+- <https://www.brandonstil.es/>,
+[source](https://github.com/stilesb/brandonstil.es)
 
 ## Hakyll 3.X
 
