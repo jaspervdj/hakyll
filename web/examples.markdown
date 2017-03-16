@@ -162,6 +162,8 @@ directly with the default Hakyll site.
   [source](https://github.com/jjduhamel/blog)
 - <http://alexanderlobov.ru/>,
   [source](https://github.com/alexanderlobov/homepage)
+- <http://limansky.me/>,
+  [source](https://github.com/limansky/limansky_me)
 - <http://rahul.nu/>,
   [source](https://github.com/rp/rp.github.io/tree/dev)
 - <http://haskanything.com/>,
