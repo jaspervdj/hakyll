@@ -4,6 +4,30 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.5.1
+
+- Bump blaze-html dependency to 0.9
+- Bump blaze-markup dependency to 0.8
+- Bump process dependency to 1.5
+
+## Hakyll 4.9.5.0
+
+- Fix compilation issue with `Hakyll.Check` if `checkExternal` is disabled
+  (Fix by Magnus Therning)
+
+## Hakyll 4.9.4.0
+
+- Make `./site check` concurrent
+- Bump directory dependency to 1.3
+- Bump time dependency to 1.7
+- Bump vector dependency to 0.12
+
+## Hakyll 4.9.3.0
+
+- Add a `Hakyll.Web.Redirect` module (contribution by gwern)
+- Expose `Hakyll.Commands`
+- Fix the exit code behaviour of `./site check`
+
 ## Hakyll 4.9.2.0
 
 - Fix integer fields in YAML metadata (Fix by Nikolaos S. Papaspyrou)

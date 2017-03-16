@@ -11,7 +11,8 @@ module Hakyll.Web.Paginate
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                  (forM_)
+import           Control.Applicative            (empty)
+import           Control.Monad                  (forM_, forM)
 import qualified Data.Map                       as M
 import qualified Data.Set                       as S
 
@@ -93,6 +94,18 @@ paginatePage pag pageNumber
 -- | A default paginate context which provides the following keys:
 --
 --
+-- * @firstPageNum@
+-- * @firstPageUrl@
+-- * @previousPageNum@
+-- * @previousPageUrl@
+-- * @nextPageNum@
+-- * @nextPageUrl@
+-- * @lastPageNum@
+-- * @lastPageUrl@
+-- * @currentPageNum@
+-- * @currentPageUrl@
+-- * @numPages@
+-- * @allPages@
 paginateContext :: Paginate -> PageNumber -> Context a
 paginateContext pag currentPage = mconcat
     [ field "firstPageNum"    $ \_ -> otherPage 1                 >>= num
@@ -106,6 +119,20 @@ paginateContext pag currentPage = mconcat
     , field "currentPageNum"  $ \i -> thisPage i                  >>= num
     , field "currentPageUrl"  $ \i -> thisPage i                  >>= url
     , constField "numPages"   $ show $ paginateNumPages pag
+    , Context $ \k _ i -> case k of
+        "allPages" -> do
+            let ctx =
+                    field "isCurrent" (\n -> if fst (itemBody n) == currentPage then return "true" else empty) `mappend`
+                    field "num" (num . itemBody) `mappend`
+                    field "url" (url . itemBody)
+
+            list <- forM [1 .. lastPage] $
+                \n -> if n == currentPage then thisPage i else otherPage n
+            items <- mapM makeItem list
+            return $ ListField ctx items
+        _          -> do
+            empty
+
     ]
   where
     lastPage = paginateNumPages pag

@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 -- | Exports simple compilers to just copy files
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.File
@@ -13,7 +14,12 @@ module Hakyll.Core.File
 --------------------------------------------------------------------------------
 import           Data.Binary                   (Binary (..))
 import           Data.Typeable                 (Typeable)
-import           System.Directory              (copyFile, doesFileExist,
+#if MIN_VERSION_directory(1,2,6)
+import           System.Directory              (copyFileWithMetadata)
+#else
+import           System.Directory              (copyFile)
+#endif
+import           System.Directory              (doesFileExist,
                                                 renameFile)
 import           System.FilePath               ((</>))
 import           System.Random                 (randomIO)
@@ -38,9 +44,11 @@ newtype CopyFile = CopyFile FilePath
 
 --------------------------------------------------------------------------------
 instance Writable CopyFile where
+#if MIN_VERSION_directory(1,2,6)
+    write dst (Item _ (CopyFile src)) = copyFileWithMetadata src dst
+#else
     write dst (Item _ (CopyFile src)) = copyFile src dst
-
-
+#endif
 --------------------------------------------------------------------------------
 copyFileCompiler :: Compiler (Item CopyFile)
 copyFileCompiler = do
