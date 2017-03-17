@@ -23,3 +23,6 @@ web/_cache
 web/_site
 web/site
 web/reference
+
+# This is generated from the CHANGELOG
+web/releases.markdown

@@ -21,10 +21,11 @@ module Hakyll
     , module Hakyll.Web.Html
     , module Hakyll.Web.Html.RelativizeUrls
     , module Hakyll.Web.Pandoc
+    , module Hakyll.Web.Paginate
     , module Hakyll.Web.Pandoc.Biblio
     , module Hakyll.Web.Pandoc.FileType
+    , module Hakyll.Web.Redirect
     , module Hakyll.Web.Tags
-    , module Hakyll.Web.Paginate
     , module Hakyll.Web.Template
     , module Hakyll.Web.Template.Context
     , module Hakyll.Web.Template.List
@@ -54,6 +55,7 @@ import           Hakyll.Web.Paginate
 import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Pandoc.Biblio
 import           Hakyll.Web.Pandoc.FileType
+import           Hakyll.Web.Redirect
 import           Hakyll.Web.Tags
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
