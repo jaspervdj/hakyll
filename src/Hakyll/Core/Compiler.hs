@@ -28,7 +28,7 @@ module Hakyll.Core.Compiler
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                 (when)
+import           Control.Monad                 (when, unless)
 import           Data.Binary                   (Binary)
 import           Data.ByteString.Lazy          (ByteString)
 import           Data.Typeable                 (Typeable)
@@ -149,6 +149,10 @@ cached name compiler = do
     id'      <- compilerUnderlying <$> compilerAsk
     store    <- compilerStore      <$> compilerAsk
     provider <- compilerProvider   <$> compilerAsk
+
+    -- Give a better error message when the resource is not there at all.
+    unless (resourceExists provider id') $ fail $ itDoesntEvenExist id'
+
     let modified = resourceModified provider id'
     if modified
         then do
@@ -165,6 +169,11 @@ cached name compiler = do
     error' progName =
         "Hakyll.Core.Compiler.cached: Cache corrupt! " ++
          "Try running: " ++ progName ++ " clean"
+
+    itDoesntEvenExist id' =
+        "Hakyll.Core.Compiler.cached: You are trying to (perhaps "    ++
+        "indirectly) use `cached` on a non-existing resource: there " ++
+        "is no file backing " ++ show id'
 
 
 --------------------------------------------------------------------------------
