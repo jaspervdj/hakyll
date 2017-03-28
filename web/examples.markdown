@@ -20,6 +20,8 @@ directly with the default Hakyll site.
   [source](https://github.com/jaspervdj/jaspervdj)
 - <http://www.imagination-land.org/>,
   [source](https://github.com/Keruspe/blog/)
+- <https://bananasandlenses.net/>,
+  [source](https://github.com/denisshevchenko/bananasandlenses)
 - <http://blog.clement.delafargue.name/>,
   [source](https://github.com/divarvel/blog)
 - <http://bneijt.nl>,
