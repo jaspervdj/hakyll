@@ -5,6 +5,7 @@
 module Hakyll.Core.Item
     ( Item (..)
     , itemSetBody
+    , itemSetIdentifier
     , withItemBody
     ) where
 
@@ -52,6 +53,11 @@ instance Binary a => Binary (Item a) where
 --------------------------------------------------------------------------------
 itemSetBody :: a -> Item b -> Item a
 itemSetBody x (Item i _) = Item i x
+
+
+--------------------------------------------------------------------------------
+itemSetIdentifier :: Identifier -> Item a -> Item a
+itemSetIdentifier x (Item _ i) = Item x i
 
 
 --------------------------------------------------------------------------------
