@@ -4,6 +4,16 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.6.0
+
+- Tighten dependency on `pandoc-citeproc` (contribution by Mikhail Glushenkov)
+- Enable using a custom parser for command line arguments (contribution by
+  Alberto)
+- Update examples to semantic HTML (contribution by Elie Génard)
+- Better error for `cached` on non-existing file
+- Provide an `$allPages$` key when doing pagination
+- Preserve file metadata in `copyFileCompiler` (contribution by frederik-h)
+
 ## Hakyll 4.9.5.1
 
 - Bump blaze-html dependency to 0.9
