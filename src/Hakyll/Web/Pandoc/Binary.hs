@@ -13,6 +13,7 @@ import           Text.Pandoc
 -- orphans
 
 instance Binary REF.CNum
+instance Binary REF.CLabel
 instance Binary REF.Literal
 instance Binary REF.RefDate
 instance Binary REF.RefType
