@@ -10,6 +10,7 @@ module Hakyll.Core.Configuration
 --------------------------------------------------------------------------------
 import           Data.Default     (Default (..))
 import           Data.List        (isPrefixOf, isSuffixOf)
+import qualified Network.Wai.Application.Static as Static
 import           System.Directory (canonicalizePath)
 import           System.Exit      (ExitCode)
 import           System.FilePath  (isAbsolute, normalise, takeFileName)
@@ -78,6 +79,9 @@ data Configuration = Configuration
       -- One can also override the port as a command line argument:
       -- ./site preview -p 1234
       previewPort          :: Int
+      -- | Override other settings used by the preview server. Default is
+      -- 'Static.defaultFileServerSettings'.
+    , previewSettings      :: FilePath -> Static.StaticSettings
     }
 
 --------------------------------------------------------------------------------
@@ -98,6 +102,7 @@ defaultConfiguration = Configuration
     , inMemoryCache        = True
     , previewHost          = "127.0.0.1"
     , previewPort          = 8000
+    , previewSettings      = Static.defaultFileServerSettings
     }
   where
     ignoreFile' path

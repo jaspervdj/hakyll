@@ -18,14 +18,13 @@ import           Hakyll.Core.Logger    (Logger)
 import qualified Hakyll.Core.Logger    as Logger
 
 staticServer :: Logger               -- ^ Logger
-             -> FilePath             -- ^ Directory to serve
+             -> Static.StaticSettings -- ^ Static file server settings
              -> String               -- ^ Host to bind on
              -> Int                  -- ^ Port to listen on
              -> IO ()                -- ^ Blocks forever
-staticServer logger directory host port = do
+staticServer logger settings host port = do
     Logger.header logger $ "Listening on http://" ++ host ++ ":" ++ show port
-    Warp.runSettings warpSettings $
-        Static.staticApp (Static.defaultFileServerSettings directory)
+    Warp.runSettings warpSettings $ Static.staticApp settings
   where
     warpSettings = Warp.setLogger noLog
         $ Warp.setHost (fromString host)
