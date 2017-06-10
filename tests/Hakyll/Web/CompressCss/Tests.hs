@@ -37,11 +37,15 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
 
           -- compress separators
         , "}"             @=? compressCss ";   }"
-        , "{};"           @=? compressCss "  {  }  ;  "
+        , ";{};"          @=? compressCss " ;  {  }  ;  "
+        , "text,"         @=? compressCss "text  ,  "
+        , "a>b"           @=? compressCss "a > b"
+        , "a+b"           @=? compressCss "a + b"
+        , "a!b"           @=? compressCss "a ! b"
           -- compress whitespace even after this curly brace
         , "}"             @=? compressCss ";   }  "
           -- but do not compress separators inside of constants
-        , "\"  { } ;  \"" @=? compressCss "\"  { } ;  \""
+        , "\"  { } ; , \"" @=? compressCss "\"  { } ; , \""
           -- don't compress separators at the start or end of constants
         , "\" }\""        @=? compressCss "\" }\""
         , "\"{ \""        @=? compressCss "\"{ \""
@@ -51,7 +55,7 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
           -- don't compress whitespace around separators in constants in the middle of a string
         , "abc '{ '"      @=? compressCss "abc '{ '"
         , "abc \"{ \""    @=? compressCss "abc \"{ \""
-          -- compress whitespace after colons
+          -- compress whitespace around colons
         , "abc:xyz"       @=? compressCss "abc : xyz"
           -- compress multiple semicolons
         , ";"             @=? compressCss ";;;;;;;"
