@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.7.0
+
+- Fix compilation trouble with `Options.Applicative`
+- Some small CSS compression improvements (contribution by Nicole Rauch)
+
 ## Hakyll 4.9.6.0
 
 - Tighten dependency on `pandoc-citeproc` (contribution by Mikhail Glushenkov)
