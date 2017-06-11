@@ -85,8 +85,13 @@ instance Monoid (Context a) where
 
 --------------------------------------------------------------------------------
 field' :: String -> (Item a -> Compiler ContextField) -> Context a
-field' key value = Context $ \k _ i -> if k == key then value i else empty
-
+field' key value = Context $ \k _ i -> if k == key
+    then do
+        v <- value i
+        case v of
+            ListField _ xs -> if (null xs) then empty else return v
+            _ -> return v
+    else empty
 
 --------------------------------------------------------------------------------
 -- | Constructs a new field in the 'Context.'
