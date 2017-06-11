@@ -102,16 +102,24 @@ Library
     Hakyll
     Hakyll.Commands
     Hakyll.Core.Compiler
+    Hakyll.Core.Compiler.Internal
     Hakyll.Core.Configuration
     Hakyll.Core.Dependencies
     Hakyll.Core.File
     Hakyll.Core.Identifier
     Hakyll.Core.Identifier.Pattern
     Hakyll.Core.Item
+    Hakyll.Core.Logger
     Hakyll.Core.Metadata
+    Hakyll.Core.Provider
+    Hakyll.Core.Provider.Metadata
     Hakyll.Core.Routes
     Hakyll.Core.Rules
+    Hakyll.Core.Rules.Internal
+    Hakyll.Core.Runtime
+    Hakyll.Core.Store
     Hakyll.Core.UnixFilter
+    Hakyll.Core.Util.File
     Hakyll.Core.Util.String
     Hakyll.Core.Writable
     Hakyll.Main
@@ -119,12 +127,12 @@ Library
     Hakyll.Web.Feed
     Hakyll.Web.Html
     Hakyll.Web.Html.RelativizeUrls
+    Hakyll.Web.Paginate
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.Biblio
     Hakyll.Web.Pandoc.FileType
     Hakyll.Web.Redirect
     Hakyll.Web.Tags
-    Hakyll.Web.Paginate
     Hakyll.Web.Template
     Hakyll.Web.Template.Context
     Hakyll.Web.Template.Internal
@@ -136,18 +144,10 @@ Library
     Data.List.Extended
     Data.Yaml.Extended
     Hakyll.Check
-    Hakyll.Core.Compiler.Internal
     Hakyll.Core.Compiler.Require
     Hakyll.Core.Item.SomeItem
-    Hakyll.Core.Logger
-    Hakyll.Core.Provider
     Hakyll.Core.Provider.Internal
-    Hakyll.Core.Provider.Metadata
     Hakyll.Core.Provider.MetadataCache
-    Hakyll.Core.Rules.Internal
-    Hakyll.Core.Runtime
-    Hakyll.Core.Store
-    Hakyll.Core.Util.File
     Hakyll.Core.Util.Parser
     Hakyll.Web.Pandoc.Binary
     Paths_hakyll
@@ -218,29 +218,12 @@ Library
 
 Test-suite hakyll-tests
   Type:           exitcode-stdio-1.0
-  Hs-source-dirs: src tests
+  Hs-source-dirs: tests
   Main-is:        TestSuite.hs
   Ghc-options:    -Wall
-  Other-modules:
-    Hakyll.Core.Dependencies.Tests
-    Hakyll.Core.Identifier.Tests
-    Hakyll.Core.Provider.Metadata.Tests
-    Hakyll.Core.Provider.Tests
-    Hakyll.Core.Routes.Tests
-    Hakyll.Core.Rules.Tests
-    Hakyll.Core.Runtime.Tests
-    Hakyll.Core.Store.Tests
-    Hakyll.Core.UnixFilter.Tests
-    Hakyll.Core.Util.String.Tests
-    Hakyll.Web.CompressCss.Tests
-    Hakyll.Web.Html.RelativizeUrls.Tests
-    Hakyll.Web.Html.Tests
-    Hakyll.Web.Pandoc.FileType.Tests
-    Hakyll.Web.Template.Context.Tests
-    Hakyll.Web.Template.Tests
-    TestSuite.Util
 
   Build-Depends:
+    hakyll,
     QuickCheck                 >= 2.8  && < 2.10,
     tasty                      >= 0.11 && < 0.12,
     tasty-hunit                >= 0.9  && < 0.10,
@@ -289,9 +272,6 @@ Test-suite hakyll-tests
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DPREVIEW_SERVER
-    Other-modules:
-      Hakyll.Preview.Poll
-      Hakyll.Preview.Server
 
   If flag(watchServer)
     Build-depends:
@@ -299,8 +279,6 @@ Test-suite hakyll-tests
       system-filepath >= 0.4.6 && <= 0.5
     Cpp-options:
       -DWATCH_SERVER
-    Other-modules:
-      Hakyll.Preview.Poll
 
   If flag(checkExternal)
     Build-depends:
@@ -311,14 +289,10 @@ Test-suite hakyll-tests
 
 Executable hakyll-init
   Ghc-options:    -Wall
-  Hs-source-dirs: src
-  Main-is:        Hakyll/Init.hs
+  Main-is:        Init.hs
 
   Build-depends:
+    hakyll,
     base      >= 4   && < 5,
     directory >= 1.0 && < 1.4,
     filepath  >= 1.0 && < 1.5
-
-  Other-modules:
-    Hakyll.Core.Util.File
-    Paths_hakyll
