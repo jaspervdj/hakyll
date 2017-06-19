@@ -169,7 +169,7 @@ Library
     network              >= 2.6    && < 2.7,
     network-uri          >= 2.6    && < 2.7,
     pandoc               >= 1.14   && < 1.20,
-    pandoc-citeproc      >= 0.4    && < 0.10.5,
+    pandoc-citeproc      >= 0.10.5 && < 0.11,
     parsec               >= 3.0    && < 3.2,
     process              >= 1.0    && < 1.6,
     random               >= 1.0    && < 1.2,
@@ -184,7 +184,7 @@ Library
     unordered-containers >= 0.2    && < 0.3,
     vector               >= 0.11   && < 0.13,
     yaml                 >= 0.8.11 && < 0.9,
-    optparse-applicative >= 0.12   && < 0.14
+    optparse-applicative >= 0.12   && < 0.15
 
   If flag(previewServer)
     Build-depends:
@@ -224,10 +224,10 @@ Test-suite hakyll-tests
 
   Build-Depends:
     hakyll,
-    QuickCheck                 >= 2.8  && < 2.10,
+    QuickCheck                 >= 2.8  && < 2.11,
     tasty                      >= 0.11 && < 0.12,
     tasty-hunit                >= 0.9  && < 0.10,
-    tasty-quickcheck           >= 0.8  && < 0.9,
+    tasty-quickcheck           >= 0.8  && < 0.10,
     -- Copy pasted from hakyll dependencies:
     base                 >= 4.8    && < 5,
     binary               >= 0.5    && < 0.9,
@@ -245,7 +245,7 @@ Test-suite hakyll-tests
     network              >= 2.6    && < 2.7,
     network-uri          >= 2.6    && < 2.7,
     pandoc               >= 1.14   && < 1.20,
-    pandoc-citeproc      >= 0.4    && < 0.11,
+    pandoc-citeproc      >= 0.10.5 && < 0.11,
     parsec               >= 3.0    && < 3.2,
     process              >= 1.0    && < 1.6,
     random               >= 1.0    && < 1.2,
@@ -260,7 +260,7 @@ Test-suite hakyll-tests
     unordered-containers >= 0.2    && < 0.3,
     vector               >= 0.11   && < 0.13,
     yaml                 >= 0.8.11 && < 0.9,
-    optparse-applicative >= 0.12   && < 0.14
+    optparse-applicative >= 0.12   && < 0.15
 
   If flag(previewServer)
     Build-depends:
