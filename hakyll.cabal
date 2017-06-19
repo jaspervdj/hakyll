@@ -96,7 +96,7 @@ Flag checkExternal
 
 Library
   Ghc-Options:    -Wall
-  Hs-Source-Dirs: src
+  Hs-Source-Dirs: lib
 
   Exposed-Modules:
     Hakyll
@@ -222,6 +222,25 @@ Test-suite hakyll-tests
   Main-is:        TestSuite.hs
   Ghc-options:    -Wall
 
+  Other-modules:
+    Hakyll.Core.Dependencies.Tests
+    Hakyll.Core.Identifier.Tests
+    Hakyll.Core.Provider.Metadata.Tests
+    Hakyll.Core.Provider.Tests
+    Hakyll.Core.Routes.Tests
+    Hakyll.Core.Rules.Tests
+    Hakyll.Core.Runtime.Tests
+    Hakyll.Core.Store.Tests
+    Hakyll.Core.UnixFilter.Tests
+    Hakyll.Core.Util.String.Tests
+    Hakyll.Web.CompressCss.Tests
+    Hakyll.Web.Html.RelativizeUrls.Tests
+    Hakyll.Web.Html.Tests
+    Hakyll.Web.Pandoc.FileType.Tests
+    Hakyll.Web.Template.Context.Tests
+    Hakyll.Web.Template.Tests
+    TestSuite.Util
+
   Build-Depends:
     hakyll,
     QuickCheck                 >= 2.8  && < 2.11,
@@ -289,6 +308,7 @@ Test-suite hakyll-tests
 
 Executable hakyll-init
   Ghc-options:    -Wall
+  Hs-source-dirs: src
   Main-is:        Init.hs
 
   Build-depends:
