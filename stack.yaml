@@ -1,7 +1,10 @@
-resolver: nightly-2016-10-31
+resolver: nightly-2017-06-19
 extra-package-dbs: []
 extra-deps:
-  - 'QuickCheck-2.9.2'
+- 'optparse-applicative-0.14.0.0'
+- 'pandoc-citeproc-0.10.5.1'
+- 'QuickCheck-2.10.0.1'
+- 'tasty-quickcheck-0.9'
 
 flags:
   hakyll:

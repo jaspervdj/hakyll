@@ -4,6 +4,15 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.9.8.0
+
+- Bump pandoc-citeproc to 0.10.5
+- Bump optparse-applicative to 0.14
+- Bump QuickCheck to 2.10
+- Bump tasty-quickcheck to 0.9
+- Restructure .cabal to avoid redundant compilation (contribution by
+  Christopher League)
+
 ## Hakyll 4.9.7.0
 
 - Fix compilation trouble with `Options.Applicative`
