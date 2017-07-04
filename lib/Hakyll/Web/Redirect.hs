@@ -86,6 +86,7 @@ instance Writable Redirect where
 redirectToHtml :: Redirect -> String
 redirectToHtml (Redirect working) =
     "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><meta name=\"generator\" content=\"hakyll\"/>" ++
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" ++
     "<meta http-equiv=\"refresh\" content=\"0; url=" ++ working ++
     "\"><link rel=\"canonical\" href=\"" ++ working ++
     "\"><title>Permanent Redirect</title></head><body><p>The page has moved to: <a href=\"" ++ working ++
