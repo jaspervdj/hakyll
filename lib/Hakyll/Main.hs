@@ -81,7 +81,7 @@ invokeCommands :: Command -> Config.Configuration ->
 invokeCommands args conf check logger rules =
     case args of
         Build          -> Commands.build conf logger rules
-        Check   _      -> Commands.check conf logger check >> ok
+        Check   _      -> Commands.check conf logger check
         Clean          -> Commands.clean conf logger >> ok
         Deploy         -> Commands.deploy conf
         Preview p      -> Commands.preview conf logger rules p >> ok
