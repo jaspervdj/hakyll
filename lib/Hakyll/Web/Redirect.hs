@@ -7,8 +7,9 @@ module Hakyll.Web.Redirect
     ) where
 
 import           Control.Applicative    ((<$>))
-import           Control.Monad          (forM_)
+import           Control.Monad          (forM_, when)
 import           Data.Binary            (Binary (..))
+import           Data.List              (nub)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Routes
@@ -55,6 +56,10 @@ import           Hakyll.Core.Writable   (Writable (..))
 -- See also <https://groups.google.com/d/msg/hakyll/sWc6zxfh-uM/fUpZPsFNDgAJ>.
 createRedirects :: [(Identifier, String)] -> Rules ()
 createRedirects redirects =
+ do -- redirects are many-to-fewer; keys must be unique, and must point somewhere else:
+    let keys = map fst redirects
+    when (length keys /= length (nub keys)) $ error "Overlapping 301 redirects; check your mapping for redundant keys"
+    when (or $ map (\(r,t) -> toFilePath r == t) redirects) $ error "Self-redirect detected: at least one redirect's target points to itself."
     forM_ redirects $ \(ident, to) ->
         create [ident] $ do
             route idRoute
@@ -81,6 +86,7 @@ instance Writable Redirect where
 redirectToHtml :: Redirect -> String
 redirectToHtml (Redirect working) =
     "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><meta name=\"generator\" content=\"hakyll\"/>" ++
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" ++
     "<meta http-equiv=\"refresh\" content=\"0; url=" ++ working ++
     "\"><link rel=\"canonical\" href=\"" ++ working ++
     "\"><title>Permanent Redirect</title></head><body><p>The page has moved to: <a href=\"" ++ working ++
