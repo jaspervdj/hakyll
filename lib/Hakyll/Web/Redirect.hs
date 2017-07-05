@@ -9,7 +9,7 @@ module Hakyll.Web.Redirect
 import           Control.Applicative    ((<$>))
 import           Control.Monad          (forM_, when)
 import           Data.Binary            (Binary (..))
-import           Data.List              (nub)
+import           Data.List              (sort, group)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Routes
@@ -57,9 +57,16 @@ import           Hakyll.Core.Writable   (Writable (..))
 createRedirects :: [(Identifier, String)] -> Rules ()
 createRedirects redirects =
  do -- redirects are many-to-fewer; keys must be unique, and must point somewhere else:
-    let keys = map fst redirects
-    when (length keys /= length (nub keys)) $ error "Overlapping 301 redirects; check your mapping for redundant keys"
-    when (or $ map (\(r,t) -> toFilePath r == t) redirects) $ error "Self-redirect detected: at least one redirect's target points to itself."
+    let gkeys = group $ sort $ map fst redirects
+    forM_ gkeys $ \gkey -> case gkey of
+        (k : _ : _) -> fail $
+            "Duplicate 301 redirects; " ++ show k ++ " is ambiguous."
+        _           -> return ()
+
+    forM_ redirects $ \(r, t) ->
+        when (toFilePath r == t) $ fail $
+            "Self-redirect detected: " ++ show r ++ " points to itself."
+
     forM_ redirects $ \(ident, to) ->
         create [ident] $ do
             route idRoute
