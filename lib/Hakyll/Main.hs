@@ -7,6 +7,9 @@ module Hakyll.Main
     , hakyllWith
     , hakyllWithArgs
     , hakyllWithExitCode
+    , hakyllWithExitCodeAndArgs
+    , Options(..)
+    , Command(..)
     ) where
 
 
