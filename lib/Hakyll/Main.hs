@@ -97,19 +97,31 @@ invokeCommands args conf check logger rules =
 
 --------------------------------------------------------------------------------
 
+-- | The parsed command-line options.
 data Options = Options {verbosity :: Bool, optCommand :: Command}
     deriving (Show)
 
+-- | The command to run.
 data Command
     = Build
+    -- ^ Generate the site.
     | Check   {internal_links :: Bool}
+    -- ^ Validate the site output.
     | Clean
+    -- ^ Clean up and remove cache.
     | Deploy
+    -- ^ Upload/deploy your site.
     | Preview {port :: Int}
+    -- ^ [DEPRECATED] Please use the watch command.
     | Rebuild
+    -- ^ Clean and build again.
     | Server  {host :: String, port :: Int}
+    -- ^ Start a preview server.
     | Watch   {host :: String, port :: Int, no_server :: Bool }
+    -- ^ Autocompile on changes and start a preview server.
     deriving (Show)
+
+{-# DEPRECATED Preview "Use Watch instead." #-}
 
 optionParser :: Config.Configuration -> OA.Parser Options
 optionParser conf = Options <$> verboseParser <*> commandParser conf
