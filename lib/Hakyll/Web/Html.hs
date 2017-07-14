@@ -3,6 +3,7 @@
 module Hakyll.Web.Html
     ( -- * Generic
       withTags
+    , withTagList
 
       -- * Headers
     , demoteHeaders
@@ -36,8 +37,11 @@ import           Network.URI                     (isUnreserved, escapeURIString)
 --------------------------------------------------------------------------------
 -- | Map over all tags in the document
 withTags :: (TS.Tag String -> TS.Tag String) -> String -> String
-withTags f = renderTags' . map f . parseTags'
+withTags = withTagList . map
 
+-- | Map over all tags (as list) in the document
+withTagList :: ([TS.Tag String] -> [TS.Tag String]) -> String -> String
+withTagList f = renderTags' . f . parseTags'
 
 --------------------------------------------------------------------------------
 -- | Map every @h1@ to an @h2@, @h2@ to @h3@, etc.
