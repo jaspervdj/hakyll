@@ -182,6 +182,8 @@ directly with the default Hakyll site.
   [source](https://github.com/sillybytes/sillybytes)
 - <https://falconpilot.github.io/>
   [source](https://github.com/FalconPilot/falconpilot.github.io)
+- <http://spyhop.cafe/>
+  [source](https://github.com/thunky-monk/spyhop-cafe)
 
 ## Hakyll 3.X
 
