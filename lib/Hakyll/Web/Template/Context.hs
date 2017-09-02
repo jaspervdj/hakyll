@@ -6,6 +6,7 @@ module Hakyll.Web.Template.Context
     , Context (..)
     , field
     , boolField
+    , boolFieldM
     , constField
     , listField
     , listFieldWith
@@ -104,9 +105,17 @@ boolField
     :: String
     -> (Item a -> Bool)
     -> Context a
-boolField name f = field name (\i -> if f i
-    then pure (error $ unwords ["no string value for bool field:",name])
-    else empty)
+boolField name f = boolFieldM name $ pure . f
+
+--------------------------------------------------------------------------------
+-- | Like 'boolField' but allows the use of the 'Compiler' monad.
+boolFieldM :: String -> (Item a -> Compiler Bool) -> Context a
+boolFieldM name f = field name $ \i -> do
+                      b <- f i
+                      if b
+                        then pure $ error $ unwords $
+                                 ["no string value for bool field:",name]
+                        else empty
 
 
 --------------------------------------------------------------------------------
