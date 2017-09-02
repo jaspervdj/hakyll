@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 -- | Module used for CSS compression. The compression is currently in a simple
 -- state, but would typically reduce the number of bytes by about 25%.
+{-# LANGUAGE PatternGuards #-}
 module Hakyll.Web.CompressCss
     ( compressCssCompiler
     , compressCss
@@ -34,6 +35,8 @@ compressSeparators :: String -> String
 compressSeparators [] = []
 compressSeparators str
     | isConstant  = head str : retainConstants compressSeparators (head str) (drop 1 str)
+    | isPrefixOf "calc( " str = "calc(" ++ compressCalcSeparators 1 (drop 6 str)
+    | isPrefixOf "calc(" str = "calc(" ++ compressCalcSeparators 1 (drop 5 str)
     | stripFirst  = compressSeparators (drop 1 str)
     | stripSecond = compressSeparators (head str : (drop 2 str))
     | otherwise   = head str : compressSeparators (drop 1 str)
@@ -42,6 +45,21 @@ compressSeparators str
     stripFirst  = or $ map (isOfPrefix str) $ [";;", ";}"] ++ (map (\c -> " " ++ c) separators)
     stripSecond = or $ map (isOfPrefix str) $ map (\c -> c ++ " ") separators
     separators  = [" ", "{", "}", ":", ";", ",", ">", "+", "!"]
+
+-- | Compresses separators when starting inside calc().
+compressCalcSeparators :: Int -> String -> String
+compressCalcSeparators 0 str = compressSeparators str
+compressCalcSeparators depth str
+  | stripFirst = compressCalcSeparators depth (tail str)
+  | stripSecond = compressCalcSeparators depth (head str : (drop 2 str))
+  | ('(' : xs) <- str = '(' : compressCalcSeparators (depth + 1) xs
+  | isPrefixOf "calc( " str = compressCalcSeparators depth ("calc(" ++ (drop 6 str))
+  | isPrefixOf "calc(" str = '(' : compressCalcSeparators (depth + 1) (drop 5 str)
+  | (')' : xs) <- str = ')' : compressCalcSeparators (depth - 1) xs
+  | otherwise = head str : compressCalcSeparators depth (tail str)
+  where
+    stripFirst = or $ map (isOfPrefix str) $ map (\c -> " " ++ c) ["*", "/", ")"]
+    stripSecond = or $ map (isOfPrefix str) $ map (\c -> c ++ " ") ["*", "/", "("]
 
 --------------------------------------------------------------------------------
 -- | Compresses all whitespace.
