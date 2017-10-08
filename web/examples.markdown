@@ -36,8 +36,6 @@ directly with the default Hakyll site.
   [source](https://github.com/dannysu/hakyll-blog)
 - <http://meta.plasm.us/>,
   [source](https://github.com/travisbrown/metaplasm)
-- <http://www.web2day-nantes.org/>,
-  [source](https://github.com/CompanyCampus/web2day2013)
 - <http://workforpizza.com/>,
   [source](https://github.com/irneh/workforpizza)
 - <http://poleiro.info/>,
@@ -48,8 +46,6 @@ directly with the default Hakyll site.
   [source](https://github.com/regisfoucault/blog)
 - <http://www.chaoxuprime.com/>,
   [source](https://github.com/Mgccl/blog)
-- <https://benjeffrey.com/>,
-  [source](https://github.com/jeffbr13/benjeffrey.com)
 - <http://www.skybluetrades.net/>,
   [source](https://github.com/ian-ross/blog)
 - <http://chromaticleaves.com/>,
@@ -60,8 +56,6 @@ directly with the default Hakyll site.
   [source](https://github.com/blaenk/blaenk.github.io)
 - <https://xinitrc.de/>,
   [source](https://github.com/xinitrc/xinitrc.de)
-- <http://blog.darkfox.id.au/>,
-  [source](http://hub.darcs.net/DarkFox/DarkFox-blog)
 - <http://nickcharlton.net/>,
   [source](https://github.com/nickcharlton/nickcharlton.net)
 - <http://scr.stunts.hu/>,
@@ -209,7 +203,5 @@ directly with the default Hakyll site.
   [source](http://gitorious.org/shakthimaan-blog)
 - <http://www.alfredodinapoli.com/>,
   [source](https://github.com/CharlesStain/alfredodinapoli.com)
-- <http://datahackermd.com>,
-  [source](http://github.com/akshayjshah/datahackermd)
 - <http://michaelxavier.net>,
   [source](https://github.com/michaelxavier/michaelxavier.net)
