@@ -8,10 +8,10 @@ module Main
 import           Control.Arrow         (first)
 import           Control.Monad         (forM_)
 import           Data.Char             (isAlphaNum, isNumber)
-import           Data.List             (foldl')
-import           Data.List             (intercalate, isPrefixOf)
+import           Data.List             (foldl', intercalate, isPrefixOf)
 import           Data.Version          (Version (..))
-import           System.Directory      (canonicalizePath, copyFile)
+import           System.Directory      (canonicalizePath, copyFile,
+                                        doesFileExist)
 import           System.Environment    (getArgs, getProgName)
 import           System.Exit           (exitFailure)
 import           System.FilePath       (splitDirectories, (</>))
@@ -37,21 +37,45 @@ main = do
         -- If dstDir begins with hyphens, the guard will prevent it from creating
         -- directory with that name so we can fall to the second alternative
         -- which prints a usage info for user.
-        [dstDir] | not ("-" `isPrefixOf` dstDir) -> do
-            forM_ files $ \file -> do
-                let dst = dstDir </> file
-                    src = srcDir </> file
-                putStrLn $ "Creating " ++ dst
-                makeDirectories dst
-                copyFile src dst
+        [dstDir] | not ("-" `isPrefixOf` dstDir) ->
+            createFiles False srcDir files dstDir
+        ["-f", dstDir] ->
+            createFiles True srcDir files dstDir
+        _ -> do
+            putStrLn $ "Usage: " ++ progName ++ "[-f] <directory>"
+            exitFailure
 
+    where
+        createFiles force srcDir files dstDir = do
             name <- makeName dstDir
             let cabalPath = dstDir </> name ++ ".cabal"
-            putStrLn $ "Creating " ++ cabalPath
-            createCabal cabalPath name
-        _ -> do
-            putStrLn $ "Usage: " ++ progName ++ " <directory>"
-            exitFailure
+
+            diff <- if force then return []
+                    else existingFiles dstDir (cabalPath : files)
+
+            case diff of
+                [] -> do
+                    forM_ files $ \file -> do
+                        let dst = dstDir </> file
+                            src = srcDir </> file
+                        putStrLn $ "Creating " ++ dst
+                        makeDirectories dst
+                        copyFile src dst
+
+                    putStrLn $ "Creating " ++ cabalPath
+                    createCabal cabalPath name
+                fs -> do
+                    putStrLn $ "The following files will be overwritten:"
+                    foldMap putStrLn fs
+                    putStrLn $ "Use -f to overwrite them"
+                    exitFailure
+
+existingFiles :: FilePath -> [FilePath] -> IO [FilePath]
+existingFiles dstDir = foldMap $ \file -> do
+    let dst = dstDir </> file
+    exists <- doesFileExist dst
+    return $ if exists then [dst] else []
+
 
 -- | Figure out a good cabal package name from the given (existing) directory
 -- name
@@ -77,7 +101,7 @@ makeName dstDir = do
     safeLast = foldl' (\_ x -> Just x) Nothing
 
 createCabal :: FilePath -> String -> IO ()
-createCabal path name = do
+createCabal path name =
     writeFile path $ unlines [
         "name:               " ++ name
       , "version:            0.1.0.0"
