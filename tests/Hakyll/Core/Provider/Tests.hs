@@ -28,8 +28,10 @@ case01 = do
     assert $ resourceExists provider "example.md"
 
     metadata <- resourceMetadata provider "example.md"
-    Just "An example"    @=? lookupString "title"    metadata
-    Just "External data" @=? lookupString "external" metadata
+    Just "An example"    @=? lookupString "title"           metadata
+    Just "External data" @=? lookupString "external"        metadata
+    Just "twitter"       @=? lookupString "social.twitter"  metadata
+    Just ["l1", "l2"]    @=? lookupStringList "social.list" metadata
 
     doesntExist <- resourceMetadata provider "doesntexist.md"
     mempty @=? doesntExist
