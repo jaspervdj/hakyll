@@ -174,8 +174,11 @@ directly with the default Hakyll site.
   [source](https://gitlab.com/GinBaby/argumatronic/tree/master)
 - <http://sillybytes.net/>,
   [source](https://github.com/sillybytes/sillybytes)
-- <https://falconpilot.github.io/>
+- <https://falconpilot.github.io/>,
   [source](https://github.com/FalconPilot/falconpilot.github.io)
+- <https://bendo.github.io/>,
+  [source](https://github.com/bendo/bendo.github.io)
+
 
 ## Hakyll 3.X
 
