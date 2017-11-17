@@ -2,7 +2,8 @@
 -- | Implementation of Hakyll commands: build, preview...
 {-# LANGUAGE CPP #-}
 module Hakyll.Commands
-    ( build
+    ( Check(..)
+    , build
     , check
     , clean
     , preview
@@ -18,6 +19,7 @@ import           Control.Concurrent
 import           System.Exit                (ExitCode, exitWith)
 
 --------------------------------------------------------------------------------
+import           Hakyll.Check               (Check(..))
 import qualified Hakyll.Check               as Check
 import           Hakyll.Core.Configuration
 import           Hakyll.Core.Logger         (Logger)

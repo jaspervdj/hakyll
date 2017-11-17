@@ -92,7 +92,8 @@ unixFilterWith writer reader programName args input = do
         ExitSuccess   -> return output
         ExitFailure e -> fail $
             "Hakyll.Core.UnixFilter.unixFilterWith: " ++
-            unwords (programName : args) ++ " gave exit code " ++ show e
+            unwords (programName : args) ++ " gave exit code " ++ show e ++
+            ". (Error: " ++ err ++ ")"
 
 
 --------------------------------------------------------------------------------

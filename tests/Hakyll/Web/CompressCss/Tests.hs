@@ -42,6 +42,8 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
         , "a>b"           @=? compressCss "a > b"
         , "a+b"           @=? compressCss "a + b"
         , "a!b"           @=? compressCss "a ! b"
+          -- compress calc()
+        , "calc(1px + 100%/(5 + 3) - (3px + 2px)*5)" @=? compressCss "calc( 1px + 100% / ( 5 +  3) - calc( 3px + 2px ) * 5 )"
           -- compress whitespace even after this curly brace
         , "}"             @=? compressCss ";   }  "
           -- but do not compress separators inside of constants

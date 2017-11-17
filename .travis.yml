@@ -1,20 +1,28 @@
-language: haskell
-ghc: '7.10'
-branches:
-  only:
-    - master
+sudo: false
+
 cache:
   directories:
   - $HOME/.stack
+
+branches:
+  only:
+    - master
+
+cache:
+  directories:
+  - $HOME/.stack
+  - .stack-work
+
 before_install:
-  - echo "override before_install"
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
 install:
-  - wget https://github.com/commercialhaskell/stack/releases/download/v1.0.0/stack-1.0.0-linux-x86_64.tar.gz -O stack.gz
-  - tar xvf stack.gz
-  - chmod +x stack-1.0.0-linux-x86_64/stack
-  - stack-1.0.0-linux-x86_64/stack setup
-  - stack-1.0.0-linux-x86_64/stack build
+  - stack --no-terminal --skip-ghc-check setup
+
 before_script:
   - echo "override before_script"
+
 script:
-  - stack-1.0.0-linux-x86_64/stack test
+  - stack --no-terminal --skip-ghc-check test
