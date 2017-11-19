@@ -88,7 +88,7 @@ writePandocWith :: WriterOptions  -- ^ Writer options for pandoc
                 -> Item String    -- ^ Resulting HTML
 writePandocWith wopt (Item itemi doc) =
     case runPure $ writeHtml5String wopt doc of
-        Left (PandocSomeError err)  -> Item itemi $ "Hakyll.Web.Pandoc.writePandocWith: unknown error: " ++ err
+        Left (PandocSomeError err)  -> error $ "Hakyll.Web.Pandoc.writePandocWith: unknown error: " ++ err
         Right item'              -> Item itemi $ T.unpack item'
 
 
