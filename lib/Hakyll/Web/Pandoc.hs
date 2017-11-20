@@ -25,6 +25,8 @@ module Hakyll.Web.Pandoc
 import qualified Data.Set                   as S
 import           Text.Pandoc
 import           Text.Pandoc.Error          (PandocError (..))
+import           Text.Pandoc.Highlighting   (pygments)
+import qualified Data.Text                  as T
 
 
 --------------------------------------------------------------------------------
@@ -48,10 +50,10 @@ readPandocWith
     -> Item String             -- ^ String to read
     -> Compiler (Item Pandoc)  -- ^ Resulting document
 readPandocWith ropt item =
-    case traverse (reader ropt (itemFileType item)) item of
-        Left (ParseFailure err)  -> fail $
+    case runPure $ traverse (reader ropt (itemFileType item)) (fmap T.pack item) of
+        Left (PandocParseError err)  -> fail $
             "Hakyll.Web.Pandoc.readPandocWith: parse failed: " ++ err
-        Left (ParsecError _ err) -> fail $
+        Left (PandocParsecError _ err) -> fail $
             "Hakyll.Web.Pandoc.readPandocWith: parse failed: " ++ show err
         Right item'              -> return item'
   where
@@ -69,7 +71,7 @@ readPandocWith ropt item =
             "Hakyll.Web.readPandocWith: I don't know how to read a file of " ++
             "the type " ++ show t ++ " for: " ++ show (itemIdentifier item)
 
-    addExt ro e = ro {readerExtensions = S.insert e $ readerExtensions ro}
+    addExt ro e = ro {readerExtensions = enableExtension e $ readerExtensions ro}
 
 
 --------------------------------------------------------------------------------
@@ -84,7 +86,10 @@ writePandoc = writePandocWith defaultHakyllWriterOptions
 writePandocWith :: WriterOptions  -- ^ Writer options for pandoc
                 -> Item Pandoc    -- ^ Document to write
                 -> Item String    -- ^ Resulting HTML
-writePandocWith wopt = fmap $ writeHtmlString wopt
+writePandocWith wopt (Item itemi doc) =
+    case runPure $ writeHtml5String wopt doc of
+        Left (PandocSomeError err)  -> error $ "Hakyll.Web.Pandoc.writePandocWith: unknown error: " ++ err
+        Right item'              -> Item itemi $ T.unpack item'
 
 
 --------------------------------------------------------------------------------
@@ -147,7 +152,7 @@ defaultHakyllReaderOptions :: ReaderOptions
 defaultHakyllReaderOptions = def
     { -- The following option causes pandoc to read smart typography, a nice
       -- and free bonus.
-      readerSmart = True
+      readerExtensions = enableExtension Ext_smart pandocExtensions
     }
 
 
@@ -157,8 +162,8 @@ defaultHakyllWriterOptions :: WriterOptions
 defaultHakyllWriterOptions = def
     { -- This option causes literate haskell to be written using '>' marks in
       -- html, which I think is a good default.
-      writerExtensions = S.insert Ext_literate_haskell (writerExtensions def)
+      writerExtensions = enableExtension Ext_smart pandocExtensions
     , -- We want to have hightlighting by default, to be compatible with earlier
       -- Hakyll releases
-      writerHighlight  = True
+      writerHighlightStyle = Just pygments
     }
