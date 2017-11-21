@@ -32,22 +32,25 @@ module Hakyll.Web.Template.Context
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           (Alternative (..))
-import           Control.Monad                 (msum)
-import           Data.List                     (intercalate)
-import           Data.Time.Clock               (UTCTime (..))
-import           Data.Time.Format              (formatTime)
-import qualified Data.Time.Format              as TF
-import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
+import           Control.Applicative                  (Alternative (..))
+import           Control.Monad                        (msum)
+import           Data.Functor.Contravariant           (Contravariant (..))
+import           Data.Functor.Contravariant.Divisible (Decidable (..), Divisible (..))
+import           Data.List                            (intercalate)
+import           Data.Time.Clock                      (UTCTime (..))
+import           Data.Time.Format                     (formatTime)
+import qualified Data.Time.Format                     as TF
+import           Data.Time.Locale.Compat              (TimeLocale, defaultTimeLocale)
+import           Data.Void                            (absurd)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
-import           Hakyll.Core.Util.String       (needlePrefix, splitAll)
+import           Hakyll.Core.Util.String              (needlePrefix, splitAll)
 import           Hakyll.Web.Html
-import           System.FilePath               (splitDirectories, takeBaseName)
+import           System.FilePath                      (splitDirectories, takeBaseName)
 
 
 --------------------------------------------------------------------------------
@@ -82,6 +85,20 @@ instance Monoid (Context a) where
     mempty                          = missingField
     mappend (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
 
+
+--------------------------------------------------------------------------------
+instance Contravariant Context where
+    contramap f (Context g) = Context $ \k a i -> g k a (f <$> i)
+
+instance Divisible Context where
+    conquer        = mempty
+    divide f c1 c2 = contramap (fst . f) c1 `mappend` contramap (snd . f) c2
+
+instance Decidable Context where
+    lose refute = Context $ \_k _a i -> absurd . refute . itemBody $ i
+    choose chooser (Context f) (Context g) = Context $ \k a i -> case chooser (itemBody i) of
+      Left l  -> f k a (itemSetBody l i)
+      Right r -> g k a (itemSetBody r i)
 
 --------------------------------------------------------------------------------
 field' :: String -> (Item a -> Compiler ContextField) -> Context a
