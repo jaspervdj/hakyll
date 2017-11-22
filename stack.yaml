@@ -1,6 +1,5 @@
 resolver: nightly-2017-11-20
 extra-package-dbs: []
-extra-deps: []
 
 flags:
   hakyll:
@@ -10,6 +9,13 @@ flags:
 
 packages:
   - '.'
+  - extra-dep: True
+    location:
+      git: https://github.com/jgm/pandoc.git
+      commit: cf87ffe9ee87b5e908725616998724fca0d6a8fd
+
+extra-deps:
+  - hslua-module-text-0.1.2
 
 nix:
   enable: false
