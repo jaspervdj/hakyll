@@ -76,6 +76,12 @@ Ensure we are in the correct branch.
 git checkout develop
 ```
 
+If this is a new Hakyll project, run Stack's build command.
+
+```
+stack build
+```
+
 Get a clean build of our site.
 
 ```
