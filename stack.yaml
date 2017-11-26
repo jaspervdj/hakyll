@@ -12,10 +12,11 @@ packages:
   - extra-dep: True
     location:
       git: https://github.com/jgm/pandoc.git
-      commit: cf87ffe9ee87b5e908725616998724fca0d6a8fd
+      commit: 51027cff294e83957f8ee365dd296b446699c365
 
 extra-deps:
   - hslua-module-text-0.1.2
+  - skylighting-0.4.4
 
 nix:
   enable: false
