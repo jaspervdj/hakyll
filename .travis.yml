@@ -1,4 +1,5 @@
 sudo: false
+language: c
 
 cache:
   directories:
@@ -19,10 +20,10 @@ before_install:
   - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
-  - stack --no-terminal --skip-ghc-check setup
+  - travis_wait stack --no-terminal --skip-ghc-check setup
 
 before_script:
   - echo "override before_script"
 
 script:
-  - stack --no-terminal --skip-ghc-check test
+  - travis_wait stack --no-terminal --skip-ghc-check test
