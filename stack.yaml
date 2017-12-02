@@ -1,4 +1,4 @@
-resolver: nightly-2017-11-20
+resolver: nightly-2017-12-01
 extra-package-dbs: []
 
 flags:
@@ -12,11 +12,11 @@ packages:
   - extra-dep: True
     location:
       git: https://github.com/jgm/pandoc.git
-      commit: 51027cff294e83957f8ee365dd296b446699c365
+      commit: ecfb5a08381dcfd3eb1c586ceb6cbc3aea96a7d5
 
 extra-deps:
   - hslua-module-text-0.1.2
-  - skylighting-0.4.4
+  - skylighting-0.4.4.1
 
 nix:
   enable: false
