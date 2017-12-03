@@ -1,29 +1,18 @@
+language: haskell
+ghc: '8.0.2'
 sudo: false
-language: c
 
 cache:
   directories:
-  - $HOME/.stack
+  - '$HOME/.cabal'
+  - '$HOME/.ghc'
 
 branches:
   only:
-    - master
-
-cache:
-  directories:
-  - $HOME/.stack
-  - .stack-work
-
-before_install:
-  - mkdir -p ~/.local/bin
-  - export PATH=$HOME/.local/bin:$PATH
-  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+    - 'master'
 
 install:
-  - stack --no-terminal --skip-ghc-check setup
-
-before_script:
-  - echo "override before_script"
+  - travis_wait cabal install --enable-tests
 
 script:
-  - stack --no-terminal --skip-ghc-check test
+  - cabal test
