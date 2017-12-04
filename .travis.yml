@@ -12,7 +12,7 @@ branches:
     - 'master'
 
 install:
-  - travis_wait cabal install --enable-tests
+  - cabal install --enable-tests
 
 script:
   - cabal test
