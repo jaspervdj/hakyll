@@ -180,6 +180,8 @@ directly with the default Hakyll site.
   [source](https://github.com/thunky-monk/spyhop-cafe)
 - <https://bendo.github.io/>,
   [source](https://github.com/bendo/bendo.github.io)
+- <http://adarsh.cc/>,
+  [source](https://github.com/adarshp/adarsh.cc)
 
 ## Hakyll 3.X
 
