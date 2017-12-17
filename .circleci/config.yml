@@ -6,6 +6,9 @@ jobs:
     steps:
       - checkout
       - run:
+          sudo apt-get update
+          sudo apt-get install cabal-install
+      - run:
           name: Greeting
           command: echo Hello, world.
       - run:
