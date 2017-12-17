@@ -6,11 +6,11 @@ jobs:
     steps:
       - checkout
       - run:
-          sudo apt-get update
-          sudo apt-get install cabal-install
+          name: 'Install cabal'
+          command: 'sudo apt-get install -y cabal-install'
       - run:
-          name: Greeting
-          command: echo Hello, world.
+          name: 'Install dependencies'
+          command: 'cabal update && cabal install --enable-tests --only-dependencies'
       - run:
-          name: Print the Current Time
-          command: date
+          name: 'Compile package and run tests'
+          command: 'cabal test'
