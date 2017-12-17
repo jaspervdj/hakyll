@@ -2,15 +2,12 @@ version: 2
 jobs:
   build:
     docker:
-      - image: debian:stretch
+      - image: 'fpco/stack-build:lts'
     steps:
       - checkout
       - run:
-          name: 'Install cabal'
-          command: 'sudo apt-get install -y cabal-install'
+          name: 'Install GHC'
+          command: 'stack --no-terminal --skip-ghc-check setup'
       - run:
-          name: 'Install dependencies'
-          command: 'cabal update && cabal install --enable-tests --only-dependencies'
-      - run:
-          name: 'Compile package and run tests'
-          command: 'cabal test'
+          name: 'Run tests'
+          command: 'stack --not-terminal --skip-ghc-check test'
