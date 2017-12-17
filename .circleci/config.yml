@@ -6,6 +6,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: 'Upgrade stack'
+          command: 'stack --no-terminal upgrade'
+      - run:
           name: 'Install GHC'
           command: 'stack --no-terminal --skip-ghc-check setup'
       - run:
