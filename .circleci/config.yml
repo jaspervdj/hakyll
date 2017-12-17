@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: 'fpco/stack-build:lts'
+      - image: 'fpco/stack-build:latest'
     steps:
       - checkout
       - run:
