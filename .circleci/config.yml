@@ -15,7 +15,7 @@ jobs:
           command: 'stack --no-terminal --skip-ghc-check setup'
       - run:
           name: 'Run tests'
-          command: 'stack --no-terminal --skip-ghc-check test'
+          command: '.circleci/tickle.sh stack --no-terminal --skip-ghc-check test'
           no_output_timeout: '30m'
       - save_cache:
           key: 'v1-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
