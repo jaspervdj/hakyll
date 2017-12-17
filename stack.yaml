@@ -1,6 +1,5 @@
-resolver: nightly-2017-11-20
+resolver: nightly-2017-12-14
 extra-package-dbs: []
-extra-deps: []
 
 flags:
   hakyll:
@@ -10,6 +9,10 @@ flags:
 
 packages:
   - '.'
+
+extra-deps:
+  - hslua-module-text-0.1.2
+  - skylighting-0.5
 
 nix:
   enable: false
