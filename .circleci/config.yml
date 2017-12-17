@@ -16,6 +16,7 @@ jobs:
       - run:
           name: 'Run tests'
           command: 'stack --no-terminal --skip-ghc-check test'
+          no_input_timeout: '20m'
       - save_cache:
           key: 'v1-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
           paths:
