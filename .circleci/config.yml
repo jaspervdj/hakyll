@@ -5,6 +5,8 @@ jobs:
       - image: 'fpco/stack-build:latest'
     steps:
       - checkout
+      - restore_cache:
+          key: 'v1-hakyll-{{ arch }}-{{ .Branch }}'
       - run:
           name: 'Upgrade stack'
           command: 'stack --no-terminal upgrade'
@@ -13,4 +15,9 @@ jobs:
           command: 'stack --no-terminal --skip-ghc-check setup'
       - run:
           name: 'Run tests'
-          command: 'stack --not-terminal --skip-ghc-check test'
+          command: 'stack --no-terminal --skip-ghc-check test'
+      - save_cache:
+          key: 'v1-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
+          paths:
+            - '~/.stack'
+            - '.stack-work'
