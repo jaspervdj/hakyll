@@ -1,20 +1,18 @@
 language: haskell
-ghc: '7.10'
-branches:
-  only:
-    - master
+ghc: '8.0.2'
+sudo: false
+
 cache:
   directories:
-  - $HOME/.stack
-before_install:
-  - echo "override before_install"
+  - '$HOME/.cabal'
+  - '$HOME/.ghc'
+
+branches:
+  only:
+    - 'master'
+
 install:
-  - wget https://github.com/commercialhaskell/stack/releases/download/v1.0.0/stack-1.0.0-linux-x86_64.tar.gz -O stack.gz
-  - tar xvf stack.gz
-  - chmod +x stack-1.0.0-linux-x86_64/stack
-  - stack-1.0.0-linux-x86_64/stack setup
-  - stack-1.0.0-linux-x86_64/stack build
-before_script:
-  - echo "override before_script"
+  - travis_wait 40 cabal install --enable-tests
+
 script:
-  - stack-1.0.0-linux-x86_64/stack test
+  - cabal test

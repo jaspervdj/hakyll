@@ -1,10 +1,5 @@
-resolver: nightly-2017-06-19
+resolver: nightly-2017-12-14
 extra-package-dbs: []
-extra-deps:
-- 'optparse-applicative-0.14.0.0'
-- 'pandoc-citeproc-0.10.5.1'
-- 'QuickCheck-2.10.0.1'
-- 'tasty-quickcheck-0.9'
 
 flags:
   hakyll:
@@ -14,3 +9,12 @@ flags:
 
 packages:
   - '.'
+
+extra-deps:
+  - hslua-module-text-0.1.2
+  - skylighting-0.5
+
+nix:
+  enable: false
+  packages:
+    - zlib
