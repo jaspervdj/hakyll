@@ -12,7 +12,7 @@ branches:
     - 'master'
 
 install:
-  - travis_wait 40 cabal install --enable-tests
+  - './scripts/tickle.sh cabal install --only-dependencies --enable-tests'
 
 script:
-  - cabal test
+  - 'cabal test'
