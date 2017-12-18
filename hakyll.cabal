@@ -311,6 +311,9 @@ Executable hakyll-init
   Hs-source-dirs: src
   Main-is:        Init.hs
 
+  Other-modules:
+    Paths_hakyll
+
   Build-depends:
     hakyll,
     base      >= 4   && < 5,

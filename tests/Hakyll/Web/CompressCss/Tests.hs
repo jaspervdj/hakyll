@@ -5,9 +5,8 @@ module Hakyll.Web.CompressCss.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.Char              (toUpper)
 import           Test.Tasty             (TestTree, testGroup)
-import           Test.Tasty.HUnit       (assert, (@=?))
+import           Test.Tasty.HUnit       ((@=?))
 
 
 --------------------------------------------------------------------------------

@@ -16,7 +16,8 @@ module Hakyll.Commands
 
 --------------------------------------------------------------------------------
 import           Control.Concurrent
-import           System.Exit                (ExitCode, exitWith)
+import           System.Exit                (ExitCode)
+
 
 --------------------------------------------------------------------------------
 import           Hakyll.Check               (Check(..))
@@ -28,6 +29,7 @@ import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
 import           Hakyll.Core.Runtime
 import           Hakyll.Core.Util.File
+
 
 --------------------------------------------------------------------------------
 #ifdef WATCH_SERVER

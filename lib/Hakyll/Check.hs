@@ -17,7 +17,6 @@ import           Control.Monad.Reader         (ReaderT, ask, runReaderT)
 import           Control.Monad.State          (StateT, get, modify, runStateT)
 import           Control.Monad.Trans          (liftIO)
 import           Control.Monad.Trans.Resource (runResourceT)
-import           Data.ByteString.Char8        (unpack)
 import           Data.List                    (isPrefixOf)
 import qualified Data.Map.Lazy                as Map
 import           Network.URI                  (unEscapeString)

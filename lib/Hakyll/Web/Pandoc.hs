@@ -22,11 +22,9 @@ module Hakyll.Web.Pandoc
 
 
 --------------------------------------------------------------------------------
-import qualified Data.Set                   as S
-import           Text.Pandoc
-import           Text.Pandoc.Error          (PandocError (..))
-import           Text.Pandoc.Highlighting   (pygments)
 import qualified Data.Text                  as T
+import           Text.Pandoc
+import           Text.Pandoc.Highlighting   (pygments)
 
 
 --------------------------------------------------------------------------------
@@ -51,11 +49,9 @@ readPandocWith
     -> Compiler (Item Pandoc)  -- ^ Resulting document
 readPandocWith ropt item =
     case runPure $ traverse (reader ropt (itemFileType item)) (fmap T.pack item) of
-        Left (PandocParseError err)  -> fail $
-            "Hakyll.Web.Pandoc.readPandocWith: parse failed: " ++ err
-        Left (PandocParsecError _ err) -> fail $
+        Left err    -> fail $
             "Hakyll.Web.Pandoc.readPandocWith: parse failed: " ++ show err
-        Right item'              -> return item'
+        Right item' -> return item'
   where
     reader ro t = case t of
         DocBook            -> readDocBook ro
@@ -88,8 +84,8 @@ writePandocWith :: WriterOptions  -- ^ Writer options for pandoc
                 -> Item String    -- ^ Resulting HTML
 writePandocWith wopt (Item itemi doc) =
     case runPure $ writeHtml5String wopt doc of
-        Left (PandocSomeError err)  -> error $ "Hakyll.Web.Pandoc.writePandocWith: unknown error: " ++ err
-        Right item'              -> Item itemi $ T.unpack item'
+        Left err    -> error $ "Hakyll.Web.Pandoc.writePandocWith: " ++ show err
+        Right item' -> Item itemi $ T.unpack item'
 
 
 --------------------------------------------------------------------------------
