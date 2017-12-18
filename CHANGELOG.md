@@ -4,6 +4,18 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.10.0.0
+
+- Bump Pandoc to 2.0 (contribution by Vaibhav Sagar)
+- Fix compression of calc() in CSS (contribution by Krzysztof Jurewicz)
+- Make unixFilter output stderr when failing (contribution by Nick Boultbee)
+- Export Check type from `Hakyll.Commands` (contribution by Futtetennista)
+- Add overwritten files check to `hakyll-init` (contribution by Ilya Murzinov)
+- Expose & document `hakyllWithExitCodeAndArgs`, `Options`, and `Command`
+  (contribution by Michael Walker)
+- Add check for non-overlapping redirects (contribution by gwern)
+- Fix early exit when calling check as a library
+
 ## Hakyll 4.9.8.0
 
 - Bump pandoc-citeproc to 0.10.5
