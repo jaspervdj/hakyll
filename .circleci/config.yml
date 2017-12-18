@@ -8,16 +8,16 @@ jobs:
       - restore_cache:
           key: 'v1-hakyll-{{ arch }}-{{ .Branch }}'
       - run:
-          name: 'Upgrade stack'
-          command: 'stack --no-terminal upgrade'
+          name: 'Update cabal indices'
+          command: 'cabal update'
       - run:
-          name: 'Install GHC'
-          command: 'stack --no-terminal --skip-ghc-check setup'
+          name: 'Install dependencies'
+          command: '.circleci/tickle.sh cabal install --only-dependencies --enable-tests --jobs=1'
       - run:
-          name: 'Run tests'
-          command: '.circleci/tickle.sh stack --no-terminal --skip-ghc-check --jobs=1 test'
+          name: 'Build and run tests'
+          command: 'cabal test'
       - save_cache:
           key: 'v1-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
           paths:
-            - '~/.stack'
-            - '.stack-work'
+            - '~/.cabal'
+            - '~/.ghc'
