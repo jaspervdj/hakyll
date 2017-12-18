@@ -12,7 +12,9 @@ branches:
     - 'master'
 
 install:
-  - travis_wait 40 cabal install --enable-tests
+  # It seems like it's actually better to use one job, since that makes it less
+  # likely to run out of memory.
+  - './scripts/tickle.sh cabal install --only-dependencies --enable-tests --jobs=1'
 
 script:
-  - cabal test
+  - 'cabal test'
