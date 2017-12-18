@@ -13,6 +13,7 @@ packages:
 extra-deps:
   - hslua-module-text-0.1.2
   - skylighting-0.5
+  - pandoc-citeproc-0.12.1.1
 
 nix:
   enable: false
