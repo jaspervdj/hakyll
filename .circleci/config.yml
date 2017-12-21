@@ -14,7 +14,7 @@ jobs:
           # We set jobs to 1 here because that prevents Out-Of-Memory exceptions
           # while compiling dependencies.
           name: 'Install dependencies'
-          command: '.circleci/tickle.sh cabal install --only-dependencies --enable-tests --jobs=1'
+          command: '.circleci/tickle.sh cabal install --only-dependencies --enable-tests --jobs=1 --flags="+buildWebsite"'
       - run:
           name: 'Build and run tests'
           command: 'cabal test'

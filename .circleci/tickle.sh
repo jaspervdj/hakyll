@@ -3,7 +3,7 @@ set -o nounset -o errexit -o pipefail
 
 function tickle() {
     while [ true ]; do
-        echo "[$(date +%H:%M:%S)"] Tickling...
+        echo "[$(date +%H:%M:%S)] Tickling..."
         sleep 60
     done
 }

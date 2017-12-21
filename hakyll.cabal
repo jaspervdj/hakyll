@@ -37,7 +37,7 @@ License:      BSD3
 License-File: LICENSE
 Category:     Web
 
-Cabal-Version: >= 1.8
+Cabal-Version: >= 1.10
 Build-Type:    Simple
 Data-Dir:      data
 
@@ -94,9 +94,15 @@ Flag checkExternal
   Description: Include external link checking
   Default:     True
 
+Flag buildWebsite
+  Description: Build the hakyll website
+  Default:     False
+  Manual:      True
+
 Library
-  Ghc-Options:    -Wall
-  Hs-Source-Dirs: lib
+  Ghc-Options:      -Wall
+  Hs-Source-Dirs:   lib
+  Default-language: Haskell2010
 
   Exposed-Modules:
     Hakyll
@@ -217,10 +223,11 @@ Library
       -DCHECK_EXTERNAL
 
 Test-suite hakyll-tests
-  Type:           exitcode-stdio-1.0
-  Hs-source-dirs: tests
-  Main-is:        TestSuite.hs
-  Ghc-options:    -Wall
+  Type:             exitcode-stdio-1.0
+  Hs-source-dirs:   tests
+  Main-is:          TestSuite.hs
+  Ghc-options:      -Wall
+  Default-language: Haskell2010
 
   Other-modules:
     Hakyll.Core.Dependencies.Tests
@@ -307,9 +314,10 @@ Test-suite hakyll-tests
       -DCHECK_EXTERNAL
 
 Executable hakyll-init
-  Ghc-options:    -Wall
-  Hs-source-dirs: src
-  Main-is:        Init.hs
+  Main-is:          Init.hs
+  Ghc-options:      -Wall
+  Hs-source-dirs:   src
+  Default-language: Haskell2010
 
   Other-modules:
     Paths_hakyll
@@ -319,3 +327,21 @@ Executable hakyll-init
     base      >= 4   && < 5,
     directory >= 1.0 && < 1.4,
     filepath  >= 1.0 && < 1.5
+
+Executable hakyll-website
+  Main-is:          site.hs
+  Ghc-options:      -Wall
+  Hs-source-dirs:   web
+  Default-language: Haskell2010
+
+  If flag(buildWebsite)
+    Buildable: True
+  Else
+    Buildable: False
+
+  Build-depends:
+    hakyll,
+    base      >= 4     && < 5,
+    directory >= 1.0   && < 1.4,
+    filepath  >= 1.0   && < 1.5,
+    pandoc    >= 2.0.5 && < 2.1
