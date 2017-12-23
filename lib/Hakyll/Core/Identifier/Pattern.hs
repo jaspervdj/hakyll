@@ -263,6 +263,8 @@ splits = inits &&& tails >>> uncurry zip >>> reverse
 -- | Match a glob against a pattern, generating a list of captures
 capture :: Pattern -> Identifier -> Maybe [String]
 capture (Glob p) i = capture' p (toFilePath i)
+capture (Regex pat) i = Just groups
+  where (_, _, _, groups) = ((toFilePath i) =~ pat) :: (String, String, String, [String])
 capture _        _ = Nothing
 
 
