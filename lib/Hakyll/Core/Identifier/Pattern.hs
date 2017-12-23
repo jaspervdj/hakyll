@@ -27,7 +27,7 @@
 -- * @\"foo\/*.html\"@ will match all HTML files in the @\"foo\/\"@ directory.
 --
 -- The 'capture' function allows the user to get access to the elements captured
--- by the capture elements in the pattern.
+-- by the capture elements in a glob or regex pattern.
 module Hakyll.Core.Identifier.Pattern
     ( -- * The pattern type
       Pattern
