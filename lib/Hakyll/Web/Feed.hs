@@ -35,6 +35,7 @@ import           Hakyll.Web.Template.List
 
 --------------------------------------------------------------------------------
 import           Paths_hakyll
+import           System.Directory (doesFileExist)
 
 
 --------------------------------------------------------------------------------
@@ -73,9 +74,10 @@ renderFeed feedPath itemPath config itemContext items = do
     applyFilter tr str = return $ fmap tr str
     protectCDATA :: String -> String
     protectCDATA = replaceAll "]]>" (const "]]&gt;")
-    -- Auxiliary: load a template from a datafile
+    -- Auxiliary: load a template from a local file if present or from a datafile
     loadTemplate path = do
-        file <- compilerUnsafeIO $ getDataFileName path
+        isLocal <- compilerUnsafeIO $ doesFileExist path
+        file <- compilerUnsafeIO $ if isLocal then return path else getDataFileName path
         unsafeReadTemplateFile file
 
     itemContext' = mconcat
