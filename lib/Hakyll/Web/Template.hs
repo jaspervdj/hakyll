@@ -140,6 +140,8 @@
 --
 module Hakyll.Web.Template
     ( Template
+    , template
+    , readTemplateElemsFile
     , templateBodyCompiler
     , templateCompiler
     , applyTemplate
@@ -147,7 +149,6 @@ module Hakyll.Web.Template
     , applyAsTemplate
     , readTemplate
     , unsafeReadTemplateFile
-    , unsafeReadTemplateFile'
     ) where
 
 

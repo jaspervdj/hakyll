@@ -37,6 +37,7 @@ import           Hakyll.Web.Template.List
 --------------------------------------------------------------------------------
 import           Data.ByteString.Char8 (unpack)
 import           Data.FileEmbed (embedFile)
+import           System.Directory                     (doesFileExist)
 
 
 --------------------------------------------------------------------------------
@@ -80,8 +81,8 @@ renderFeed :: FilePath                -- ^ Feed template
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
 renderFeed feedPath defFeed itemPath defItem config itemContext items = do
-    feedTpl <- unsafeReadTemplateFile' feedPath defFeed
-    itemTpl <- unsafeReadTemplateFile' itemPath defItem
+    feedTpl <- readTemplateFile feedPath defFeed
+    itemTpl <- readTemplateFile itemPath defItem
 
     protectedItems <- mapM (applyFilter protectCDATA) items
     body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
@@ -118,6 +119,14 @@ renderFeed feedPath defFeed itemPath defItem config itemContext items = do
         (x : _) -> unContext itemContext' "updated" [] x >>= \cf -> case cf of
             ListField _ _ -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
             StringField s -> return s
+
+    readTemplateFile :: FilePath -> String -> Compiler Template
+    readTemplateFile file defValue = do
+        tpl <- unsafeCompiler $ do
+          isLocal <- doesFileExist file
+          if isLocal then readFile file
+          else return defValue
+        pure $ template $ readTemplateElemsFile file tpl
 
 
 --------------------------------------------------------------------------------

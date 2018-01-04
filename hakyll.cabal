@@ -73,6 +73,10 @@ Extra-source-files:
   tests/data/strip.html.out
   tests/data/template.html
   tests/data/template.html.out
+  data/templates/atom-item.xml
+  data/templates/atom.xml
+  data/templates/rss-item.xml
+  data/templates/rss.xml
 
 Source-Repository head
   Type:     git

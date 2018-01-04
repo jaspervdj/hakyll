@@ -11,7 +11,6 @@ module Hakyll.Web.Template.Internal
     , applyAsTemplate
     , readTemplate
     , unsafeReadTemplateFile
-    , unsafeReadTemplateFile'
 
     , module Hakyll.Web.Template.Internal.Element
     , module Hakyll.Web.Template.Internal.Trim
@@ -25,7 +24,6 @@ import           Data.List                            (intercalate)
 import           Data.Typeable                        (Typeable)
 import           GHC.Exts                             (IsString (..))
 import           Prelude                              hiding (id)
-import           System.Directory                     (doesFileExist)
 
 
 --------------------------------------------------------------------------------
@@ -201,14 +199,4 @@ applyAsTemplate context item =
 unsafeReadTemplateFile :: FilePath -> Compiler Template
 unsafeReadTemplateFile file = do
     tpl <- unsafeCompiler $ readFile file
-    pure $ template $ readTemplateElemsFile file tpl
-
-
---------------------------------------------------------------------------------
-unsafeReadTemplateFile' :: FilePath -> String -> Compiler Template
-unsafeReadTemplateFile' file defValue = do
-    tpl <- unsafeCompiler $ do
-      isLocal <- doesFileExist file
-      if isLocal then readFile file
-      else return defValue
     pure $ template $ readTemplateElemsFile file tpl
