@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 --------------------------------------------------------------------------------
 -- | A Module that allows easy rendering of RSS feeds.
 --
@@ -25,7 +27,6 @@ module Hakyll.Web.Feed
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
-import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
 import           Hakyll.Core.Util.String (replaceAll)
 import           Hakyll.Web.Template
@@ -34,8 +35,22 @@ import           Hakyll.Web.Template.List
 
 
 --------------------------------------------------------------------------------
-import           Paths_hakyll
-import           System.Directory (doesFileExist)
+import           Data.ByteString.Char8 (unpack)
+import           Data.FileEmbed (embedFile)
+
+
+--------------------------------------------------------------------------------
+rssTemplate :: String
+rssTemplate = unpack $(embedFile "data/templates/rss.xml")
+
+rssItemTemplate :: String
+rssItemTemplate = unpack $(embedFile "data/templates/rss-item.xml")
+
+atomTemplate :: String
+atomTemplate = unpack $(embedFile "data/templates/atom.xml")
+
+atomItemTemplate :: String
+atomItemTemplate = unpack $(embedFile "data/templates/atom-item.xml")
 
 
 --------------------------------------------------------------------------------
@@ -57,14 +72,16 @@ data FeedConfiguration = FeedConfiguration
 --------------------------------------------------------------------------------
 -- | Abstract function to render any feed.
 renderFeed :: FilePath                -- ^ Feed template
+           -> String                  -- ^ Default feed template
            -> FilePath                -- ^ Item template
+           -> String                  -- ^ Default item template
            -> FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Context for the items
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
-renderFeed feedPath itemPath config itemContext items = do
-    feedTpl <- loadTemplate feedPath
-    itemTpl <- loadTemplate itemPath
+renderFeed feedPath defFeed itemPath defItem config itemContext items = do
+    feedTpl <- unsafeReadTemplateFile' feedPath defFeed
+    itemTpl <- unsafeReadTemplateFile' itemPath defItem
 
     protectedItems <- mapM (applyFilter protectCDATA) items
     body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
@@ -74,11 +91,6 @@ renderFeed feedPath itemPath config itemContext items = do
     applyFilter tr str = return $ fmap tr str
     protectCDATA :: String -> String
     protectCDATA = replaceAll "]]>" (const "]]&gt;")
-    -- Auxiliary: load a template from a local file if present or from a datafile
-    loadTemplate path = do
-        isLocal <- compilerUnsafeIO $ doesFileExist path
-        file <- compilerUnsafeIO $ if isLocal then return path else getDataFileName path
-        unsafeReadTemplateFile file
 
     itemContext' = mconcat
         [ itemContext
@@ -115,7 +127,7 @@ renderRss :: FeedConfiguration       -- ^ Feed configuration
           -> [Item String]           -- ^ Feed items
           -> Compiler (Item String)  -- ^ Resulting feed
 renderRss config context = renderFeed
-    "templates/rss.xml" "templates/rss-item.xml" config
+    "templates/rss.xml" rssTemplate "templates/rss-item.xml" rssItemTemplate config
     (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
 
 
@@ -126,7 +138,7 @@ renderAtom :: FeedConfiguration       -- ^ Feed configuration
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
 renderAtom config context = renderFeed
-    "templates/atom.xml" "templates/atom-item.xml" config
+    "templates/atom.xml" atomTemplate "templates/atom-item.xml" atomItemTemplate config
     (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
 
 

@@ -147,6 +147,7 @@ module Hakyll.Web.Template
     , applyAsTemplate
     , readTemplate
     , unsafeReadTemplateFile
+    , unsafeReadTemplateFile'
     ) where
 
 
