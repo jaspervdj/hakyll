@@ -200,4 +200,3 @@ unsafeReadTemplateFile :: FilePath -> Compiler Template
 unsafeReadTemplateFile file = do
     tpl <- unsafeCompiler $ readFile file
     pure $ template $ readTemplateElemsFile file tpl
-

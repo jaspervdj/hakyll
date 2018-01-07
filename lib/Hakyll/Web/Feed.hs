@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 --------------------------------------------------------------------------------
 -- | A Module that allows easy rendering of RSS feeds.
 --
@@ -25,7 +27,6 @@ module Hakyll.Web.Feed
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
-import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
 import           Hakyll.Core.Util.String (replaceAll)
 import           Hakyll.Web.Template
@@ -34,7 +35,22 @@ import           Hakyll.Web.Template.List
 
 
 --------------------------------------------------------------------------------
-import           Paths_hakyll
+import           Data.ByteString.Char8 (unpack)
+import           Data.FileEmbed (embedFile)
+
+
+--------------------------------------------------------------------------------
+rssTemplate :: String
+rssTemplate = unpack $(embedFile "data/templates/rss.xml")
+
+rssItemTemplate :: String
+rssItemTemplate = unpack $(embedFile "data/templates/rss-item.xml")
+
+atomTemplate :: String
+atomTemplate = unpack $(embedFile "data/templates/atom.xml")
+
+atomItemTemplate :: String
+atomItemTemplate = unpack $(embedFile "data/templates/atom-item.xml")
 
 
 --------------------------------------------------------------------------------
@@ -55,15 +71,15 @@ data FeedConfiguration = FeedConfiguration
 
 --------------------------------------------------------------------------------
 -- | Abstract function to render any feed.
-renderFeed :: FilePath                -- ^ Feed template
-           -> FilePath                -- ^ Item template
+renderFeed :: String                  -- ^ Default feed template
+           -> String                  -- ^ Default item template
            -> FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Context for the items
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
-renderFeed feedPath itemPath config itemContext items = do
-    feedTpl <- loadTemplate feedPath
-    itemTpl <- loadTemplate itemPath
+renderFeed defFeed defItem config itemContext items = do
+    feedTpl <- readTemplateFile defFeed
+    itemTpl <- readTemplateFile defItem
 
     protectedItems <- mapM (applyFilter protectCDATA) items
     body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
@@ -73,10 +89,6 @@ renderFeed feedPath itemPath config itemContext items = do
     applyFilter tr str = return $ fmap tr str
     protectCDATA :: String -> String
     protectCDATA = replaceAll "]]>" (const "]]&gt;")
-    -- Auxiliary: load a template from a datafile
-    loadTemplate path = do
-        file <- compilerUnsafeIO $ getDataFileName path
-        unsafeReadTemplateFile file
 
     itemContext' = mconcat
         [ itemContext
@@ -105,6 +117,9 @@ renderFeed feedPath itemPath config itemContext items = do
             ListField _ _ -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
             StringField s -> return s
 
+    readTemplateFile :: String -> Compiler Template
+    readTemplateFile value = pure $ template $ readTemplateElems value
+
 
 --------------------------------------------------------------------------------
 -- | Render an RSS feed with a number of items.
@@ -113,7 +128,7 @@ renderRss :: FeedConfiguration       -- ^ Feed configuration
           -> [Item String]           -- ^ Feed items
           -> Compiler (Item String)  -- ^ Resulting feed
 renderRss config context = renderFeed
-    "templates/rss.xml" "templates/rss-item.xml" config
+    rssTemplate rssItemTemplate config
     (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
 
 
@@ -124,7 +139,7 @@ renderAtom :: FeedConfiguration       -- ^ Feed configuration
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
 renderAtom config context = renderFeed
-    "templates/atom.xml" "templates/atom-item.xml" config
+    atomTemplate atomItemTemplate config
     (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
 
 

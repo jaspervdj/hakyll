@@ -140,6 +140,8 @@
 --
 module Hakyll.Web.Template
     ( Template
+    , template
+    , readTemplateElems
     , templateBodyCompiler
     , templateCompiler
     , applyTemplate
