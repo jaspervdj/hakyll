@@ -37,7 +37,6 @@ import           Hakyll.Web.Template.List
 --------------------------------------------------------------------------------
 import           Data.ByteString.Char8 (unpack)
 import           Data.FileEmbed (embedFile)
-import           System.Directory                     (doesFileExist)
 
 
 --------------------------------------------------------------------------------
@@ -72,17 +71,15 @@ data FeedConfiguration = FeedConfiguration
 
 --------------------------------------------------------------------------------
 -- | Abstract function to render any feed.
-renderFeed :: FilePath                -- ^ Feed template
-           -> String                  -- ^ Default feed template
-           -> FilePath                -- ^ Item template
+renderFeed :: String                  -- ^ Default feed template
            -> String                  -- ^ Default item template
            -> FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Context for the items
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
-renderFeed feedPath defFeed itemPath defItem config itemContext items = do
-    feedTpl <- readTemplateFile feedPath defFeed
-    itemTpl <- readTemplateFile itemPath defItem
+renderFeed defFeed defItem config itemContext items = do
+    feedTpl <- readTemplateFile defFeed
+    itemTpl <- readTemplateFile defItem
 
     protectedItems <- mapM (applyFilter protectCDATA) items
     body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
@@ -120,13 +117,8 @@ renderFeed feedPath defFeed itemPath defItem config itemContext items = do
             ListField _ _ -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
             StringField s -> return s
 
-    readTemplateFile :: FilePath -> String -> Compiler Template
-    readTemplateFile file defValue = do
-        tpl <- unsafeCompiler $ do
-          isLocal <- doesFileExist file
-          if isLocal then readFile file
-          else return defValue
-        pure $ template $ readTemplateElemsFile file tpl
+    readTemplateFile :: String -> Compiler Template
+    readTemplateFile value = pure $ template $ readTemplateElems value
 
 
 --------------------------------------------------------------------------------
@@ -136,7 +128,7 @@ renderRss :: FeedConfiguration       -- ^ Feed configuration
           -> [Item String]           -- ^ Feed items
           -> Compiler (Item String)  -- ^ Resulting feed
 renderRss config context = renderFeed
-    "templates/rss.xml" rssTemplate "templates/rss-item.xml" rssItemTemplate config
+    rssTemplate rssItemTemplate config
     (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
 
 
@@ -147,7 +139,7 @@ renderAtom :: FeedConfiguration       -- ^ Feed configuration
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
 renderAtom config context = renderFeed
-    "templates/atom.xml" atomTemplate "templates/atom-item.xml" atomItemTemplate config
+    atomTemplate atomItemTemplate config
     (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
 
 

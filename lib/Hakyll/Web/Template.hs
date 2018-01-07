@@ -141,7 +141,7 @@
 module Hakyll.Web.Template
     ( Template
     , template
-    , readTemplateElemsFile
+    , readTemplateElems
     , templateBodyCompiler
     , templateCompiler
     , applyTemplate
