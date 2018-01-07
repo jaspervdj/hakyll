@@ -130,7 +130,7 @@ postCtx =
 ### Loading and applying templates
 
 Now we know about templates, context and how to load arbitrary items. This gives
-us enough background information in order to understand you can apply a
+us enough background information in order to understand how you can apply a
 template:
 
 ```haskell
