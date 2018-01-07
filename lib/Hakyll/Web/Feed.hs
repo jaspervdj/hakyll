@@ -28,29 +28,34 @@ module Hakyll.Web.Feed
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Item
-import           Hakyll.Core.Util.String (replaceAll)
+import           Hakyll.Core.Util.String     (replaceAll)
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.List
 
 
 --------------------------------------------------------------------------------
-import           Data.ByteString.Char8 (unpack)
-import           Data.FileEmbed (embedFile)
+import           Data.FileEmbed              (embedFile)
+import qualified Data.Text                   as T
+import qualified Data.Text.Encoding          as T
 
 
 --------------------------------------------------------------------------------
 rssTemplate :: String
-rssTemplate = unpack $(embedFile "data/templates/rss.xml")
+rssTemplate = T.unpack $
+    T.decodeUtf8 $(embedFile "data/templates/rss.xml")
 
 rssItemTemplate :: String
-rssItemTemplate = unpack $(embedFile "data/templates/rss-item.xml")
+rssItemTemplate = T.unpack $
+    T.decodeUtf8 $(embedFile "data/templates/rss-item.xml")
 
 atomTemplate :: String
-atomTemplate = unpack $(embedFile "data/templates/atom.xml")
+atomTemplate = T.unpack $
+    T.decodeUtf8 $(embedFile "data/templates/atom.xml")
 
 atomItemTemplate :: String
-atomItemTemplate = unpack $(embedFile "data/templates/atom-item.xml")
+atomItemTemplate = T.unpack $
+    T.decodeUtf8 $(embedFile "data/templates/atom-item.xml")
 
 
 --------------------------------------------------------------------------------
