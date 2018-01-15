@@ -4,6 +4,21 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.11.0.0
+
+- Bump binary to 0.9
+- Bump pandoc to 2.1
+- Bump pandoc-citeproc to 0.13
+- Bump http-types to 0.11
+- Bump QuickCheck to 2.11
+- Bump tasty to 1.0
+- Bump tasty-hunit to 0.10
+- Remove system-filepath dependency
+- Embed feed templates rather than using data-files (contribution by Roman
+  Kuznetsov)
+- Fix pthread link error on GHC-8.2.2 (contribution by Shinya Yamaguchi)
+- Extend capture with Regex handling (contribution by frederik-h)
+
 ## Hakyll 4.10.0.0
 
 - Bump Pandoc to 2.0 (contribution by Vaibhav Sagar)
