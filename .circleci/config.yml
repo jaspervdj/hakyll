@@ -6,7 +6,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: 'v1-hakyll-{{ arch }}-{{ .Branch }}'
+          key: 'v2-hakyll-{{ arch }}-{{ .Branch }}'
       - run:
           name: 'Update cabal indices'
           command: 'cabal update'
@@ -19,7 +19,7 @@ jobs:
           name: 'Build and run tests'
           command: 'cabal test'
       - save_cache:
-          key: 'v1-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
+          key: 'v2-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
           paths:
             - '~/.cabal'
             - '~/.ghc'
