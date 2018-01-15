@@ -84,7 +84,10 @@ instance Writable Biblio where
 biblioCompiler :: Compiler (Item Biblio)
 biblioCompiler = do
     filePath <- toFilePath <$> getUnderlying
-    makeItem =<< unsafeCompiler (Biblio <$> CSL.readBiblioFile filePath)
+    makeItem =<< unsafeCompiler (Biblio <$> CSL.readBiblioFile idpred filePath)
+  where
+    -- This is a filter on citations.  We include all citations.
+    idpred = const True
 
 
 --------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-resolver: nightly-2017-12-14
+resolver: nightly-2018-01-15
 extra-package-dbs: []
 
 flags:
@@ -11,10 +11,16 @@ flags:
 packages:
   - '.'
 
+allow-newer: True
+
 extra-deps:
-  - hslua-module-text-0.1.2
-  - skylighting-0.5
-  - pandoc-citeproc-0.12.2.2
+  - 'binary-0.9.0.0'
+  - 'http-types-0.11'
+  - 'pandoc-2.1'
+  - 'pandoc-citeproc-0.13'
+  - 'QuickCheck-2.11.3'
+  - 'tasty-1.0.0.1'
+  - 'tasty-hunit-0.10.0.1'
 
 nix:
   enable: false
