@@ -39,7 +39,7 @@ unixFilterRev = do
     provider <- newTestProvider store
     output   <- testCompilerDone store provider testMarkdown compiler
     expected <- testCompilerDone store provider testMarkdown getResourceString
-    H.assert $ rev (itemBody expected) == lines (itemBody output)
+    rev (itemBody expected) H.@=? lines (itemBody output)
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "rev" [])
@@ -52,9 +52,9 @@ unixFilterFalse = do
     store    <- newTestStore
     provider <- newTestProvider store
     result   <- testCompiler store provider testMarkdown compiler
-    H.assert $ case result of
-        CompilerError es -> any ("exit code" `isInfixOf`) es
-        _                -> False
+    case result of
+        CompilerError es -> True H.@=? any ("exit code" `isInfixOf`) es
+        _                -> H.assertFailure "Expecting CompilerError"
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "false" [])
@@ -66,9 +66,9 @@ unixFilterError = do
     store    <- newTestStore
     provider <- newTestProvider store
     result   <- testCompiler store provider testMarkdown compiler
-    H.assert $ case result of
-        CompilerError es -> any ("invalid option" `isInfixOf`) es
-        _                -> False
+    case result of
+        CompilerError es -> True H.@=? any ("invalid option" `isInfixOf`) es
+        _                -> H.assertFailure "Expecting CompilerError"
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "head" ["-#"])

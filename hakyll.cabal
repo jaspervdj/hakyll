@@ -160,7 +160,7 @@ Library
 
   Build-Depends:
     base                 >= 4.8      && < 5,
-    binary               >= 0.5      && < 0.9,
+    binary               >= 0.5      && < 0.10,
     blaze-html           >= 0.5      && < 0.10,
     blaze-markup         >= 0.5.1    && < 0.9,
     bytestring           >= 0.9      && < 0.11,
@@ -174,8 +174,8 @@ Library
     mtl                  >= 1        && < 2.3,
     network              >= 2.6      && < 2.7,
     network-uri          >= 2.6      && < 2.7,
-    pandoc               >= 2.0.5    && < 2.1,
-    pandoc-citeproc      >= 0.12.1.1 && < 0.13,
+    pandoc               >= 2.0.5    && < 2.2,
+    pandoc-citeproc      >= 0.13     && < 0.14,
     parsec               >= 3.0      && < 3.2,
     process              >= 1.6      && < 1.7,
     random               >= 1.0      && < 1.2,
@@ -198,9 +198,8 @@ Library
       wai             >= 3.2   && < 3.3,
       warp            >= 3.2   && < 3.3,
       wai-app-static  >= 3.1   && < 3.2,
-      http-types      >= 0.9   && < 0.10,
-      fsnotify        >= 0.2   && < 0.3,
-      system-filepath >= 0.4.6 && <= 0.5
+      http-types      >= 0.9   && < 0.12,
+      fsnotify        >= 0.2   && < 0.3
     Cpp-options:
       -DPREVIEW_SERVER
     Other-modules:
@@ -209,8 +208,7 @@ Library
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.2   && < 0.3,
-      system-filepath >= 0.4.6 && <= 0.5
+      fsnotify        >= 0.2   && < 0.3
     Cpp-options:
       -DWATCH_SERVER
     Other-modules:
@@ -219,7 +217,7 @@ Library
   If flag(checkExternal)
     Build-depends:
       http-conduit >= 2.2    && < 2.3,
-      http-types   >= 0.7    && < 0.10
+      http-types   >= 0.7    && < 0.12
     Cpp-options:
       -DCHECK_EXTERNAL
 
@@ -251,13 +249,13 @@ Test-suite hakyll-tests
 
   Build-Depends:
     hakyll,
-    QuickCheck                 >= 2.8  && < 2.11,
-    tasty                      >= 0.11 && < 0.12,
-    tasty-hunit                >= 0.9  && < 0.10,
+    QuickCheck                 >= 2.8  && < 2.12,
+    tasty                      >= 0.11 && < 1.1,
+    tasty-hunit                >= 0.9  && < 0.11,
     tasty-quickcheck           >= 0.8  && < 0.10,
     -- Copy pasted from hakyll dependencies:
     base                 >= 4.8      && < 5,
-    binary               >= 0.5      && < 0.9,
+    binary               >= 0.5      && < 0.10,
     blaze-html           >= 0.5      && < 0.10,
     blaze-markup         >= 0.5.1    && < 0.9,
     bytestring           >= 0.9      && < 0.11,
@@ -271,8 +269,8 @@ Test-suite hakyll-tests
     mtl                  >= 1        && < 2.3,
     network              >= 2.6      && < 2.7,
     network-uri          >= 2.6      && < 2.7,
-    pandoc               >= 2.0.5    && < 2.1,
-    pandoc-citeproc      >= 0.12.1.1 && < 0.13,
+    pandoc               >= 2.0.5    && < 2.2,
+    pandoc-citeproc      >= 0.13     && < 0.14,
     parsec               >= 3.0      && < 3.2,
     process              >= 1.6      && < 1.7,
     random               >= 1.0      && < 1.2,
@@ -294,23 +292,21 @@ Test-suite hakyll-tests
       wai             >= 3.2   && < 3.3,
       warp            >= 3.2   && < 3.3,
       wai-app-static  >= 3.1   && < 3.2,
-      http-types      >= 0.9   && < 0.10,
-      fsnotify        >= 0.2   && < 0.3,
-      system-filepath >= 0.4.6 && <= 0.5
+      http-types      >= 0.9   && < 0.12,
+      fsnotify        >= 0.2   && < 0.3
     Cpp-options:
       -DPREVIEW_SERVER
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.2   && < 0.3,
-      system-filepath >= 0.4.6 && <= 0.5
+      fsnotify        >= 0.2   && < 0.3
     Cpp-options:
       -DWATCH_SERVER
 
   If flag(checkExternal)
     Build-depends:
       http-conduit >= 2.2    && < 2.3,
-      http-types   >= 0.7    && < 0.10
+      http-types   >= 0.7    && < 0.12
     Cpp-options:
       -DCHECK_EXTERNAL
 
@@ -345,4 +341,4 @@ Executable hakyll-website
     base      >= 4     && < 5,
     directory >= 1.0   && < 1.4,
     filepath  >= 1.0   && < 1.5,
-    pandoc    >= 2.0.5 && < 2.1
+    pandoc    >= 2.0.5 && < 2.2

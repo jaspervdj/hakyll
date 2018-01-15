@@ -20,7 +20,7 @@ import           Hakyll.Core.Rules.Internal
 import           Hakyll.Web.Pandoc
 import           System.FilePath                ((</>))
 import           Test.Tasty                     (TestTree, testGroup)
-import           Test.Tasty.HUnit               (Assertion, assert, (@=?))
+import           Test.Tasty.HUnit               (Assertion, (@=?))
 import           TestSuite.Util
 
 
@@ -50,7 +50,7 @@ case01 = do
     checkRoute "example.mv1"     (sv "mv1" "example.md")
     checkRoute "example.mv2"     (sv "mv2" "example.md")
     checkRoute "food/example.md" (sv "metadataMatch" "example.md")
-    readIORef ioref >>= assert
+    readIORef ioref >>= (True @=?)
     cleanTestEnv
   where
     sv g     = setVersion (Just g)
