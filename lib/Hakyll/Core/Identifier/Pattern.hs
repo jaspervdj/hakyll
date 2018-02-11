@@ -28,6 +28,7 @@
 --
 -- The 'capture' function allows the user to get access to the elements captured
 -- by the capture elements in a glob or regex pattern.
+{-# LANGUAGE CPP #-}
 module Hakyll.Core.Identifier.Pattern
     ( -- * The pattern type
       Pattern
@@ -62,6 +63,9 @@ import           Control.Monad          (msum)
 import           Data.Binary            (Binary (..), getWord8, putWord8)
 import           Data.List              (inits, isPrefixOf, tails)
 import           Data.Maybe             (isJust)
+#if MIN_VERSION_base(4,9,0)
+import           Data.Semigroup         (Semigroup (..))
+#endif
 import           Data.Set               (Set)
 import qualified Data.Set               as S
 
@@ -136,9 +140,18 @@ instance IsString Pattern where
 
 
 --------------------------------------------------------------------------------
+#if MIN_VERSION_base(4,9,0)
+instance Semigroup Pattern where
+    (<>) = (.&&.)
+
+instance Monoid Pattern where
+    mempty  = Everything
+    mappend = (<>)
+#else
 instance Monoid Pattern where
     mempty  = Everything
     mappend = (.&&.)
+#endif
 
 
 --------------------------------------------------------------------------------
