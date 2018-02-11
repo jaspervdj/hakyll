@@ -35,6 +35,9 @@ module Hakyll.Web.Template.Context
 import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
 import           Data.List                     (intercalate)
+#if MIN_VERSION_base(4,9,0)
+import           Data.Semigroup                (Semigroup (..))
+#endif
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime)
 import qualified Data.Time.Format              as TF
@@ -78,9 +81,18 @@ newtype Context a = Context
 
 
 --------------------------------------------------------------------------------
+#if MIN_VERSION_base(4,9,0)
+instance Semigroup (Context a) where
+    (<>) (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
+
+instance Monoid (Context a) where
+    mempty  = missingField
+    mappend = (<>)
+#else
 instance Monoid (Context a) where
     mempty                          = missingField
     mappend (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
+#endif
 
 
 --------------------------------------------------------------------------------

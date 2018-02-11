@@ -19,6 +19,9 @@ import           Control.Monad.Trans          (liftIO)
 import           Control.Monad.Trans.Resource (runResourceT)
 import           Data.List                    (isPrefixOf)
 import qualified Data.Map.Lazy                as Map
+#if MIN_VERSION_base(4,9,0)
+import           Data.Semigroup               (Semigroup (..))
+#endif
 import           Network.URI                  (unEscapeString)
 import           System.Directory             (doesDirectoryExist,
                                                doesFileExist)
@@ -85,10 +88,20 @@ data CheckerWrite = CheckerWrite
 
 
 --------------------------------------------------------------------------------
+#if MIN_VERSION_base(4,9,0)
+instance Semigroup CheckerWrite where
+    (<>) (CheckerWrite f1 o1) (CheckerWrite f2 o2) =
+        CheckerWrite (f1 + f2) (o1 + o2)
+
+instance Monoid CheckerWrite where
+    mempty  = CheckerWrite 0 0
+    mappend = (<>)
+#else
 instance Monoid CheckerWrite where
     mempty                                            = CheckerWrite 0 0
     mappend (CheckerWrite f1 o1) (CheckerWrite f2 o2) =
         CheckerWrite (f1 + f2) (o1 + o2)
+#endif
 
 
 --------------------------------------------------------------------------------
