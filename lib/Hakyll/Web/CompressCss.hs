@@ -1,7 +1,6 @@
 --------------------------------------------------------------------------------
 -- | Module used for CSS compression. The compression is currently in a simple
 -- state, but would typically reduce the number of bytes by about 25%.
-{-# LANGUAGE PatternGuards #-}
 module Hakyll.Web.CompressCss
     ( compressCssCompiler
     , compressCss
@@ -9,12 +8,14 @@ module Hakyll.Web.CompressCss
 
 
 --------------------------------------------------------------------------------
-import           Data.List               (isPrefixOf)
+import           Data.Char               (isSpace)
+import           Data.List               (dropWhileEnd, isPrefixOf)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Item
+import           Hakyll.Core.Util.String
 
 
 --------------------------------------------------------------------------------
@@ -26,79 +27,75 @@ compressCssCompiler = fmap compressCss <$> getResourceString
 --------------------------------------------------------------------------------
 -- | Compress CSS to speed up your site.
 compressCss :: String -> String
-compressCss = compressSeparators . stripComments . compressWhitespace
+compressCss = withoutStrings (handleCalcExpressions compressSeparators . compressWhitespace)
+            . dropWhileEnd isSpace
+            . dropWhile isSpace
+            . stripComments
 
 
 --------------------------------------------------------------------------------
 -- | Compresses certain forms of separators.
 compressSeparators :: String -> String
-compressSeparators [] = []
-compressSeparators str
-    | isConstant  = head str : retainConstants compressSeparators (head str) (drop 1 str)
-    | isPrefixOf "calc( " str = "calc(" ++ compressCalcSeparators 1 (drop 6 str)
-    | isPrefixOf "calc(" str = "calc(" ++ compressCalcSeparators 1 (drop 5 str)
-    | stripFirst  = compressSeparators (drop 1 str)
-    | stripSecond = compressSeparators (head str : (drop 2 str))
-    | otherwise   = head str : compressSeparators (drop 1 str)
-  where
-    isConstant  = or $ map (isOfPrefix str) ["\"", "'"]
-    stripFirst  = or $ map (isOfPrefix str) $ [";;", ";}"] ++ (map (\c -> " " ++ c) separators)
-    stripSecond = or $ map (isOfPrefix str) $ map (\c -> c ++ " ") separators
-    separators  = [" ", "{", "}", ":", ";", ",", ">", "+", "!"]
+compressSeparators =
+    replaceAll "; *}" (const "}") .
+    replaceAll ";+" (const ";") .
+    replaceAll " *[{};,>+~!] *" (take 1 . dropWhile isSpace) .
+    replaceAll ": *" (take 1) -- not destroying pseudo selectors (#323)
 
--- | Compresses separators when starting inside calc().
-compressCalcSeparators :: Int -> String -> String
-compressCalcSeparators 0 str = compressSeparators str
-compressCalcSeparators depth str
-  | stripFirst = compressCalcSeparators depth (tail str)
-  | stripSecond = compressCalcSeparators depth (head str : (drop 2 str))
-  | ('(' : xs) <- str = '(' : compressCalcSeparators (depth + 1) xs
-  | isPrefixOf "calc( " str = compressCalcSeparators depth ("calc(" ++ (drop 6 str))
-  | isPrefixOf "calc(" str = '(' : compressCalcSeparators (depth + 1) (drop 5 str)
-  | (')' : xs) <- str = ')' : compressCalcSeparators (depth - 1) xs
-  | otherwise = head str : compressCalcSeparators depth (tail str)
+-- | Uses `compressCalcExpression` on all parenthesised calc expressions
+-- and applies `transform` to all parts outside of them
+handleCalcExpressions :: (String -> String) -> String -> String
+handleCalcExpressions transform = top transform
   where
-    stripFirst = or $ map (isOfPrefix str) $ map (\c -> " " ++ c) ["*", "/", ")"]
-    stripSecond = or $ map (isOfPrefix str) $ map (\c -> c ++ " ") ["*", "/", "("]
+    top f ""                             = f ""
+    top f str | "calc(" `isPrefixOf` str = f "calc" ++ nested 0 compressCalcExpression (drop 4 str)
+    top f (x:xs)                         = top (f . (x:)) xs
+    
+    -- when called with depth=0, the first character must be a '('
+    nested :: Int -> (String -> String) -> String -> String
+    nested _     f ""                             = f "" -- shouldn't happen, mismatched nesting
+    nested depth f str | "calc(" `isPrefixOf` str = nested depth f (drop 4 str)
+    nested 1     f (')':xs)                       = f ")" ++ top transform xs
+    nested depth f (x:xs)                         = nested (case x of
+                                                      '(' -> depth + 1
+                                                      ')' -> depth - 1 -- assert: depth > 1
+                                                      _   -> depth
+                                                    ) (f . (x:)) xs
+
+-- | does not remove whitespace around + and -, which is important in calc() expressions
+compressCalcExpression :: String -> String
+compressCalcExpression =
+    replaceAll " *[*/] *| *\\)|\\( *" (take 1 . dropWhile isSpace)
 
 --------------------------------------------------------------------------------
 -- | Compresses all whitespace.
 compressWhitespace :: String -> String
-compressWhitespace [] = []
-compressWhitespace str
-    | isConstant = head str : retainConstants compressWhitespace (head str) (drop 1 str)
-    | replaceOne = compressWhitespace (' ' : (drop 1 str))
-    | replaceTwo = compressWhitespace (' ' : (drop 2 str))
-    | otherwise  = head str : compressWhitespace (drop 1 str)
-  where
-    isConstant = or $ map (isOfPrefix str) ["\"", "'"]
-    replaceOne = or $ map (isOfPrefix str) ["\t", "\n", "\r"]
-    replaceTwo = or $ map (isOfPrefix str) [" \t", " \n", " \r", "  "]
+compressWhitespace = replaceAll "[ \t\n\r]+" (const " ")
 
 --------------------------------------------------------------------------------
--- | Function that strips CSS comments away.
+-- | Function that strips CSS comments away (outside of strings).
 stripComments :: String -> String
-stripComments [] = []
-stripComments str
-    | isConstant          = head str : retainConstants stripComments (head str) (drop 1 str)
-    | isPrefixOf "/*" str = stripComments $ eatComments $ drop 2 str
-    | otherwise           = head str : stripComments (drop 1 str)
-  where
-    isConstant  = or $ map (isOfPrefix str) ["\"", "'"]
-    eatComments str'
-        | null str' = []
-        | isPrefixOf "*/" str' = drop 2 str'
-        | otherwise = eatComments $ drop 1 str'
+stripComments ""                       = ""
+stripComments ('/':'*':str)            = stripComments $ eatComment str
+stripComments (x:xs) | x `elem` "\"'"  = retainString x xs stripComments
+                     | otherwise       = x : stripComments xs
+
+eatComment :: String -> String
+eatComment "" = ""
+eatComment ('*':'/':str) = str
+eatComment (_:str) = eatComment str
+
 
 --------------------------------------------------------------------------------
--- | Helper function to handle string constants correctly.
-retainConstants :: (String -> String) -> Char -> String -> String
-retainConstants f delim str
-    | null str = []
-    | isPrefixOf [delim] str = head str : f (drop 1 str)
-    | otherwise = head str : retainConstants f delim (drop 1 str)
+-- | Helper functions to handle string tokens correctly.
 
---------------------------------------------------------------------------------
--- | Helper function to determine whether a string is a substring.
-isOfPrefix :: String -> String -> Bool
-isOfPrefix = flip isPrefixOf
+-- TODO: handle backslash escapes
+withoutStrings :: (String -> String) -> String -> String
+withoutStrings f str = case span (`notElem` "\"'") str of
+    (text, "")     -> f text
+    (text, d:rest) -> f text ++ retainString d rest (withoutStrings f)
+
+retainString :: Char -> String -> (String -> String) -> String
+retainString delim str cont = case span (/= delim) str of
+    (val, "")     -> delim : val
+    (val, _:rest) -> delim : val ++ delim : cont rest
