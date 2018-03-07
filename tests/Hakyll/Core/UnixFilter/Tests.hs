@@ -17,6 +17,7 @@ import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
 import           Hakyll.Core.UnixFilter
+import           Hakyll.Core.Identifier
 import           TestSuite.Util
 
 
@@ -25,17 +26,20 @@ tests :: TestTree
 tests = testGroup "Hakyll.Core.UnixFilter.Tests"
     [ testCase "unixFilter rev"   unixFilterRev
     , testCase "unixFilter false" unixFilterFalse
+    , testCase "unixFilter error" unixFilterError
     ]
 
+testMarkdown :: Identifier
+testMarkdown = "russian.md"
 
 --------------------------------------------------------------------------------
 unixFilterRev :: H.Assertion
 unixFilterRev = do
     store    <- newTestStore
     provider <- newTestProvider store
-    output   <- testCompilerDone store provider "russian.md" compiler
-    expected <- testCompilerDone store provider "russian.md" getResourceString
-    H.assert $ rev (itemBody expected) == lines (itemBody output)
+    output   <- testCompilerDone store provider testMarkdown compiler
+    expected <- testCompilerDone store provider testMarkdown getResourceString
+    rev (itemBody expected) H.@=? lines (itemBody output)
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "rev" [])
@@ -47,10 +51,24 @@ unixFilterFalse :: H.Assertion
 unixFilterFalse = do
     store    <- newTestStore
     provider <- newTestProvider store
-    result   <- testCompiler store provider "russian.md" compiler
-    H.assert $ case result of
-        CompilerError es -> any ("exit code" `isInfixOf`) es
-        _                -> False
+    result   <- testCompiler store provider testMarkdown compiler
+    case result of
+        CompilerError es -> True H.@=? any ("exit code" `isInfixOf`) es
+        _                -> H.assertFailure "Expecting CompilerError"
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "false" [])
+
+
+--------------------------------------------------------------------------------
+unixFilterError :: H.Assertion
+unixFilterError = do
+    store    <- newTestStore
+    provider <- newTestProvider store
+    result   <- testCompiler store provider testMarkdown compiler
+    case result of
+        CompilerError es -> True H.@=? any ("invalid option" `isInfixOf`) es
+        _                -> H.assertFailure "Expecting CompilerError"
+    cleanTestEnv
+  where
+    compiler = getResourceString >>= withItemBody (unixFilter "head" ["-#"])

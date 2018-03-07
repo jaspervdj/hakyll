@@ -130,7 +130,7 @@ postCtx =
 ### Loading and applying templates
 
 Now we know about templates, context and how to load arbitrary items. This gives
-us enough background information in order to understand you can apply a
+us enough background information in order to understand how you can apply a
 template:
 
 ```haskell
@@ -235,6 +235,20 @@ you, except for how we produce the list of posts in `archive.html` and
 This uses the `$for(foo)$` construct. This construct allows you loop over a
 list, in this case, `$posts$`. Inside the body of this for loop, all fields
 refer to the current post, e.g.: `$url$`, `$title$` and `$date$`.
+
+You can also add a simple separator with the special `$sep$` field. 
+Everything between `$sep$` and `$endfor$` will be regarded as a separator
+that will only be shown if there is more than one item in the list.
+
+```html
+<ul>
+    $for(posts)$
+        $x$
+        $sep$,
+    $endfor$
+</ul>
+```
+
 
 Of course, $posts$ does not magically appear. We have to specify this in
 `site.hs`. Let's look at how `archive.html` is generated:

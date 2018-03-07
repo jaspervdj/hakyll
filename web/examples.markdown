@@ -20,6 +20,8 @@ directly with the default Hakyll site.
   [source](https://github.com/jaspervdj/jaspervdj)
 - <http://www.imagination-land.org/>,
   [source](https://github.com/Keruspe/blog/)
+- <https://bananasandlenses.net/>,
+  [source](https://github.com/denisshevchenko/bananasandlenses)
 - <http://blog.clement.delafargue.name/>,
   [source](https://github.com/divarvel/blog)
 - <http://bneijt.nl>,
@@ -34,8 +36,6 @@ directly with the default Hakyll site.
   [source](https://github.com/dannysu/hakyll-blog)
 - <http://meta.plasm.us/>,
   [source](https://github.com/travisbrown/metaplasm)
-- <http://www.web2day-nantes.org/>,
-  [source](https://github.com/CompanyCampus/web2day2013)
 - <http://workforpizza.com/>,
   [source](https://github.com/irneh/workforpizza)
 - <http://poleiro.info/>,
@@ -46,8 +46,6 @@ directly with the default Hakyll site.
   [source](https://github.com/regisfoucault/blog)
 - <http://www.chaoxuprime.com/>,
   [source](https://github.com/Mgccl/blog)
-- <https://benjeffrey.com/>,
-  [source](https://github.com/jeffbr13/benjeffrey.com)
 - <http://www.skybluetrades.net/>,
   [source](https://github.com/ian-ross/blog)
 - <http://chromaticleaves.com/>,
@@ -58,8 +56,6 @@ directly with the default Hakyll site.
   [source](https://github.com/blaenk/blaenk.github.io)
 - <https://xinitrc.de/>,
   [source](https://github.com/xinitrc/xinitrc.de)
-- <http://blog.darkfox.id.au/>,
-  [source](http://hub.darcs.net/DarkFox/DarkFox-blog)
 - <http://nickcharlton.net/>,
   [source](https://github.com/nickcharlton/nickcharlton.net)
 - <http://scr.stunts.hu/>,
@@ -160,6 +156,30 @@ directly with the default Hakyll site.
   [source](https://github.com/NicoleRauch/BusinessWebsite)
 - <http://johnduhamel.io/>,
   [source](https://github.com/jjduhamel/blog)
+- <http://alexanderlobov.ru/>,
+  [source](https://github.com/alexanderlobov/homepage)
+- <http://www.rosanbo.com/>,
+  [source](https://github.com/polo2ro/blog)
+- <http://limansky.me/>,
+  [source](https://github.com/limansky/limansky_me)
+- <http://rahul.nu/>,
+  [source](https://github.com/rp/rp.github.io/tree/dev)
+- <http://haskanything.com/>,
+  [source](https://github.com/beerendlauwers/HaskAnything)
+- <https://anler.me/>,
+  [source](https://github.com/anler/anler.me)
+- <https://www.brandonstil.es/>,
+  [source](https://github.com/stilesb/brandonstil.es)
+- <http://argumatronic.com/>,
+  [source](https://gitlab.com/GinBaby/argumatronic/tree/master)
+- <http://sillybytes.net/>,
+  [source](https://github.com/sillybytes/sillybytes)
+- <https://falconpilot.github.io/>,
+  [source](https://github.com/FalconPilot/falconpilot.github.io)
+- <http://spyhop.cafe/>,
+  [source](https://github.com/thunky-monk/spyhop-cafe)
+- <https://bendo.github.io/>,
+  [source](https://github.com/bendo/bendo.github.io)
 
 ## Hakyll 3.X
 
@@ -187,7 +207,5 @@ directly with the default Hakyll site.
   [source](http://gitorious.org/shakthimaan-blog)
 - <http://www.alfredodinapoli.com/>,
   [source](https://github.com/CharlesStain/alfredodinapoli.com)
-- <http://datahackermd.com>,
-  [source](http://github.com/akshayjshah/datahackermd)
 - <http://michaelxavier.net>,
   [source](https://github.com/michaelxavier/michaelxavier.net)

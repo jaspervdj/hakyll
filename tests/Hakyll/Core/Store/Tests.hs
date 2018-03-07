@@ -63,11 +63,11 @@ wrongType = do
     -- Store a string and try to fetch an int
     Store.set store ["foo", "bar"] ("qux" :: String)
     value <- Store.get store ["foo", "bar"] :: IO (Store.Result Int)
-    H.assert $ case value of
-        Store.WrongType e t ->
-            e == typeOf (undefined :: Int) &&
-            t == typeOf (undefined :: String)
-        _                   -> False
+    case value of
+        Store.WrongType e t -> do
+            typeOf (undefined :: Int)    H.@=? e
+            typeOf (undefined :: String) H.@=? t
+        _ -> H.assertFailure "Expecting WrongType"
     cleanTestEnv
 
 
@@ -78,6 +78,6 @@ isMembertest = do
     Store.set store ["foo", "bar"] ("qux" :: String)
     good <- Store.isMember store ["foo", "bar"]
     bad  <- Store.isMember store ["foo", "baz"]
-    H.assert good
-    H.assert (not bad)
+    True  H.@=? good
+    False H.@=? bad
     cleanTestEnv

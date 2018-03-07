@@ -9,7 +9,7 @@ module Hakyll.Core.Provider.Tests
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Test.Tasty           (TestTree, testGroup)
-import           Test.Tasty.HUnit     (Assertion, assert, testCase, (@=?))
+import           Test.Tasty.HUnit     (Assertion, testCase, (@=?))
 import           TestSuite.Util
 
 
@@ -25,7 +25,7 @@ case01 :: Assertion
 case01 = do
     store    <- newTestStore
     provider <- newTestProvider store
-    assert $ resourceExists provider "example.md"
+    True @=? resourceExists provider "example.md"
 
     metadata <- resourceMetadata provider "example.md"
     Just "An example"    @=? lookupString "title"    metadata

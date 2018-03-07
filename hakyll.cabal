@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.9.0.0
+Version: 4.11.0.0
 
 Synopsis: A static website compiler library
 Description:
@@ -37,7 +37,7 @@ License:      BSD3
 License-File: LICENSE
 Category:     Web
 
-Cabal-Version: >= 1.8
+Cabal-Version: >= 1.10
 Build-Type:    Simple
 Data-Dir:      data
 
@@ -56,19 +56,27 @@ Data-files:
   example/index.html
   example/about.rst
   example/contact.markdown
-  templates/atom-item.xml
-  templates/atom.xml
-  templates/rss-item.xml
-  templates/rss.xml
 
 Extra-source-files:
+  CHANGELOG.md
   tests/data/example.md
   tests/data/example.md.metadata
   tests/data/images/favicon.ico
+  tests/data/just-meta.html
+  tests/data/just-meta.html.out
+  tests/data/partial-helper.html
+  tests/data/partial.html
+  tests/data/partial.html.out
   tests/data/posts/2010-08-26-birthday.md
   tests/data/russian.md
+  tests/data/strip.html
+  tests/data/strip.html.out
   tests/data/template.html
   tests/data/template.html.out
+  data/templates/atom-item.xml
+  data/templates/atom.xml
+  data/templates/rss-item.xml
+  data/templates/rss.xml
 
 Source-Repository head
   Type:     git
@@ -86,23 +94,38 @@ Flag checkExternal
   Description: Include external link checking
   Default:     True
 
+Flag buildWebsite
+  Description: Build the hakyll website
+  Default:     False
+  Manual:      True
+
 Library
-  Ghc-Options:    -Wall
-  Hs-Source-Dirs: src
+  Ghc-Options:      -Wall
+  Hs-Source-Dirs:   lib
+  Default-language: Haskell2010
 
   Exposed-Modules:
     Hakyll
+    Hakyll.Commands
     Hakyll.Core.Compiler
+    Hakyll.Core.Compiler.Internal
     Hakyll.Core.Configuration
     Hakyll.Core.Dependencies
     Hakyll.Core.File
     Hakyll.Core.Identifier
     Hakyll.Core.Identifier.Pattern
     Hakyll.Core.Item
+    Hakyll.Core.Logger
     Hakyll.Core.Metadata
+    Hakyll.Core.Provider
+    Hakyll.Core.Provider.Metadata
     Hakyll.Core.Routes
     Hakyll.Core.Rules
+    Hakyll.Core.Rules.Internal
+    Hakyll.Core.Runtime
+    Hakyll.Core.Store
     Hakyll.Core.UnixFilter
+    Hakyll.Core.Util.File
     Hakyll.Core.Util.String
     Hakyll.Core.Writable
     Hakyll.Main
@@ -110,11 +133,12 @@ Library
     Hakyll.Web.Feed
     Hakyll.Web.Html
     Hakyll.Web.Html.RelativizeUrls
+    Hakyll.Web.Paginate
     Hakyll.Web.Pandoc
     Hakyll.Web.Pandoc.Biblio
     Hakyll.Web.Pandoc.FileType
+    Hakyll.Web.Redirect
     Hakyll.Web.Tags
-    Hakyll.Web.Paginate
     Hakyll.Web.Template
     Hakyll.Web.Template.Context
     Hakyll.Web.Template.Internal
@@ -126,65 +150,56 @@ Library
     Data.List.Extended
     Data.Yaml.Extended
     Hakyll.Check
-    Hakyll.Commands
-    Hakyll.Core.Compiler.Internal
     Hakyll.Core.Compiler.Require
     Hakyll.Core.Item.SomeItem
-    Hakyll.Core.Logger
-    Hakyll.Core.Provider
     Hakyll.Core.Provider.Internal
-    Hakyll.Core.Provider.Metadata
     Hakyll.Core.Provider.MetadataCache
-    Hakyll.Core.Rules.Internal
-    Hakyll.Core.Runtime
-    Hakyll.Core.Store
-    Hakyll.Core.Util.File
     Hakyll.Core.Util.Parser
     Hakyll.Web.Pandoc.Binary
     Paths_hakyll
 
   Build-Depends:
-    base                 >= 4.8    && < 5,
-    binary               >= 0.5    && < 0.9,
-    blaze-html           >= 0.5    && < 0.9,
-    blaze-markup         >= 0.5.1  && < 0.8,
-    bytestring           >= 0.9    && < 0.11,
-    containers           >= 0.3    && < 0.6,
-    cryptohash           >= 0.7    && < 0.12,
-    data-default         >= 0.4    && < 0.8,
-    deepseq              >= 1.3    && < 1.5,
-    directory            >= 1.0    && < 1.3,
-    filepath             >= 1.0    && < 1.5,
-    lrucache             >= 1.1.1  && < 1.3,
-    mtl                  >= 1      && < 2.3,
-    network              >= 2.6    && < 2.7,
-    network-uri          >= 2.6    && < 2.7,
-    pandoc               >= 1.14   && < 1.18,
-    pandoc-citeproc      >= 0.4    && < 0.11,
-    parsec               >= 3.0    && < 3.2,
-    process              >= 1.0    && < 1.5,
-    random               >= 1.0    && < 1.2,
-    regex-base           >= 0.93   && < 0.94,
-    regex-tdfa           >= 1.1    && < 1.3,
-    resourcet            >= 1.1    && < 1.2,
-    scientific           >= 0.3.4  && < 0.4,
-    tagsoup              >= 0.13.1 && < 0.15,
-    text                 >= 0.11   && < 1.3,
-    time                 >= 1.4    && < 1.7,
-    time-locale-compat   >= 0.1    && < 0.2,
-    unordered-containers >= 0.2    && < 0.3,
-    vector               >= 0.11   && < 0.12,
-    yaml                 >= 0.8    && < 0.9,
-    optparse-applicative >= 0.12   && < 0.13
+    base                 >= 4.8      && < 5,
+    binary               >= 0.5      && < 0.10,
+    blaze-html           >= 0.5      && < 0.10,
+    blaze-markup         >= 0.5.1    && < 0.9,
+    bytestring           >= 0.9      && < 0.11,
+    containers           >= 0.3      && < 0.6,
+    cryptohash           >= 0.7      && < 0.12,
+    data-default         >= 0.4      && < 0.8,
+    deepseq              >= 1.3      && < 1.5,
+    directory            >= 1.0      && < 1.4,
+    filepath             >= 1.0      && < 1.5,
+    lrucache             >= 1.1.1    && < 1.3,
+    mtl                  >= 1        && < 2.3,
+    network              >= 2.6      && < 2.7,
+    network-uri          >= 2.6      && < 2.7,
+    pandoc               >= 2.0.5    && < 2.2,
+    pandoc-citeproc      >= 0.13     && < 0.14,
+    parsec               >= 3.0      && < 3.2,
+    process              >= 1.6      && < 1.7,
+    random               >= 1.0      && < 1.2,
+    regex-base           >= 0.93     && < 0.94,
+    regex-tdfa           >= 1.1      && < 1.3,
+    resourcet            >= 1.1      && < 1.2,
+    scientific           >= 0.3.4    && < 0.4,
+    tagsoup              >= 0.13.1   && < 0.15,
+    text                 >= 0.11     && < 1.3,
+    time                 >= 1.8      && < 1.9,
+    time-locale-compat   >= 0.1      && < 0.2,
+    unordered-containers >= 0.2      && < 0.3,
+    vector               >= 0.11     && < 0.13,
+    yaml                 >= 0.8.11   && < 0.9,
+    optparse-applicative >= 0.12     && < 0.15,
+    file-embed           >= 0.0.10.1 && < 0.0.11
 
   If flag(previewServer)
     Build-depends:
       wai             >= 3.2   && < 3.3,
       warp            >= 3.2   && < 3.3,
       wai-app-static  >= 3.1   && < 3.2,
-      http-types      >= 0.9   && < 0.10,
-      fsnotify        >= 0.2   && < 0.3,
-      system-filepath >= 0.4.6 && <= 0.5
+      http-types      >= 0.9   && < 0.12,
+      fsnotify        >= 0.2   && < 0.3
     Cpp-options:
       -DPREVIEW_SERVER
     Other-modules:
@@ -193,8 +208,7 @@ Library
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.2   && < 0.3,
-      system-filepath >= 0.4.6 && <= 0.5
+      fsnotify        >= 0.2   && < 0.3
     Cpp-options:
       -DWATCH_SERVER
     Other-modules:
@@ -202,16 +216,18 @@ Library
 
   If flag(checkExternal)
     Build-depends:
-      http-conduit >= 2.1    && < 2.2,
-      http-types   >= 0.7    && < 0.10
+      http-conduit >= 2.2    && < 2.3,
+      http-types   >= 0.7    && < 0.12
     Cpp-options:
       -DCHECK_EXTERNAL
 
 Test-suite hakyll-tests
-  Type:           exitcode-stdio-1.0
-  Hs-source-dirs: src tests
-  Main-is:        TestSuite.hs
-  Ghc-options:    -Wall
+  Type:             exitcode-stdio-1.0
+  Hs-source-dirs:   tests
+  Main-is:          TestSuite.hs
+  Ghc-options:      -Wall -threaded
+  Default-language: Haskell2010
+
   Other-modules:
     Hakyll.Core.Dependencies.Tests
     Hakyll.Core.Identifier.Tests
@@ -232,84 +248,97 @@ Test-suite hakyll-tests
     TestSuite.Util
 
   Build-Depends:
-    QuickCheck                 >= 2.8  && < 2.9,
-    tasty                      >= 0.11 && < 0.12,
-    tasty-hunit                >= 0.9  && < 0.10,
-    tasty-quickcheck           >= 0.8  && < 0.9,
+    hakyll,
+    QuickCheck                 >= 2.8  && < 2.12,
+    tasty                      >= 0.11 && < 1.1,
+    tasty-hunit                >= 0.9  && < 0.11,
+    tasty-quickcheck           >= 0.8  && < 0.10,
     -- Copy pasted from hakyll dependencies:
-    base                 >= 4.8    && < 5,
-    binary               >= 0.5    && < 0.9,
-    blaze-html           >= 0.5    && < 0.9,
-    blaze-markup         >= 0.5.1  && < 0.8,
-    bytestring           >= 0.9    && < 0.11,
-    containers           >= 0.3    && < 0.6,
-    cryptohash           >= 0.7    && < 0.12,
-    data-default         >= 0.4    && < 0.8,
-    deepseq              >= 1.3    && < 1.5,
-    directory            >= 1.0    && < 1.3,
-    filepath             >= 1.0    && < 1.5,
-    lrucache             >= 1.1.1  && < 1.3,
-    mtl                  >= 1      && < 2.3,
-    network              >= 2.6    && < 2.7,
-    network-uri          >= 2.6    && < 2.7,
-    pandoc               >= 1.14   && < 1.18,
-    pandoc-citeproc      >= 0.4    && < 0.11,
-    parsec               >= 3.0    && < 3.2,
-    process              >= 1.0    && < 1.5,
-    random               >= 1.0    && < 1.2,
-    regex-base           >= 0.93   && < 0.94,
-    regex-tdfa           >= 1.1    && < 1.3,
-    resourcet            >= 1.1    && < 1.2,
-    scientific           >= 0.3.4  && < 0.4,
-    tagsoup              >= 0.13.1 && < 0.15,
-    text                 >= 0.11   && < 1.3,
-    time                 >= 1.4    && < 1.7,
-    time-locale-compat   >= 0.1    && < 0.2,
-    unordered-containers >= 0.2    && < 0.3,
-    vector               >= 0.11   && < 0.12,
-    yaml                 >= 0.8.11 && < 0.9,
-    optparse-applicative >= 0.12   && < 0.13
+    base                 >= 4.8      && < 5,
+    binary               >= 0.5      && < 0.10,
+    blaze-html           >= 0.5      && < 0.10,
+    blaze-markup         >= 0.5.1    && < 0.9,
+    bytestring           >= 0.9      && < 0.11,
+    containers           >= 0.3      && < 0.6,
+    cryptohash           >= 0.7      && < 0.12,
+    data-default         >= 0.4      && < 0.8,
+    deepseq              >= 1.3      && < 1.5,
+    directory            >= 1.0      && < 1.4,
+    filepath             >= 1.0      && < 1.5,
+    lrucache             >= 1.1.1    && < 1.3,
+    mtl                  >= 1        && < 2.3,
+    network              >= 2.6      && < 2.7,
+    network-uri          >= 2.6      && < 2.7,
+    pandoc               >= 2.0.5    && < 2.2,
+    pandoc-citeproc      >= 0.13     && < 0.14,
+    parsec               >= 3.0      && < 3.2,
+    process              >= 1.6      && < 1.7,
+    random               >= 1.0      && < 1.2,
+    regex-base           >= 0.93     && < 0.94,
+    regex-tdfa           >= 1.1      && < 1.3,
+    resourcet            >= 1.1      && < 1.2,
+    scientific           >= 0.3.4    && < 0.4,
+    tagsoup              >= 0.13.1   && < 0.15,
+    text                 >= 0.11     && < 1.3,
+    time                 >= 1.8      && < 1.9,
+    time-locale-compat   >= 0.1      && < 0.2,
+    unordered-containers >= 0.2      && < 0.3,
+    vector               >= 0.11     && < 0.13,
+    yaml                 >= 0.8.11   && < 0.9,
+    optparse-applicative >= 0.12     && < 0.15
 
   If flag(previewServer)
     Build-depends:
       wai             >= 3.2   && < 3.3,
       warp            >= 3.2   && < 3.3,
       wai-app-static  >= 3.1   && < 3.2,
-      http-types      >= 0.9   && < 0.10,
-      fsnotify        >= 0.2   && < 0.3,
-      system-filepath >= 0.4.6 && <= 0.5
+      http-types      >= 0.9   && < 0.12,
+      fsnotify        >= 0.2   && < 0.3
     Cpp-options:
       -DPREVIEW_SERVER
-    Other-modules:
-      Hakyll.Preview.Poll
-      Hakyll.Preview.Server
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.2   && < 0.3,
-      system-filepath >= 0.4.6 && <= 0.5
+      fsnotify        >= 0.2   && < 0.3
     Cpp-options:
       -DWATCH_SERVER
-    Other-modules:
-      Hakyll.Preview.Poll
 
   If flag(checkExternal)
     Build-depends:
-      http-conduit >= 2.1    && < 2.2,
-      http-types   >= 0.7    && < 0.10
+      http-conduit >= 2.2    && < 2.3,
+      http-types   >= 0.7    && < 0.12
     Cpp-options:
       -DCHECK_EXTERNAL
 
 Executable hakyll-init
-  Ghc-options:    -Wall
-  Hs-source-dirs: src
-  Main-is:        Hakyll/Init.hs
-
-  Build-depends:
-    base      >= 4   && < 5,
-    directory >= 1.0 && < 1.3,
-    filepath  >= 1.0 && < 1.5
+  Main-is:          Init.hs
+  Ghc-options:      -Wall -threaded
+  Hs-source-dirs:   src
+  Default-language: Haskell2010
 
   Other-modules:
-    Hakyll.Core.Util.File
     Paths_hakyll
+
+  Build-depends:
+    hakyll,
+    base      >= 4   && < 5,
+    directory >= 1.0 && < 1.4,
+    filepath  >= 1.0 && < 1.5
+
+Executable hakyll-website
+  Main-is:          site.hs
+  Ghc-options:      -Wall -threaded
+  Hs-source-dirs:   web
+  Default-language: Haskell2010
+
+  If flag(buildWebsite)
+    Buildable: True
+  Else
+    Buildable: False
+
+  Build-depends:
+    hakyll,
+    base      >= 4     && < 5,
+    directory >= 1.0   && < 1.4,
+    filepath  >= 1.0   && < 1.5,
+    pandoc    >= 2.0.5 && < 2.2

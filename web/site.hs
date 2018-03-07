@@ -1,19 +1,24 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import           Control.Arrow   (second)
-import           Control.Monad   (forM_)
-import           Data.Char       (isDigit)
-import           Data.List       (isPrefixOf, sortBy)
-import           Data.Monoid     ((<>))
-import           Data.Ord        (comparing)
+import           Control.Arrow    (second)
+import           Control.Monad    (forM_)
+import           Data.Char        (isDigit)
+import           Data.List        (isPrefixOf, sortBy)
+import           Data.Monoid      ((<>))
+import           Data.Ord         (comparing)
 import           Hakyll
-import           System.FilePath (dropTrailingPathSeparator, splitPath)
+import           System.Directory (copyFile)
+import           System.FilePath  (dropTrailingPathSeparator, splitPath)
 import           Text.Pandoc
 
 
 --------------------------------------------------------------------------------
 main :: IO ()
 main = hakyllWith config $ do
+    -- Copy CHANGELOG.md here.
+    preprocess $ copyFile "../CHANGELOG.md" "releases.markdown"
+
+    -- CSS
     match "css/*" $ do
         route   idRoute
         compile compressCssCompiler
@@ -70,8 +75,7 @@ main = hakyllWith config $ do
   where
     withToc = defaultHakyllWriterOptions
         { writerTableOfContents = True
-        , writerTemplate = "$toc$\n$body$"
-        , writerStandalone = True
+        , writerTemplate        = Just "$toc$\n$body$"
         }
 
 
