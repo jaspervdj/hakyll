@@ -81,6 +81,9 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
         -- fail on incomplete template.
         , assertBool "did not yield error" $ isLeft $
           parseTemplateElemsFile "" "a$b"
+        -- fail on mismatched template syntax.
+        , assertBool "did not fail to parse" $ isLeft $
+          parseTemplateElemsFile "" "$for(xs)$\n  <p>foo</p>\n$endif$"
         ]
     ]
 
