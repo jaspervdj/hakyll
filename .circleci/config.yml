@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: 'fpco/stack-build:latest'
+    steps:
+      - checkout
+      - restore_cache:
+          key: 'v2-hakyll-{{ arch }}-{{ .Branch }}'
+      - run:
+          name: 'Update cabal indices'
+          command: 'cabal update'
+      - run:
+          # We set jobs to 1 here because that prevents Out-Of-Memory exceptions
+          # while compiling dependencies.
+          name: 'Install dependencies'
+          command: '.circleci/tickle.sh cabal install --only-dependencies --enable-tests --jobs=1 --flags="+buildWebsite"'
+      - run:
+          name: 'Build and run tests'
+          command: 'cabal test'
+      - save_cache:
+          key: 'v2-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
+          paths:
+            - '~/.cabal'
+            - '~/.ghc'

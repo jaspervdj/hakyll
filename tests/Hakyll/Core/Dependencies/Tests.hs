@@ -9,8 +9,8 @@ module Hakyll.Core.Dependencies.Tests
 import           Data.List                (delete)
 import qualified Data.Map                 as M
 import qualified Data.Set                 as S
-import           Test.Framework           (Test, testGroup)
-import           Test.HUnit               (Assertion, (@=?))
+import           Test.Tasty               (TestTree, testGroup)
+import           Test.Tasty.HUnit         (Assertion, (@=?))
 
 
 --------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Dependencies.Tests" $
     fromAssertions "analyze" [case01, case02, case03]
 

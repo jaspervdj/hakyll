@@ -11,13 +11,13 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Routes
 import           System.FilePath        ((</>))
-import           Test.Framework         (Test, testGroup)
-import           Test.HUnit             (Assertion, (@=?))
+import           Test.Tasty             (TestTree, testGroup)
+import           Test.Tasty.HUnit       (Assertion, (@=?))
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Routes.Tests" $ fromAssertions "runRoutes"
     [ testRoutes "foo.html" (setExtension "html") "foo"
     , testRoutes "foo.html" (setExtension ".html") "foo"

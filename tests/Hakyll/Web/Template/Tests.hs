@@ -6,9 +6,9 @@ module Hakyll.Web.Template.Tests
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework                 (Test, testGroup)
-import           Test.Framework.Providers.HUnit (testCase)
-import           Test.HUnit                     (Assertion, (@=?), (@?=), assertBool)
+import           Test.Tasty                   (TestTree, testGroup)
+import           Test.Tasty.HUnit             (Assertion, testCase, (@=?),
+                                               (@?=), assertBool)
 
 import           Data.Either                    (isLeft)
 
@@ -27,14 +27,15 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Template.Tests" $ concat
     [ [ testCase "case01" $ test ("template.html.out", "template.html", "example.md")
       , testCase "case02" $ test ("strip.html.out", "strip.html", "example.md")
+      , testCase "case03" $ test ("just-meta.html.out", "just-meta.html", "example.md")
       , testCase "applyJoinTemplateList" testApplyJoinTemplateList
       ]
 
-    , fromAssertions "readTemplate"
+    , fromAssertions "parseTemplate"
         [ Right [Chunk "Hello ", Expr (Call "guest" [])]
             @=? parseTemplateElemsFile "" "Hello $guest()$"
         , Right [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]

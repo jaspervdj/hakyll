@@ -10,13 +10,13 @@ import qualified Data.Text                     as T
 import qualified Data.Yaml                     as Yaml
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Metadata
-import           Test.Framework                (Test, testGroup)
-import           Test.HUnit                    (Assertion, (@=?), assertFailure)
+import           Test.Tasty                    (TestTree, testGroup)
+import           Test.Tasty.HUnit              (Assertion, assertFailure, (@=?))
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Provider.Metadata.Tests" $
     fromAssertions "page" [testPage01, testPage02]
 

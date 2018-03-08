@@ -6,8 +6,8 @@ module Hakyll.Core.Identifier.Tests
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework                 (Test, testGroup)
-import           Test.HUnit                     ((@=?))
+import           Test.Tasty                     (TestTree, testGroup)
+import           Test.Tasty.HUnit               ((@=?))
 
 
 --------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Identifier.Tests" $ concat
     [ captureTests
     , matchesTests
@@ -25,7 +25,7 @@ tests = testGroup "Hakyll.Core.Identifier.Tests" $ concat
 
 
 --------------------------------------------------------------------------------
-captureTests :: [Test]
+captureTests :: [TestTree]
 captureTests = fromAssertions "capture"
     [ Just ["bar"]              @=? capture "foo/**" "foo/bar"
     , Just ["foo/bar"]          @=? capture "**" "foo/bar"
@@ -42,11 +42,12 @@ captureTests = fromAssertions "capture"
     , Just ["lol", "fun/large"] @=? capture "*cat/**.jpg" "lolcat/fun/large.jpg"
     , Just []                   @=? capture "\\*.jpg" "*.jpg"
     , Nothing                   @=? capture "\\*.jpg" "foo.jpg"
+    , Just ["xyz","42"]              @=? capture (fromRegex "cat-([a-z]+)/foo([0-9]+).jpg") "cat-xyz/foo42.jpg"
     ]
 
 
 --------------------------------------------------------------------------------
-matchesTests :: [Test]
+matchesTests :: [TestTree]
 matchesTests = fromAssertions "matches"
     [ True  @=? matches (fromList ["foo.markdown"]) "foo.markdown"
     , False @=? matches (fromList ["foo"]) (setVersion (Just "x") "foo")

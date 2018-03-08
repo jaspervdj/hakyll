@@ -5,9 +5,9 @@ module Hakyll.Web.Html.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.Char       (toUpper)
-import           Test.Framework  (Test, testGroup)
-import           Test.HUnit      (assert, (@=?))
+import           Data.Char        (toUpper)
+import           Test.Tasty       (TestTree, testGroup)
+import           Test.Tasty.HUnit ((@=?))
 
 
 --------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Web.Html.Tests" $ concat
     [ fromAssertions "demoteHeaders"
         [ "<h2>A h1 title</h2>" @=?
@@ -64,11 +64,11 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
         ]
 
     , fromAssertions "isExternal"
-        [ assert (isExternal "http://reddit.com")
-        , assert (isExternal "https://mail.google.com")
-        , assert (isExternal "//ajax.googleapis.com")
-        , assert (not (isExternal "../header.png"))
-        , assert (not (isExternal "/foo/index.html"))
+        [ True  @=? isExternal "http://reddit.com"
+        , True  @=? isExternal "https://mail.google.com"
+        , True  @=? isExternal "//ajax.googleapis.com"
+        , False @=? isExternal "../header.png"
+        , False @=? isExternal "/foo/index.html"
         ]
 
     , fromAssertions "stripTags"

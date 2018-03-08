@@ -6,22 +6,21 @@ module Hakyll.Web.Template.Context.Tests
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework                 (Test, testGroup)
-import           Test.Framework.Providers.HUnit (testCase)
-import           Test.HUnit                     (Assertion, (@=?))
+import           Test.Tasty                  (TestTree, testGroup)
+import           Test.Tasty.HUnit            (Assertion, testCase, (@=?))
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Provider
-import           Hakyll.Core.Store              (Store)
+import           Hakyll.Core.Store           (Store)
 import           Hakyll.Web.Template.Context
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Template.Context.Tests"
     [ testCase "testDateField" testDateField
     ]

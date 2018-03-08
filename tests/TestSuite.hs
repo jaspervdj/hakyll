@@ -5,7 +5,7 @@ module Main
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework                       (defaultMain)
+import           Test.Tasty                           (defaultMain, testGroup)
 
 
 --------------------------------------------------------------------------------
@@ -19,6 +19,7 @@ import qualified Hakyll.Core.Runtime.Tests
 import qualified Hakyll.Core.Store.Tests
 import qualified Hakyll.Core.UnixFilter.Tests
 import qualified Hakyll.Core.Util.String.Tests
+import qualified Hakyll.Web.CompressCss.Tests
 import qualified Hakyll.Web.Html.RelativizeUrls.Tests
 import qualified Hakyll.Web.Html.Tests
 import qualified Hakyll.Web.Pandoc.FileType.Tests
@@ -28,7 +29,7 @@ import qualified Hakyll.Web.Template.Tests
 
 --------------------------------------------------------------------------------
 main :: IO ()
-main = defaultMain
+main = defaultMain $ testGroup "Hakyll"
     [ Hakyll.Core.Dependencies.Tests.tests
     , Hakyll.Core.Identifier.Tests.tests
     , Hakyll.Core.Provider.Metadata.Tests.tests
@@ -39,6 +40,7 @@ main = defaultMain
     , Hakyll.Core.Store.Tests.tests
     , Hakyll.Core.UnixFilter.Tests.tests
     , Hakyll.Core.Util.String.Tests.tests
+    , Hakyll.Web.CompressCss.Tests.tests
     , Hakyll.Web.Html.RelativizeUrls.Tests.tests
     , Hakyll.Web.Html.Tests.tests
     , Hakyll.Web.Pandoc.FileType.Tests.tests

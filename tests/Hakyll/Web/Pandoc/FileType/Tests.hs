@@ -6,8 +6,8 @@ module Hakyll.Web.Pandoc.FileType.Tests
 
 
 --------------------------------------------------------------------------------
-import           Test.Framework                 (Test, testGroup)
-import           Test.HUnit                     ((@=?))
+import           Test.Tasty                 (TestTree, testGroup)
+import           Test.Tasty.HUnit           ((@=?))
 
 
 --------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Web.Pandoc.FileType.Tests" $
     fromAssertions "fileType"
         [ Markdown                 @=? fileType "index.md"

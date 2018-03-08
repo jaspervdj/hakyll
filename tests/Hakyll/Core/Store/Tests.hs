@@ -6,22 +6,22 @@ module Hakyll.Core.Store.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.Typeable                        (typeOf)
-import           Test.Framework                       (Test, testGroup)
-import           Test.Framework.Providers.HUnit       (testCase)
-import           Test.Framework.Providers.QuickCheck2 (testProperty)
-import qualified Test.HUnit                           as H
-import qualified Test.QuickCheck                      as Q
-import qualified Test.QuickCheck.Monadic              as Q
+import           Data.Typeable           (typeOf)
+import qualified Test.QuickCheck         as Q
+import qualified Test.QuickCheck.Monadic as Q
+import           Test.Tasty              (TestTree, testGroup)
+import           Test.Tasty.HUnit        (testCase)
+import qualified Test.Tasty.HUnit        as H
+import           Test.Tasty.QuickCheck   (testProperty)
 
 
 --------------------------------------------------------------------------------
-import qualified Hakyll.Core.Store                    as Store
+import qualified Hakyll.Core.Store       as Store
 import           TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-tests :: Test
+tests :: TestTree
 tests = testGroup "Hakyll.Core.Store.Tests"
     [ testProperty "simple get . set"     simpleSetGet
     , testProperty "persistent get . set" persistentSetGet
@@ -63,11 +63,11 @@ wrongType = do
     -- Store a string and try to fetch an int
     Store.set store ["foo", "bar"] ("qux" :: String)
     value <- Store.get store ["foo", "bar"] :: IO (Store.Result Int)
-    H.assert $ case value of
-        Store.WrongType e t ->
-            e == typeOf (undefined :: Int) &&
-            t == typeOf (undefined :: String)
-        _                   -> False
+    case value of
+        Store.WrongType e t -> do
+            typeOf (undefined :: Int)    H.@=? e
+            typeOf (undefined :: String) H.@=? t
+        _ -> H.assertFailure "Expecting WrongType"
     cleanTestEnv
 
 
@@ -78,6 +78,6 @@ isMembertest = do
     Store.set store ["foo", "bar"] ("qux" :: String)
     good <- Store.isMember store ["foo", "bar"]
     bad  <- Store.isMember store ["foo", "baz"]
-    H.assert good
-    H.assert (not bad)
+    True  H.@=? good
+    False H.@=? bad
     cleanTestEnv
