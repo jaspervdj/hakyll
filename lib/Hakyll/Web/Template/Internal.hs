@@ -164,7 +164,7 @@ applyTemplate' tes name context x = go tes `catchError` handler
             "for expr " ++ show e ++ ": " ++ err) es)
 
     applyElem (For e b s) = applyExpr e >>= \cf -> case cf of
-        NoField        -> expected "ListField" "boolField" e
+        EmptyField     -> expected "ListField" "boolField" e
         StringField _  -> expected "ListField" "StringField" e
         ListField c xs -> do
             sep <- maybe (return "") go s
@@ -190,7 +190,7 @@ applyTemplate' tes name context x = go tes `catchError` handler
 
     ----------------------------------------------------------------------------
 
-    getString e NoField         = expected "StringField" "boolField" e
+    getString e EmptyField      = expected "StringField" "boolField" e
     getString _ (StringField s) = return s
     getString e (ListField _ _) = expected "StringField" "ListField" e
 

@@ -36,9 +36,9 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
 
     , fromAssertions "parseTemplate"
         [ Right [Chunk "Hello ", Expr (Call "guest" [])]
-            @=? parseTemplateElemsFile "" "Hello $guest()$"
+            @=? parse "Hello $guest()$"
         , Right [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]
-            @=? parseTemplateElemsFile "" "$if(a(\"bar\"))$foo$endif$"
+            @=? parse "$if(a(\"bar\"))$foo$endif$"
         -- 'If' trim check.
         , Right [ TrimL
           , If (Ident (TemplateKey "body"))
@@ -56,7 +56,7 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
                      ])
           , TrimR
           ]
-          @=? parseTemplateElemsFile "" "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
+          @=? parse "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
         -- 'For' trim check.
         , Right [ TrimL
           , For (Ident (TemplateKey "authors"))
@@ -64,27 +64,29 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
                 Nothing
           , TrimR
           ]
-          @=? parseTemplateElemsFile "" "$-for(authors)-$\n   body   \n$-endfor-$"
+          @=? parse "$-for(authors)-$\n   body   \n$-endfor-$"
         -- 'Partial' trim check.
         , Right [ TrimL
           , Partial (StringLiteral "path")
           , TrimR
           ]
-          @=? parseTemplateElemsFile "" "$-partial(\"path\")-$"
+          @=? parse "$-partial(\"path\")-$"
         -- 'Expr' trim check.
         , Right [ TrimL
           , Expr (Ident (TemplateKey "foo"))
           , TrimR
           ]
-          @=? parseTemplateElemsFile "" "$-foo-$"
+          @=? parse "$-foo-$"
         -- fail on incomplete template.
         , assertBool "did not yield error" $ isLeft $
-          parseTemplateElemsFile "" "a$b"
+          parse "a$b"
         -- fail on mismatched template syntax.
         , assertBool "did not fail to parse" $ isLeft $
-          parseTemplateElemsFile "" "$for(xs)$\n  <p>foo</p>\n$endif$"
+          parse "$for(xs)$\n  <p>foo</p>\n$endif$"
         ]
     ]
+  where
+    parse = parseTemplateElemsFile ""
 
 
 --------------------------------------------------------------------------------

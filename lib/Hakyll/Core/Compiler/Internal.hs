@@ -18,7 +18,7 @@ module Hakyll.Core.Compiler.Internal
     , compilerTell
     , compilerAsk
     , compilerThrow
-    , compilerFailMessage
+    , compilerNoResult
     , compilerTry
     , compilerCatch
     , compilerResult
@@ -108,11 +108,11 @@ getReason (NoCompilationResult x) = x
 
 
 --------------------------------------------------------------------------------
-data CompilerResult a where
-    CompilerDone     :: a -> CompilerWrite -> CompilerResult a
-    CompilerSnapshot :: Snapshot -> Compiler a -> CompilerResult a
-    CompilerError    :: Reason [String] -> CompilerResult a
-    CompilerRequire  :: (Identifier, Snapshot) -> Compiler a -> CompilerResult a
+data CompilerResult a
+    = CompilerDone a CompilerWrite
+    | CompilerSnapshot Snapshot (Compiler a)
+    | CompilerRequire (Identifier, Snapshot) (Compiler a)
+    | CompilerError (Reason [String])
 
 
 --------------------------------------------------------------------------------
@@ -235,8 +235,8 @@ compilerThrow = compilerResult . CompilerError . CompilationFailure
 compilerMissing :: [String] -> Compiler a
 compilerMissing = compilerResult . CompilerError . NoCompilationResult
 
-compilerFailMessage :: String -> Compiler a
-compilerFailMessage = compilerMissing . return
+compilerNoResult :: String -> Compiler a
+compilerNoResult = compilerMissing . return
 
 
 --------------------------------------------------------------------------------

@@ -73,7 +73,7 @@ import           Prelude                       hiding (id)
 --------------------------------------------------------------------------------
 -- | Mostly for internal usage
 data ContextField
-    = NoField
+    = EmptyField
     | StringField String
     | forall a. ListField (Context a) [Item a]
 
@@ -109,7 +109,7 @@ field' :: String -> (Item a -> Compiler ContextField) -> Context a
 field' key value = Context $ \k _ i ->
     if k == key
         then value i
-        else compilerFailMessage $ "Tried field " ++ key
+        else compilerNoResult $ "Tried field " ++ key
 
 
 --------------------------------------------------------------------------------
@@ -133,8 +133,8 @@ boolField
     -> (Item a -> Bool)
     -> Context a
 boolField name f = field' name (\i -> if f i
-    then return NoField
-    else compilerFailMessage $ "Field " ++ name ++ " is false")
+    then return EmptyField
+    else compilerNoResult $ "Field " ++ name ++ " is false")
 
 
 --------------------------------------------------------------------------------
@@ -173,7 +173,7 @@ functionField :: String                                  -- ^ Key
 functionField name value = Context $ \k args i ->
     if k == name
         then StringField <$> value args i
-        else compilerFailMessage $ "Tried function field " ++ name
+        else compilerNoResult $ "Tried function field " ++ name
 
 
 --------------------------------------------------------------------------------
@@ -190,7 +190,7 @@ mapContext :: (String -> String) -> Context a -> Context a
 mapContext f (Context c) = Context $ \k a i -> do
     fld <- c k a i
     case fld of
-        NoField         -> wrongType "boolField"
+        EmptyField      -> wrongType "boolField"
         StringField str -> return $ StringField (f str)
         ListField _ _   -> wrongType "ListField"
   where
@@ -252,7 +252,7 @@ bodyField key = field key $ return . itemBody
 metadataField :: Context a
 metadataField = Context $ \k _ i -> do
     let id = itemIdentifier i
-        empty' = compilerFailMessage $ "No '" ++ k ++ "' field in metadata " ++
+        empty' = compilerNoResult $ "No '" ++ k ++ "' field in metadata " ++
             "of item " ++ show id
     value <- getMetadataField id k
     maybe empty' (return . StringField) value
@@ -430,7 +430,7 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
 -- | Constantly reports any field as missing. Mostly for internal usage,
 -- it is the last choice in every context used in a template application.
 missingField :: Context a
-missingField = Context $ \k _ _ -> compilerFailMessage $
+missingField = Context $ \k _ _ -> compilerNoResult $
     "Missing field '" ++ k ++ "' in context"
 
 parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime
