@@ -28,7 +28,7 @@ import           Data.List                            (intercalate)
 import           Data.Typeable                        (Typeable)
 import           GHC.Exts                             (IsString (..))
 import           GHC.Generics                         (Generic)
-import           Prelude                              hiding (id)
+import           Control.Monad.Except                 (catchError)
 
 
 --------------------------------------------------------------------------------
@@ -36,7 +36,6 @@ import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
-import           Hakyll.Core.Logger                   (Verbosity (Error))
 import           Hakyll.Core.Writable
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal.Element
@@ -126,13 +125,13 @@ applyTemplate'
     -> Context a         -- ^ Context
     -> Item a            -- ^ Page
     -> Compiler String   -- ^ Resulting item
-applyTemplate' tes name context x = go tes `compilerCatch` handler
+applyTemplate' tes name context x = go tes `catchError` handler
   where
     context' :: String -> [String] -> Item a -> Compiler ContextField
     context' = unContext (context `mappend` missingField)
 
     itemName = show $ itemIdentifier x
-    handler _ es = fail $ "Hakyll.Web.Template.applyTemplate: Failed to " ++
+    handler es = fail $ "Hakyll.Web.Template.applyTemplate: Failed to " ++
         (if name == itemName
           then "interpolate template in item " ++ name
           else "apply template " ++ name ++ " to item " ++ itemName) ++
@@ -154,16 +153,15 @@ applyTemplate' tes name context x = go tes `compilerCatch` handler
 
     applyElem Escaped = return "$"
 
-    applyElem (If e t mf) = do
-        c <- (applyExpr e >> return True) `compilerCatch` handler
-        if c
-            then go t
-            else maybe (return "") go mf
+    applyElem (If e t mf) = compilerTry (applyExpr e) >>= handle
       where
-        handler Error es = compilerDebugLog (map (\err ->
+        f = maybe (return "") go mf
+        handle (Right _)                      = go t
+        handle (Left (NoCompilationResult _)) = f
+        handle (Left (CompilationFailure es)) = debug es >> f
+        debug es = compilerDebugLog (map (\err ->
             "Hakyll.Web.Template.applyTemplate: [ERROR] in 'if' condition " ++
-            "for expr " ++ show e ++ ": " ++ err) es) >> return False
-        handler _     _  = return False
+            "for expr " ++ show e ++ ": " ++ err) es)
 
     applyElem (For e b s) = applyExpr e >>= \cf -> case cf of
         NoField        -> expected "ListField" "boolField" e

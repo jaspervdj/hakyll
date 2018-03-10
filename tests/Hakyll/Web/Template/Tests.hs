@@ -21,7 +21,6 @@ import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
-import           Hakyll.Web.Template.Internal.Element
 import           Hakyll.Web.Template.List
 import           TestSuite.Util
 

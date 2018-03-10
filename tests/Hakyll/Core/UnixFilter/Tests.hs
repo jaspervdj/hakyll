@@ -6,7 +6,6 @@ module Hakyll.Core.UnixFilter.Tests
 
 
 --------------------------------------------------------------------------------
-import           Data.List                     (isInfixOf)
 import           Test.Tasty                    (TestTree, testGroup)
 import           Test.Tasty.HUnit              (testCase)
 import qualified Test.Tasty.HUnit              as H
@@ -14,9 +13,7 @@ import qualified Test.Tasty.HUnit              as H
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
-import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Item
-import           Hakyll.Core.Logger
 import           Hakyll.Core.UnixFilter
 import           Hakyll.Core.Identifier
 import           TestSuite.Util
@@ -52,10 +49,7 @@ unixFilterFalse :: H.Assertion
 unixFilterFalse = do
     store    <- newTestStore
     provider <- newTestProvider store
-    result   <- testCompiler store provider testMarkdown compiler
-    case result of
-        CompilerError Error es -> any ("exit code" `isInfixOf`) es H.@? "Expecting exit code error"
-        _                      -> H.assertFailure "Expecting CompilerError"
+    testCompilerError store provider testMarkdown compiler "exit code"
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "false" [])
@@ -66,10 +60,7 @@ unixFilterError :: H.Assertion
 unixFilterError = do
     store    <- newTestStore
     provider <- newTestProvider store
-    result   <- testCompiler store provider testMarkdown compiler
-    case result of
-        CompilerError Error es -> any ("option" `isInfixOf`) es H.@? "Expecting option error"
-        _                      -> H.assertFailure "Expecting CompilerError"
+    testCompilerError store provider testMarkdown compiler "option"
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "head" ["-#"])

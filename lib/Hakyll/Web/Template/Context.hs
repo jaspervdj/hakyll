@@ -67,6 +67,7 @@ import           Hakyll.Core.Provider
 import           Hakyll.Core.Util.String       (needlePrefix, splitAll)
 import           Hakyll.Web.Html
 import           System.FilePath               (splitDirectories, takeBaseName)
+import           Prelude                       hiding (id)
 
 
 --------------------------------------------------------------------------------
