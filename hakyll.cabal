@@ -114,7 +114,6 @@ Library
     Hakyll.Core.File
     Hakyll.Core.Identifier
     Hakyll.Core.Identifier.Pattern
-    Hakyll.Core.Identifier.Pattern.Internal
     Hakyll.Core.Item
     Hakyll.Core.Logger
     Hakyll.Core.Metadata
@@ -152,6 +151,7 @@ Library
     Data.Yaml.Extended
     Hakyll.Check
     Hakyll.Core.Compiler.Require
+    Hakyll.Core.Identifier.Pattern.Internal
     Hakyll.Core.Item.SomeItem
     Hakyll.Core.Provider.Internal
     Hakyll.Core.Provider.MetadataCache
