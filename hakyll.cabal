@@ -114,6 +114,7 @@ Library
     Hakyll.Core.File
     Hakyll.Core.Identifier
     Hakyll.Core.Identifier.Pattern
+    Hakyll.Core.Identifier.Pattern.Internal
     Hakyll.Core.Item
     Hakyll.Core.Logger
     Hakyll.Core.Metadata
