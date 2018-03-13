@@ -21,9 +21,13 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Hakyll.Web.Template.Context
     ( ContextField (..)
     , Context (..)
+    , context
+    , functionContext
+    , toContextField
     , field
     , boolField
     , constField
@@ -120,11 +124,39 @@ instance Monoid (Context a) where
 
 
 --------------------------------------------------------------------------------
-field' :: String -> (Item a -> Compiler ContextField) -> Context a
-field' key value = Context $ \k _ i ->
+class ToContextField a where
+    toContextField :: a -> Compiler ContextField
+
+instance ToContextField ContextField where
+    toContextField = return
+
+instance ToContextField a => ToContextField (Compiler a) where
+    toContextField = (>>= toContextField)
+
+instance ToContextField [Char] where
+    toContextField = return . StringField
+
+instance ToContextField Bool where
+    toContextField True  = return EmptyField
+    toContextField False = failBranch "False"
+
+instance ToContextField a => ToContextField (Maybe a) where
+    toContextField = maybe (failBranch "False") toContextField
+
+
+--------------------------------------------------------------------------------
+functionContext :: ToContextField c => String -> ([String] -> Item a -> c) -> Context a
+functionContext key value = Context $ \k args item ->
     if k == key
-        then value i
+        then mapError details $ toContextField $ value args item
         else failBranch $ "Tried field " ++ key
+  where
+    details []        = ["No result at field "++key]
+    details ["False"] = ["Field "++key++" is False"]
+    details errors    = ("In evaluation of field "++key) : errors
+
+context :: ToContextField c => String -> (Item a -> c) -> Context a
+context key = functionContext key . const
 
 
 --------------------------------------------------------------------------------
@@ -142,7 +174,7 @@ field
     -> (Item a -> Compiler String) -- ^ Function that constructs a value based
                                    -- on the item (e.g. accessing metadata)
     -> Context a
-field key value = field' key (fmap StringField . value)
+field = context
 
 
 --------------------------------------------------------------------------------
@@ -152,9 +184,7 @@ boolField
     :: String
     -> (Item a -> Bool)
     -> Context a
-boolField name f = field' name (\i -> if f i
-    then return EmptyField
-    else failBranch $ "Field " ++ name ++ " is false")
+boolField = context
 
 
 --------------------------------------------------------------------------------
@@ -163,7 +193,7 @@ boolField name f = field' name (\i -> if f i
 constField :: String     -- ^ Key
            -> String     -- ^ Value
            -> Context a
-constField key = field key . const . return
+constField key = context key . const
 
 
 --------------------------------------------------------------------------------
@@ -179,7 +209,7 @@ listField key c xs = listFieldWith key c (const xs)
 -- to the compiler.
 listFieldWith
     :: String -> Context a -> (Item b -> Compiler [Item a]) -> Context b
-listFieldWith key c f = field' key $ fmap (ListField c) . f
+listFieldWith key c f = context key $ fmap (ListField c) . f
 
 
 --------------------------------------------------------------------------------
@@ -190,10 +220,7 @@ listFieldWith key c f = field' key $ fmap (ListField c) . f
 functionField :: String                                  -- ^ Key
               -> ([String] -> Item a -> Compiler String) -- ^ Function
               -> Context a
-functionField name value = Context $ \k args i ->
-    if k == name
-        then StringField <$> value args i
-        else failBranch $ "Tried function field " ++ name
+functionField = functionContext
 
 
 --------------------------------------------------------------------------------
@@ -263,7 +290,7 @@ teaserSeparator = "<!--more-->"
 --------------------------------------------------------------------------------
 -- | Constructs a 'field' that contains the body of the item.
 bodyField :: String -> Context String
-bodyField key = field key $ return . itemBody
+bodyField key = context key itemBody
 
 
 --------------------------------------------------------------------------------
@@ -289,7 +316,7 @@ urlField key = field key $ \i -> do
 --------------------------------------------------------------------------------
 -- | Filepath of the underlying file of the item
 pathField :: String -> Context a
-pathField key = field key $ return . toFilePath . itemIdentifier
+pathField key = context key $ toFilePath . itemIdentifier
 
 
 --------------------------------------------------------------------------------
