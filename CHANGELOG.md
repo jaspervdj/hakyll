@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.0.1
+
+- Bump resourcet to 1.2 in test section
+
 ## Hakyll 4.12.0.0
 
 - Add Semigroup instances for existing Monoids (contribution by
