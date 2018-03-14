@@ -1,4 +1,4 @@
-resolver: lts-10.9
+resolver: lts-11.0
 extra-package-dbs: []
 
 flags:
@@ -11,8 +11,7 @@ flags:
 packages:
   - '.'
 
-extra-deps:
-  - 'pandoc-citeproc-0.14.1.5'
+extra-deps: []
 
 nix:
   enable: false
