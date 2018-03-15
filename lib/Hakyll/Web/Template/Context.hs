@@ -17,6 +17,7 @@
 -- This will evaluate the @category@ field in the context, then prepend he path,
 -- and include the referenced file as a template.
 
+
 --------------------------------------------------------------------------------
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
@@ -99,6 +100,8 @@ newtype Context a = Context
 
 
 --------------------------------------------------------------------------------
+-- | Tries to find a key in the left context,
+-- or when that fails in the right context.
 instance Monoid (Context a) where
     mempty                          = missingField
     mappend (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
@@ -109,15 +112,19 @@ field' :: String -> (Item a -> Compiler ContextField) -> Context a
 field' key value = Context $ \k _ i ->
     if k == key
         then value i
-        else compilerNoResult $ "Tried field " ++ key
+        else failBranch $ "Tried field " ++ key
 
 
 --------------------------------------------------------------------------------
 -- | Constructs a new field for a 'Context'.
 -- If the key matches, the compiler is run and its result is substituted in the
 -- template.
--- If the compiler returns 'empty', the field will be considered non-existent.
--- If the compiler throws an error ('fail'), the template breaks.
+-- 
+-- If the compiler fails, the field will be considered non-existent
+-- in an @$if()$@ macro or ultimately break the template application
+-- (unless the key is found in another context when using '<>').
+-- Use 'empty' or 'failBranch' for intentional failures of fields used in
+-- @$if()$@, to distinguish them from exceptions thrown with 'fail'.
 field
     :: String                      -- ^ Key
     -> (Item a -> Compiler String) -- ^ Function that constructs a value based
@@ -128,13 +135,14 @@ field key value = field' key (fmap StringField . value)
 
 --------------------------------------------------------------------------------
 -- | Creates a 'field' to use with the @$if()$@ template macro.
+-- Attempting to substitute the field into the template will cause an error.
 boolField
     :: String
     -> (Item a -> Bool)
     -> Context a
 boolField name f = field' name (\i -> if f i
     then return EmptyField
-    else compilerNoResult $ "Field " ++ name ++ " is false")
+    else failBranch $ "Field " ++ name ++ " is false")
 
 
 --------------------------------------------------------------------------------
@@ -173,7 +181,7 @@ functionField :: String                                  -- ^ Key
 functionField name value = Context $ \k args i ->
     if k == name
         then StringField <$> value args i
-        else compilerNoResult $ "Tried function field " ++ name
+        else failBranch $ "Tried function field " ++ name
 
 
 --------------------------------------------------------------------------------
@@ -211,9 +219,8 @@ snippetField :: Context String
 snippetField = functionField "snippet" f
   where
     f [contentsPath] _ = loadBody (fromFilePath contentsPath)
-    f _              i = fail $
-        "Too many arguments to function 'snippet()' in item " ++
-            show (itemIdentifier i)
+    f []             _ = fail "No argument to function 'snippet()'"
+    f _              _ = fail "Too many arguments to function 'snippet()'"
 
 --------------------------------------------------------------------------------
 -- | A context that contains (in that order)
@@ -252,7 +259,7 @@ bodyField key = field key $ return . itemBody
 metadataField :: Context a
 metadataField = Context $ \k _ i -> do
     let id = itemIdentifier i
-        empty' = compilerNoResult $ "No '" ++ k ++ "' field in metadata " ++
+        empty' = failBranch $ "No '" ++ k ++ "' field in metadata " ++
             "of item " ++ show id
     value <- getMetadataField id k
     maybe empty' (return . StringField) value
@@ -379,7 +386,7 @@ getItemModificationTime identifier = do
 
 
 --------------------------------------------------------------------------------
--- Creates a field with the last modification date of the underlying item.
+-- | Creates a field with the last modification date of the underlying item.
 modificationTimeField :: String     -- ^ Key
                       -> String     -- ^ Format
                       -> Context  a -- ^ Resuting context
@@ -387,7 +394,7 @@ modificationTimeField = modificationTimeFieldWith defaultTimeLocale
 
 
 --------------------------------------------------------------------------------
--- Creates a field with the last modification date of the underlying item
+-- | Creates a field with the last modification date of the underlying item
 -- in a custom localisation format (see 'formatTime').
 modificationTimeFieldWith :: TimeLocale  -- ^ Time output locale
                           -> String      -- ^ Key
@@ -430,7 +437,7 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
 -- | Constantly reports any field as missing. Mostly for internal usage,
 -- it is the last choice in every context used in a template application.
 missingField :: Context a
-missingField = Context $ \k _ _ -> compilerNoResult $
+missingField = Context $ \k _ _ -> failBranch $
     "Missing field '" ++ k ++ "' in context"
 
 parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime

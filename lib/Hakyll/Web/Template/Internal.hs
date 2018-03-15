@@ -149,7 +149,9 @@ applyTemplate' tes name context x = go tes `catchError` handler
 
     applyElem (Chunk c) = return c
 
-    applyElem (Expr e) = applyExpr e >>= getString e
+    applyElem (Expr e) = mapError (msg:) $ applyExpr e >>= getString e
+      where
+        msg = "In expr '$" ++ show e ++ "$'"
 
     applyElem Escaped = return "$"
 
@@ -159,9 +161,8 @@ applyTemplate' tes name context x = go tes `catchError` handler
         handle (Right _)                      = go t
         handle (Left (NoCompilationResult _)) = f
         handle (Left (CompilationFailure es)) = debug es >> f
-        debug es = compilerDebugLog (map (\err ->
-            "Hakyll.Web.Template.applyTemplate: [ERROR] in 'if' condition " ++
-            "for expr " ++ show e ++ ": " ++ err) es)
+        debug = compilerDebugEntries ("Hakyll.Web.Template.applyTemplate: " ++
+            "[ERROR] in 'if' condition for expr '" ++ show e ++ "':")
 
     applyElem (For e b s) = applyExpr e >>= \cf -> case cf of
         EmptyField     -> expected "ListField" "boolField" e
@@ -239,3 +240,4 @@ unsafeReadTemplateFile :: FilePath -> Compiler Template
 unsafeReadTemplateFile file = do
     tpl <- unsafeCompiler $ readFile file
     compileTemplateFile (fromFilePath file) tpl
+{-# DEPRECATED unsafeReadTemplateFile "Use templateCompiler" #-}

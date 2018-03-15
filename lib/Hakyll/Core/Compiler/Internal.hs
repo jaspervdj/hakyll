@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 module Hakyll.Core.Compiler.Internal
     ( -- * Types
@@ -15,18 +16,20 @@ module Hakyll.Core.Compiler.Internal
     , runCompiler
 
       -- * Core operations
+    , compilerResult
     , compilerTell
     , compilerAsk
-    , compilerThrow
-    , compilerNoResult
-    , compilerTry
-    , compilerCatch
-    , compilerResult
     , compilerUnsafeIO
-    , compilerDebugLog
+
+      -- * Error operations
+    , compilerThrow
+    , compilerFailBranch
+    , compilerCatch
+    , compilerTry
+    , getReason
 
       -- * Utilities
-    , getReason
+    , compilerDebugEntries
     , compilerTellDependencies
     , compilerTellCacheHits
     ) where
@@ -94,11 +97,13 @@ instance Monoid CompilerWrite where
 
 
 --------------------------------------------------------------------------------
+-- | Distinguishes reasons in a 'CompilerError'
 data Reason a
     -- | An exception occured during compilation
     = CompilationFailure a
     -- | Absence of any result, most notably in template contexts
     | NoCompilationResult a
+    deriving Functor
 
 
 -- | Unwrap a `Reason`
@@ -108,6 +113,7 @@ getReason (NoCompilationResult x) = x
 
 
 --------------------------------------------------------------------------------
+-- | An intermediate result of a compilation step
 data CompilerResult a
     = CompilerDone a CompilerWrite
     | CompilerSnapshot Snapshot (Compiler a)
@@ -137,7 +143,7 @@ instance Functor Compiler where
 
 --------------------------------------------------------------------------------
 instance Monad Compiler where
-    return x = Compiler $ \_ -> return $ CompilerDone x mempty
+    return x = compilerResult $ CompilerDone x mempty
     {-# INLINE return #-}
 
     Compiler c >>= f = Compiler $ \r -> do
@@ -174,18 +180,22 @@ instance Applicative Compiler where
 
 
 --------------------------------------------------------------------------------
+-- | Access provided metadata from anywhere
 instance MonadMetadata Compiler where
     getMetadata = compilerGetMetadata
     getMatches  = compilerGetMatches
 
 
 --------------------------------------------------------------------------------
+-- | Compilation may fail with multiple error messages.
+-- 'catchError' handles errors from 'throwError', 'fail' and 'Hakyll.Core.Compiler.failBranch'
 instance MonadError [String] Compiler where
-  throwError = compilerThrow
-  catchError c = compilerCatch c . (. getReason)
+    throwError = compilerThrow
+    catchError c = compilerCatch c . (. getReason)
 
 
 --------------------------------------------------------------------------------
+-- | Like 'unCompiler' but treating IO exceptions as 'CompilerError's
 runCompiler :: Compiler a -> CompilerRead -> IO (CompilerResult a)
 runCompiler compiler read' = handle handler $ unCompiler compiler read'
   where
@@ -194,31 +204,21 @@ runCompiler compiler read' = handle handler $ unCompiler compiler read'
 
 
 --------------------------------------------------------------------------------
+-- | Trying alternative compilers if the first fails, regardless whether through
+-- 'fail', 'throwError' or 'Hakyll.Core.Compiler.failBranch'.
+-- Aggregates error messages if all fail.
 instance Alternative Compiler where
-    empty   = compilerMissing []
+    empty   = compilerFailBranch []
     x <|> y = x `compilerCatch` (\rx -> y `compilerCatch` (\ry ->
         case (rx, ry) of
           (CompilationFailure xs,  CompilationFailure ys)  -> compilerThrow $ xs ++ ys
           (CompilationFailure xs,  NoCompilationResult ys) -> debug ys >> compilerThrow xs
           (NoCompilationResult xs, CompilationFailure ys)  -> debug xs >> compilerThrow ys
-          (NoCompilationResult xs, NoCompilationResult ys) -> compilerMissing $ xs ++ ys
+          (NoCompilationResult xs, NoCompilationResult ys) -> compilerFailBranch $ xs ++ ys
         ))
       where
-        debug = compilerDebugLog . map
-            ("Hakyll.Core.Compiler.Internal: Alternative fail suppressed: " ++)
+        debug = compilerDebugEntries "Hakyll.Core.Compiler.Internal: Alternative fail suppressed"
     {-# INLINE (<|>) #-}
-
-
---------------------------------------------------------------------------------
-compilerAsk :: Compiler CompilerRead
-compilerAsk = Compiler $ \r -> return $ CompilerDone r mempty
-{-# INLINE compilerAsk #-}
-
-
---------------------------------------------------------------------------------
-compilerTell :: CompilerWrite -> Compiler ()
-compilerTell = compilerResult . CompilerDone ()
-{-# INLINE compilerTell #-}
 
 
 --------------------------------------------------------------------------------
@@ -229,17 +229,43 @@ compilerResult x = Compiler $ \_ -> return x
 
 
 --------------------------------------------------------------------------------
-compilerThrow :: [String] -> Compiler a
-compilerThrow = compilerResult . CompilerError . CompilationFailure
-
-compilerMissing :: [String] -> Compiler a
-compilerMissing = compilerResult . CompilerError . NoCompilationResult
-
-compilerNoResult :: String -> Compiler a
-compilerNoResult = compilerMissing . return
+-- | Get the current environment
+compilerAsk :: Compiler CompilerRead
+compilerAsk = Compiler $ \r -> return $ CompilerDone r mempty
+{-# INLINE compilerAsk #-}
 
 
 --------------------------------------------------------------------------------
+-- | Put a 'CompilerWrite'
+compilerTell :: CompilerWrite -> Compiler ()
+compilerTell = compilerResult . CompilerDone ()
+{-# INLINE compilerTell #-}
+
+
+--------------------------------------------------------------------------------
+-- | Run an IO computation without dependencies in a Compiler
+compilerUnsafeIO :: IO a -> Compiler a
+compilerUnsafeIO io = Compiler $ \_ -> do
+    x <- io
+    return $ CompilerDone x mempty
+{-# INLINE compilerUnsafeIO #-}
+
+
+--------------------------------------------------------------------------------
+-- | Put a 'CompilerError' with  multiple error messages as 'CompilationFailure'
+compilerThrow :: [String] -> Compiler a
+compilerThrow = compilerResult . CompilerError . CompilationFailure
+
+
+-- | Put a 'CompilerError' with  multiple messages as 'NoCompilationResult'
+compilerFailBranch :: [String] -> Compiler a
+compilerFailBranch = compilerResult . CompilerError . NoCompilationResult
+
+
+--------------------------------------------------------------------------------
+-- | Allows to distinguish 'CompilerError's and branch on them with 'Either'
+-- 
+-- prop> compilerTry = (`compilerCatch` return . Left) . fmap Right
 compilerTry :: Compiler a -> Compiler (Either (Reason [String]) a)
 compilerTry (Compiler x) = Compiler $ \r -> do
     res <- x r
@@ -250,8 +276,12 @@ compilerTry (Compiler x) = Compiler $ \r -> do
         CompilerError e      -> return (CompilerDone (Left e) mempty)
 {-# INLINE compilerTry #-}
 
+
 --------------------------------------------------------------------------------
--- compilerCatch f = compilerTry >=> either f return
+-- | Allows you to recover from 'CompilerError's.
+-- Uses the same parameter order as 'catchError' so that it can be used infix.
+-- 
+-- prop> c `compilerCatch` f = compilerTry c >>= either f return
 compilerCatch :: Compiler a -> (Reason [String] -> Compiler a) -> Compiler a
 compilerCatch (Compiler x) f = Compiler $ \r -> do
     res <- x r
@@ -264,17 +294,18 @@ compilerCatch (Compiler x) f = Compiler $ \r -> do
 
 
 --------------------------------------------------------------------------------
-compilerUnsafeIO :: IO a -> Compiler a
-compilerUnsafeIO io = Compiler $ \_ -> do
-    x <- io
-    return $ CompilerDone x mempty
-{-# INLINE compilerUnsafeIO #-}
-
---------------------------------------------------------------------------------
 compilerDebugLog :: [String] -> Compiler ()
 compilerDebugLog ms = do
   logger <- compilerLogger <$> compilerAsk
   compilerUnsafeIO $ forM_ ms $ Logger.debug logger
+
+--------------------------------------------------------------------------------
+-- | Pass a list of messages with a heading to the debug logger
+compilerDebugEntries :: String -> [String] -> Compiler ()
+compilerDebugEntries msg = compilerDebugLog . (msg:) . map indent
+  where
+    indent = unlines . map ("    "++) . lines
+
 
 --------------------------------------------------------------------------------
 compilerTellDependencies :: [Dependency] -> Compiler ()
