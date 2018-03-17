@@ -34,6 +34,7 @@ module Hakyll.Web.Template.Context
     , listField
     , listFieldWith
     , functionField
+    , dataField
     , mapContext
 
     , defaultContext
@@ -58,10 +59,17 @@ module Hakyll.Web.Template.Context
 --------------------------------------------------------------------------------
 import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
+import           Data.Char                     (toUpper)
+import           Text.Read                     (readMaybe)
 import           Data.List                     (intercalate)
 #if MIN_VERSION_base(4,9,0)
 import           Data.Semigroup                (Semigroup (..))
 #endif
+import           Data.Yaml                     (Value (..))
+import qualified Data.Text                     as T
+import qualified Data.HashMap.Strict           as H
+import qualified Data.Vector                   as V
+import           Data.Yaml.Extended            (toString)
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime)
 import qualified Data.Time.Format              as TF
@@ -260,6 +268,58 @@ snippetField = functionField "snippet" f
     f [contentsPath] _ = loadBody (fromFilePath contentsPath)
     f []             _ = fail "No argument to function 'snippet()'"
     f _              _ = fail "Too many arguments to function 'snippet()'"
+
+
+
+dataField :: String -> Value -> Context a
+dataField key val = Context $ \f a (Item i _) -> case splitAll "\\." f of
+    [k] | k == get    -> lookupNestedValue a  (Item i val)
+    (k:ks) | k == key -> lookupNestedValue ks (Item i val)
+    _                 -> failBranch $ "Tried field " ++ key -- and functionField get
+  where
+    get = let (h:rest) = key in "get" ++ toUpper h : rest
+
+pairContext :: Context (T.Text, Value)
+pairContext = Context $ \k a (Item i (key, value)) -> case splitAll "\\." k of
+    ["get"]      -> lookupNestedValue a    (Item i value)
+    ["key"]      -> return $ StringField $ T.unpack key
+    ("value":ks) -> lookupNestedValue ks   (Item i value)
+    []           -> fail "no supposted to happen" -- , right?
+    keys         -> lookupNestedValue keys (Item i value)
+
+indexContext :: Context (Int, Value)
+indexContext = Context $ \k a (Item i (index, value)) -> case splitAll "\\." k of
+    ["get"]      -> lookupNestedValue a    (Item i value)
+    ["index"]    -> return $ StringField $ show index
+    ("value":ks) -> lookupNestedValue ks   (Item i value)
+    []           -> fail "no supposted to happen" -- , right?
+    keys         -> lookupNestedValue keys (Item i value)
+
+lookupNestedValue :: [String] -> Item Value -> Compiler ContextField
+lookupNestedValue []     (Item i (Object o)) = return $ ListField pairContext $ map (Item i) $ H.toList o
+lookupNestedValue []     (Item i (Array a)) = return $ ListField indexContext $ map (Item i) $ V.toList $ V.indexed a
+lookupNestedValue []     (Item i v) = return $ let Just s = toString v in StringField s
+lookupNestedValue (k:ks) (Item i (Object m)) = case H.lookup (T.pack k) m of
+    Nothing -> failBranch $ "No '"++k++"' property in object" -- ++ debug m
+    Just v  -> lookupNestedValue ks (Item i v)
+lookupNestedValue (k:ks) (Item i (Array v)) = case readMaybe k :: Maybe Int of
+    Nothing -> failBranch $ "No '"++k++"' element in array" -- ++ debug v
+    Just n  -> case v V.!? n of
+        Nothing -> failBranch $ "No '"++k++"' index in array of size " ++ show (length v) -- ++ debug v
+        Just v  -> lookupNestedValue ks (Item i v)
+lookupNestedValue (k:_)  (Item i _) = failBranch $ "no '"++k++"' in primitive value" -- ++ debug p
+
+
+
+
+
+
+
+
+
+
+
+
 
 --------------------------------------------------------------------------------
 -- | A context that contains (in that order)
