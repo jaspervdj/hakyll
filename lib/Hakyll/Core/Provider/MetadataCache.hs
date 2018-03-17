@@ -18,7 +18,9 @@ import qualified Hakyll.Core.Store             as Store
 --------------------------------------------------------------------------------
 resourceMetadata :: Provider -> Identifier -> IO Metadata
 resourceMetadata p r
-    | not (resourceExists p r) = return mempty
+    | not (resourceExists p r) = fail $ unwords [
+        "Hakyll.Core.Provider.MetadataCache.resourceMetadata:",
+        "cannot read metadata,", show r, "does not exist"]
     | otherwise                = do
         -- TODO keep time in md cache
         load p r
