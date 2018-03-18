@@ -335,7 +335,7 @@ getItemModificationTime identifier = do
 --------------------------------------------------------------------------------
 modificationTimeField :: String     -- ^ Key
                       -> String     -- ^ Format
-                      -> Context  a -- ^ Resuting context
+                      -> Context  a -- ^ Resulting context
 modificationTimeField = modificationTimeFieldWith defaultTimeLocale
 
 
