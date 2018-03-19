@@ -212,7 +212,7 @@ mapContext f (Context c) = Context $ \k a i -> do
     case fld of
         EmptyField      -> wrongType "boolField"
         StringField str -> return $ StringField (f str)
-        ListField _ _   -> wrongType "ListField"
+        _               -> wrongType "ListField"
   where
     wrongType typ = fail $ "Hakyll.Web.Template.Context.mapContext: " ++
         "can't map over a " ++ typ ++ "!"
