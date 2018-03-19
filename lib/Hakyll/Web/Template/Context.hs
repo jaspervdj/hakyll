@@ -22,6 +22,8 @@
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
+
 module Hakyll.Web.Template.Context
     ( ContextField (..)
     , Context (..)
@@ -92,7 +94,7 @@ data ContextField
     = EmptyField
     | StringField String
     | forall a. ListField (Context a) [Item a]
-
+    | forall a. LexicalListField (forall b. Context b -> a -> Context b) [a]
 
 --------------------------------------------------------------------------------
 -- | The 'Context' monoid. Please note that the order in which you
@@ -272,42 +274,46 @@ snippetField = functionField "snippet" f
 
 
 dataField :: String -> Value -> Context a
-dataField key val = Context $ \f a (Item i _) -> case splitAll "\\." f of
-    [k] | k == get    -> lookupNestedValue a  (Item i val)
-    (k:ks) | k == key -> lookupNestedValue ks (Item i val)
+dataField key val = Context $ \f a _ -> case splitAll "\\." f of
+    [k] | k == get    -> lookupNestedValue a val
+    (k:ks) | k == key -> lookupNestedValue ks val
     _                 -> failBranch $ "Tried field " ++ key -- and functionField get
   where
     get = let (h:rest) = key in "get" ++ toUpper h : rest
 
-pairContext :: Context (T.Text, Value)
-pairContext = Context $ \k a (Item i (key, value)) -> case splitAll "\\." k of
-    ["get"]      -> lookupNestedValue a    (Item i value)
-    ["key"]      -> return $ StringField $ T.unpack key
-    ("value":ks) -> lookupNestedValue ks   (Item i value)
-    []           -> fail "no supposted to happen" -- , right?
-    keys         -> lookupNestedValue keys (Item i value)
+makePairContext :: Context a -> (T.Text, Value) -> Context a
+makePairContext c (key, value) = pairContext <> c
+  where
+    pairContext = Context $ \k a _ -> case splitAll "\\." k of
+        ["get"]      -> lookupNestedValue a value
+        ["key"]      -> return $ StringField $ T.unpack key
+        ("value":ks) -> lookupNestedValue ks value
+        []           -> fail "no supposted to happen" -- , right?
+        keys         -> lookupNestedValue keys value
 
-indexContext :: Context (Int, Value)
-indexContext = Context $ \k a (Item i (index, value)) -> case splitAll "\\." k of
-    ["get"]      -> lookupNestedValue a    (Item i value)
-    ["index"]    -> return $ StringField $ show index
-    ("value":ks) -> lookupNestedValue ks   (Item i value)
-    []           -> fail "no supposted to happen" -- , right?
-    keys         -> lookupNestedValue keys (Item i value)
+makeIndexContext :: Context a -> (Int, Value) -> Context a
+makeIndexContext c (index, value) = indexContext <> c
+  where
+    indexContext = Context $ \k a _ -> case splitAll "\\." k of
+        ["get"]      -> lookupNestedValue a value
+        ["index"]    -> return $ StringField $ show index
+        ("value":ks) -> lookupNestedValue ks value
+        []           -> fail "no supposted to happen" -- , right?
+        keys         -> lookupNestedValue keys value
 
-lookupNestedValue :: [String] -> Item Value -> Compiler ContextField
-lookupNestedValue []     (Item i (Object o)) = return $ ListField pairContext $ map (Item i) $ H.toList o
-lookupNestedValue []     (Item i (Array a)) = return $ ListField indexContext $ map (Item i) $ V.toList $ V.indexed a
-lookupNestedValue []     (Item i v) = return $ let Just s = toString v in StringField s
-lookupNestedValue (k:ks) (Item i (Object m)) = case H.lookup (T.pack k) m of
+lookupNestedValue :: [String] -> Value -> Compiler ContextField
+lookupNestedValue []     (Object o) = return $ LexicalListField makePairContext $ H.toList o
+lookupNestedValue []     (Array a)  = return $ LexicalListField makeIndexContext $ V.toList $ V.indexed a
+lookupNestedValue []     v          = return $ let Just s = toString v in StringField s
+lookupNestedValue (k:ks) (Object m) = case H.lookup (T.pack k) m of
     Nothing -> failBranch $ "No '"++k++"' property in object" -- ++ debug m
-    Just v  -> lookupNestedValue ks (Item i v)
-lookupNestedValue (k:ks) (Item i (Array v)) = case readMaybe k :: Maybe Int of
+    Just v  -> lookupNestedValue ks v
+lookupNestedValue (k:ks) (Array v)  = case readMaybe k :: Maybe Int of
     Nothing -> failBranch $ "No '"++k++"' element in array" -- ++ debug v
     Just n  -> case v V.!? n of
         Nothing -> failBranch $ "No '"++k++"' index in array of size " ++ show (length v) -- ++ debug v
-        Just v  -> lookupNestedValue ks (Item i v)
-lookupNestedValue (k:_)  (Item i _) = failBranch $ "no '"++k++"' in primitive value" -- ++ debug p
+        Just v  -> lookupNestedValue ks v
+lookupNestedValue (k:_)  _          = failBranch $ "no '"++k++"' in primitive value" -- ++ debug p
 
 
 

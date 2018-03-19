@@ -23,6 +23,7 @@ module Hakyll.Web.Template.Internal
 
 
 --------------------------------------------------------------------------------
+import           Data.Monoid                          ((<>))
 import           Data.Binary                          (Binary)
 import           Data.List                            (intercalate)
 import           Data.Typeable                        (Typeable)
@@ -172,6 +173,10 @@ applyTemplate' tes context x = go tes
         ListField c xs -> mapError (bodyMsg:) $ do
             sep <- maybe (return "") go s
             bs  <- mapM (applyTemplate' b c) xs
+            return $ intercalate sep bs
+        LexicalListField mc vs -> mapError (bodyMsg:) do
+            sep <- maybe (return "") go s
+            bs  <- mapM (\v -> applyTemplate' b (mc context v) x) vs
             return $ intercalate sep bs
       where
         headMsg = "In expr '$for(" ++ show e ++ ")$'"
