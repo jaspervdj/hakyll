@@ -99,6 +99,11 @@ Flag buildWebsite
   Default:     False
   Manual:      True
 
+Flag usePandoc
+  Description: Include Pandoc support
+  Default:     True
+  Manual:      True
+
 Library
   Ghc-Options:      -Wall
   Hs-Source-Dirs:   lib
@@ -134,9 +139,6 @@ Library
     Hakyll.Web.Html
     Hakyll.Web.Html.RelativizeUrls
     Hakyll.Web.Paginate
-    Hakyll.Web.Pandoc
-    Hakyll.Web.Pandoc.Biblio
-    Hakyll.Web.Pandoc.FileType
     Hakyll.Web.Redirect
     Hakyll.Web.Tags
     Hakyll.Web.Template
@@ -156,7 +158,6 @@ Library
     Hakyll.Core.Provider.Internal
     Hakyll.Core.Provider.MetadataCache
     Hakyll.Core.Util.Parser
-    Hakyll.Web.Pandoc.Binary
     Paths_hakyll
 
   Build-Depends:
@@ -175,8 +176,6 @@ Library
     mtl                  >= 1        && < 2.3,
     network              >= 2.6      && < 2.7,
     network-uri          >= 2.6      && < 2.7,
-    pandoc               >= 2.0.5    && < 2.2,
-    pandoc-citeproc      >= 0.14     && < 0.15,
     parsec               >= 3.0      && < 3.2,
     process              >= 1.6      && < 1.7,
     random               >= 1.0      && < 1.2,
@@ -222,6 +221,19 @@ Library
     Cpp-options:
       -DCHECK_EXTERNAL
 
+  If flag(usePandoc)
+    Exposed-Modules:
+      Hakyll.Web.Pandoc
+      Hakyll.Web.Pandoc.Biblio
+      Hakyll.Web.Pandoc.FileType
+    Other-Modules:
+      Hakyll.Web.Pandoc.Binary
+    Build-Depends:
+      pandoc          >= 2.0.5    && < 2.2,
+      pandoc-citeproc >= 0.14     && < 0.15
+    Cpp-options:
+      -DUSE_PANDOC
+
 Test-suite hakyll-tests
   Type:             exitcode-stdio-1.0
   Hs-source-dirs:   tests
@@ -243,7 +255,6 @@ Test-suite hakyll-tests
     Hakyll.Web.CompressCss.Tests
     Hakyll.Web.Html.RelativizeUrls.Tests
     Hakyll.Web.Html.Tests
-    Hakyll.Web.Pandoc.FileType.Tests
     Hakyll.Web.Template.Context.Tests
     Hakyll.Web.Template.Tests
     TestSuite.Util
@@ -270,8 +281,6 @@ Test-suite hakyll-tests
     mtl                  >= 1        && < 2.3,
     network              >= 2.6      && < 2.7,
     network-uri          >= 2.6      && < 2.7,
-    pandoc               >= 2.0.5    && < 2.2,
-    pandoc-citeproc      >= 0.14     && < 0.15,
     parsec               >= 3.0      && < 3.2,
     process              >= 1.6      && < 1.7,
     random               >= 1.0      && < 1.2,
@@ -310,6 +319,15 @@ Test-suite hakyll-tests
       http-types   >= 0.7    && < 0.13
     Cpp-options:
       -DCHECK_EXTERNAL
+
+  If flag(usePandoc)
+    Other-modules:
+      Hakyll.Web.Pandoc.FileType.Tests
+    Build-Depends:
+      pandoc               >= 2.0.5    && < 2.2,
+      pandoc-citeproc      >= 0.14     && < 0.15
+    Cpp-options:
+      -DUSE_PANDOC
 
 Executable hakyll-init
   Main-is:          Init.hs

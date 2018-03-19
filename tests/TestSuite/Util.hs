@@ -8,6 +8,7 @@ module TestSuite.Util
     , testCompilerDone
     , testConfiguration
     , cleanTestEnv
+    , renderParagraphs
     ) where
 
 
@@ -29,6 +30,7 @@ import           Hakyll.Core.Provider
 import           Hakyll.Core.Store             (Store)
 import qualified Hakyll.Core.Store             as Store
 import           Hakyll.Core.Util.File
+import           Hakyll.Core.Item
 
 
 --------------------------------------------------------------------------------
@@ -102,3 +104,13 @@ cleanTestEnv = do
     removeDirectory $ destinationDirectory testConfiguration
     removeDirectory $ storeDirectory testConfiguration
     removeDirectory $ tmpDirectory testConfiguration
+
+
+--------------------------------------------------------------------------------
+-- | like 'Hakyll.Web.Pandoc.renderPandoc'
+-- | but allowing to test without the @usePandoc@ flag
+renderParagraphs :: Item String -> Compiler (Item String)
+renderParagraphs = withItemBody (return
+                       . intercalate "\n" -- no trailing line
+                       . map (("<p>"++) . (++"</p>"))
+                       . lines)

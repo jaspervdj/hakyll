@@ -39,7 +39,7 @@ case01 = do
             compile $ do
                 getResourceBody
                     >>= saveSnapshot "raw"
-                    >>= renderPandoc
+                    >>= renderParagraphs
 
         match (fromList ["partial.html", "partial-helper.html"]) $
             compile templateCompiler

@@ -6,6 +6,7 @@ flags:
     previewServer: True
     watchServer:   True
     checkExternal: True
+    usePandoc:     True
     buildWebsite:  True
 
 packages:
