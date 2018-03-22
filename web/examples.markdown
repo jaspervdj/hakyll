@@ -168,8 +168,6 @@ directly with the default Hakyll site.
   [source](https://github.com/beerendlauwers/HaskAnything)
 - <https://anler.me/>,
   [source](https://github.com/anler/anler.me)
-- <https://www.brandonstil.es/>,
-  [source](https://github.com/stilesb/brandonstil.es)
 - <http://argumatronic.com/>,
   [source](https://gitlab.com/GinBaby/argumatronic/tree/master)
 - <http://sillybytes.net/>,
