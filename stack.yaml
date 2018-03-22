@@ -3,11 +3,11 @@ extra-package-dbs: []
 
 flags:
   hakyll:
-    previewServer: True
-    watchServer:   True
-    checkExternal: True
-    usePandoc:     True
-    buildWebsite:  True
+    previewServer: true
+    watchServer:   true
+    checkExternal: true
+    usePandoc:     true
+    buildWebsite:  true
 
 packages:
   - '.'
@@ -18,3 +18,8 @@ nix:
   enable: false
   packages:
     - zlib
+
+build:
+  haddock: true
+  haddock-hyperlink-source: true
+  haddock-deps: false

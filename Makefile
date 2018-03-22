@@ -1,9 +1,9 @@
+PACKAGE="$(shell stack list-dependencies --separator='-' | grep hakyll)"
+LOCAL_DOC_ROOT="$(shell stack path --local-doc-root)"
+
 # Generate the docs and copy them to the website dir
 haddock:
-	cabal haddock --hyperlink-source
-	rm -rf web/reference/
-	cp -r dist/doc/html/hakyll/ web/reference/
+	stack build --haddock --no-haddock-deps
+	rsync -r "$(LOCAL_DOC_ROOT)/$(PACKAGE)/" web/reference/
 
-# Run the tests
-test:
-	runghc -isrc -itests tests/TestSuite.hs
+.PHONY: haddock
