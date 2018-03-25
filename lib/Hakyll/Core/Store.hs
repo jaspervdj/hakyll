@@ -16,7 +16,6 @@ module Hakyll.Core.Store
 
 
 --------------------------------------------------------------------------------
-import           Control.Exception    (IOException, handle)
 import qualified Crypto.Hash.MD5      as MD5
 import           Data.Binary          (Binary, decode, encodeFile)
 import qualified Data.ByteString      as B
@@ -31,6 +30,8 @@ import           System.Directory     (createDirectoryIfMissing)
 import           System.Directory     (doesFileExist, removeFile)
 import           System.FilePath      ((</>))
 import           System.IO            (IOMode (..), hClose, openFile)
+import           System.IO.Error      (catchIOError, modifyIOError,
+                                       ioeSetFileName, ioeSetLocation)
 import           Text.Printf          (printf)
 
 
@@ -84,6 +85,14 @@ new inMemory directory = do
   where
     csize = Just 500
 
+--------------------------------------------------------------------------------
+withStore :: Store -> String -> (String -> FilePath -> IO a) -> [String] -> IO a
+withStore store loc run identifier = modifyIOError handle $ run key path
+  where
+    key = hash identifier
+    path = storeDirectory store </> key
+    handle e = e `ioeSetFileName` (path ++ " for " ++ intercalate "/" identifier)
+                 `ioeSetLocation` ("Store." ++ loc)
 
 --------------------------------------------------------------------------------
 -- | Auxiliary: add an item to the in-memory cache
@@ -124,17 +133,16 @@ cacheDelete (Store _ (Just lru)) key = do
 --------------------------------------------------------------------------------
 -- | Store an item
 set :: (Binary a, Typeable a) => Store -> [String] -> a -> IO ()
-set store identifier value = do
-    encodeFile (storeDirectory store </> key) value
+set store identifier value = withStore store "set" (\key path -> do
+    encodeFile path value
     cacheInsert store key value
-  where
-    key = hash identifier
+  ) identifier
 
 
 --------------------------------------------------------------------------------
 -- | Load an item
 get :: (Binary a, Typeable a) => Store -> [String] -> IO (Result a)
-get store identifier = do
+get store = withStore store "get" $ \key path -> do
     -- First check the in-memory map
     ref <- cacheLookup store key
     case ref of
@@ -146,17 +154,14 @@ get store identifier = do
                 then return NotFound
                 -- Found in the filesystem
                 else do
-                    v <- decodeClose
+                    v <- decodeClose path
                     cacheInsert store key v
                     return $ Found v
         -- Found in the in-memory map (or wrong type), just return
         s -> return s
   where
-    key  = hash identifier
-    path = storeDirectory store </> key
-
     -- 'decodeFile' from Data.Binary which closes the file ASAP
-    decodeClose = do
+    decodeClose path = do
         h   <- openFile path ReadMode
         lbs <- BL.hGetContents h
         BL.length lbs `seq` hClose h
@@ -166,28 +171,23 @@ get store identifier = do
 --------------------------------------------------------------------------------
 -- | Strict function
 isMember :: Store -> [String] -> IO Bool
-isMember store identifier = do
+isMember store = withStore store "isMember" $ \key path -> do
     inCache <- cacheIsMember store key
     if inCache then return True else doesFileExist path
-  where
-    key  = hash identifier
-    path = storeDirectory store </> key
 
 
 --------------------------------------------------------------------------------
 -- | Delete an item
 delete :: Store -> [String] -> IO ()
-delete store identifier = do
+delete store = withStore store "delete" $ \key path -> do
     cacheDelete store key
-    deleteFile $ storeDirectory store </> key
-  where
-    key  = hash identifier
+    deleteFile path
 
 
 --------------------------------------------------------------------------------
 -- | Delete a file unless it doesn't exist...
 deleteFile :: FilePath -> IO ()
-deleteFile = handle (\(_ :: IOException) -> return ()) . removeFile
+deleteFile = (`catchIOError` \_ -> return ()) . removeFile
 
 
 --------------------------------------------------------------------------------
