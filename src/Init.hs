@@ -66,16 +66,15 @@ main = do
                     createCabal cabalPath name
                 fs -> do
                     putStrLn $ "The following files will be overwritten:"
-                    foldMap putStrLn fs
+                    mapM_ putStrLn fs
                     putStrLn $ "Use -f to overwrite them"
                     exitFailure
 
 existingFiles :: FilePath -> [FilePath] -> IO [FilePath]
-existingFiles dstDir = foldMap $ \file -> do
+existingFiles dstDir files = fmap concat $ forM files $ \file -> do
     let dst = dstDir </> file
     exists <- doesFileExist dst
     return $ if exists then [dst] else []
-
 
 -- | Figure out a good cabal package name from the given (existing) directory
 -- name
