@@ -6,7 +6,7 @@ module Main
 
 --------------------------------------------------------------------------------
 import           Control.Arrow         (first)
-import           Control.Monad         (forM_)
+import           Control.Monad         (forM, forM_)
 import           Data.Char             (isAlphaNum, isNumber)
 import           Data.List             (foldl', intercalate, isPrefixOf)
 import           Data.Version          (Version (..))
@@ -20,6 +20,10 @@ import           System.FilePath       (splitDirectories, (</>))
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Util.File
 import           Paths_hakyll
+
+
+--------------------------------------------------------------------------------
+import           Prelude
 
 
 --------------------------------------------------------------------------------
