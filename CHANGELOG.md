@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.1.0
+
+- Fix hakyll-init on older GHC versions
+- Make the Pandoc dependency optional
+
 ## Hakyll 4.12.0.1
 
 - Bump resourcet to 1.2 in test section
