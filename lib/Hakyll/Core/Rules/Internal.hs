@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Rank2Types                 #-}
 module Hakyll.Core.Rules.Internal
@@ -16,6 +17,9 @@ import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
 import           Control.Monad.Trans            (liftIO)
 import qualified Data.Map                       as M
+#if MIN_VERSION_base(4,9,0)
+import           Data.Semigroup                 (Semigroup (..))
+#endif
 import           Data.Set                       (Set)
 
 
@@ -52,10 +56,20 @@ data RuleSet = RuleSet
 
 
 --------------------------------------------------------------------------------
+#if MIN_VERSION_base(4,9,0)
+instance Semigroup RuleSet where
+    (<>) (RuleSet r1 c1 s1 p1) (RuleSet r2 c2 s2 p2) =
+        RuleSet (mappend r1 r2) (mappend c1 c2) (mappend s1 s2) (p1 .||. p2)
+
+instance Monoid RuleSet where
+    mempty  = RuleSet mempty mempty mempty mempty
+    mappend = (<>)
+#else
 instance Monoid RuleSet where
     mempty = RuleSet mempty mempty mempty mempty
     mappend (RuleSet r1 c1 s1 p1) (RuleSet r2 c2 s2 p2) =
         RuleSet (mappend r1 r2) (mappend c1 c2) (mappend s1 s2) (p1 .||. p2)
+#endif
 
 
 --------------------------------------------------------------------------------

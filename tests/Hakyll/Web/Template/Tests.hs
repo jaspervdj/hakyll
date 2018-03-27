@@ -17,7 +17,6 @@ import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Provider
-import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
@@ -98,7 +97,9 @@ test (outf, tplf, itemf) = do
     out  <- resourceString provider outf
     tpl  <- testCompilerDone store provider tplf templateBodyCompiler
     item <- testCompilerDone store provider itemf $
-        pandocCompiler >>= applyTemplate (itemBody tpl) testContext
+        getResourceBody
+        >>= renderParagraphs
+        >>= applyTemplate (itemBody tpl) testContext
 
     out @=? itemBody item
     cleanTestEnv

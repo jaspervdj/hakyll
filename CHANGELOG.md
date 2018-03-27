@@ -4,6 +4,24 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.0.1
+
+- Bump resourcet to 1.2 in test section
+
+## Hakyll 4.12.0.0
+
+- Add Semigroup instances for existing Monoids (contribution by
+  Christian Barcenas)
+- Fix issue with CPP and comment containing `/*`
+- Add `withTagList` (contribution by Oleg Grenrus)
+- Improve CSS compression (contribution by Bergi)
+- Bump pandoc-citeproc to 0.14
+- Bump resourcet to 1.2
+- Bump time to 1.9
+- Bump http-types to 0.12
+- Bump http-conduit to 2.3
+- Bump tasty-quickcheck to 0.10
+
 ## Hakyll 4.11.0.0
 
 - Bump binary to 0.9

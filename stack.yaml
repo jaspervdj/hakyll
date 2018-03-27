@@ -1,4 +1,4 @@
-resolver: nightly-2018-01-15
+resolver: lts-11.0
 extra-package-dbs: []
 
 flags:
@@ -6,21 +6,13 @@ flags:
     previewServer: True
     watchServer:   True
     checkExternal: True
+    usePandoc:     True
     buildWebsite:  True
 
 packages:
   - '.'
 
-allow-newer: True
-
-extra-deps:
-  - 'binary-0.9.0.0'
-  - 'http-types-0.11'
-  - 'pandoc-2.1'
-  - 'pandoc-citeproc-0.13'
-  - 'QuickCheck-2.11.3'
-  - 'tasty-1.0.0.1'
-  - 'tasty-hunit-0.10.0.1'
+extra-deps: []
 
 nix:
   enable: false

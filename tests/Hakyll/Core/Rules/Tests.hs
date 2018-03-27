@@ -17,7 +17,6 @@ import           Hakyll.Core.Metadata
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
-import           Hakyll.Web.Pandoc
 import           System.FilePath                ((</>))
 import           Test.Tasty                     (TestTree, testGroup)
 import           Test.Tasty.HUnit               (Assertion, (@=?))
@@ -75,7 +74,7 @@ rules01 ioref = do
     -- Compile some posts
     match "*.md" $ do
         route $ setExtension "html"
-        compile pandocCompiler
+        compile copyFileCompiler
 
     -- Yeah. I don't know how else to test this stuff?
     preprocess $ writeIORef ioref True

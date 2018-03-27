@@ -2,7 +2,6 @@
 -- | Parser utilities
 module Hakyll.Core.Util.Parser
     ( metadataKey
-    , reservedKeys
     ) where
 
 

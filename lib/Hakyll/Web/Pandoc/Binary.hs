@@ -28,5 +28,6 @@ instance Binary REF.CNum
 instance Binary REF.Literal
 instance Binary REF.RefDate
 instance Binary REF.RefType
+instance Binary REF.Season
 instance Binary STY.Agent
 instance Binary STY.Formatted

@@ -20,9 +20,9 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
     [ fromAssertions "compressCss"
         [
           -- compress whitespace
-          " something something " @=?
+          "something something" @=?
             compressCss " something  \n\t\r  something "
-          -- do not compress whitespace in constants
+          -- do not compress whitespace in string tokens
         , "abc \"  \t\n\r  \" xyz" @=?
             compressCss "abc \"  \t\n\r  \" xyz"
         , "abc '  \t\n\r  ' xyz" @=?
@@ -30,7 +30,7 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
 
           -- strip comments
         , "before after"  @=? compressCss "before /* abc { } ;; \n\t\r */ after"
-          -- don't strip comments inside constants
+          -- don't strip comments inside string tokens
         , "before \"/* abc { } ;; \n\t\r */\" after"
                           @=? compressCss "before \"/* abc { } ;; \n\t\r */\" after"
 
@@ -45,19 +45,19 @@ tests = testGroup "Hakyll.Web.CompressCss.Tests" $ concat
         , "calc(1px + 100%/(5 + 3) - (3px + 2px)*5)" @=? compressCss "calc( 1px + 100% / ( 5 +  3) - calc( 3px + 2px ) * 5 )"
           -- compress whitespace even after this curly brace
         , "}"             @=? compressCss ";   }  "
-          -- but do not compress separators inside of constants
+          -- but do not compress separators inside string tokens
         , "\"  { } ; , \"" @=? compressCss "\"  { } ; , \""
-          -- don't compress separators at the start or end of constants
+          -- don't compress separators at the start or end of string tokens
         , "\" }\""        @=? compressCss "\" }\""
         , "\"{ \""        @=? compressCss "\"{ \""
-          -- don't get irritated by the wrong constant terminator
+          -- don't get irritated by the wrong token delimiter
         , "\"   '   \""   @=? compressCss "\"   '   \""
         , "'   \"   '"    @=? compressCss "'   \"   '"
-          -- don't compress whitespace around separators in constants in the middle of a string
+          -- don't compress whitespace in the middle of a string
         , "abc '{ '"      @=? compressCss "abc '{ '"
         , "abc \"{ \""    @=? compressCss "abc \"{ \""
-          -- compress whitespace around colons
-        , "abc:xyz"       @=? compressCss "abc : xyz"
+          -- compress whitespace after colons (but not before)
+        , "abc :xyz"       @=? compressCss "abc : xyz"
           -- compress multiple semicolons
         , ";"             @=? compressCss ";;;;;;;"
         ]

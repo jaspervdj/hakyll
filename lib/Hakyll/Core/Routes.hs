@@ -25,6 +25,7 @@
 --   not appear in your site directory.
 --
 -- * If an item matches multiple routes, the first rule will be chosen.
+{-# LANGUAGE CPP        #-}
 {-# LANGUAGE Rank2Types #-}
 module Hakyll.Core.Routes
     ( UsedMetadata
@@ -42,6 +43,9 @@ module Hakyll.Core.Routes
 
 
 --------------------------------------------------------------------------------
+#if MIN_VERSION_base(4,9,0)
+import           Data.Semigroup                 (Semigroup (..))
+#endif
 import           System.FilePath                (replaceExtension)
 
 
@@ -74,6 +78,18 @@ newtype Routes = Routes
 
 
 --------------------------------------------------------------------------------
+#if MIN_VERSION_base(4,9,0)
+instance Semigroup Routes where
+    (<>) (Routes f) (Routes g) = Routes $ \p id' -> do
+        (mfp, um) <- f p id'
+        case mfp of
+            Nothing -> g p id'
+            Just _  -> return (mfp, um)
+
+instance Monoid Routes where
+    mempty  = Routes $ \_ _ -> return (Nothing, False)
+    mappend = (<>)
+#else
 instance Monoid Routes where
     mempty = Routes $ \_ _ -> return (Nothing, False)
     mappend (Routes f) (Routes g) = Routes $ \p id' -> do
@@ -81,6 +97,7 @@ instance Monoid Routes where
         case mfp of
             Nothing -> g p id'
             Just _  -> return (mfp, um)
+#endif
 
 
 --------------------------------------------------------------------------------
