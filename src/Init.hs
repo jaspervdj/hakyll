@@ -8,7 +8,7 @@ module Main
 import           Control.Arrow         (first)
 import           Control.Monad         (forM, forM_)
 import           Data.Char             (isAlphaNum, isNumber)
-import           Data.List             (foldl', intercalate, isPrefixOf)
+import           Data.List             (foldl', intercalate, (\\))
 import           Data.Version          (Version (..))
 import           System.Directory      (canonicalizePath, copyFile,
                                         doesFileExist)
@@ -31,23 +31,45 @@ main :: IO ()
 main = do
     progName <- getProgName
     args     <- getArgs
-    srcDir   <- getDataFileName "example"
-    files    <- getRecursiveContents (const $ return False) srcDir
 
-    case args of
-        -- When the argument begins with hyphens, it's more likely that the user
-        -- intends to attempt some arguments like ("--help", "-h", "--version", etc.)
-        -- rather than create directory with that name.
-        -- If dstDir begins with hyphens, the guard will prevent it from creating
-        -- directory with that name so we can fall to the second alternative
-        -- which prints a usage info for user.
-        [dstDir] | not ("-" `isPrefixOf` dstDir) ->
-            createFiles False srcDir files dstDir
-        ["-f", dstDir] ->
-            createFiles True srcDir files dstDir
-        _ -> do
-            putStrLn $ "Usage: " ++ progName ++ "[-f] <directory>"
+    -- Retrieve all user arguments and flags.
+    -- Example: hakyll-init --force template mypage
+    let flags = filter (\x -> (head x) == '-') args
+        arguments = args \\ flags
+
+        isForced = (elem "-f" flags) || (elem "--force" flags)
+
+        dstDir = case (length arguments) of
+            0 -> []
+            1 -> head arguments
+            _ -> arguments !! 1
+
+        exmDir = if (length arguments) < 2
+            then "default"
+            else head arguments
+
+
+    srcDir <- getDataFileName $ "examples" </> exmDir
+    files  <- getRecursiveContents (const $ return False) srcDir
+
+    -- Makes sure that the destination location exists.
+    if (length dstDir) < 1
+        then do
+            putStr $ unlines
+                [ "Hakyll-" ++ version'
+                , "Usage: " ++ progName
+                  ++ " [-f|--force] [template] <directory>"
+                ]
             exitFailure
+        -- Makes sure that the template files exists.
+        else if (length files) < 1
+            then do
+                putStrLn $ "Error: " ++ exmDir ++ " doesn't exists."
+                exitFailure
+            -- Check whether it is forced or not.
+            else if isForced
+                then createFiles True srcDir files dstDir
+                else createFiles False srcDir files dstDir
 
     where
         createFiles force srcDir files dstDir = do
@@ -71,7 +93,7 @@ main = do
                 fs -> do
                     putStrLn $ "The following files will be overwritten:"
                     mapM_ putStrLn fs
-                    putStrLn $ "Use -f to overwrite them"
+                    putStrLn $ "Use -f or --force to overwrite them"
                     exitFailure
 
 existingFiles :: FilePath -> [FilePath] -> IO [FilePath]
@@ -118,6 +140,7 @@ createCabal path name =
       , "  ghc-options:      -threaded"
       , "  default-language: Haskell2010"
       ]
-  where
-    -- Major hakyll version
-    version' = intercalate "." . take 2 . map show $ versionBranch version
+
+-- Major hakyll version
+version' :: String
+version' = intercalate "." . take 2 . map show $ versionBranch version

@@ -42,20 +42,25 @@ Build-Type:    Simple
 Data-Dir:      data
 
 Data-files:
-  example/posts/2015-11-28-carpe-diem.markdown
-  example/posts/2015-10-07-rosa-rosa-rosam.markdown
-  example/posts/2015-12-07-tu-quoque.markdown
-  example/posts/2015-08-12-spqr.markdown
-  example/site.hs
-  example/images/haskell-logo.png
-  example/templates/post-list.html
-  example/templates/default.html
-  example/templates/archive.html
-  example/templates/post.html
-  example/css/default.css
-  example/index.html
-  example/about.rst
-  example/contact.markdown
+  examples/default/posts/2015-11-28-carpe-diem.markdown
+  examples/default/posts/2015-10-07-rosa-rosa-rosam.markdown
+  examples/default/posts/2015-12-07-tu-quoque.markdown
+  examples/default/posts/2015-08-12-spqr.markdown
+  examples/default/site.hs
+  examples/default/images/haskell-logo.png
+  examples/default/templates/post-list.html
+  examples/default/templates/default.html
+  examples/default/templates/archive.html
+  examples/default/templates/post.html
+  examples/default/css/default.css
+  examples/default/index.html
+  examples/default/about.rst
+  examples/default/contact.markdown
+  examples/fresh/site.hs
+  examples/fresh/src/index.html
+  examples/fresh/src/templates/default.html
+  examples/fresh/src/assets/css/default.css
+  examples/fresh/src/assets/img/haskell-logo.png
 
 Extra-source-files:
   CHANGELOG.md

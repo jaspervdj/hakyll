@@ -1,0 +1,18 @@
+body {
+  cursor: default;
+}
+img.avatar {
+  border-radius: 100%;
+  display: block;
+  height: 240px;
+  margin: 16px auto;
+  width: 240px;
+}
+div.social-links {
+  margin: 16px auto;
+  text-align: center;
+}
+div.social-links a {
+  display: inline-block;
+  margin: 0 16px;
+}
