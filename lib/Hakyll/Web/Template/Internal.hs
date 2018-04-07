@@ -167,23 +167,24 @@ applyTemplate' tes context x = go tes
         debug = compilerDebugEntries ("Hakyll.Web.Template.applyTemplate: " ++
             "[ERROR] in 'if' condition on expr '" ++ show e ++ "':")
 
-    applyElem (For e b s) = mapError (headMsg:) (applyExpr e) >>= \cf -> case cf of
-        EmptyField     -> expected "list" "boolean" typeMsg
-        StringField _  -> expected "list" "string" typeMsg
-        ListField c xs -> mapError (bodyMsg:) $ do
-            sep <- maybe (return "") go s
-            bs  <- mapM (applyTemplate' b c) xs
-            return $ intercalate sep bs
-        LexicalListField mc vs -> mapError (bodyMsg:) do
-            sep <- maybe (return "") go s
-            bs  <- mapM (\v -> applyTemplate' b (mc context v) x) vs
-            return $ intercalate sep bs
+    applyElem (For e b s) = do
+        bs <- mapError (headMsg:) (applyExpr e) >>= getList
+        sep <- maybe (return "") go s
+        return $ intercalate sep bs
       where
+        getList EmptyField               = expected "list" "boolean" typeMsg
+        getList (StringField _)          = expected "list" "string" typeMsg
+        getList (ListField c xs)         = mapError (bodyMsg:) $
+            mapM (applyTemplate' b c) xs
+        getList (LexicalListField mc vs) = mapError (bodyMsg:) $
+            mapM (\v -> applyTemplate' b (mc context v) x) vs
+
         headMsg = "In expr '$for(" ++ show e ++ ")$'"
         typeMsg = "loop expr '" ++ show e ++ "'"
         bodyMsg = "In loop context of '$for(" ++ show e ++ ")$'"
 
-    applyElem (Partial e) = applyStringExpr (headMsg:) typeMsg e >>= \p ->
+    applyElem (Partial e) = do
+        p <- applyStringExpr (headMsg:) typeMsg e
         mapError (inclMsg:) $ do
             tpl' <- loadBody (fromFilePath p)
             itemBody <$> applyTemplate tpl' context x
