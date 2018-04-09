@@ -201,7 +201,7 @@ failBranch = compilerFailBranch . return
 
 --------------------------------------------------------------------------------
 -- | Map over the error list from a failed compilation.
--- Unlike @'`Control.Monad.Except.catchError`' ('Control.Monad.Except.throwError' . f)@,
+-- Unlike @\``Control.Monad.Except.catchError`\` ('Control.Monad.Except.throwError' . f)@,
 -- it keeps the distinction between 'fail' and 'failBranch'.
 -- 
 -- @since 4.12.0
