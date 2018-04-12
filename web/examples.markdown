@@ -98,8 +98,8 @@ directly with the default Hakyll site.
   [source](https://github.com/Libbum/AxiomaticSemantics)
 - [https://tesser.org/](http://web.archive.org/web/20161022221713/https://tesser.org/),
   [source](https://github.com/fractalcat/tesser.org)
-- <https://wei2912.github.io/>,
-  [source](https://github.com/wei2912/blog_src)
+- <https://weien.io/>,
+  [source](https://github.com/wei2912/blog-src)
 - <http://www.metasepi.org/>,
   [source](https://github.com/metasepi/metasepi-website)
 - <http://gisli.hamstur.is/>,
