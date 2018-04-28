@@ -1,4 +1,4 @@
-resolver: lts-11.0
+resolver: lts-11.5
 extra-package-dbs: []
 
 flags:
@@ -12,8 +12,6 @@ flags:
 packages:
   - '.'
 
-extra-deps: []
-
 nix:
   enable: false
   packages:
@@ -23,3 +21,8 @@ build:
   haddock: true
   haddock-hyperlink-source: true
   haddock-deps: false
+
+extra-deps:
+- 'pandoc-2.2'
+- 'pandoc-types-1.17.4.2'
+- 'pandoc-citeproc-0.14.3.1'
