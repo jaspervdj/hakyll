@@ -25,17 +25,19 @@ module Hakyll.Web.Pandoc.Biblio
 --------------------------------------------------------------------------------
 import           Control.Monad            (liftM, replicateM)
 import           Data.Binary              (Binary (..))
-import           Data.Default             (def)
 import           Data.Typeable            (Typeable)
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
+import           Hakyll.Core.Provider
 import           Hakyll.Core.Writable
 import           Hakyll.Web.Pandoc
 import           Hakyll.Web.Pandoc.Binary ()
 import qualified Text.CSL                 as CSL
 import           Text.CSL.Pandoc          (processCites)
-import           Text.Pandoc              (Pandoc, ReaderOptions (..))
+import           Text.Pandoc              (Pandoc, ReaderOptions (..),
+                                           enableExtension, Extension (..))
 
 
 --------------------------------------------------------------------------------
@@ -83,7 +85,7 @@ instance Writable Biblio where
 --------------------------------------------------------------------------------
 biblioCompiler :: Compiler (Item Biblio)
 biblioCompiler = do
-    filePath <- toFilePath <$> getUnderlying
+    filePath <- getResourceFilePath
     makeItem =<< unsafeCompiler (Biblio <$> CSL.readBiblioFile idpred filePath)
   where
     -- This is a filter on citations.  We include all citations.
@@ -98,7 +100,9 @@ readPandocBiblio :: ReaderOptions
                  -> Compiler (Item Pandoc)
 readPandocBiblio ropt csl biblio item = do
     -- Parse CSL file, if given
-    style <- unsafeCompiler $ CSL.readCSLFile Nothing . toFilePath . itemIdentifier $ csl
+    provider <- compilerProvider <$> compilerAsk
+    style <- unsafeCompiler $
+             CSL.readCSLFile Nothing . (resourceFilePath provider) . itemIdentifier $ csl
 
     -- We need to know the citation keys, add then *before* actually parsing the
     -- actual page. If we don't do this, pandoc won't even consider them
@@ -115,4 +119,8 @@ pandocBiblioCompiler cslFileName bibFileName = do
     csl <- load $ fromFilePath cslFileName
     bib <- load $ fromFilePath bibFileName
     liftM writePandoc
-        (getResourceBody >>= readPandocBiblio def csl bib)
+        (getResourceBody >>= readPandocBiblio ropt csl bib)
+    where ropt = defaultHakyllReaderOptions
+            { -- The following option enables citation rendering
+              readerExtensions = enableExtension Ext_citations $ readerExtensions defaultHakyllReaderOptions
+            }
