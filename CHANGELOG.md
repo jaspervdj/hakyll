@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.2.0
+
+- Bump pandoc to 2.2
+- Fix path resolution in Pandoc.Biblio (contribution by knih)
+
 ## Hakyll 4.12.1.0
 
 - Fix hakyll-init on older GHC versions
