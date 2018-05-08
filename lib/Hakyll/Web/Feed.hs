@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 --------------------------------------------------------------------------------
 -- | A Module that allows easy rendering of RSS feeds.
@@ -41,20 +42,20 @@ import qualified Data.Text.Encoding          as T
 
 
 --------------------------------------------------------------------------------
-rssTemplate :: String
-rssTemplate = T.unpack $
+rssTemplate :: Item String
+rssTemplate = Item "templates/rss.xml" $ T.unpack $
     T.decodeUtf8 $(embedFile "data/templates/rss.xml")
 
-rssItemTemplate :: String
-rssItemTemplate = T.unpack $
+rssItemTemplate :: Item String
+rssItemTemplate = Item "templates/rss-item.xml" $ T.unpack $
     T.decodeUtf8 $(embedFile "data/templates/rss-item.xml")
 
-atomTemplate :: String
-atomTemplate = T.unpack $
+atomTemplate :: Item String
+atomTemplate = Item "templates/atom.xml" $ T.unpack $
     T.decodeUtf8 $(embedFile "data/templates/atom.xml")
 
-atomItemTemplate :: String
-atomItemTemplate = T.unpack $
+atomItemTemplate :: Item String
+atomItemTemplate = Item "templates/atom-item.xml" $ T.unpack $
     T.decodeUtf8 $(embedFile "data/templates/atom-item.xml")
 
 
@@ -76,15 +77,15 @@ data FeedConfiguration = FeedConfiguration
 
 --------------------------------------------------------------------------------
 -- | Abstract function to render any feed.
-renderFeed :: String                  -- ^ Default feed template
-           -> String                  -- ^ Default item template
+renderFeed :: Item String             -- ^ Default feed template
+           -> Item String             -- ^ Default item template
            -> FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Context for the items
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
 renderFeed defFeed defItem config itemContext items = do
-    feedTpl <- readTemplateFile defFeed
-    itemTpl <- readTemplateFile defItem
+    feedTpl <- compileTemplateItem defFeed
+    itemTpl <- compileTemplateItem defItem
 
     protectedItems <- mapM (applyFilter protectCDATA) items
     body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
@@ -119,12 +120,8 @@ renderFeed defFeed defItem config itemContext items = do
     updatedField = field "updated" $ \_ -> case items of
         []      -> return "Unknown"
         (x : _) -> unContext itemContext' "updated" [] x >>= \cf -> case cf of
-            ListField _ _ -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
             StringField s -> return s
-
-    readTemplateFile :: String -> Compiler Template
-    readTemplateFile value = pure $ template $ readTemplateElems value
-
+            _             -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
 
 --------------------------------------------------------------------------------
 -- | Render an RSS feed with a number of items.

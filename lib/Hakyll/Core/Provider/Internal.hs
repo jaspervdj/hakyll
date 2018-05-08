@@ -22,6 +22,7 @@ module Hakyll.Core.Provider.Internal
 --------------------------------------------------------------------------------
 import           Control.DeepSeq        (NFData (..), deepseq)
 import           Control.Monad          (forM)
+import           Control.Applicative    ((<|>))
 import           Data.Binary            (Binary (..))
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Map               (Map)
@@ -32,7 +33,7 @@ import qualified Data.Set               as S
 import           Data.Time              (Day (..), UTCTime (..))
 import           Data.Typeable          (Typeable)
 import           System.Directory       (getModificationTime)
-import           System.FilePath        (addExtension, (</>))
+import           System.FilePath        (stripExtension, (</>))
 
 
 --------------------------------------------------------------------------------
@@ -106,10 +107,7 @@ newProvider :: Store                  -- ^ Store to use
             -> IO Provider            -- ^ Resulting provider
 newProvider store ignore directory = do
     list <- map fromFilePath <$> getRecursiveContents ignore directory
-    let universe = S.fromList list
-    files <- fmap (maxmtime . M.fromList) $ forM list $ \identifier -> do
-        rInfo <- getResourceInfo directory universe identifier
-        return (identifier, rInfo)
+    files <- M.fromListWith combine <$> mapM (getResourceInfo directory) list
 
     -- Get the old files from the store, and then immediately replace them by
     -- the new files.
@@ -120,20 +118,20 @@ newProvider store ignore directory = do
   where
     oldKey = ["Hakyll.Core.Provider.Internal.newProvider", "oldFiles"]
 
-    -- Update modified if metadata is modified
-    maxmtime files = flip M.map files $ \rInfo@(ResourceInfo mtime meta) ->
-        let metaMod = fmap resourceInfoModified $ meta >>= flip M.lookup files
-        in rInfo {resourceInfoModified = maybe mtime (max mtime) metaMod}
+    -- Combine a resource with its metadata file
+    combine (ResourceInfo xTime xMeta) (ResourceInfo yTime yMeta) =
+        ResourceInfo (xTime `max` yTime) (xMeta <|> yMeta)
 
 
 --------------------------------------------------------------------------------
-getResourceInfo :: FilePath -> Set Identifier -> Identifier -> IO ResourceInfo
-getResourceInfo directory universe identifier = do
-    mtime <- fileModificationTime $ directory </> toFilePath identifier
-    return $ ResourceInfo (BinaryTime mtime) $
-        if mdRsc `S.member` universe then Just mdRsc else Nothing
-  where
-    mdRsc = fromFilePath $ flip addExtension "metadata" $ toFilePath identifier
+getResourceInfo :: FilePath -> Identifier -> IO (Identifier, ResourceInfo)
+getResourceInfo directory identifier = do
+    let file = toFilePath identifier
+    mtime <- fileModificationTime $ directory </> file
+    let makeInfo m = ResourceInfo (BinaryTime mtime) m
+    return $ case stripExtension "metadata" file of
+        Nothing -> (identifier, makeInfo Nothing)
+        Just r -> (fromFilePath r, makeInfo (Just identifier))
 
 
 --------------------------------------------------------------------------------

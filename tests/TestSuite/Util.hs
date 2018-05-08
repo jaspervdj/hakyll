@@ -6,6 +6,7 @@ module TestSuite.Util
     , newTestProvider
     , testCompiler
     , testCompilerDone
+    , testCompilerError
     , testConfiguration
     , cleanTestEnv
     , renderParagraphs
@@ -13,7 +14,7 @@ module TestSuite.Util
 
 
 --------------------------------------------------------------------------------
-import           Data.List                     (intercalate)
+import           Data.List                     (intercalate, isInfixOf)
 import           Data.Monoid                   (mempty)
 import qualified Data.Set                      as S
 import           Test.Tasty
@@ -80,13 +81,20 @@ testCompilerDone store provider underlying compiler = do
         CompilerDone x _    -> return x
         CompilerError e     -> fail $
             "TestSuite.Util.testCompilerDone: compiler " ++ show underlying ++
-            " threw: " ++ intercalate "; " e
+            " threw: " ++ intercalate "; " (getReason e)
         CompilerRequire i _ -> fail $
             "TestSuite.Util.testCompilerDone: compiler " ++ show underlying ++
             " requires: " ++ show i
         CompilerSnapshot _ _ -> fail
             "TestSuite.Util.testCompilerDone: unexpected CompilerSnapshot"
 
+testCompilerError :: Store -> Provider -> Identifier -> Compiler a -> String -> IO ()
+testCompilerError store provider underlying compiler expectedMessage = do
+    result   <- testCompiler store provider underlying compiler
+    case result of
+        CompilerError e -> any (expectedMessage `isInfixOf`) (getReason e) @?
+                               "Expecting '" ++ expectedMessage ++ "' error"
+        _               -> assertFailure "Expecting CompilerError"
 
 --------------------------------------------------------------------------------
 testConfiguration :: Configuration

@@ -8,8 +8,9 @@ module Hakyll.Web.Template.Tests
 --------------------------------------------------------------------------------
 import           Test.Tasty                   (TestTree, testGroup)
 import           Test.Tasty.HUnit             (Assertion, testCase, (@=?),
-                                               (@?=))
+                                               (@?=), assertBool)
 
+import           Data.Either                    (isLeft)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
@@ -32,13 +33,13 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
       , testCase "applyJoinTemplateList" testApplyJoinTemplateList
       ]
 
-    , fromAssertions "readTemplate"
-        [ [Chunk "Hello ", Expr (Call "guest" [])]
-            @=? readTemplateElems "Hello $guest()$"
-        , [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]
-            @=? readTemplateElems "$if(a(\"bar\"))$foo$endif$"
+    , fromAssertions "parseTemplate"
+        [ Right [Chunk "Hello ", Expr (Call "guest" [])]
+            @=? parse "Hello $guest()$"
+        , Right [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]
+            @=? parse "$if(a(\"bar\"))$foo$endif$"
         -- 'If' trim check.
-        , [ TrimL
+        , Right [ TrimL
           , If (Ident (TemplateKey "body"))
                [ TrimR
                , Chunk "\n"
@@ -54,29 +55,37 @@ tests = testGroup "Hakyll.Core.Template.Tests" $ concat
                      ])
           , TrimR
           ]
-          @=? readTemplateElems "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
+          @=? parse "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
         -- 'For' trim check.
-        , [ TrimL
+        , Right [ TrimL
           , For (Ident (TemplateKey "authors"))
                 [TrimR, Chunk "\n   body   \n", TrimL]
                 Nothing
           , TrimR
           ]
-          @=? readTemplateElems "$-for(authors)-$\n   body   \n$-endfor-$"
+          @=? parse "$-for(authors)-$\n   body   \n$-endfor-$"
         -- 'Partial' trim check.
-        , [ TrimL
+        , Right [ TrimL
           , Partial (StringLiteral "path")
           , TrimR
           ]
-          @=? readTemplateElems "$-partial(\"path\")-$"
+          @=? parse "$-partial(\"path\")-$"
         -- 'Expr' trim check.
-        , [ TrimL
+        , Right [ TrimL
           , Expr (Ident (TemplateKey "foo"))
           , TrimR
           ]
-          @=? readTemplateElems "$-foo-$"
+          @=? parse "$-foo-$"
+        -- fail on incomplete template.
+        , assertBool "did not yield error" $ isLeft $
+          parse "a$b"
+        -- fail on mismatched template syntax.
+        , assertBool "did not fail to parse" $ isLeft $
+          parse "$for(xs)$\n  <p>foo</p>\n$endif$"
         ]
     ]
+  where
+    parse = parseTemplateElemsFile ""
 
 
 --------------------------------------------------------------------------------

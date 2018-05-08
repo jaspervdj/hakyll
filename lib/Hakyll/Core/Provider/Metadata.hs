@@ -27,12 +27,14 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
 import           System.IO                     as IO
+import           System.IO.Error               (catchIOError, modifyIOError,
+                                                ioeSetLocation)
 
 
 --------------------------------------------------------------------------------
 loadMetadata :: Provider -> Identifier -> IO (Metadata, Maybe String)
 loadMetadata p identifier = do
-    hasHeader  <- probablyHasMetadataHeader fp
+    hasHeader  <- probablyHasMetadataHeader fp `catchIOError` \_ -> return False
     (md, body) <- if hasHeader
         then second Just <$> loadMetadataHeader fp
         else return (mempty, Nothing)
@@ -51,7 +53,7 @@ loadMetadata p identifier = do
 --------------------------------------------------------------------------------
 loadMetadataHeader :: FilePath -> IO (Metadata, String)
 loadMetadataHeader fp = do
-    fileContent <- readFile fp
+    fileContent <- modifyIOError (`ioeSetLocation` "loadMetadataHeader") $ readFile fp
     case parsePage fileContent of
         Right x   -> return x
         Left  err -> throwIO $ MetadataException fp err
@@ -60,7 +62,7 @@ loadMetadataHeader fp = do
 --------------------------------------------------------------------------------
 loadMetadataFile :: FilePath -> IO Metadata
 loadMetadataFile fp = do
-    fileContent <- B.readFile fp
+    fileContent <- modifyIOError (`ioeSetLocation` "loadMetadataFile") $ B.readFile fp
     let errOrMeta = Yaml.decodeEither' fileContent
     either (fail . show) return errOrMeta
 

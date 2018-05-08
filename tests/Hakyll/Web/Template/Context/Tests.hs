@@ -53,6 +53,6 @@ testContextDone store provider identifier key context =
         cf   <- unContext context key [] item
         case cf of
             StringField str -> return str
-            ListField _ _   -> error $
+            _               -> error $
                 "Hakyll.Web.Template.Context.Tests.testContextDone: " ++
-                "Didn't expect ListField"
+                "expected StringField"
