@@ -14,8 +14,7 @@ import           Control.Exception              (AsyncException, fromException,
 import           Control.Monad                  (forever, void, when)
 import           System.Directory               (canonicalizePath)
 import           System.FilePath                (pathSeparators)
-import           System.FSNotify                (Event (..), startManager,
-                                                 watchTree)
+import qualified System.FSNotify                as FSNotify
 
 #ifdef mingw32_HOST_OS
 import           Control.Concurrent             (threadDelay)
@@ -44,12 +43,12 @@ watchUpdates conf update = do
     shouldBuild     <- newEmptyMVar
     pattern         <- update
     fullProviderDir <- canonicalizePath $ providerDirectory conf
-    manager         <- startManager
+    manager         <- FSNotify.startManager
 
     let allowed event = do
             -- Absolute path of the changed file. This must be inside provider
             -- dir, since that's the only dir we're watching.
-            let path       = eventPath event
+            let path       = FSNotify.eventPath event
                 relative   = dropWhile (`elem` pathSeparators) $
                     drop (length fullProviderDir) path
                 identifier = fromFilePath relative
@@ -69,7 +68,7 @@ watchUpdates conf update = do
 
     -- Send an event whenever something occurs so that the thread described
     -- above will do a build.
-    void $ watchTree manager providerDir (not . isRemove) $ \event -> do
+    void $ FSNotify.watchTree manager providerDir (not . isRemove) $ \event -> do
         allowed' <- allowed event
         when allowed' $ void $ tryPutMVar shouldBuild event
   where
@@ -77,7 +76,7 @@ watchUpdates conf update = do
     update' _     _        = void update
 #else
     update' event provider = do
-        let path = provider </> eventPath event
+        let path = provider </> FSNotify.eventPath event
         -- on windows, a 'Modified' event is also sent on file deletion
         fileExists <- doesFileExist path
 
@@ -105,15 +104,6 @@ watchUpdates conf update = do
 
 
 --------------------------------------------------------------------------------
-eventPath :: Event -> FilePath
-eventPath evt = evtPath evt
-  where
-    evtPath (Added p _)    = p
-    evtPath (Modified p _) = p
-    evtPath (Removed p _)  = p
-
-
---------------------------------------------------------------------------------
-isRemove :: Event -> Bool
-isRemove (Removed _ _) = True
-isRemove _             = False
+isRemove :: FSNotify.Event -> Bool
+isRemove (FSNotify.Removed {}) = True
+isRemove _                     = False

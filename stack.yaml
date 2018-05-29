@@ -1,4 +1,4 @@
-resolver: lts-11.5
+resolver: lts-11.7
 extra-package-dbs: []
 
 flags:
@@ -26,3 +26,5 @@ extra-deps:
 - 'pandoc-2.2'
 - 'pandoc-types-1.17.4.2'
 - 'pandoc-citeproc-0.14.3.1'
+- 'tasty-1.1.0.1'
+- 'fsnotify-0.3.0.0'
