@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.3.0 (2018-05-29)
+
+- Bump tasty to 1.1
+- Bump fsnotify to 0.3
+
 ## Hakyll 4.12.2.0
 
 - Bump pandoc to 2.2
