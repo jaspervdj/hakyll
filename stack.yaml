@@ -1,5 +1,6 @@
 resolver: lts-11.7
 extra-package-dbs: []
+save-hackage-creds: false
 
 flags:
   hakyll:
