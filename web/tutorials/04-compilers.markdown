@@ -92,7 +92,7 @@ And `$title$` like this:
 titleContext :: Context a
 titleContext = field "title" $ \item -> do
     metadata <- getMetadata (itemIdentifier item)
-    return $ fromMaybe "No title" $ M.lookup "title" metadata
+    return $ fromMaybe "No title" $ lookupString "title" metadata
 ```
 
 And compose them using the `Monoid` instance:
