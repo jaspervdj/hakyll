@@ -180,6 +180,8 @@ directly with the default Hakyll site.
   [source](https://github.com/bendo/bendo.github.io)
 - <http://adarsh.cc/>,
   [source](https://github.com/adarshp/adarsh.cc)
+- <http://zer0.degree/>,
+  [source](https://github.com/arrchhy/zer0.degree)
 
 ## Hakyll 3.X
 
