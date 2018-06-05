@@ -182,6 +182,8 @@ directly with the default Hakyll site.
   [source](https://github.com/adarshp/adarsh.cc)
 - <http://zer0.degree/>,
   [source](https://github.com/arrchhy/zer0.degree)
+- <https://nasy.moe/>,
+  [source](https://github.com/nasyxx/nasyxx.github.io)
 
 ## Hakyll 3.X
 
