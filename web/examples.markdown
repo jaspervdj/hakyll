@@ -86,8 +86,8 @@ directly with the default Hakyll site.
   [source](https://github.com/plaimi/www)
 - <http://duplode.github.io/>,
   [source](https://github.com/duplode/duplode.github.io/tree/sources)
-- <http://maseek.codes>,
-  [source](https://github.com/maseek/maseek-codes)
+- <https://tzemanovic.github.io>,
+  [source](https://github.com/tzemanovic/tzemanovic)
 - <http://listx.github.io>,
   [source](https://github.com/listx/listx_blog)
 - <http://kyle.marek-spartz.org>,
