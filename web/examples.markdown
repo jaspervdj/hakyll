@@ -68,16 +68,10 @@ directly with the default Hakyll site.
   [source](https://github.com/walkie/WebPage)
 - <http://techblog.rosedu.org/>,
   [source](https://github.com/rosedu/techblog)
-- <http://abizern.org>,
-  [source](https://github.com/Abizern/hblog)
 - <http://freizl.github.io>,
   [source](https://github.com/freizl/freizl.github.com/tree/master/build)
-- <http://covariant.me>,
-  [source](http://hub.darcs.net/co-dan/website)
 - <http://www.gwern.net/>,
   [source](https://github.com/gwern/gwern.net)
-- <http://www.rohanjain.in/>,
-  [source](https://github.com/crodjer/rohanjain.in)
 - <http://www.corentindupont.info/>,
   [source](https://github.com/cdupont/CorentinDupont-WebPage)
 - <http://jelv.is>,
@@ -86,8 +80,8 @@ directly with the default Hakyll site.
   [source](https://github.com/plaimi/www)
 - <http://duplode.github.io/>,
   [source](https://github.com/duplode/duplode.github.io/tree/sources)
-- <http://maseek.codes>,
-  [source](https://github.com/maseek/maseek-codes)
+- <http://tzemanovic.github.io/>,
+  [source](https://github.com/tzemanovic/tzemanovic)
 - <http://listx.github.io>,
   [source](https://github.com/listx/listx_blog)
 - <http://kyle.marek-spartz.org>,
@@ -98,13 +92,11 @@ directly with the default Hakyll site.
   [source](https://github.com/rbros/reichertbrothers.com)
 - <http://alemedeiros.sdf.org>,
   [source](https://github.com/alemedeiros/homepage)
-- <https://ruudvanasseldonk.com/>,
-  [source](https://github.com/ruud-v-a/ruudvanasseldonk.com)
 - <http://www.haskell.mn>,
   [source](https://github.com/HaskellMN/www.haskell.mn)
 - <https://axiomatic.neophilus.net/>,
   [source](https://github.com/Libbum/AxiomaticSemantics)
-- <https://tesser.org/>,
+- [https://tesser.org/](http://web.archive.org/web/20161022221713/https://tesser.org/),
   [source](https://github.com/fractalcat/tesser.org)
 - <https://wei2912.github.io/>,
   [source](https://github.com/wei2912/blog_src)
@@ -114,10 +106,6 @@ directly with the default Hakyll site.
   [source](https://github.com/gislik/gisli.hamstur.is)
 - <http://blog.ssanj.net/>,
   [source](https://github.com/ssanj/babyloncandle)
-- <https://rockymadden.com/>,
-  [source](https://github.com/rockymadden/rockymadden-web)
-- <http://blog.dshevchenko.biz/>,
-  [source](https://github.com/denisshevchenko/blog)
 - <http://ruhaskell.org/>,
   [source](https://github.com/ruHaskell/ruhaskell)
 - <http://www.haskell.od.ua/>,
@@ -138,8 +126,6 @@ directly with the default Hakyll site.
   [source](https://github.com/ismailmustafa/ismailmustafa.github.io/tree/hakyll)
 - <http://lettier.github.io/>,
   [source](https://github.com/lettier/lettier.github.io)
-- <http://jozefg.bitbucket.org/>,
-  [source](https://github.com/jozefg/blog)
 - <http://raindev.io>,
   [source](https://github.com/raindev/raindev.github.io)
 - <http://hal2016.haskell.org/>,
