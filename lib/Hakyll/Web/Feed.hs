@@ -41,6 +41,8 @@ import qualified Data.Text.Encoding          as T
 
 
 --------------------------------------------------------------------------------
+#if !defined(mingw32_HOST_OS)
+
 rssTemplate :: String
 rssTemplate = T.unpack $
     T.decodeUtf8 $(makeRelativeToProject "data/templates/rss.xml" >>= embedFile)
@@ -56,6 +58,26 @@ atomTemplate = T.unpack $
 atomItemTemplate :: String
 atomItemTemplate = T.unpack $
     T.decodeUtf8 $(makeRelativeToProject "data/templates/atom-item.xml" >>= embedFile)
+
+#else
+
+rssTemplate :: String
+rssTemplate = T.unpack $
+    T.decodeUtf8 $(makeRelativeToProject "data\\templates\\rss.xml" >>= embedFile)
+
+rssItemTemplate :: String
+rssItemTemplate = T.unpack $
+    T.decodeUtf8 $(makeRelativeToProject "data\\templates\\rss-item.xml" >>= embedFile)
+
+atomTemplate :: String
+atomTemplate = T.unpack $
+    T.decodeUtf8 $(makeRelativeToProject "data\\templates\\atom.xml" >>= embedFile)
+
+atomItemTemplate :: String
+atomItemTemplate = T.unpack $
+    T.decodeUtf8 $(makeRelativeToProject "data\\templates\\atom-item.xml" >>= embedFile)
+
+#endif
 
 --------------------------------------------------------------------------------
 -- | This is a data structure to keep the configuration of a feed.
