@@ -21,7 +21,8 @@ module Hakyll.Core.Identifier
 --------------------------------------------------------------------------------
 import           Control.DeepSeq     (NFData (..))
 import           Data.List           (intercalate)
-import           System.FilePath     (dropTrailingPathSeparator, splitPath)
+import           System.FilePath     (dropTrailingPathSeparator, splitPath,
+                                      pathSeparator)
 
 
 --------------------------------------------------------------------------------
@@ -72,7 +73,9 @@ fromFilePath = Identifier Nothing .
 --------------------------------------------------------------------------------
 -- | Convert an identifier to a relative 'FilePath'
 toFilePath :: Identifier -> FilePath
-toFilePath = identifierPath
+toFilePath = intercalate [pathSeparator] . split' . identifierPath
+  where
+    split' = map dropTrailingPathSeparator . splitPath
 
 
 --------------------------------------------------------------------------------
