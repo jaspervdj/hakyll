@@ -151,7 +151,7 @@ Control flow in templates
 -------------------------
 
 Sometimes string interpolation does not suffice, and you want a little more
-control over how your templates are layed out. Hakyll provides a few control
+control over how your templates are laid out. Hakyll provides a few control
 structures for this. The syntax for these structures was based on the syntax
 used in pandoc templates, since Hakyll already has tight integration with
 pandoc.
