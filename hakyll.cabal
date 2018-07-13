@@ -187,7 +187,7 @@ Library
     time-locale-compat   >= 0.1      && < 0.2,
     unordered-containers >= 0.2      && < 0.3,
     vector               >= 0.11     && < 0.13,
-    yaml                 >= 0.8.11   && < 0.9,
+    yaml                 >= 0.8.11   && < 0.10,
     optparse-applicative >= 0.12     && < 0.15,
     file-embed           >= 0.0.10.1 && < 0.0.11
 
@@ -270,7 +270,7 @@ Test-suite hakyll-tests
     filepath             >= 1.0      && < 1.5,
     text                 >= 0.11     && < 1.3,
     unordered-containers >= 0.2      && < 0.3,
-    yaml                 >= 0.8.11   && < 0.9
+    yaml                 >= 0.8.11   && < 0.10
 
   If flag(previewServer)
     Cpp-options:
