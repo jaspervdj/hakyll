@@ -22,6 +22,8 @@ module Hakyll.Web.Feed
     ( FeedConfiguration (..)
     , renderRss
     , renderAtom
+    , renderRssWithTemplates
+    , renderAtomWithTemplates
     ) where
 
 
@@ -126,14 +128,40 @@ renderFeed defFeed defItem config itemContext items = do
 
 
 --------------------------------------------------------------------------------
+-- | Render an RSS feed using given templates with a number of items.
+renderRssWithTemplates ::
+       String                  -- ^ Feed template
+    -> String                  -- ^ Item template
+    -> FeedConfiguration       -- ^ Feed configuration
+    -> Context String          -- ^ Item context
+    -> [Item String]           -- ^ Feed items
+    -> Compiler (Item String)  -- ^ Resulting feed
+renderRssWithTemplates feedTemplate itemTemplate config context = renderFeed
+    feedTemplate itemTemplate config
+    (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
+
+
+--------------------------------------------------------------------------------
+-- | Render an Atom feed using given templates with a number of items.
+renderAtomWithTemplates ::
+       String                  -- ^ Feed template
+    -> String                  -- ^ Item template
+    -> FeedConfiguration       -- ^ Feed configuration
+    -> Context String          -- ^ Item context
+    -> [Item String]           -- ^ Feed items
+    -> Compiler (Item String)  -- ^ Resulting feed
+renderAtomWithTemplates feedTemplate itemTemplate config context = renderFeed
+    feedTemplate itemTemplate config
+    (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
+
+
+--------------------------------------------------------------------------------
 -- | Render an RSS feed with a number of items.
 renderRss :: FeedConfiguration       -- ^ Feed configuration
           -> Context String          -- ^ Item context
           -> [Item String]           -- ^ Feed items
           -> Compiler (Item String)  -- ^ Resulting feed
-renderRss config context = renderFeed
-    rssTemplate rssItemTemplate config
-    (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
+renderRss = renderRssWithTemplates rssTemplate rssItemTemplate
 
 
 --------------------------------------------------------------------------------
@@ -142,9 +170,7 @@ renderAtom :: FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Item context
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
-renderAtom config context = renderFeed
-    atomTemplate atomItemTemplate config
-    (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
+renderAtom = renderAtomWithTemplates atomTemplate atomItemTemplate
 
 
 --------------------------------------------------------------------------------
