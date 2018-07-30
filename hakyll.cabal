@@ -189,7 +189,7 @@ Library
     vector               >= 0.11     && < 0.13,
     yaml                 >= 0.8.11   && < 0.10,
     optparse-applicative >= 0.12     && < 0.15,
-    file-embed           >= 0.0.10.1 && < 0.0.11
+    file-embed           >= 0.0.10.1 && < 0.0.12
 
   If flag(previewServer)
     Build-depends:
