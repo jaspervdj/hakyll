@@ -17,7 +17,7 @@ different distributions. For installation from source (i.e. via Hackage),
 Linux distro packages:
 
 - [Debian unstable](http://packages.debian.org/source/sid/haskell-hakyll)
-- [Fedora](https://apps.fedoraproject.org/packages/ghc-hakyll-devel)
+- [Fedora](https://apps.fedoraproject.org/packages/ghc-hakyll)
 
 Building the example site
 -------------------------
