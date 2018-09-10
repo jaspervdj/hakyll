@@ -17,6 +17,7 @@ module Hakyll
     , module Hakyll.Core.Writable
     , module Hakyll.Main
     , module Hakyll.Web.CompressCss
+    , module Hakyll.Web.CompressJpg
     , module Hakyll.Web.Feed
     , module Hakyll.Web.Html
     , module Hakyll.Web.Html.RelativizeUrls
@@ -50,6 +51,7 @@ import           Hakyll.Core.Util.String
 import           Hakyll.Core.Writable
 import           Hakyll.Main
 import           Hakyll.Web.CompressCss
+import           Hakyll.Web.CompressJpg
 import           Hakyll.Web.Feed
 import           Hakyll.Web.Html
 import           Hakyll.Web.Html.RelativizeUrls

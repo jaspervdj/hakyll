@@ -62,6 +62,7 @@ Extra-source-files:
   tests/data/example.md
   tests/data/example.md.metadata
   tests/data/images/favicon.ico
+  tests/data/images/piccolo.jpg
   tests/data/just-meta.html
   tests/data/just-meta.html.out
   tests/data/partial-helper.html
@@ -135,6 +136,7 @@ Library
     Hakyll.Core.Writable
     Hakyll.Main
     Hakyll.Web.CompressCss
+    Hakyll.Web.CompressJpg
     Hakyll.Web.Feed
     Hakyll.Web.Html
     Hakyll.Web.Html.RelativizeUrls
@@ -172,6 +174,7 @@ Library
     deepseq              >= 1.3      && < 1.5,
     directory            >= 1.0      && < 1.4,
     filepath             >= 1.0      && < 1.5,
+    JuicyPixels          >= 3        && < 4,
     lrucache             >= 1.1.1    && < 1.3,
     mtl                  >= 1        && < 2.3,
     network-uri          >= 2.6      && < 2.7,
