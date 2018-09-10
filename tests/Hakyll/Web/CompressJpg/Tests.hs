@@ -6,13 +6,13 @@ module Hakyll.Web.CompressJpg.Tests
 
 --------------------------------------------------------------------------------
 import           Test.Tasty             (TestTree, testGroup)
-import           Test.Tasty.HUnit       ((@=?), assertBool, Assertion)
+import           Test.Tasty.HUnit       (Assertion, assertBool)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Web.CompressJpg
-import           TestSuite.Util
-import qualified Data.ByteString.Lazy as B
+import           TestSuite.Util         (fromAssertions)
+import qualified Data.ByteString.Lazy   as B
 
 
 testJpg :: IO B.ByteString 
@@ -31,4 +31,6 @@ testCompressionFromImage = do
 --------------------------------------------------------------------------------
 tests :: TestTree
 tests = testGroup "Hakyll.Web.CompressJpg.Tests" $ concat
-   [ fromAssertions "compressJpg" [testCompressionFromImage] ]
+   [ fromAssertions "compressJpg" 
+        [ testCompressionFromImage ] 
+    ]
