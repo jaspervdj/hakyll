@@ -4,6 +4,14 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.4.0 (2018-08-13)
+
+- Bump yaml to 0.10
+- Bump file-embed to 0.0.11
+- Bump QuickCheck to 2.12
+- Use makeRelativeToProject with embedFile for stack ghci (contribution by
+  Michael Sloan)
+
 ## Hakyll 4.12.3.0 (2018-05-29)
 
 - Bump tasty to 1.1
