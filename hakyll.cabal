@@ -254,6 +254,7 @@ Test-suite hakyll-tests
     Hakyll.Core.UnixFilter.Tests
     Hakyll.Core.Util.String.Tests
     Hakyll.Web.CompressCss.Tests
+    Hakyll.Web.CompressJpg.Tests
     Hakyll.Web.Html.RelativizeUrls.Tests
     Hakyll.Web.Html.Tests
     Hakyll.Web.Template.Context.Tests
