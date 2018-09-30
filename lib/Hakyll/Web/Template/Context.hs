@@ -50,7 +50,7 @@ import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Util.String       (needlePrefix, splitAll)
 import           Hakyll.Web.Html
-import           System.FilePath               (splitDirectories, takeBaseName)
+import           System.FilePath               (splitDirectories, takeBaseName, dropExtension)
 
 
 --------------------------------------------------------------------------------
@@ -300,7 +300,7 @@ getItemUTC :: MonadMetadata m
 getItemUTC locale id' = do
     metadata <- getMetadata id'
     let tryField k fmt = lookupString k metadata >>= parseTime' fmt
-        paths          = splitDirectories $ toFilePath id'
+        paths          = splitDirectories $ (dropExtension . toFilePath) id'
 
     maybe empty' return $ msum $
         [tryField "published" fmt | fmt <- formats] ++
