@@ -41,6 +41,10 @@ testDateField = do
             dateField "date" "%B %e, %Y"
     date2 @=? "August 26, 2010"
 
+    date3 <- testContextDone store provider
+        "posts/2018-09-26.md" "date" $
+            dateField "date" "%B %e, %Y"
+    date3 @=? "September 26, 2018"
     cleanTestEnv
 
 
