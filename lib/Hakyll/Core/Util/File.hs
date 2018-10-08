@@ -12,7 +12,7 @@ import           Control.Monad       (filterM, forM, when)
 import           System.Directory    (createDirectoryIfMissing,
                                       doesDirectoryExist, getDirectoryContents,
                                       removeDirectoryRecursive)
-import           System.FilePath     (takeBaseName,takeDirectory, (</>))
+import           System.FilePath     (takeDirectory, (</>))
 
 
 --------------------------------------------------------------------------------
@@ -29,16 +29,16 @@ getRecursiveContents :: (FilePath -> IO Bool)  -- ^ Ignore this file/directory
                      -> IO [FilePath]          -- ^ List of files found
 getRecursiveContents ignore top = go ""
   where
-    isProper x
-        | (takeBaseName x) `elem` [".", ".."] = return False
-        | otherwise            = not <$> ignore x
+    isProper dir x
+        | x `elem` [".", ".."] = return False
+        | otherwise            = not <$> ignore (dir </> x)
 
     go dir     = do
         dirExists <- doesDirectoryExist (top </> dir)
         if not dirExists
             then return []
             else do
-                names <- filterM (isProper . (dir </>)) =<< getDirectoryContents (top </> dir)
+                names <- filterM (isProper dir) =<< getDirectoryContents (top </> dir)
                 paths <- forM names $ \name -> do
                     let rel = dir </> name
                     isDirectory <- doesDirectoryExist (top </> rel)
