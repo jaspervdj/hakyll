@@ -12,7 +12,7 @@ import           Control.Monad       (filterM, forM, when)
 import           System.Directory    (createDirectoryIfMissing,
                                       doesDirectoryExist, getDirectoryContents,
                                       removeDirectoryRecursive)
-import           System.FilePath     (takeDirectory, (</>))
+import           System.FilePath     (takeBaseName,takeDirectory, (</>))
 
 
 --------------------------------------------------------------------------------
