@@ -38,7 +38,7 @@ getRecursiveContents ignore top = go ""
         if not dirExists
             then return []
             else do
-                names <- filterM (isProper . (top </> dir </>)) =<< getDirectoryContents (top </> dir)
+                names <- filterM (isProper . (dir </>)) =<< getDirectoryContents (top </> dir)
                 paths <- forM names $ \name -> do
                     let rel = dir </> name
                     isDirectory <- doesDirectoryExist (top </> rel)
