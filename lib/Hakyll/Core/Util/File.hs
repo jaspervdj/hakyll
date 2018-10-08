@@ -30,7 +30,7 @@ getRecursiveContents :: (FilePath -> IO Bool)  -- ^ Ignore this file/directory
 getRecursiveContents ignore top = go ""
   where
     isProper x
-        | x `elem` [".", ".."] = return False
+        | (takeBaseName x) `elem` [".", ".."] = return False
         | otherwise            = not <$> ignore x
 
     go dir     = do
