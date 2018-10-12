@@ -62,7 +62,7 @@ instance Show Identifier where
 
 --------------------------------------------------------------------------------
 -- | Parse an identifier from a string
-fromFilePath :: String -> Identifier
+fromFilePath :: FilePath -> Identifier
 fromFilePath = Identifier Nothing .
     intercalate "/" . filter (not . null) . split'
   where
