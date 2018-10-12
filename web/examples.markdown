@@ -45,7 +45,7 @@ directly with the default Hakyll site.
 - <http://www.regisfoucault.com/>,
   [source](https://github.com/regisfoucault/blog)
 - <http://www.chaoxuprime.com/>,
-  [source](https://github.com/Mgccl/blog)
+  [source](https://github.com/chaoxu/chaoxu.github.io/tree/develop)
 - <http://www.skybluetrades.net/>,
   [source](https://github.com/ian-ross/blog)
 - <http://chromaticleaves.com/>,
@@ -170,6 +170,12 @@ directly with the default Hakyll site.
   [source](https://github.com/arrchhy/zer0.degree)
 - <https://nasy.moe/>,
   [source](https://github.com/nasyxx/nasyxx.github.io)
+- <http://uniprocess.org/>,
+  [source](https://gitlab.com/uniprocess/uniprocess.org)
+- <https://regularflolloping.com/>,
+  [source](https://github.com/techieAgnostic/rf)
+- <http://enter-haken.github.io/>,
+  [source](https://github.com/enter-haken/blog)
 
 ## Hakyll 3.X
 
