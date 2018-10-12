@@ -67,7 +67,7 @@ unixFilterError = do
     provider <- newTestProvider store
     result   <- testCompiler store provider testMarkdown compiler
     case result of
-        CompilerError es -> True H.@=? any ("invalid option" `isInfixOf`) es
+        CompilerError es -> True H.@=? any ("illegal option" `isInfixOf`) es
         _                -> H.assertFailure "Expecting CompilerError"
     cleanTestEnv
   where
