@@ -67,8 +67,10 @@ unixFilterError = do
     provider <- newTestProvider store
     result   <- testCompiler store provider testMarkdown compiler
     case result of
-        CompilerError es -> True H.@=? any ("illegal option" `isInfixOf`) es
+        CompilerError es -> True H.@=? any containsIncorrectOptionMessage es
         _                -> H.assertFailure "Expecting CompilerError"
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "head" ["-#"])
+    incorrectOptionMessages = ["invalid option", "illegal option"]
+    containsIncorrectOptionMessage output = any (`isInfixOf` output) incorrectOptionMessages
