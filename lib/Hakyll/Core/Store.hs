@@ -27,6 +27,7 @@ import           Data.Maybe           (isJust)
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as T
 import           Data.Typeable        (TypeRep, Typeable, cast, typeOf)
+import           Numeric              (showHex)
 import           System.Directory     (createDirectoryIfMissing)
 import           System.Directory     (doesFileExist, removeFile)
 import           System.FilePath      ((</>))
@@ -193,5 +194,8 @@ deleteFile = handle (\(_ :: IOException) -> return ()) . removeFile
 --------------------------------------------------------------------------------
 -- | Mostly meant for internal usage
 hash :: [String] -> String
-hash = concatMap (printf "%02x") . B.unpack .
-    MD5.hash . T.encodeUtf8 . T.pack . intercalate "/"
+hash = toHex . B.unpack . MD5.hash . T.encodeUtf8 . T.pack . intercalate "/"
+  where
+    toHex [] = ""
+    toHex (x : xs) | x < 16 = '0' : showHex x (toHex xs)
+                   | otherwise = showHex x (toHex xs)
