@@ -187,7 +187,7 @@ Library
     time-locale-compat   >= 0.1      && < 0.2,
     unordered-containers >= 0.2      && < 0.3,
     vector               >= 0.11     && < 0.13,
-    yaml                 >= 0.8.11   && < 0.11,
+    yaml                 >= 0.8.11   && < 0.12,
     optparse-applicative >= 0.12     && < 0.15,
     file-embed           >= 0.0.10.1 && < 0.0.12
 
@@ -227,8 +227,8 @@ Library
     Other-Modules:
       Hakyll.Web.Pandoc.Binary
     Build-Depends:
-      pandoc          >= 2.0.5    && < 2.3,
-      pandoc-citeproc >= 0.14     && < 0.15
+      pandoc          >= 2.0.5    && < 2.5,
+      pandoc-citeproc >= 0.14     && < 0.16
     Cpp-options:
       -DUSE_PANDOC
 
@@ -270,7 +270,7 @@ Test-suite hakyll-tests
     filepath             >= 1.0      && < 1.5,
     text                 >= 0.11     && < 1.3,
     unordered-containers >= 0.2      && < 0.3,
-    yaml                 >= 0.8.11   && < 0.11
+    yaml                 >= 0.8.11   && < 0.12
 
   If flag(previewServer)
     Cpp-options:
@@ -321,4 +321,4 @@ Executable hakyll-website
     base      >= 4     && < 5,
     directory >= 1.0   && < 1.4,
     filepath  >= 1.0   && < 1.5,
-    pandoc    >= 2.0.5 && < 2.3
+    pandoc    >= 2.0.5 && < 2.5
