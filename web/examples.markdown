@@ -176,6 +176,8 @@ directly with the default Hakyll site.
   [source](https://github.com/techieAgnostic/rf)
 - <http://enter-haken.github.io/>,
   [source](https://github.com/enter-haken/blog)
+- <https://modular.blind.guru/>,
+  [source](https://github.com/mlang/eurorack-metadata)
 
 ## Hakyll 3.X
 
