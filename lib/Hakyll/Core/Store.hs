@@ -32,7 +32,6 @@ import           System.Directory     (createDirectoryIfMissing)
 import           System.Directory     (doesFileExist, removeFile)
 import           System.FilePath      ((</>))
 import           System.IO            (IOMode (..), hClose, openFile)
-import           Text.Printf          (printf)
 
 
 --------------------------------------------------------------------------------
