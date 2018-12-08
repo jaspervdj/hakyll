@@ -43,6 +43,7 @@
 module Hakyll.Web.Tags
     ( Tags (..)
     , getTags
+    , getCategory
     , buildTagsWith
     , buildTags
     , buildCategories
