@@ -177,4 +177,4 @@ renderAtom = renderAtomWithTemplates atomTemplate atomItemTemplate
 -- | Copies @$updated$@ from @$published$@ if it is not already set.
 makeItemContext :: String -> Context a -> Context a
 makeItemContext fmt context = mconcat
-    [dateField "published" fmt, context, dateField "updated" fmt]
+    [context, dateField "published" fmt, dateField "updated" fmt]
