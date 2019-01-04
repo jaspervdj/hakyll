@@ -33,6 +33,7 @@ import           Control.Applicative            (Alternative (..))
 import           Control.Exception              (SomeException, handle)
 import           Control.Monad                  (forM_)
 import           Control.Monad.Except            (MonadError (..))
+import           Control.Monad.Fail
 #if MIN_VERSION_base(4,9,0)
 import           Data.Semigroup                 (Semigroup (..))
 #endif
@@ -156,9 +157,9 @@ instance Monad Compiler where
             CompilerRequire i c'  -> return $ CompilerRequire i (c' >>= f)
     {-# INLINE (>>=) #-}
 
+instance MonadFail Compiler where
     fail = compilerThrow . return
     {-# INLINE fail #-}
-
 
 --------------------------------------------------------------------------------
 instance Applicative Compiler where
