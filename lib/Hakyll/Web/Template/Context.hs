@@ -269,6 +269,12 @@ titleField = mapContext takeBaseName . pathField
 -- that begins with @yyyy-mm-dd@ . For example:
 -- @folder//yyyy-mm-dd-title//dist//main.extension@ .
 -- In case of multiple matches, the rightmost one is used.
+--
+-- As another alternative, if none of the above matches, and the file has a
+-- path which contains nested directories specifying a date, then that date
+-- will be used. In other words, if the path is of the form 
+-- @**//yyyy//mm//dd//**//main.extension@ . 
+-- As above, in case of multiple matches, the rightmost one is used.
 
 dateField :: String     -- ^ Key in which the rendered date should be placed
           -> String     -- ^ Format to use on the date
@@ -306,6 +312,8 @@ getItemUTC locale id' = do
         [tryField "published" fmt | fmt <- formats] ++
         [tryField "date"      fmt | fmt <- formats] ++
         [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fnCand | fnCand <- reverse paths]
+        [parseTime' "%Y-%m-%d" $ intercalate "-" $ fnCand 
+          | fnCand <- takeWhile ((==3) . length) . map (take 3) . iterate (drop 1) $ paths]
   where
     empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
         "could not parse time for " ++ show id'
