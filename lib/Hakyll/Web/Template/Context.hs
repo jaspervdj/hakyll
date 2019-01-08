@@ -313,7 +313,7 @@ getItemUTC locale id' = do
         [tryField "date"      fmt | fmt <- formats] ++
          [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fnCand | fnCand <- reverse paths] ++
         [parseTime' "%Y-%m-%d" $ intercalate "-" $ fnCand 
-          | fnCand <- takeWhile ((==3) . length) . map (take 3) . iterate (drop 1) $ paths]
+          | fnCand <- map (take 3) $ tails paths]
   where
     empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
         "could not parse time for " ++ show id'
