@@ -311,9 +311,8 @@ getItemUTC locale id' = do
     maybe empty' return $ msum $
         [tryField "published" fmt | fmt <- formats] ++
         [tryField "date"      fmt | fmt <- formats] ++
-         [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fnCand | fnCand <- reverse paths] ++
-        [parseTime' "%Y-%m-%d" $ intercalate "-" $ fnCand 
-          | fnCand <- map (take 3) $ tails paths]
+        [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fnCand | fnCand <- reverse paths] ++
+        [parseTime' "%Y-%m-%d" $ intercalate "-" $ fnCand | fnCand <- map (take 3) $ reverse . tails $ paths]
   where
     empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
         "could not parse time for " ++ show id'
