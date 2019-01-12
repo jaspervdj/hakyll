@@ -4,6 +4,24 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.5.0 (2019-01-12)
+
+- Update dependencies (contribution by Hexirp):
+    * Bump containers to 0.6
+    * Bump yaml to 0.11
+    * Bump pandoc to 2.5
+    * Bump pandoc-citeproc to 0.15
+    * Bump tasty to 1.2
+- Correct assertion in unixFilterError test
+  (contribution by Jim McStanton)
+- Add renderRssWithTemplates, renderAtomWithTemplates
+  (contribution by Abhinav Sarkar)
+- Speed up hashing in cache (contribution by 0xd34df00d)
+- Update type of fromFilePath to use FilePath instead of String
+  (contribution by Jim McStanton)
+- Drop extension when parsing dates in filepaths (contribution by
+  Gabriel Aumala)
+
 ## Hakyll 4.12.4.0 (2018-08-13)
 
 - Bump yaml to 0.10
