@@ -6,20 +6,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: 'v2-hakyll-{{ arch }}-{{ .Branch }}'
-      - run:
-          name: 'Update cabal indices'
-          command: 'cabal update'
+          key: 'v3-hakyll-{{ arch }}-{{ .Branch }}'
       - run:
           # We set jobs to 1 here because that prevents Out-Of-Memory exceptions
           # while compiling dependencies.
           name: 'Install dependencies'
-          command: '.circleci/tickle.sh cabal install --only-dependencies --enable-tests --jobs=1 --flags="+buildWebsite"'
-      - run:
-          name: 'Build and run tests'
-          command: 'cabal test'
+          command: '.circleci/tickle.sh stack build --test --copy-bins --jobs=1'
       - save_cache:
-          key: 'v2-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
+          key: 'v3-hakyll-{{ arch }}-{{ .Branch }}-{{ .Revision }}'
           paths:
-            - '~/.cabal'
-            - '~/.ghc'
+            - '~/.stack-work'
+            - '~/.stack'
