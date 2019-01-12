@@ -1,5 +1,4 @@
-resolver: lts-12.14
-compiler: ghc-8.4.2
+resolver: lts-13.0
 save-hackage-creds: false
 
 flags:
@@ -24,12 +23,4 @@ build:
   haddock-deps: false
 
 extra-deps:
-- 'pandoc-2.4'
-- 'pandoc-citeproc-0.15'
-- 'yaml-0.11.0.0'
-
-- 'libyaml-0.1.0.0'
-- 'HsYAML-0.1.1.2'
-- 'haddock-library-1.7.0'
-- 'hslua-1.0.1'
-- 'hslua-module-text-0.2.0'
+- 'lrucache-1.2.0.1'
