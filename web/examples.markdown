@@ -166,8 +166,8 @@ directly with the default Hakyll site.
   [source](https://github.com/bendo/bendo.github.io)
 - <http://adarsh.cc/>,
   [source](https://github.com/adarshp/adarsh.cc)
-- <http://zer0.degree/>,
-  [source](https://github.com/arrchhy/zer0.degree)
+- <http://0a.io>,
+  [source](https://github.com/arrchyy/0a.io)
 - <https://nasy.moe/>,
   [source](https://github.com/nasyxx/nasyxx.github.io)
 - <http://uniprocess.org/>,
