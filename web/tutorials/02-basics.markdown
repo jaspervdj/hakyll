@@ -1,6 +1,7 @@
 ---
 title: The basics
 author: Jasper Van der Jeugt
+type: main
 ---
 
 Building and cleaning

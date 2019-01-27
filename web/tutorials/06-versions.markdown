@@ -1,6 +1,7 @@
 ---
 title: Producing multiple versions of a single file
 author: Jasper Van der Jeugt
+type: main
 ---
 
 Basics

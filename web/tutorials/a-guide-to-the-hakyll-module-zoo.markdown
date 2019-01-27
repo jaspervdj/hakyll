@@ -1,6 +1,7 @@
 ---
 title: A Guide to the Hakyll Module Zoo
 author: Brent Yorgey
+type: article
 ---
 
 The hakyll package [contains a bewildering array](/reference/) of modules, and

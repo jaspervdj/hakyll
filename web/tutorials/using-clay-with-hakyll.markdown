@@ -1,6 +1,7 @@
 ---
 title: Using Clay with Hakyll
 author: Jasper Van der Jeugt
+type: article
 ---
 
 [Clay](http://sebastiaanvisser.github.com/clay/) is a nice CSS preprocesser

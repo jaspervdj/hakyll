@@ -1,6 +1,7 @@
 ---
 title: Installation
 author: Jasper Van der Jeugt
+type: main
 ---
 
 Installation

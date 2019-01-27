@@ -1,23 +1,19 @@
 <h1>Tutorials about Hakyll</h1>
 <h2 id="series">Tutorial series</h2>
 <ul>
-    $for(tutorials)$
-        $if(isSeries)$
-            <li>
-                <a href="$url$">$title$</a>
-            </li>
-        $endif$
+    $for(main)$
+        <li>
+            <a href="$url$">$title$</a>
+        </li>
     $endfor$
 </ul>
 <h2 id="articles">Other articles</h2>
 <p>In no particular order:</p>
 <ul>
-    $for(tutorials)$
-        $if(isArticle)$
-            <li>
-                <a href="$url$">$title$</a> by <em>$author$</em>
-            </li>
-        $endif$
+    $for(articles)$
+        <li>
+            <a href="$url$">$title$</a> by <em>$author$</em>
+        </li>
     $endfor$
 </ul>
 <h2 id="external-articles">External articles</h2>
@@ -28,12 +24,10 @@
 </p>
 <p>In no particular order:</p>
 <ul>
-    $for(tutorials)$
-        $if(isExternal)$
-            <li>
-                <a href="$url$">$title$</a> by <em>$author$</em>
-            </li>
-        $endif$
+    $for(externals)$
+        <li>
+            <a href="$url$">$title$</a> by <em>$author$</em>
+        </li>
     $endfor$
 </ul>
 <p>
