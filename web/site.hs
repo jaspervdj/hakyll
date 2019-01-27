@@ -105,10 +105,11 @@ hackage url
 -- | Partition tutorials into tutorial series, other articles, external articles
 tutorialsCtx :: [Item String] -> Context String
 tutorialsCtx tuts =
-    constField "title" "Tutorials"                           <>
-    listField "main"      defaultContext (ofType "main")     <>
-    listField "articles"  defaultContext (ofType "article")  <>
-    listField "externals" defaultContext (ofType "external") <>
+    constField "title" "Tutorials"                                    <>
+    listField "main"          defaultContext (ofType "main")          <>
+    listField "articles"      defaultContext (ofType "article")       <>
+    listField "externals"     defaultContext (ofType "external")      <>
+    listField "robertwpearce" defaultContext (ofType "robertwpearce") <>
     defaultContext
   where
     ofType ty = filterM (\item -> do
