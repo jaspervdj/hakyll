@@ -68,6 +68,7 @@ Extra-source-files:
   tests/data/partial.html
   tests/data/partial.html.out
   tests/data/posts/2010-08-26-birthday.md
+  tests/data/posts/2018-09-26.md
   tests/data/russian.md
   tests/data/strip.html
   tests/data/strip.html.out
