@@ -24,3 +24,6 @@ build:
 
 extra-deps:
 - 'lrucache-1.2.0.1'
+- 'pandoc-2.6'
+- 'pandoc-citeproc-0.16'
+- 'ipynb-0.1'
