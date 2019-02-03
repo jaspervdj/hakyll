@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.5.1 (2019-02-03)
+
+- Bump pandoc to 2.6
+- Bump pandoc-citeproc to 0.16
+
 ## Hakyll 4.12.5.0 (2019-01-12)
 
 - Update dependencies (contribution by Hexirp):
