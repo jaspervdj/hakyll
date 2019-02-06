@@ -25,7 +25,7 @@ import           TestSuite.Util
 
 --------------------------------------------------------------------------------
 tests :: TestTree
-tests = testGroup "Hakyll.Core.Template.Tests" $ concat
+tests = testGroup "Hakyll.Web.Template.Tests" $ concat
     [ [ testCase "case01" $ test ("template.html.out", "template.html", "example.md")
       , testCase "case02" $ test ("strip.html.out", "strip.html", "example.md")
       , testCase "case03" $ test ("just-meta.html.out", "just-meta.html", "example.md")

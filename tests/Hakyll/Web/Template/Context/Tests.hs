@@ -21,7 +21,7 @@ import           TestSuite.Util
 
 --------------------------------------------------------------------------------
 tests :: TestTree
-tests = testGroup "Hakyll.Core.Template.Context.Tests"
+tests = testGroup "Hakyll.Web.Template.Context.Tests"
     [ testCase "testDateField" testDateField
     ]
 
