@@ -27,7 +27,7 @@ Apart from the main Hakyll library, the cabal package also provides you with an
 executable `hakyll-init` to create an example site. This is an easy way to get
 started:
 
-    $ hakyll-init my-site
+    $ stack exec hakyll-init my-site
 
 This creates a folder `my-site` in the current directory, with some example
 content and a generic configuration.
