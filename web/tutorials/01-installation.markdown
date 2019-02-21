@@ -19,6 +19,7 @@ Linux distro packages:
 
 - [Debian unstable](http://packages.debian.org/source/sid/haskell-hakyll)
 - [Fedora](https://apps.fedoraproject.org/packages/ghc-hakyll)
+- [Nix](https://nixos.org/nixos/packages.html#hakyll): `$ nix-env -i hakyll` 
 
 Building the example site
 -------------------------
