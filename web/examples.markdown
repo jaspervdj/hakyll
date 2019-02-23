@@ -68,6 +68,8 @@ directly with the default Hakyll site.
   [source](https://github.com/walkie/WebPage)
 - <http://techblog.rosedu.org/>,
   [source](https://github.com/rosedu/techblog)
+- <https://abhinavsarkar.net/>,
+  [source](https://github.com/abhin4v/abhin4v.github.io)
 - <http://freizl.github.io>,
   [source](https://github.com/freizl/freizl.github.com/tree/master/build)
 - <http://www.gwern.net/>,
