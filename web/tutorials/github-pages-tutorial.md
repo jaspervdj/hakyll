@@ -90,6 +90,27 @@ Update the local list of remote branches to ensure we're able to checkout the br
 git fetch --all
 ```
 
+### Deployment Using ```git-commit-filetree```
+
+The [`git-commit-filetree`](https://github.com/cynic-net/git-commit-filetree) command automates the process of committing the files for your compiled site to another branch in the current repo. This replaces all steps after the post-build branch update (```git fetch --all``` above).
+
+You can use the [```bin/git-commit-filetree```](https://github.com/cynic-net/git-commit-filetree/blob/master/bin/git-commit-filetree) script by putting it in any directory in your ```$PATH``` (e.g., ```~/.local/bin```) or by specifying the full path to it when you run it. Here we suggest simply copying that file to the root of the ```develop``` branch in your repo and commiting it so that it's always available to anybody using the repo.
+
+If you do not already have a local ```master``` branch in your repo, you will need to create one. This needs to be done only once in a repo. (If you have not done this, you will later see a message ```Invalid ref: refs/heads/master``` from ```git-commit-filetree```.)
+
+```
+git branch master --track origin/master
+```
+
+Commit the files you built under ```_site``` to the root of the file tree of the  ```master``` branch and push that branch up to the server. This will entirely replace the file tree, so you need not worry about removing old files manually.
+
+```
+./git-commit-filetree master _site/
+git push origin master:master
+```
+
+### Manual Deployment
+
 Switch to the `master` branch. 
 
 > **Note:** Checking out this branch does not overwrite the files that Hakyll just produced because we have '_site' listed in both .gitignore files.
@@ -144,6 +165,22 @@ stack exec myblog build
 
 # Get previous files
 git fetch --all
+```
+
+### Deployment Using ```git-commit-filetree```
+
+```
+#   The following command is needed only if you have not already created
+#   a local `master` branch. (Running it more than once is harmless.)
+git branch master --track origin/master
+
+./git-commit-filetree master _site/
+git push origin master:master
+```
+
+### Manual Deployment
+
+```
 git checkout -b master --track origin/master
 
 # Overwrite existing files with new files
