@@ -178,6 +178,8 @@ directly with the default Hakyll site.
   [source](https://github.com/enter-haken/blog)
 - <https://modular.blind.guru/>,
   [source](https://github.com/mlang/eurorack-metadata)
+- <http://www.jonashietala.se/>,
+  [source](https://github.com/treeman/jonashietala)
 
 ## Hakyll 3.X
 
