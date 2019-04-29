@@ -169,7 +169,7 @@ directly with the default Hakyll site.
 - <http://0a.io>,
   [source](https://github.com/arrchyy/0a.io)
 - <https://nasy.moe/>,
-  [source](https://github.com/nasyxx/nasyxx.github.io)
+  [source](https://github.com/nasyxx/NasyMoe)
 - <http://uniprocess.org/>,
   [source](https://gitlab.com/uniprocess/uniprocess.org)
 - <https://regularflolloping.com/>,
