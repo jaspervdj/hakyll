@@ -23,7 +23,10 @@ build:
   haddock-deps: false
 
 extra-deps:
-- 'lrucache-1.2.0.1'
-- 'pandoc-2.6'
-- 'pandoc-citeproc-0.16'
 - 'ipynb-0.1'
+- 'lrucache-1.2.0.1'
+- 'pandoc-2.7'
+- 'pandoc-citeproc-0.16.2'
+- 'skylighting-0.7.7'
+- 'skylighting-core-0.7.7'
+- 'texmath-0.11.2.2'
