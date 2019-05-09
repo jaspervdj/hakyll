@@ -4,6 +4,14 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.12.5.2 (2019-05-09)
+
+- Bump pandoc to 2.7
+- Add `srcset` to the list of URL attributes (contribution by c50a326)
+- Expose `getCategory` in `Hakyll.Web.Tags` (contribution by Ng Wei En)
+- Fix issue where `published` overwrites the user's context (contribution by
+  ncaq)
+
 ## Hakyll 4.12.5.1 (2019-02-03)
 
 - Bump pandoc to 2.6
