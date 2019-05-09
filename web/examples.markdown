@@ -180,6 +180,8 @@ directly with the default Hakyll site.
   [source](https://github.com/mlang/eurorack-metadata)
 - <http://www.jonashietala.se/>,
   [source](https://github.com/treeman/jonashietala)
+- <https://abhinavsarkar.net/>,
+  [source](https://github.com/abhin4v/abhin4v.github.io)
 
 ## Hakyll 3.X
 
