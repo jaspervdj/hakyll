@@ -34,7 +34,7 @@ module Hakyll.Web.Template.Context
 --------------------------------------------------------------------------------
 import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
-import           Data.List                     (intercalate)
+import           Data.List                     (intercalate, tails)
 #if MIN_VERSION_base(4,9,0)
 import           Data.Semigroup                (Semigroup (..))
 #endif
