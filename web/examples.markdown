@@ -182,6 +182,8 @@ directly with the default Hakyll site.
   [source](https://github.com/treeman/jonashietala)
 - <https://abhinavsarkar.net/>,
   [source](https://github.com/abhin4v/abhin4v.github.io)
+- <https://dailyreadingnotes.com/>,
+  [source](https://github.com/hackeryarn/daily-reading-notes)
 
 ## Hakyll 3.X
 
