@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.12.4.0
+Version: 4.12.5.2
 
 Synopsis: A static website compiler library
 Description:
@@ -68,6 +68,7 @@ Extra-source-files:
   tests/data/partial.html
   tests/data/partial.html.out
   tests/data/posts/2010-08-26-birthday.md
+  tests/data/posts/2018-09-26.md
   tests/data/russian.md
   tests/data/strip.html
   tests/data/strip.html.out
@@ -166,7 +167,7 @@ Library
     blaze-html           >= 0.5      && < 0.10,
     blaze-markup         >= 0.5.1    && < 0.9,
     bytestring           >= 0.9      && < 0.11,
-    containers           >= 0.3      && < 0.6,
+    containers           >= 0.3      && < 0.7,
     cryptohash           >= 0.7      && < 0.12,
     data-default         >= 0.4      && < 0.8,
     deepseq              >= 1.3      && < 1.5,
@@ -227,8 +228,8 @@ Library
     Other-Modules:
       Hakyll.Web.Pandoc.Binary
     Build-Depends:
-      pandoc          >= 2.0.5    && < 2.5,
-      pandoc-citeproc >= 0.14     && < 0.16
+      pandoc          >= 2.0.5    && < 2.8,
+      pandoc-citeproc >= 0.14     && < 0.17
     Cpp-options:
       -DUSE_PANDOC
 
@@ -260,13 +261,13 @@ Test-suite hakyll-tests
   Build-Depends:
     hakyll,
     QuickCheck                 >= 2.8  && < 2.13,
-    tasty                      >= 0.11 && < 1.2,
+    tasty                      >= 0.11 && < 1.3,
     tasty-hunit                >= 0.9  && < 0.11,
     tasty-quickcheck           >= 0.8  && < 0.11,
     -- Copy pasted from hakyll dependencies:
     base                 >= 4.8      && < 5,
     bytestring           >= 0.9      && < 0.11,
-    containers           >= 0.3      && < 0.6,
+    containers           >= 0.3      && < 0.7,
     filepath             >= 1.0      && < 1.5,
     text                 >= 0.11     && < 1.3,
     unordered-containers >= 0.2      && < 0.3,
@@ -321,4 +322,4 @@ Executable hakyll-website
     base      >= 4     && < 5,
     directory >= 1.0   && < 1.4,
     filepath  >= 1.0   && < 1.5,
-    pandoc    >= 2.0.5 && < 2.5
+    pandoc    >= 2.0.5 && < 2.8

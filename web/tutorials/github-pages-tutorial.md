@@ -1,6 +1,7 @@
 ---
 title: Using Hakyll with GitHub Pages
 author: Erik Stevenson
+type: article
 ---
 
 ## Introduction

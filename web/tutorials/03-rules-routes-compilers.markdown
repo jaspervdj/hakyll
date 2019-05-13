@@ -1,6 +1,7 @@
 ---
 title: Rules, routes and compilers
 author: Jasper Van der Jeugt
+type: main
 ---
 
 Basic rules

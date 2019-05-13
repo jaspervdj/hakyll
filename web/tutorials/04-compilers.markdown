@@ -1,6 +1,7 @@
 ---
 title: 'More on compilers: load, and templates'
 author: Jasper Van der Jeugt
+type: main
 ---
 
 Loading items

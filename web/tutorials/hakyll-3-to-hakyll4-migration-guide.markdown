@@ -1,6 +1,7 @@
 ---
 title: Hakyll 3 to Hakyll 4 migration guide
 author: Jasper Van der Jeugt
+type: article
 ---
 
 Introduction

@@ -1,8 +1,7 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 import           Control.Arrow    (second)
-import           Control.Monad    (forM_)
-import           Data.Char        (isDigit)
+import           Control.Monad    (filterM, forM_)
 import           Data.List        (isPrefixOf, sortBy)
 import           Data.Monoid      ((<>))
 import           Data.Ord         (comparing)
@@ -57,17 +56,11 @@ main = hakyllWith config $ do
     create ["tutorials.html"] $ do
         route idRoute
         compile $ do
-            tuts <-
+            ctx <- tutorialsCtx <$>
                 sortBy (comparing itemIdentifier) <$> loadAll "tutorials/*"
-
-            let tutorialsCtx =
-                    constField "title" "Tutorials"  `mappend`
-                    listField "tutorials"   tutorialCtx (return tuts) `mappend`
-                    defaultContext
-
             makeItem ""
-                >>= loadAndApplyTemplate "templates/tutorials.html" tutorialsCtx
-                >>= loadAndApplyTemplate "templates/default.html" tutorialsCtx
+                >>= loadAndApplyTemplate "templates/tutorials.html" ctx
+                >>= loadAndApplyTemplate "templates/default.html"   ctx
                 >>= relativizeUrls
 
     -- Templates
@@ -109,27 +102,16 @@ hackage url
 
 
 --------------------------------------------------------------------------------
-data TutorialType = SeriesTutorial | ArticlesTutorial | ExternalTutorial
-    deriving (Eq)
-
-
---------------------------------------------------------------------------------
 -- | Partition tutorials into tutorial series, other articles, external articles
-tutorialCtx :: Context String
-tutorialCtx =
-    field "isSeries"   (isTutorialType SeriesTutorial)   <>
-    field "isArticle"  (isTutorialType ArticlesTutorial) <>
-    field "isExternal" (isTutorialType ExternalTutorial) <>
+tutorialsCtx :: [Item String] -> Context String
+tutorialsCtx tuts =
+    constField "title" "Tutorials"                                    <>
+    listField "main"          defaultContext (ofType "main")          <>
+    listField "articles"      defaultContext (ofType "article")       <>
+    listField "externals"     defaultContext (ofType "external")      <>
+    listField "robertwpearce" defaultContext (ofType "robertwpearce") <>
     defaultContext
   where
-    getTutorialType item = do
-        mbExternal <- getMetadataField (itemIdentifier item) "external"
-        return $ case mbExternal of
-            Just _ -> ExternalTutorial
-            _      -> case splitPath (toFilePath $ itemIdentifier item) of
-                [_, (x : _)] -> if isDigit x then SeriesTutorial else ArticlesTutorial
-                _            -> ArticlesTutorial
-
-    isTutorialType ty0 item = do
-        ty1 <- getTutorialType item
-        if ty0 == ty1 then return "yes" else fail "no"
+    ofType ty = filterM (\item -> do
+        mbType <- getMetadataField (itemIdentifier item) "type"
+        return $ Just ty == mbType) tuts

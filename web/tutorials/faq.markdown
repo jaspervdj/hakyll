@@ -1,6 +1,7 @@
 ---
 title: FAQ
 author: Jasper Van der Jeugt
+type: article
 ---
 
 ## "hGetContents: invalid argument" or "commitBuffer: invalid argument"

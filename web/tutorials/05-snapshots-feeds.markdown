@@ -1,6 +1,7 @@
 ---
 title: Snapshots, and how to produce an RSS/Atom feed
 author: Jasper Van der Jeugt
+type: main
 ---
 
 Basic feed configuration

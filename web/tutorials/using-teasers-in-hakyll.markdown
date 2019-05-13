@@ -1,6 +1,7 @@
 ---
 title: Using teasers in Hakyll
 author: Ivan Veselov
+type: article
 ---
 
 ## Introduction

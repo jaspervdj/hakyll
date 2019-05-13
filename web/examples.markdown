@@ -166,10 +166,10 @@ directly with the default Hakyll site.
   [source](https://github.com/bendo/bendo.github.io)
 - <http://adarsh.cc/>,
   [source](https://github.com/adarshp/adarsh.cc)
-- <http://zer0.degree/>,
-  [source](https://github.com/arrchhy/zer0.degree)
+- <http://0a.io>,
+  [source](https://github.com/arrchyy/0a.io)
 - <https://nasy.moe/>,
-  [source](https://github.com/nasyxx/nasyxx.github.io)
+  [source](https://github.com/nasyxx/NasyMoe)
 - <http://uniprocess.org/>,
   [source](https://gitlab.com/uniprocess/uniprocess.org)
 - <https://regularflolloping.com/>,
@@ -178,6 +178,12 @@ directly with the default Hakyll site.
   [source](https://github.com/enter-haken/blog)
 - <https://modular.blind.guru/>,
   [source](https://github.com/mlang/eurorack-metadata)
+- <http://www.jonashietala.se/>,
+  [source](https://github.com/treeman/jonashietala)
+- <https://abhinavsarkar.net/>,
+  [source](https://github.com/abhin4v/abhin4v.github.io)
+- <https://dailyreadingnotes.com/>,
+  [source](https://github.com/hackeryarn/daily-reading-notes)
 
 ## Hakyll 3.X
 
