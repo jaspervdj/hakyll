@@ -32,7 +32,7 @@ and TeX support, including syntax highlighting and other goodies.
 # Getting Started
 
 You can get the latest version from hackage using `cabal install hakyll`, or
-using [stack] by using `stack install hakyll`. Then, you can:
+using [stack] by using `stack install hakyll --resolver lts-12.26`. Then, you can:
 
 [stack]: http://www.haskellstack.org/
 

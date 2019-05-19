@@ -12,4 +12,4 @@ You can install this library using cabal:
 
 Or using stack:
 
-    stack install hakyll
+    stack install hakyll --resolver lts-12.26
