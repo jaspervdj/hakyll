@@ -28,6 +28,7 @@ import qualified Hakyll.Web.Pandoc.FileType.Tests
 #endif
 import qualified Hakyll.Web.Template.Context.Tests
 import qualified Hakyll.Web.Template.Tests
+import qualified Hakyll.Web.Tags.Tests
 
 
 --------------------------------------------------------------------------------
@@ -49,6 +50,7 @@ main = defaultMain $ testGroup "Hakyll"
 #ifdef USE_PANDOC
     , Hakyll.Web.Pandoc.FileType.Tests.tests
 #endif
+    , Hakyll.Web.Tags.Tests.tests
     , Hakyll.Web.Template.Context.Tests.tests
     , Hakyll.Web.Template.Tests.tests
     ]

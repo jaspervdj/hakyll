@@ -72,7 +72,7 @@ import qualified Data.Map                        as M
 import           Data.Maybe                      (catMaybes, fromMaybe)
 import           Data.Ord                        (comparing)
 import qualified Data.Set                        as S
-import           System.FilePath                 (takeBaseName, takeDirectory)
+import           System.FilePath                 (takeDirectory, splitDirectories)
 import           Text.Blaze.Html                 (toHtml, toValue, (!))
 import           Text.Blaze.Html.Renderer.String (renderHtml)
 import qualified Text.Blaze.Html5                as H
@@ -115,7 +115,8 @@ getTags identifier = do
 --------------------------------------------------------------------------------
 -- | Obtain categories from a page.
 getCategory :: MonadMetadata m => Identifier -> m [String]
-getCategory = return . return . takeBaseName . takeDirectory . toFilePath
+getCategory = return . tail' . splitDirectories . takeDirectory . toFilePath
+  where tail' (_:xs) = xs; tail' _ = []
 
 
 --------------------------------------------------------------------------------
