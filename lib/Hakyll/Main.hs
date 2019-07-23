@@ -1,13 +1,19 @@
 --------------------------------------------------------------------------------
 -- | Module providing the main hakyll function and command-line argument parsing
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP        #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Hakyll.Main
     ( hakyll
+    , parHakyll
     , hakyllWith
+    , parHakyllWith
     , hakyllWithArgs
+    , parHakyllWithArgs
     , hakyllWithExitCode
+    , parHakyllWithExitCode
     , hakyllWithExitCodeAndArgs
+    , parHakyllWithExitCodeAndArgs
     , Options(..)
     , Command(..)
     ) where
@@ -35,40 +41,79 @@ import           Hakyll.Core.Rules
 --------------------------------------------------------------------------------
 -- | This usually is the function with which the user runs the hakyll compiler
 hakyll :: Rules a -> IO ()
-hakyll = hakyllWith Config.defaultConfiguration
+hakyll rules = parHakyll sequence [rules]
+
+-- | This usually is the function with which the user runs the hakyll compiler
+parHakyll :: (forall b. [IO b] -> IO [b]) -> [Rules a] -> IO ()
+parHakyll ev rules = parHakyllWith ev Config.defaultConfiguration rules
 
 --------------------------------------------------------------------------------
 -- | A variant of 'hakyll' which allows the user to specify a custom
 -- configuration
 hakyllWith :: Config.Configuration -> Rules a -> IO ()
-hakyllWith conf rules = hakyllWithExitCode conf rules >>= exitWith
+hakyllWith conf rules = parHakyllWith sequence conf [rules]
+
+-- | A variant of 'parHakyll' which allows the user to specify a custom
+-- configuration
+parHakyllWith :: (forall b. [IO b] -> IO [b])
+              -> Config.Configuration
+              -> [Rules a]
+              -> IO ()
+parHakyllWith ev conf rules = parHakyllWithExitCode ev conf rules >>= exitWith
 
 --------------------------------------------------------------------------------
 -- | A variant of 'hakyll' which returns an 'ExitCode'
 hakyllWithExitCode :: Config.Configuration -> Rules a -> IO ExitCode
-hakyllWithExitCode conf rules =  do
+hakyllWithExitCode conf rules = parHakyllWithExitCode sequence conf [rules]
+
+-- | A variant of 'parHakyll' which returns an 'ExitCode'
+parHakyllWithExitCode :: (forall b. [IO b] -> IO [b])
+                      -> Config.Configuration
+                      -> [Rules a]
+                      -> IO ExitCode
+parHakyllWithExitCode ev conf rules =  do
     args <- defaultParser conf
-    hakyllWithExitCodeAndArgs conf args rules
+    parHakyllWithExitCodeAndArgs ev conf args rules
 
 --------------------------------------------------------------------------------
 -- | A variant of 'hakyll' which expects a 'Configuration' and command-line
 -- 'Options'. This gives freedom to implement your own parsing.
 hakyllWithArgs :: Config.Configuration -> Options -> Rules a -> IO ()
-hakyllWithArgs conf args rules =
-    hakyllWithExitCodeAndArgs conf args rules >>= exitWith
+hakyllWithArgs conf args rules = parHakyllWithArgs sequence conf args [rules]
+
+-- | A variant of 'parHakyll' which expects a 'Configuration' and command-line
+-- 'Options'. This gives freedom to implement your own parsing.
+parHakyllWithArgs :: (forall b. [IO b] -> IO [b])
+                  -> Config.Configuration
+                  -> Options
+                  -> [Rules a]
+                  -> IO ()
+parHakyllWithArgs ev conf args rules =
+    parHakyllWithExitCodeAndArgs ev conf args rules >>= exitWith
 
 --------------------------------------------------------------------------------
+-- | A variant of 'parHakyll' which expects a 'Configuration' and command-line
+-- 'Options'. This gives freedom to implement your own parsing.
 hakyllWithExitCodeAndArgs :: Config.Configuration ->
                               Options -> Rules a -> IO ExitCode
-hakyllWithExitCodeAndArgs conf args rules = do
+hakyllWithExitCodeAndArgs conf args rules =
+  parHakyllWithExitCodeAndArgs sequence conf args [rules]
+
+-- | A variant of 'parHakyll' which expects a 'Configuration' and command-line
+-- 'Options'. This gives freedom to implement your own parsing.
+parHakyllWithExitCodeAndArgs :: (forall b. [IO b] -> IO [b])
+                             -> Config.Configuration
+                             -> Options
+                             -> [Rules a]
+                             -> IO ExitCode
+parHakyllWithExitCodeAndArgs ev conf args rules = do
     let args' = optCommand args
         verbosity' = if verbosity args then Logger.Debug else Logger.Message
         check     =
             if internal_links args' then Check.InternalLinks else Check.All
 
     logger <- Logger.new verbosity'
-    invokeCommands args' conf check logger rules
-
+    invokeCommands ev args' conf check logger rules
 --------------------------------------------------------------------------------
 defaultParser :: Config.Configuration -> IO Options
 defaultParser conf =
@@ -79,18 +124,23 @@ defaultParser conf =
 
 
 --------------------------------------------------------------------------------
-invokeCommands :: Command -> Config.Configuration ->
-                  Check.Check -> Logger.Logger -> Rules a -> IO ExitCode
-invokeCommands args conf check logger rules =
+invokeCommands :: (forall b. [IO b] -> IO [b])
+               -> Command
+               -> Config.Configuration
+               -> Check.Check
+               -> Logger.Logger
+               -> [Rules a]
+               -> IO ExitCode
+invokeCommands ev args conf check logger rules =
     case args of
-        Build          -> Commands.build conf logger rules
+        Build          -> Commands.buildPar ev conf logger rules
         Check   _      -> Commands.check conf logger check
         Clean          -> Commands.clean conf logger >> ok
         Deploy         -> Commands.deploy conf
-        Preview p      -> Commands.preview conf logger rules p >> ok
-        Rebuild        -> Commands.rebuild conf logger rules
+        Preview p      -> Commands.preview conf logger (head rules) p >> ok
+        Rebuild        -> Commands.rebuildPar ev conf logger rules
         Server  _ _    -> Commands.server conf logger (host args) (port args) >> ok
-        Watch   _ p s  -> Commands.watch conf logger (host args) p (not s) rules >> ok
+        Watch   _ p s  -> Commands.watchPar ev conf logger (host args) p (not s) rules >> ok
     where
         ok = return ExitSuccess
 

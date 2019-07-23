@@ -1,6 +1,8 @@
+{-# LANGUAGE Rank2Types                 #-}
 --------------------------------------------------------------------------------
 module Hakyll.Core.Runtime
     ( run
+    , runPar
     ) where
 
 
@@ -42,6 +44,15 @@ import           Hakyll.Core.Writable
 --------------------------------------------------------------------------------
 run :: Configuration -> Logger -> Rules a -> IO (ExitCode, RuleSet)
 run config logger rules = do
+  (code, ruleSets) <- runPar sequence config logger [rules]
+  pure (code, head ruleSets)
+
+runPar :: (forall b. [IO b] -> IO [b])
+       -> Configuration
+       -> Logger
+       -> [Rules a]
+       -> IO (ExitCode, [RuleSet])
+runPar evaluator config logger rules= do
     -- Initialization
     Logger.header logger "Initialising..."
     Logger.message logger "Creating store..."
@@ -50,49 +61,53 @@ run config logger rules = do
     provider <- newProvider store (shouldIgnoreFile config) $
         providerDirectory config
     Logger.message logger "Running rules..."
-    ruleSet  <- runRules rules provider
+    ruleSets  <- runRulesPar rules provider
 
     -- Get old facts
     mOldFacts <- Store.get store factsKey
     let (oldFacts) = case mOldFacts of Store.Found f -> f
                                        _             -> mempty
-
-    -- Build runtime read/state
-    let compilers = rulesCompilers ruleSet
-        read'     = RuntimeRead
-            { runtimeConfiguration = config
-            , runtimeLogger        = logger
-            , runtimeProvider      = provider
-            , runtimeStore         = store
-            , runtimeRoutes        = rulesRoutes ruleSet
-            , runtimeUniverse      = M.fromList compilers
-            }
-        state     = RuntimeState
-            { runtimeDone      = S.empty
-            , runtimeSnapshots = S.empty
-            , runtimeTodo      = M.empty
-            , runtimeFacts     = oldFacts
-            }
-
-    -- Run the program and fetch the resulting state
-    result <- runExceptT $ runRWST build read' state
-    case result of
-        Left e          -> do
-            Logger.error logger e
-            Logger.flush logger
-            return (ExitFailure 1, ruleSet)
-
-        Right (_, s, _) -> do
-            Store.set store factsKey $ runtimeFacts s
-
-            Logger.debug logger "Removing tmp directory..."
-            removeDirectory $ tmpDirectory config
-
-            Logger.flush logger
-            return (ExitSuccess, ruleSet)
+    let runs = run' config logger provider store oldFacts <$> ruleSets
+    results <- evaluator runs
+    pure $ foldl foldResults (ExitSuccess, []) results
   where
+    foldResults (_   , others) (f@(ExitFailure _), rs) = (f   , rs : others)
+    foldResults (exit, others) (ExitSuccess      , rs) = (exit, rs : others)
     factsKey = ["Hakyll.Core.Runtime.run", "facts"]
+    run' config logger provider store oldFacts ruleSet = do
+      -- Build runtime read/state
+      let compilers = rulesCompilers ruleSet
+          read'     = RuntimeRead
+              { runtimeConfiguration = config
+              , runtimeLogger        = logger
+              , runtimeProvider      = provider
+              , runtimeStore         = store
+              , runtimeRoutes        = rulesRoutes ruleSet
+              , runtimeUniverse      = M.fromList compilers
+              }
+          state     = RuntimeState
+              { runtimeDone      = S.empty
+              , runtimeSnapshots = S.empty
+              , runtimeTodo      = M.empty
+              , runtimeFacts     = oldFacts
+              }
 
+      -- Run the program and fetch the resulting state
+      result <- runExceptT $ runRWST build read' state
+      case result of
+          Left e          -> do
+              Logger.error logger e
+              Logger.flush logger
+              return (ExitFailure 1, ruleSet)
+
+          Right (_, s, _) -> do
+              Store.set store factsKey $ runtimeFacts s
+
+              Logger.debug logger "Removing tmp directory..."
+              removeDirectory $ tmpDirectory config
+
+              Logger.flush logger
+              return (ExitSuccess, ruleSet)
 
 --------------------------------------------------------------------------------
 data RuntimeRead = RuntimeRead

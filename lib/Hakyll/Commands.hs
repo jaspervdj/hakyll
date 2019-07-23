@@ -1,16 +1,20 @@
  --------------------------------------------------------------------------------
 -- | Implementation of Hakyll commands: build, preview...
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP        #-}
+{-# LANGUAGE Rank2Types #-}
 module Hakyll.Commands
     ( Check(..)
     , build
+    , buildPar
     , check
     , clean
     , preview
     , rebuild
+    , rebuildPar
     , server
     , deploy
     , watch
+    , watchPar
     ) where
 
 
@@ -49,8 +53,16 @@ import           System.IO.Error            (catchIOError)
 --------------------------------------------------------------------------------
 -- | Build the site
 build :: Configuration -> Logger -> Rules a -> IO ExitCode
-build conf logger rules = fst <$> run conf logger rules
+build conf logger rules = buildPar sequence conf logger [rules]
 
+-- | Build the site with multiple rule sets
+buildPar :: (forall b. [IO b] -> IO [b])
+         -> Configuration
+         -> Logger
+         -> [Rules a]
+         -> IO ExitCode
+buildPar evaluator conf logger rules =
+  fst <$> runPar evaluator conf logger rules
 
 --------------------------------------------------------------------------------
 -- | Run the checker and exit
@@ -91,10 +103,23 @@ preview _ _ _ _ = previewServerDisabled
 -- | Watch and recompile for changes
 
 watch :: Configuration -> Logger -> String -> Int -> Bool -> Rules a -> IO ()
+watch conf logger host port runServer rules =
+  watchPar sequence conf logger host port runServer [rules]
+
+-- | Watch and recompile for changes using multiple rulesets
+watchPar :: (forall b. [IO b] -> IO [b])
+         -> Configuration
+         -> Logger
+         -> String
+         -> Int -> Bool
+         -> [Rules a]
+         -> IO ()
 #ifdef WATCH_SERVER
-watch conf logger host port runServer rules = do
+watchPar evaluator conf logger host port runServer rules = do
 #ifndef mingw32_HOST_OS
-    _ <- forkIO $ watchUpdates conf update
+    _ <- forkIO $ do
+      updates <- ioUpdates
+      mapM_ (\u -> watchUpdates conf (pure u)) updates
 #else
     -- Force windows users to compile with -threaded flag, as otherwise
     -- thread is blocked indefinitely.
@@ -104,9 +129,9 @@ watch conf logger host port runServer rules = do
 #endif
     server'
   where
-    update = do
-        (_, ruleSet) <- run conf logger rules
-        return $ rulesPattern ruleSet
+    ioUpdates = do
+        (_, ruleSets) <- runPar evaluator conf logger rules
+        return $ rulesPattern <$> ruleSets
     loop = threadDelay 100000 >> loop
     server' = if runServer then server conf logger host port else loop
 #else
@@ -116,8 +141,16 @@ watch _ _ _ _ _ _ = watchServerDisabled
 --------------------------------------------------------------------------------
 -- | Rebuild the site
 rebuild :: Configuration -> Logger -> Rules a -> IO ExitCode
-rebuild conf logger rules =
-    clean conf logger >> build conf logger rules
+rebuild conf logger rules = rebuildPar sequence conf logger [rules]
+
+-- | Rebuild the site with multiple rule sets
+rebuildPar :: (forall b. [IO b] -> IO [b])
+           -> Configuration
+           -> Logger
+           -> [Rules a]
+           -> IO ExitCode
+rebuildPar evaluator conf logger rules =
+    clean conf logger >> buildPar evaluator conf logger rules
 
 --------------------------------------------------------------------------------
 -- | Start a server

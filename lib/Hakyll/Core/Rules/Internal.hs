@@ -9,6 +9,7 @@ module Hakyll.Core.Rules.Internal
     , emptyRulesState
     , Rules (..)
     , runRules
+    , runRulesPar
     ) where
 
 
@@ -121,3 +122,7 @@ runRules rules provider = do
         , rulesMatches  = []
         , rulesVersion  = Nothing
         }
+
+runRulesPar :: [Rules a] -> Provider -> IO [RuleSet]
+runRulesPar rules provider = sequence $ fmap (runRules' provider) rules where
+  runRules' = flip runRules
