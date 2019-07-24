@@ -27,6 +27,7 @@ import           System.Exit                (ExitCode)
 import           Hakyll.Check               (Check(..))
 import qualified Hakyll.Check               as Check
 import           Hakyll.Core.Configuration
+import           Hakyll.Core.Identifier.Pattern ((.||.))
 import           Hakyll.Core.Logger         (Logger)
 import qualified Hakyll.Core.Logger         as Logger
 import           Hakyll.Core.Rules
@@ -117,9 +118,7 @@ watchPar :: (forall b. [IO b] -> IO [b])
 #ifdef WATCH_SERVER
 watchPar evaluator conf logger host port runServer rules = do
 #ifndef mingw32_HOST_OS
-    _ <- forkIO $ do
-      updates <- ioUpdates
-      mapM_ (\u -> watchUpdates conf (pure u)) updates
+    _ <- forkIO $ watchUpdates conf update
 #else
     -- Force windows users to compile with -threaded flag, as otherwise
     -- thread is blocked indefinitely.
@@ -129,9 +128,10 @@ watchPar evaluator conf logger host port runServer rules = do
 #endif
     server'
   where
-    ioUpdates = do
+    update = do
         (_, ruleSets) <- runPar evaluator conf logger rules
-        return $ rulesPattern <$> ruleSets
+        let allRules = rulesPattern <$> ruleSets
+        return $ foldr1 (.||.) allRules
     loop = threadDelay 100000 >> loop
     server' = if runServer then server conf logger host port else loop
 #else
