@@ -125,7 +125,7 @@ field' :: String -> (Item a -> Compiler ContextField) -> Context a
 field' key value = Context $ \k _ i ->
     if k == key
         then value i
-        else failBranch $ "Tried field " ++ key
+        else noResult $ "Tried field " ++ key
 
 
 --------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ field' key value = Context $ \k _ i ->
 -- If the compiler fails, the field will be considered non-existent
 -- in an @$if()$@ macro or ultimately break the template application
 -- (unless the key is found in another context when using '<>').
--- Use 'empty' or 'failBranch' for intentional failures of fields used in
+-- Use 'empty' or 'noResult' for intentional failures of fields used in
 -- @$if()$@, to distinguish them from exceptions thrown with 'fail'.
 field
     :: String                      -- ^ Key
@@ -155,7 +155,7 @@ boolField
     -> Context a
 boolField name f = field' name (\i -> if f i
     then return EmptyField
-    else failBranch $ "Field " ++ name ++ " is false")
+    else noResult $ "Field " ++ name ++ " is false")
 
 
 --------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ functionField :: String                                  -- ^ Key
 functionField name value = Context $ \k args i ->
     if k == name
         then StringField <$> value args i
-        else failBranch $ "Tried function field " ++ name
+        else noResult $ "Tried function field " ++ name
 
 
 --------------------------------------------------------------------------------
@@ -272,7 +272,7 @@ bodyField key = field key $ return . itemBody
 metadataField :: Context a
 metadataField = Context $ \k _ i -> do
     let id = itemIdentifier i
-        empty' = failBranch $ "No '" ++ k ++ "' field in metadata " ++
+        empty' = noResult $ "No '" ++ k ++ "' field in metadata " ++
             "of item " ++ show id
     value <- getMetadataField id k
     maybe empty' (return . StringField) value
@@ -457,7 +457,7 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
 -- | Constantly reports any field as missing. Mostly for internal usage,
 -- it is the last choice in every context used in a template application.
 missingField :: Context a
-missingField = Context $ \k _ _ -> failBranch $
+missingField = Context $ \k _ _ -> noResult $
     "Missing field '" ++ k ++ "' in context"
 
 parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime

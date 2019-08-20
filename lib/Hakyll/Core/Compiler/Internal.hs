@@ -1,17 +1,17 @@
 --------------------------------------------------------------------------------
 -- | Internally used compiler module
 {-# LANGUAGE CPP                        #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 module Hakyll.Core.Compiler.Internal
     ( -- * Types
       Snapshot
     , CompilerRead (..)
     , CompilerWrite (..)
-    , Reason (..)
+    , CompilerErrors (..)
     , CompilerResult (..)
     , Compiler (..)
     , runCompiler
@@ -24,10 +24,10 @@ module Hakyll.Core.Compiler.Internal
 
       -- * Error operations
     , compilerThrow
-    , compilerFailBranch
+    , compilerNoResult
     , compilerCatch
     , compilerTry
-    , getReason
+    , compilerErrorMessages
 
       -- * Utilities
     , compilerDebugEntries
@@ -41,6 +41,8 @@ import           Control.Applicative            (Alternative (..))
 import           Control.Exception              (SomeException, handle)
 import           Control.Monad                  (forM_)
 import           Control.Monad.Except           (MonadError (..))
+import           Data.List.NonEmpty             (NonEmpty (..))
+import qualified Data.List.NonEmpty             as NonEmpty
 #if MIN_VERSION_base(4,9,0)
 import           Data.Semigroup                 (Semigroup (..))
 #endif
@@ -112,18 +114,19 @@ instance Monoid CompilerWrite where
 
 --------------------------------------------------------------------------------
 -- | Distinguishes reasons in a 'CompilerError'
-data Reason a
-    -- | An exception occured during compilation
-    = CompilationFailure a
-    -- | Absence of any result, most notably in template contexts
-    | NoCompilationResult a
+data CompilerErrors a
+    -- | One or more exceptions occured during compilation
+    = CompilationFailure (NonEmpty a)
+    -- | Absence of any result, most notably in template contexts.  May still
+    -- have error messages.
+    | CompilationNoResult [a]
     deriving Functor
 
 
 -- | Unwrap a `Reason`
-getReason :: Reason a -> a
-getReason (CompilationFailure x)  = x
-getReason (NoCompilationResult x) = x
+compilerErrorMessages :: CompilerErrors a -> [a]
+compilerErrorMessages (CompilationFailure x)  = NonEmpty.toList x
+compilerErrorMessages (CompilationNoResult x) = x
 
 
 --------------------------------------------------------------------------------
@@ -132,7 +135,7 @@ data CompilerResult a
     = CompilerDone a CompilerWrite
     | CompilerSnapshot Snapshot (Compiler a)
     | CompilerRequire (Identifier, Snapshot) (Compiler a)
-    | CompilerError (Reason [String])
+    | CompilerError (CompilerErrors String)
 
 
 --------------------------------------------------------------------------------
@@ -205,7 +208,7 @@ instance MonadMetadata Compiler where
 -- 'catchError' handles errors from 'throwError', 'fail' and 'Hakyll.Core.Compiler.failBranch'
 instance MonadError [String] Compiler where
     throwError = compilerThrow
-    catchError c = compilerCatch c . (. getReason)
+    catchError c = compilerCatch c . (. compilerErrorMessages)
 
 
 --------------------------------------------------------------------------------
@@ -214,7 +217,7 @@ runCompiler :: Compiler a -> CompilerRead -> IO (CompilerResult a)
 runCompiler compiler read' = handle handler $ unCompiler compiler read'
   where
     handler :: SomeException -> IO (CompilerResult a)
-    handler e = return $ CompilerError $ CompilationFailure [show e]
+    handler e = return $ CompilerError $ CompilationFailure $ show e :| []
 
 
 --------------------------------------------------------------------------------
@@ -222,13 +225,16 @@ runCompiler compiler read' = handle handler $ unCompiler compiler read'
 -- 'fail', 'throwError' or 'Hakyll.Core.Compiler.failBranch'.
 -- Aggregates error messages if all fail.
 instance Alternative Compiler where
-    empty   = compilerFailBranch []
+    empty   = compilerNoResult []
     x <|> y = x `compilerCatch` (\rx -> y `compilerCatch` (\ry ->
         case (rx, ry) of
-          (CompilationFailure xs,  CompilationFailure ys)  -> compilerThrow $ xs ++ ys
-          (CompilationFailure xs,  NoCompilationResult ys) -> debug ys >> compilerThrow xs
-          (NoCompilationResult xs, CompilationFailure ys)  -> debug xs >> compilerThrow ys
-          (NoCompilationResult xs, NoCompilationResult ys) -> compilerFailBranch $ xs ++ ys
+          (CompilationFailure xs,  CompilationFailure ys)  ->
+            compilerThrow $ NonEmpty.toList xs ++ NonEmpty.toList ys
+          (CompilationFailure xs,  CompilationNoResult ys) ->
+            debug ys >> compilerThrow (NonEmpty.toList xs)
+          (CompilationNoResult xs, CompilationFailure ys)  ->
+            debug xs >> compilerThrow (NonEmpty.toList ys)
+          (CompilationNoResult xs, CompilationNoResult ys) -> compilerNoResult $ xs ++ ys
         ))
       where
         debug = compilerDebugEntries "Hakyll.Core.Compiler.Internal: Alternative fail suppressed"
@@ -266,21 +272,25 @@ compilerUnsafeIO io = Compiler $ \_ -> do
 
 
 --------------------------------------------------------------------------------
--- | Put a 'CompilerError' with  multiple error messages as 'CompilationFailure'
+-- | Throw errors in the 'Compiler'.
+--
+-- If no messages are given, this is considered a 'CompilationNoResult' error.
+-- Otherwise, it is treated as a proper compilation failure.
 compilerThrow :: [String] -> Compiler a
-compilerThrow = compilerResult . CompilerError . CompilationFailure
+compilerThrow errs = compilerResult $ CompilerError $ case errs of
+    []       -> CompilationNoResult []
+    (e : es) -> CompilationFailure (e :| es)
 
-
--- | Put a 'CompilerError' with  multiple messages as 'NoCompilationResult'
-compilerFailBranch :: [String] -> Compiler a
-compilerFailBranch = compilerResult . CompilerError . NoCompilationResult
+-- | Put a 'CompilerError' with  multiple messages as 'CompilationNoResult'
+compilerNoResult :: [String] -> Compiler a
+compilerNoResult = compilerResult . CompilerError . CompilationNoResult
 
 
 --------------------------------------------------------------------------------
 -- | Allows to distinguish 'CompilerError's and branch on them with 'Either'
--- 
+--
 -- prop> compilerTry = (`compilerCatch` return . Left) . fmap Right
-compilerTry :: Compiler a -> Compiler (Either (Reason [String]) a)
+compilerTry :: Compiler a -> Compiler (Either (CompilerErrors String) a)
 compilerTry (Compiler x) = Compiler $ \r -> do
     res <- x r
     case res of
@@ -294,9 +304,9 @@ compilerTry (Compiler x) = Compiler $ \r -> do
 --------------------------------------------------------------------------------
 -- | Allows you to recover from 'CompilerError's.
 -- Uses the same parameter order as 'catchError' so that it can be used infix.
--- 
+--
 -- prop> c `compilerCatch` f = compilerTry c >>= either f return
-compilerCatch :: Compiler a -> (Reason [String] -> Compiler a) -> Compiler a
+compilerCatch :: Compiler a -> (CompilerErrors String -> Compiler a) -> Compiler a
 compilerCatch (Compiler x) f = Compiler $ \r -> do
     res <- x r
     case res of

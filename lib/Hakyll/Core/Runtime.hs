@@ -199,7 +199,7 @@ chase trail id'
         result <- liftIO $ runCompiler compiler read'
         case result of
             -- Rethrow error
-            CompilerError e -> throwError $ case getReason e of
+            CompilerError e -> throwError $ case compilerErrorMessages e of
                 [] -> "Compiler failed but no info given, try running with -v?"
                 es -> intercalate "; " es
 

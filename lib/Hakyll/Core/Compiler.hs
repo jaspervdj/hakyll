@@ -24,15 +24,16 @@ module Hakyll.Core.Compiler
     , cached
     , unsafeCompiler
     , debugCompiler
-    , failBranch
-    , mapError
+    , noResult
+    , prependErrorMessage
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                 (when, unless, (>=>))
+import           Control.Monad                 (unless, when, (>=>))
 import           Data.Binary                   (Binary)
 import           Data.ByteString.Lazy          (ByteString)
+import qualified Data.List.NonEmpty            as NonEmpty
 import           Data.Typeable                 (Typeable)
 import           System.Environment            (getProgName)
 import           System.FilePath               (takeExtension)
@@ -193,20 +194,23 @@ unsafeCompiler = compilerUnsafeIO
 -- | Fail so that it is treated as non-defined in an @\$if()\$@ branching
 -- "Hakyll.Web.Template" macro, and alternative
 -- 'Hakyll.Web.Template.Context.Context's are tried
--- 
--- @since 4.12.0
-failBranch :: String -> Compiler a
-failBranch = compilerFailBranch . return
+--
+-- @since 4.13.0
+noResult :: String -> Compiler a
+noResult = compilerNoResult . return
 
 
 --------------------------------------------------------------------------------
--- | Map over the error list from a failed compilation.
--- Unlike @\``Control.Monad.Except.catchError`\` ('Control.Monad.Except.throwError' . f)@,
--- it keeps the distinction between 'fail' and 'failBranch'.
--- 
--- @since 4.12.0
-mapError :: ([String] -> [String]) -> Compiler a -> Compiler a
-mapError f = compilerTry >=> either (compilerResult . CompilerError . fmap f) return
+-- | Prepend an error line to the error, if there is one.  This allows you to
+-- add helpful context to error messages.
+--
+-- @since 4.13.0
+prependErrorMessage :: String -> Compiler a -> Compiler a
+prependErrorMessage x = do
+    compilerTry >=> either (compilerResult . CompilerError . prepend) return
+  where
+    prepend (CompilationFailure  es) = CompilationFailure  (x `NonEmpty.cons` es)
+    prepend (CompilationNoResult es) = CompilationNoResult (x : es)
 
 
 --------------------------------------------------------------------------------
