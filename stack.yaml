@@ -1,4 +1,4 @@
-resolver: lts-13.0
+resolver: lts-13.29
 save-hackage-creds: false
 
 flags:
@@ -23,10 +23,11 @@ build:
   haddock-deps: false
 
 extra-deps:
+- 'cmark-gfm-0.2.0'
+- 'hslua-module-system-0.2.1'
 - 'ipynb-0.1'
 - 'lrucache-1.2.0.1'
-- 'pandoc-2.7'
+- 'pandoc-2.7.3'
 - 'pandoc-citeproc-0.16.2'
-- 'skylighting-0.7.7'
-- 'skylighting-core-0.7.7'
-- 'texmath-0.11.2.2'
+- 'skylighting-0.8.2'
+- 'skylighting-core-0.8.2'
