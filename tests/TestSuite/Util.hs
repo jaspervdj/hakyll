@@ -81,7 +81,7 @@ testCompilerDone store provider underlying compiler = do
         CompilerDone x _    -> return x
         CompilerError e     -> fail $
             "TestSuite.Util.testCompilerDone: compiler " ++ show underlying ++
-            " threw: " ++ intercalate "; " (getReason e)
+            " threw: " ++ intercalate "; " (compilerErrorMessages e)
         CompilerRequire i _ -> fail $
             "TestSuite.Util.testCompilerDone: compiler " ++ show underlying ++
             " requires: " ++ show i
@@ -92,8 +92,9 @@ testCompilerError :: Store -> Provider -> Identifier -> Compiler a -> String -> 
 testCompilerError store provider underlying compiler expectedMessage = do
     result   <- testCompiler store provider underlying compiler
     case result of
-        CompilerError e -> any (expectedMessage `isInfixOf`) (getReason e) @?
-                               "Expecting '" ++ expectedMessage ++ "' error"
+        CompilerError e ->
+            any (expectedMessage `isInfixOf`) (compilerErrorMessages e) @?
+           "Expecting '" ++ expectedMessage ++ "' error"
         _               -> assertFailure "Expecting CompilerError"
 
 --------------------------------------------------------------------------------

@@ -123,7 +123,7 @@ data CompilerErrors a
     deriving Functor
 
 
--- | Unwrap a `Reason`
+-- | Unwrap a `CompilerErrors`
 compilerErrorMessages :: CompilerErrors a -> [a]
 compilerErrorMessages (CompilationFailure x)  = NonEmpty.toList x
 compilerErrorMessages (CompilationNoResult x) = x
@@ -205,7 +205,7 @@ instance MonadMetadata Compiler where
 
 --------------------------------------------------------------------------------
 -- | Compilation may fail with multiple error messages.
--- 'catchError' handles errors from 'throwError', 'fail' and 'Hakyll.Core.Compiler.failBranch'
+-- 'catchError' handles errors from 'throwError', 'fail' and 'Hakyll.Core.Compiler.noResult'
 instance MonadError [String] Compiler where
     throwError = compilerThrow
     catchError c = compilerCatch c . (. compilerErrorMessages)
@@ -222,7 +222,7 @@ runCompiler compiler read' = handle handler $ unCompiler compiler read'
 
 --------------------------------------------------------------------------------
 -- | Trying alternative compilers if the first fails, regardless whether through
--- 'fail', 'throwError' or 'Hakyll.Core.Compiler.failBranch'.
+-- 'fail', 'throwError' or 'Hakyll.Core.Compiler.noResult'.
 -- Aggregates error messages if all fail.
 instance Alternative Compiler where
     empty   = compilerNoResult []

@@ -4,10 +4,8 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 
 module Hakyll.Web.Template.Internal
-    ( Template
+    ( Template (..)
     , template
-    , unTemplate
-    , getOrigin
     , templateBodyCompiler
     , templateCompiler
     , applyTemplate
@@ -46,8 +44,8 @@ import           Hakyll.Web.Template.Internal.Trim
 --------------------------------------------------------------------------------
 -- | Datatype used for template substitutions.
 data Template = Template
-    { unTemplate :: [TemplateElement]
-    , getOrigin  :: FilePath
+    { tplElements :: [TemplateElement]
+    , tplOrigin   :: FilePath  -- Only for error messages.
     } deriving (Show, Eq, Generic, Binary, Typeable)
 
 
@@ -114,10 +112,10 @@ applyTemplate :: Template                -- ^ Template
               -> Item a                  -- ^ Page
               -> Compiler (Item String)  -- ^ Resulting item
 applyTemplate tpl context item = do
-    body <- applyTemplate' (unTemplate tpl) context item `catchError` handler
+    body <- applyTemplate' (tplElements tpl) context item `catchError` handler
     return $ itemSetBody body item
   where
-    tplName = getOrigin tpl
+    tplName = tplOrigin tpl
     itemName = show $ itemIdentifier item
     handler es = fail $ "Hakyll.Web.Template.applyTemplate: Failed to " ++
         (if tplName == itemName
