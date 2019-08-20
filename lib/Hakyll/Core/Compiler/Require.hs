@@ -91,6 +91,7 @@ loadBody id' = loadSnapshotBody id' final
 
 
 --------------------------------------------------------------------------------
+-- | A shortcut for only requiring the body for a specific snapshot of an item
 loadSnapshotBody :: (Binary a, Typeable a)
                  => Identifier -> Snapshot -> Compiler a
 loadSnapshotBody id' snapshot = fmap itemBody $ loadSnapshot id' snapshot
@@ -103,6 +104,7 @@ loadAll pattern = loadAllSnapshots pattern final
 
 
 --------------------------------------------------------------------------------
+-- | Load a specific snapshot for each of dynamic list of items
 loadAllSnapshots :: (Binary a, Typeable a)
                  => Pattern -> Snapshot -> Compiler [Item a]
 loadAllSnapshots pattern snapshot = do

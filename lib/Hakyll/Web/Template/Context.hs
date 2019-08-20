@@ -1,3 +1,23 @@
+-- | This module provides 'Context's which are used to expand expressions in
+-- templates and allow for arbitrary customisation.
+--
+-- 'Template's define a small expression DSL which consists of strings,
+-- identifiers and function application. There is no type system, every value is
+-- a string and on the top level they get substituted verbatim into the page.
+--
+-- For example, you can build a context that contains
+--
+-- > … <> functionField "concat" (const . concat) <> …
+--
+-- which will allow you to use the @concat@ identifier as a function that takes
+-- arbitrarily many stings and concatenates them to a new string:
+--
+-- > $partial(concat("templates/categories/", category))$
+--
+-- This will evaluate the @category@ field in the context, then prepend he path,
+-- and include the referenced file as a template.
+
+
 --------------------------------------------------------------------------------
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
@@ -50,13 +70,16 @@ import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Util.String       (needlePrefix, splitAll)
 import           Hakyll.Web.Html
-import           System.FilePath               (splitDirectories, takeBaseName, dropExtension)
+import           Prelude                       hiding (id)
+import           System.FilePath               (dropExtension, splitDirectories,
+                                                takeBaseName)
 
 
 --------------------------------------------------------------------------------
 -- | Mostly for internal usage
 data ContextField
-    = StringField String
+    = EmptyField
+    | StringField String
     | forall a. ListField (Context a) [Item a]
 
 
@@ -81,6 +104,8 @@ newtype Context a = Context
 
 
 --------------------------------------------------------------------------------
+-- | Tries to find a key in the left context,
+-- or when that fails in the right context.
 #if MIN_VERSION_base(4,9,0)
 instance Semigroup (Context a) where
     (<>) (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
@@ -97,64 +122,101 @@ instance Monoid (Context a) where
 
 --------------------------------------------------------------------------------
 field' :: String -> (Item a -> Compiler ContextField) -> Context a
-field' key value = Context $ \k _ i -> if k == key then value i else empty
+field' key value = Context $ \k _ i ->
+    if k == key
+        then value i
+        else failBranch $ "Tried field " ++ key
 
 
 --------------------------------------------------------------------------------
--- | Constructs a new field in the 'Context.'
+-- | Constructs a new field for a 'Context'.
+-- If the key matches, the compiler is run and its result is substituted in the
+-- template.
+--
+-- If the compiler fails, the field will be considered non-existent
+-- in an @$if()$@ macro or ultimately break the template application
+-- (unless the key is found in another context when using '<>').
+-- Use 'empty' or 'failBranch' for intentional failures of fields used in
+-- @$if()$@, to distinguish them from exceptions thrown with 'fail'.
 field
     :: String                      -- ^ Key
     -> (Item a -> Compiler String) -- ^ Function that constructs a value based
-                                   -- on the item
+                                   -- on the item (e.g. accessing metadata)
     -> Context a
 field key value = field' key (fmap StringField . value)
 
 
 --------------------------------------------------------------------------------
 -- | Creates a 'field' to use with the @$if()$@ template macro.
+-- Attempting to substitute the field into the template will cause an error.
 boolField
     :: String
     -> (Item a -> Bool)
     -> Context a
-boolField name f = field name (\i -> if f i
-    then pure (error $ unwords ["no string value for bool field:",name])
-    else empty)
+boolField name f = field' name (\i -> if f i
+    then return EmptyField
+    else failBranch $ "Field " ++ name ++ " is false")
 
 
 --------------------------------------------------------------------------------
--- | Creates a 'field' that does not depend on the 'Item'
-constField :: String -> String -> Context a
+-- | Creates a 'field' that does not depend on the 'Item' but always yields
+-- the same string
+constField :: String     -- ^ Key
+           -> String     -- ^ Value
+           -> Context a
 constField key = field key . const . return
 
 
 --------------------------------------------------------------------------------
+-- | Creates a list field to be consumed by a @$for(…)$@ expression.
+-- The compiler returns multiple items which are rendered in the loop body
+-- with the supplied context.
 listField :: String -> Context a -> Compiler [Item a] -> Context b
 listField key c xs = listFieldWith key c (const xs)
 
 
 --------------------------------------------------------------------------------
+-- | Creates a list field like 'listField', but supplies the current page
+-- to the compiler.
 listFieldWith
     :: String -> Context a -> (Item b -> Compiler [Item a]) -> Context b
 listFieldWith key c f = field' key $ fmap (ListField c) . f
 
 
 --------------------------------------------------------------------------------
-functionField :: String -> ([String] -> Item a -> Compiler String) -> Context a
+-- | Creates a variadic function field.
+--
+-- The function will be called with the dynamically evaluated string arguments
+-- from the template as well as the page that is currently rendered.
+functionField :: String                                  -- ^ Key
+              -> ([String] -> Item a -> Compiler String) -- ^ Function
+              -> Context a
 functionField name value = Context $ \k args i ->
     if k == name
         then StringField <$> value args i
-        else empty
+        else failBranch $ "Tried function field " ++ name
 
 
 --------------------------------------------------------------------------------
+-- | Transform the respective string results of all fields in a context.
+-- For example,
+--
+-- > mapContext (++"c") (constField "x" "a" <> constField "y" "b")
+--
+-- is equivalent to
+--
+-- > constField "x" "ac" <> constField "y" "bc"
+--
 mapContext :: (String -> String) -> Context a -> Context a
 mapContext f (Context c) = Context $ \k a i -> do
     fld <- c k a i
     case fld of
+        EmptyField      -> wrongType "boolField"
         StringField str -> return $ StringField (f str)
-        ListField _ _   -> fail $
-            "Hakyll.Web.Template.Context.mapContext: " ++
-            "can't map over a ListField!"
+        _               -> wrongType "ListField"
+  where
+    wrongType typ = fail $ "Hakyll.Web.Template.Context.mapContext: " ++
+        "can't map over a " ++ typ ++ "!"
 
 --------------------------------------------------------------------------------
 -- | A context that allows snippet inclusion. In processed file, use as:
@@ -163,15 +225,15 @@ mapContext f (Context c) = Context $ \k a i -> do
 -- > $snippet("path/to/snippet/")$
 -- > ...
 --
--- The contents of the included file will not be interpolated.
+-- The contents of the included file will not be interpolated like @partial@
+-- does it.
 --
 snippetField :: Context String
 snippetField = functionField "snippet" f
   where
     f [contentsPath] _ = loadBody (fromFilePath contentsPath)
-    f _              i = error $
-        "Too many arguments to function 'snippet()' in item " ++
-            show (itemIdentifier i)
+    f []             _ = fail "No argument to function 'snippet()'"
+    f _              _ = fail "Too many arguments to function 'snippet()'"
 
 --------------------------------------------------------------------------------
 -- | A context that contains (in that order)
@@ -191,8 +253,7 @@ defaultContext =
     metadataField            `mappend`
     urlField      "url"      `mappend`
     pathField     "path"     `mappend`
-    titleField    "title"    `mappend`
-    missingField
+    titleField    "title"
 
 
 --------------------------------------------------------------------------------
@@ -210,15 +271,20 @@ bodyField key = field key $ return . itemBody
 -- | Map any field to its metadata value, if present
 metadataField :: Context a
 metadataField = Context $ \k _ i -> do
-    value <- getMetadataField (itemIdentifier i) k
-    maybe empty (return . StringField) value
+    let id = itemIdentifier i
+        empty' = failBranch $ "No '" ++ k ++ "' field in metadata " ++
+            "of item " ++ show id
+    value <- getMetadataField id k
+    maybe empty' (return . StringField) value
 
 
 --------------------------------------------------------------------------------
 -- | Absolute url to the resulting item
 urlField :: String -> Context a
-urlField key = field key $
-    fmap (maybe empty toUrl) . getRoute . itemIdentifier
+urlField key = field key $ \i -> do
+    let id = itemIdentifier i
+        empty' = fail $ "No route url found for item " ++ show id
+    fmap (maybe empty' toUrl) $ getRoute id
 
 
 --------------------------------------------------------------------------------
@@ -272,8 +338,8 @@ titleField = mapContext takeBaseName . pathField
 --
 -- As another alternative, if none of the above matches, and the file has a
 -- path which contains nested directories specifying a date, then that date
--- will be used. In other words, if the path is of the form 
--- @**//yyyy//mm//dd//**//main.extension@ . 
+-- will be used. In other words, if the path is of the form
+-- @**//yyyy//mm//dd//**//main.extension@ .
 -- As above, in case of multiple matches, the rightmost one is used.
 
 dateField :: String     -- ^ Key in which the rendered date should be placed
@@ -285,7 +351,7 @@ dateField = dateFieldWith defaultTimeLocale
 --------------------------------------------------------------------------------
 -- | This is an extended version of 'dateField' that allows you to
 -- specify a time locale that is used for outputting the date. For more
--- details, see 'dateField'.
+-- details, see 'dateField' and 'formatTime'.
 dateFieldWith :: TimeLocale  -- ^ Output time locale
               -> String      -- ^ Destination key
               -> String      -- ^ Format to use on the date
@@ -340,6 +406,7 @@ getItemModificationTime identifier = do
 
 
 --------------------------------------------------------------------------------
+-- | Creates a field with the last modification date of the underlying item.
 modificationTimeField :: String     -- ^ Key
                       -> String     -- ^ Format
                       -> Context  a -- ^ Resulting context
@@ -347,6 +414,8 @@ modificationTimeField = modificationTimeFieldWith defaultTimeLocale
 
 
 --------------------------------------------------------------------------------
+-- | Creates a field with the last modification date of the underlying item
+-- in a custom localisation format (see 'formatTime').
 modificationTimeFieldWith :: TimeLocale  -- ^ Time output locale
                           -> String      -- ^ Key
                           -> String      -- ^ Format
@@ -385,10 +454,11 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
 
 
 --------------------------------------------------------------------------------
+-- | Constantly reports any field as missing. Mostly for internal usage,
+-- it is the last choice in every context used in a template application.
 missingField :: Context a
-missingField = Context $ \k _ i -> fail $
-    "Missing field $" ++ k ++ "$ in context for item " ++
-    show (itemIdentifier i)
+missingField = Context $ \k _ _ -> failBranch $
+    "Missing field '" ++ k ++ "' in context"
 
 parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime
 #if MIN_VERSION_time(1,5,0)

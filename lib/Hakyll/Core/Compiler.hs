@@ -24,11 +24,13 @@ module Hakyll.Core.Compiler
     , cached
     , unsafeCompiler
     , debugCompiler
+    , failBranch
+    , mapError
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                 (when, unless)
+import           Control.Monad                 (when, unless, (>=>))
 import           Data.Binary                   (Binary)
 import           Data.ByteString.Lazy          (ByteString)
 import           Data.Typeable                 (Typeable)
@@ -62,6 +64,7 @@ getUnderlyingExtension = takeExtension . toFilePath <$> getUnderlying
 
 
 --------------------------------------------------------------------------------
+-- | Create an item from the underlying identifier and a given value.
 makeItem :: a -> Compiler (Item a)
 makeItem x = do
     identifier <- getUnderlying
@@ -141,6 +144,10 @@ saveSnapshot snapshot item = do
 
 
 --------------------------------------------------------------------------------
+-- | Turn on caching for a compilation value to avoid recomputing it
+-- on subsequent Hakyll runs.
+-- The storage key consists of the underlying identifier of the compiled
+-- ressource and the given name.
 cached :: (Binary a, Typeable a)
        => String
        -> Compiler a
@@ -177,12 +184,34 @@ cached name compiler = do
 
 
 --------------------------------------------------------------------------------
+-- | Run an IO computation without dependencies in a Compiler
 unsafeCompiler :: IO a -> Compiler a
 unsafeCompiler = compilerUnsafeIO
 
 
 --------------------------------------------------------------------------------
--- | Compiler for debugging purposes
+-- | Fail so that it is treated as non-defined in an @\$if()\$@ branching
+-- "Hakyll.Web.Template" macro, and alternative
+-- 'Hakyll.Web.Template.Context.Context's are tried
+-- 
+-- @since 4.12.0
+failBranch :: String -> Compiler a
+failBranch = compilerFailBranch . return
+
+
+--------------------------------------------------------------------------------
+-- | Map over the error list from a failed compilation.
+-- Unlike @\``Control.Monad.Except.catchError`\` ('Control.Monad.Except.throwError' . f)@,
+-- it keeps the distinction between 'fail' and 'failBranch'.
+-- 
+-- @since 4.12.0
+mapError :: ([String] -> [String]) -> Compiler a -> Compiler a
+mapError f = compilerTry >=> either (compilerResult . CompilerError . fmap f) return
+
+
+--------------------------------------------------------------------------------
+-- | Compiler for debugging purposes.
+-- Passes a message to the debug logger that is printed in verbose mode.
 debugCompiler :: String -> Compiler ()
 debugCompiler msg = do
     logger <- compilerLogger <$> compilerAsk

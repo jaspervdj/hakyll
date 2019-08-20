@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 --------------------------------------------------------------------------------
 -- | A Module that allows easy rendering of RSS feeds.
@@ -43,21 +44,22 @@ import qualified Data.Text.Encoding          as T
 
 
 --------------------------------------------------------------------------------
-rssTemplate :: String
-rssTemplate = T.unpack $
-    T.decodeUtf8 $(makeRelativeToProject "data/templates/rss.xml" >>= embedFile)
+rssTemplate :: Item String
+rssTemplate = Item "templates/rss.xml" $ T.unpack $ T.decodeUtf8 $
+    $(makeRelativeToProject "data/templates/rss.xml" >>= embedFile)
 
-rssItemTemplate :: String
-rssItemTemplate = T.unpack $
-    T.decodeUtf8 $(makeRelativeToProject "data/templates/rss-item.xml" >>= embedFile)
+rssItemTemplate :: Item String
+rssItemTemplate = Item "templates/rss-item.xml" $ T.unpack $ T.decodeUtf8 $
+    $(makeRelativeToProject "data/templates/rss-item.xml" >>= embedFile)
 
-atomTemplate :: String
-atomTemplate = T.unpack $
-    T.decodeUtf8 $(makeRelativeToProject "data/templates/atom.xml" >>= embedFile)
+atomTemplate :: Item String
+atomTemplate = Item "templates/atom.xml" $ T.unpack $ T.decodeUtf8 $
+    $(makeRelativeToProject "data/templates/atom.xml" >>= embedFile)
 
-atomItemTemplate :: String
-atomItemTemplate = T.unpack $
-    T.decodeUtf8 $(makeRelativeToProject "data/templates/atom-item.xml" >>= embedFile)
+atomItemTemplate :: Item String
+atomItemTemplate = Item "templates/atom-item.xml" $ T.unpack $ T.decodeUtf8 $
+    $(makeRelativeToProject "data/templates/atom-item.xml" >>= embedFile)
+
 
 --------------------------------------------------------------------------------
 -- | This is a data structure to keep the configuration of a feed.
@@ -77,15 +79,15 @@ data FeedConfiguration = FeedConfiguration
 
 --------------------------------------------------------------------------------
 -- | Abstract function to render any feed.
-renderFeed :: String                  -- ^ Default feed template
-           -> String                  -- ^ Default item template
+renderFeed :: Item String             -- ^ Default feed template
+           -> Item String             -- ^ Default item template
            -> FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Context for the items
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
 renderFeed defFeed defItem config itemContext items = do
-    feedTpl <- readTemplateFile defFeed
-    itemTpl <- readTemplateFile defItem
+    feedTpl <- compileTemplateItem defFeed
+    itemTpl <- compileTemplateItem defItem
 
     protectedItems <- mapM (applyFilter protectCDATA) items
     body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
@@ -120,18 +122,14 @@ renderFeed defFeed defItem config itemContext items = do
     updatedField = field "updated" $ \_ -> case items of
         []      -> return "Unknown"
         (x : _) -> unContext itemContext' "updated" [] x >>= \cf -> case cf of
-            ListField _ _ -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
             StringField s -> return s
-
-    readTemplateFile :: String -> Compiler Template
-    readTemplateFile value = pure $ template $ readTemplateElems value
-
+            _             -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
 
 --------------------------------------------------------------------------------
 -- | Render an RSS feed using given templates with a number of items.
 renderRssWithTemplates ::
-       String                  -- ^ Feed template
-    -> String                  -- ^ Item template
+       Item String             -- ^ Feed template
+    -> Item String             -- ^ Item template
     -> FeedConfiguration       -- ^ Feed configuration
     -> Context String          -- ^ Item context
     -> [Item String]           -- ^ Feed items
@@ -144,8 +142,8 @@ renderRssWithTemplates feedTemplate itemTemplate config context = renderFeed
 --------------------------------------------------------------------------------
 -- | Render an Atom feed using given templates with a number of items.
 renderAtomWithTemplates ::
-       String                  -- ^ Feed template
-    -> String                  -- ^ Item template
+       Item String             -- ^ Feed template
+    -> Item String             -- ^ Item template
     -> FeedConfiguration       -- ^ Feed configuration
     -> Context String          -- ^ Item context
     -> [Item String]           -- ^ Feed items
