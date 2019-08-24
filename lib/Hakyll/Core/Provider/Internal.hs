@@ -20,8 +20,8 @@ module Hakyll.Core.Provider.Internal
 
 
 --------------------------------------------------------------------------------
+import           Control.Concurrent.Async (forConcurrently)
 import           Control.DeepSeq        (NFData (..), deepseq)
-import           Control.Monad          (forM)
 import           Data.Binary            (Binary (..))
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Map               (Map)
@@ -107,7 +107,7 @@ newProvider :: Store                  -- ^ Store to use
 newProvider store ignore directory = do
     list <- map fromFilePath <$> getRecursiveContents ignore directory
     let universe = S.fromList list
-    files <- fmap (maxmtime . M.fromList) $ forM list $ \identifier -> do
+    files <- fmap (maxmtime . M.fromList) $ forConcurrently list $ \identifier -> do
         rInfo <- getResourceInfo directory universe identifier
         return (identifier, rInfo)
 
