@@ -18,6 +18,7 @@ module Hakyll.Web.Template.Internal
 
 
 --------------------------------------------------------------------------------
+import           Control.Applicative                  ((<|>))
 import           Control.Monad.Except                 (MonadError (..))
 import           Data.Binary                          (Binary)
 import           Data.List                            (intercalate)
@@ -134,8 +135,13 @@ applyTemplate' tes context x = go tes
             "got StringField for expr " ++ show e
         ListField c xs -> do
             sep <- maybe (return "") go s
-            bs  <- mapM (applyTemplate' b c) xs
+            bs  <- mapM (applyTemplate' b $ combineContexts context x c) xs
             return $ intercalate sep bs
+            where
+                combineContexts :: Context a -> Item a -> Context b -> Context b
+                combineContexts ca ia cb = Context $ \ k' args' ib' ->
+                    unContext cb k' args' ib'
+                    <|> unContext ca k' args' ia
 
     applyElem (Partial e) = do
         p             <- applyExpr e >>= getString e

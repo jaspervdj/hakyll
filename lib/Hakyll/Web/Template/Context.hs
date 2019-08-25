@@ -272,8 +272,8 @@ titleField = mapContext takeBaseName . pathField
 --
 -- As another alternative, if none of the above matches, and the file has a
 -- path which contains nested directories specifying a date, then that date
--- will be used. In other words, if the path is of the form 
--- @**//yyyy//mm//dd//**//main.extension@ . 
+-- will be used. In other words, if the path is of the form
+-- @**//yyyy//mm//dd//**//main.extension@ .
 -- As above, in case of multiple matches, the rightmost one is used.
 
 dateField :: String     -- ^ Key in which the rendered date should be placed
