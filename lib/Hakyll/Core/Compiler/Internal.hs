@@ -277,9 +277,9 @@ compilerUnsafeIO io = Compiler $ \_ -> do
 -- If no messages are given, this is considered a 'CompilationNoResult' error.
 -- Otherwise, it is treated as a proper compilation failure.
 compilerThrow :: [String] -> Compiler a
-compilerThrow errs = compilerResult $ CompilerError $ case errs of
-    []       -> CompilationNoResult []
-    (e : es) -> CompilationFailure (e :| es)
+compilerThrow = compilerResult . CompilerError .
+    maybe (CompilationNoResult []) CompilationFailure .
+    NonEmpty.nonEmpty
 
 -- | Put a 'CompilerError' with  multiple messages as 'CompilationNoResult'
 compilerNoResult :: [String] -> Compiler a

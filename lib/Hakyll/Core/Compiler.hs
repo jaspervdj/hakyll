@@ -25,7 +25,7 @@ module Hakyll.Core.Compiler
     , unsafeCompiler
     , debugCompiler
     , noResult
-    , prependErrorMessage
+    , withErrorMessage
     ) where
 
 
@@ -205,8 +205,8 @@ noResult = compilerNoResult . return
 -- add helpful context to error messages.
 --
 -- @since 4.13.0
-prependErrorMessage :: String -> Compiler a -> Compiler a
-prependErrorMessage x = do
+withErrorMessage :: String -> Compiler a -> Compiler a
+withErrorMessage x = do
     compilerTry >=> either (compilerResult . CompilerError . prepend) return
   where
     prepend (CompilationFailure  es) = CompilationFailure  (x `NonEmpty.cons` es)

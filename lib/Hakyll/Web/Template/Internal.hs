@@ -149,9 +149,9 @@ applyTemplate' tes context x = go tes
 
     applyElem (Chunk c) = return c
 
-    applyElem (Expr e) = applyStringExpr evalMsg typeMsg e
+    applyElem (Expr e) = withErrorMessage evalMsg (applyStringExpr typeMsg e)
       where
-        evalMsg = Just $ "In expr '$" ++ show e ++ "$'"
+        evalMsg = "In expr '$" ++ show e ++ "$'"
         typeMsg = "expr '$" ++ show e ++ "$'"
 
     applyElem Escaped = return "$"
@@ -165,10 +165,10 @@ applyTemplate' tes context x = go tes
         debug = compilerDebugEntries ("Hakyll.Web.Template.applyTemplate: " ++
             "[ERROR] in 'if' condition on expr '" ++ show e ++ "':")
 
-    applyElem (For e b s) = prependErrorMessage headMsg (applyExpr e) >>= \cf -> case cf of
+    applyElem (For e b s) = withErrorMessage headMsg (applyExpr e) >>= \cf -> case cf of
         EmptyField     -> expected "list" "boolean" typeMsg
         StringField _  -> expected "list" "string" typeMsg
-        ListField c xs -> prependErrorMessage bodyMsg $ do
+        ListField c xs -> withErrorMessage bodyMsg $ do
             sep <- maybe (return "") go s
             bs  <- mapM (applyTemplate' b c) xs
             return $ intercalate sep bs
@@ -177,12 +177,13 @@ applyTemplate' tes context x = go tes
         typeMsg = "loop expr '" ++ show e ++ "'"
         bodyMsg = "In loop context of '$for(" ++ show e ++ ")$'"
 
-    applyElem (Partial e) = applyStringExpr headMsg typeMsg e >>= \p ->
-        prependErrorMessage inclMsg $ do
+    applyElem (Partial e) = withErrorMessage headMsg $
+        applyStringExpr typeMsg e >>= \p ->
+        withErrorMessage inclMsg $ do
             tpl' <- loadBody (fromFilePath p)
             itemBody <$> applyTemplate tpl' context x
       where
-        headMsg = Just $ "In expr '$partial(" ++ show e ++ ")$'"
+        headMsg = "In expr '$partial(" ++ show e ++ ")$'"
         typeMsg = "partial expr '" ++ show e ++ "'"
         inclMsg = "In inclusion of '$partial(" ++ show e ++ ")$'"
 
@@ -193,7 +194,7 @@ applyTemplate' tes context x = go tes
     applyExpr (Ident (TemplateKey k)) = context' k [] x
 
     applyExpr (Call (TemplateKey k) args) = do
-        args' <- mapM (\e -> applyStringExpr Nothing (typeMsg e) e) args
+        args' <- mapM (\e -> applyStringExpr (typeMsg e) e) args
         context' k args' x
       where
         typeMsg e = "argument '" ++ show e ++ "'"
@@ -202,15 +203,13 @@ applyTemplate' tes context x = go tes
 
     ----------------------------------------------------------------------------
 
-    applyStringExpr :: Maybe String -> String -> TemplateExpr -> Compiler String
-    applyStringExpr mbPrepend msg expr =
-        prepending (applyExpr expr) >>= getString
+    applyStringExpr :: String -> TemplateExpr -> Compiler String
+    applyStringExpr msg expr =
+        applyExpr expr >>= getString
       where
         getString EmptyField      = expected "string" "boolean" msg
         getString (StringField s) = return s
         getString (ListField _ _) = expected "string" "list" msg
-
-        prepending = maybe id prependErrorMessage mbPrepend
 
     expected typ act expr = fail $ unwords ["Hakyll.Web.Template.applyTemplate:",
         "expected", typ, "but got", act, "for", expr]
