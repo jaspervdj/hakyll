@@ -44,20 +44,20 @@ import qualified Data.Text.Encoding          as T
 
 
 --------------------------------------------------------------------------------
-rssTemplate :: Item String
-rssTemplate = Item "templates/rss.xml" $ T.unpack $ T.decodeUtf8 $
+rssTemplate :: Template
+rssTemplate = readTemplate $ T.unpack $ T.decodeUtf8 $
     $(makeRelativeToProject "data/templates/rss.xml" >>= embedFile)
 
-rssItemTemplate :: Item String
-rssItemTemplate = Item "templates/rss-item.xml" $ T.unpack $ T.decodeUtf8 $
+rssItemTemplate :: Template
+rssItemTemplate = readTemplate $ T.unpack $ T.decodeUtf8 $
     $(makeRelativeToProject "data/templates/rss-item.xml" >>= embedFile)
 
-atomTemplate :: Item String
-atomTemplate = Item "templates/atom.xml" $ T.unpack $ T.decodeUtf8 $
+atomTemplate :: Template
+atomTemplate = readTemplate $ T.unpack $ T.decodeUtf8 $
     $(makeRelativeToProject "data/templates/atom.xml" >>= embedFile)
 
-atomItemTemplate :: Item String
-atomItemTemplate = Item "templates/atom-item.xml" $ T.unpack $ T.decodeUtf8 $
+atomItemTemplate :: Template
+atomItemTemplate = readTemplate $ T.unpack $ T.decodeUtf8 $
     $(makeRelativeToProject "data/templates/atom-item.xml" >>= embedFile)
 
 
@@ -79,16 +79,13 @@ data FeedConfiguration = FeedConfiguration
 
 --------------------------------------------------------------------------------
 -- | Abstract function to render any feed.
-renderFeed :: Item String             -- ^ Default feed template
-           -> Item String             -- ^ Default item template
+renderFeed :: Template                -- ^ Default feed template
+           -> Template                -- ^ Default item template
            -> FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Context for the items
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
-renderFeed defFeed defItem config itemContext items = do
-    feedTpl <- compileTemplateItem defFeed
-    itemTpl <- compileTemplateItem defItem
-
+renderFeed feedTpl itemTpl config itemContext items = do
     protectedItems <- mapM (applyFilter protectCDATA) items
     body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
     applyTemplate feedTpl feedContext body
@@ -128,8 +125,8 @@ renderFeed defFeed defItem config itemContext items = do
 --------------------------------------------------------------------------------
 -- | Render an RSS feed using given templates with a number of items.
 renderRssWithTemplates ::
-       Item String             -- ^ Feed template
-    -> Item String             -- ^ Item template
+       Template                -- ^ Feed template
+    -> Template                -- ^ Item template
     -> FeedConfiguration       -- ^ Feed configuration
     -> Context String          -- ^ Item context
     -> [Item String]           -- ^ Feed items
@@ -142,8 +139,8 @@ renderRssWithTemplates feedTemplate itemTemplate config context = renderFeed
 --------------------------------------------------------------------------------
 -- | Render an Atom feed using given templates with a number of items.
 renderAtomWithTemplates ::
-       Item String             -- ^ Feed template
-    -> Item String             -- ^ Item template
+       Template                -- ^ Feed template
+    -> Template                -- ^ Item template
     -> FeedConfiguration       -- ^ Feed configuration
     -> Context String          -- ^ Item context
     -> [Item String]           -- ^ Feed items
