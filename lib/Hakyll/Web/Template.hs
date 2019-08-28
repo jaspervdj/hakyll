@@ -138,6 +138,7 @@
 -- >     3...2...1
 -- > </p>
 --
+{-# LANGUAGE TemplateHaskell #-}
 module Hakyll.Web.Template
     ( Template
     , templateBodyCompiler
@@ -148,8 +149,30 @@ module Hakyll.Web.Template
     , readTemplate
     , compileTemplateItem
     , unsafeReadTemplateFile
+    , embedTemplate
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Web.Template.Internal
+
+
+--------------------------------------------------------------------------------
+import           Data.FileEmbed               (embedFile)
+import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as T
+import           Language.Haskell.TH          (Exp, Q)
+
+
+--------------------------------------------------------------------------------
+-- | Embed template allows you embed a template within the Haskell binary.
+-- Example:
+--
+-- > myTemplate :: Template
+-- > myTemplate = $(embedTemplate "test.html")
+embedTemplate :: FilePath -> Q Exp
+embedTemplate filePath = [|
+    let source = T.unpack $ T.decodeUtf8 $(embedFile filePath) in
+    case parseTemplateElemsFile filePath source of
+        Left  err -> error err
+        Right tpl -> template filePath tpl |]

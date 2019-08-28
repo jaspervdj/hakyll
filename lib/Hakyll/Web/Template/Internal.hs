@@ -73,6 +73,7 @@ readTemplate :: String -> Template
 readTemplate = either error (template origin) . parseTemplateElemsFile origin
   where
     origin = "{literal}"
+{-# DEPRECATED readTemplate "Use templateCompiler instead" #-}
 
 --------------------------------------------------------------------------------
 -- | Parse an item body into a template.

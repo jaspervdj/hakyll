@@ -1,5 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 --------------------------------------------------------------------------------
 -- | A Module that allows easy rendering of RSS feeds.
@@ -38,27 +38,25 @@ import           Hakyll.Web.Template.List
 
 
 --------------------------------------------------------------------------------
-import           Data.FileEmbed              (makeRelativeToProject, embedFile)
-import qualified Data.Text                   as T
-import qualified Data.Text.Encoding          as T
+import           Data.FileEmbed              (makeRelativeToProject)
 
 
 --------------------------------------------------------------------------------
 rssTemplate :: Template
-rssTemplate = readTemplate $ T.unpack $ T.decodeUtf8 $
-    $(makeRelativeToProject "data/templates/rss.xml" >>= embedFile)
+rssTemplate =
+    $(makeRelativeToProject "data/templates/rss.xml" >>= embedTemplate)
 
 rssItemTemplate :: Template
-rssItemTemplate = readTemplate $ T.unpack $ T.decodeUtf8 $
-    $(makeRelativeToProject "data/templates/rss-item.xml" >>= embedFile)
+rssItemTemplate =
+    $(makeRelativeToProject "data/templates/rss-item.xml" >>= embedTemplate)
 
 atomTemplate :: Template
-atomTemplate = readTemplate $ T.unpack $ T.decodeUtf8 $
-    $(makeRelativeToProject "data/templates/atom.xml" >>= embedFile)
+atomTemplate =
+    $(makeRelativeToProject "data/templates/atom.xml" >>= embedTemplate)
 
 atomItemTemplate :: Template
-atomItemTemplate = readTemplate $ T.unpack $ T.decodeUtf8 $
-    $(makeRelativeToProject "data/templates/atom-item.xml" >>= embedFile)
+atomItemTemplate =
+    $(makeRelativeToProject "data/templates/atom-item.xml" >>= embedTemplate)
 
 
 --------------------------------------------------------------------------------
