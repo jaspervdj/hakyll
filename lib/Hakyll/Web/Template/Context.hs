@@ -135,6 +135,10 @@ listField key c xs = listFieldWith key c (const xs)
 
 
 --------------------------------------------------------------------------------
+-- | Produces a new 'Context' which has list field 'key'. All fields from
+-- 'c' are also accessible from the produced context.
+-- Be careful when doing @listFieldWith k ca f <> cb@ as any fields in @ca@
+-- will override fields in @cb@ with the same name.
 listFieldWith
     :: String -> Context a -> (Item b -> Compiler [Item a]) -> Context b
 listFieldWith key c f = field' key $ fmap (ListField c) . f
