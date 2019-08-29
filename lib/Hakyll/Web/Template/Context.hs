@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE RankNTypes                #-}
 module Hakyll.Web.Template.Context
     ( ContextField (..)
     , Context (..)
@@ -28,6 +29,7 @@ module Hakyll.Web.Template.Context
     , teaserField
     , teaserFieldWithSeparator
     , missingField
+    , bindItem
     ) where
 
 
@@ -396,3 +398,10 @@ parseTimeM = TF.parseTimeM
 #else
 parseTimeM _ = TF.parseTime
 #endif
+
+--------------------------------------------------------------------------------
+
+-- | Binds an 'Item' to a given 'Context', allowing it to be combined with any
+-- other 'Context' of any type.
+bindItem :: Context a -> Item a -> forall b. Context b
+bindItem (Context ctx) ia = Context $ \k args _ -> ctx k args ia
