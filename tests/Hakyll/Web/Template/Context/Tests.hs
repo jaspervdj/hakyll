@@ -13,9 +13,11 @@ import           Test.Tasty.HUnit            (Assertion, testCase, (@=?))
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Item
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Store           (Store)
 import           Hakyll.Web.Template.Context
+import           Hakyll.Web.Template.Internal
 import           TestSuite.Util
 
 
@@ -23,6 +25,7 @@ import           TestSuite.Util
 tests :: TestTree
 tests = testGroup "Hakyll.Web.Template.Context.Tests"
     [ testCase "testDateField" testDateField
+    , testCase "testOuerLoopContextAccess" testOuerLoopContextAccess
     ]
 
 
@@ -65,3 +68,28 @@ testContextDone store provider identifier key context =
             ListField _ _   -> error $
                 "Hakyll.Web.Template.Context.Tests.testContextDone: " ++
                 "Didn't expect ListField"
+
+--------------------------------------------------------------------------------
+
+testOuerLoopContextAccess :: Assertion
+testOuerLoopContextAccess = do
+    store    <- newTestStore
+    provider <- newTestProvider store
+    test store provider ctx "baz"
+    test store provider (ctx' <> ctx) "not baz"
+    test store provider (ctx <> ctx') "baz"
+
+    cleanTestEnv
+    where
+        tpl = readTemplate "$for(foo)$$for(bar)$$qux$$endfor$$endfor$"
+        ctx = mconcat [
+            field "qux" $ const $ return "baz"
+            , listField "foo" (listField "bar" mempty $ return [mockItem])
+                $ return [mockItem]
+            ]
+        ctx' = field "qux" $ const $ return "not baz"
+        mockItem = Item "" ()
+        test store provider context str = do
+            str' <- testCompilerDone store provider ""
+                $ applyTemplate tpl context mockItem
+            str @=? itemBody str'
