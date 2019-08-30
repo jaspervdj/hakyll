@@ -18,6 +18,7 @@ import           Control.Concurrent.Chan (Chan, newChan, readChan, writeChan)
 import           Control.Concurrent.MVar (MVar, newEmptyMVar, putMVar, takeMVar)
 import           Control.Monad           (forever)
 import           Control.Monad.Trans     (MonadIO, liftIO)
+import           Data.List               (intercalate)
 import           Prelude                 hiding (error)
 
 
@@ -79,7 +80,7 @@ string l v m
 
 --------------------------------------------------------------------------------
 error :: MonadIO m => Logger -> String -> m ()
-error l m = string l Error $ "  [ERROR] " ++ m
+error l m = string l Error $ "  [ERROR] " ++ indent m
 
 
 --------------------------------------------------------------------------------
@@ -89,9 +90,14 @@ header l = string l Message
 
 --------------------------------------------------------------------------------
 message :: MonadIO m => Logger -> String -> m ()
-message l m = string l Message $ "  " ++ m
+message l m = string l Message $ "  " ++ indent m
 
 
 --------------------------------------------------------------------------------
 debug :: MonadIO m => Logger -> String -> m ()
-debug l m = string l Debug $ "  [DEBUG] " ++ m
+debug l m = string l Debug $ "  [DEBUG] " ++ indent m
+
+
+--------------------------------------------------------------------------------
+indent :: String -> String
+indent = intercalate "\n    " . lines

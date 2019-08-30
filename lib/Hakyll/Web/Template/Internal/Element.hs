@@ -7,14 +7,14 @@ module Hakyll.Web.Template.Internal.Element
     , TemplateExpr (..)
     , TemplateElement (..)
     , templateElems
-    , readTemplateElems
-    , readTemplateElemsFile
+    , parseTemplateElemsFile
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative     ((<|>))
+import           Control.Applicative     ((<|>), (<*))
 import           Control.Monad           (void)
+import           Control.Arrow           (left)
 import           Data.Binary             (Binary, get, getWord8, put, putWord8)
 import           Data.List               (intercalate)
 import           Data.Maybe              (isJust)
@@ -107,17 +107,10 @@ instance Binary TemplateExpr where
         2 -> StringLiteral <$> get
         _ -> error "Hakyll.Web.Template.Internal: Error reading cached template"
 
-
 --------------------------------------------------------------------------------
-readTemplateElems :: String -> [TemplateElement]
-readTemplateElems = readTemplateElemsFile "{literal}"
-
-
---------------------------------------------------------------------------------
-readTemplateElemsFile :: FilePath -> String -> [TemplateElement]
-readTemplateElemsFile file input = case P.parse templateElems file input of
-    Left err -> error $ "Cannot parse template: " ++ show err
-    Right t  -> t
+parseTemplateElemsFile :: FilePath -> String -> Either String [TemplateElement]
+parseTemplateElemsFile file = left (\e -> "Cannot parse template " ++ show e)
+                            . P.parse (templateElems <* P.eof) file
 
 
 --------------------------------------------------------------------------------
@@ -167,7 +160,7 @@ trimOpen = do
 --------------------------------------------------------------------------------
 trimClose :: P.Parser Bool
 trimClose = do
-    trimIfR <- P.optionMaybe $ P.try (P.char '-')
+    trimIfR <- P.optionMaybe $ (P.char '-')
     void $ P.char '$'
     pure $ isJust trimIfR
 

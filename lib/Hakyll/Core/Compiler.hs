@@ -24,13 +24,16 @@ module Hakyll.Core.Compiler
     , cached
     , unsafeCompiler
     , debugCompiler
+    , noResult
+    , withErrorMessage
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                 (when, unless)
+import           Control.Monad                 (unless, when, (>=>))
 import           Data.Binary                   (Binary)
 import           Data.ByteString.Lazy          (ByteString)
+import qualified Data.List.NonEmpty            as NonEmpty
 import           Data.Typeable                 (Typeable)
 import           System.Environment            (getProgName)
 import           System.FilePath               (takeExtension)
@@ -62,6 +65,7 @@ getUnderlyingExtension = takeExtension . toFilePath <$> getUnderlying
 
 
 --------------------------------------------------------------------------------
+-- | Create an item from the underlying identifier and a given value.
 makeItem :: a -> Compiler (Item a)
 makeItem x = do
     identifier <- getUnderlying
@@ -141,6 +145,10 @@ saveSnapshot snapshot item = do
 
 
 --------------------------------------------------------------------------------
+-- | Turn on caching for a compilation value to avoid recomputing it
+-- on subsequent Hakyll runs.
+-- The storage key consists of the underlying identifier of the compiled
+-- ressource and the given name.
 cached :: (Binary a, Typeable a)
        => String
        -> Compiler a
@@ -177,12 +185,37 @@ cached name compiler = do
 
 
 --------------------------------------------------------------------------------
+-- | Run an IO computation without dependencies in a Compiler
 unsafeCompiler :: IO a -> Compiler a
 unsafeCompiler = compilerUnsafeIO
 
 
 --------------------------------------------------------------------------------
--- | Compiler for debugging purposes
+-- | Fail so that it is treated as non-defined in an @\$if()\$@ branching
+-- "Hakyll.Web.Template" macro, and alternative
+-- 'Hakyll.Web.Template.Context.Context's are tried
+--
+-- @since 4.13.0
+noResult :: String -> Compiler a
+noResult = compilerNoResult . return
+
+
+--------------------------------------------------------------------------------
+-- | Prepend an error line to the error, if there is one.  This allows you to
+-- add helpful context to error messages.
+--
+-- @since 4.13.0
+withErrorMessage :: String -> Compiler a -> Compiler a
+withErrorMessage x = do
+    compilerTry >=> either (compilerResult . CompilerError . prepend) return
+  where
+    prepend (CompilationFailure  es) = CompilationFailure  (x `NonEmpty.cons` es)
+    prepend (CompilationNoResult es) = CompilationNoResult (x : es)
+
+
+--------------------------------------------------------------------------------
+-- | Compiler for debugging purposes.
+-- Passes a message to the debug logger that is printed in verbose mode.
 debugCompiler :: String -> Compiler ()
 debugCompiler msg = do
     logger <- compilerLogger <$> compilerAsk
