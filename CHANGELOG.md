@@ -4,6 +4,19 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.13.0.0 (2019-08-30)
+
+- Improved documentation in many places (contribution by Bergi)
+- Significantly improve error messages when reading and applying templates
+  (contribution by Bergi)
+    * `empty` and `fail` for `Compiler` now fail without or with a message,
+      allowing for much better debug output
+    * `renderFeed`, `renderRssWithTemplates` and `renderAtomWithTemplates` now
+      take `Template` rather than `String` arguments
+- Add option to specify date in directory structure,e.g.
+  `posts/2019/05/10/tomorrow.md` (contribution by Taeer Bar-Ya)
+- Bump QuickCheck to 2.13
+
 ## Hakyll 4.12.5.2 (2019-05-09)
 
 - Bump pandoc to 2.7
