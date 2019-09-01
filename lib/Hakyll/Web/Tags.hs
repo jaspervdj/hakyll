@@ -113,7 +113,7 @@ getTags identifier = do
 
 
 --------------------------------------------------------------------------------
--- | Obtain categories from a page.
+-- | Obtain category from a page.
 getCategory :: MonadMetadata m => Identifier -> m [String]
 getCategory = return . return . takeBaseName . takeDirectory . toFilePath
 

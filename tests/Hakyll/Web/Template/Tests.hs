@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Hakyll.Web.Template.Tests
     ( tests
     ) where
@@ -7,9 +8,10 @@ module Hakyll.Web.Template.Tests
 
 --------------------------------------------------------------------------------
 import           Test.Tasty                   (TestTree, testGroup)
-import           Test.Tasty.HUnit             (Assertion, testCase, (@=?),
-                                               (@?=))
+import           Test.Tasty.HUnit             (Assertion, assertBool, testCase,
+                                               (@=?), (@?=))
 
+import           Data.Either                  (isLeft)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
@@ -32,13 +34,13 @@ tests = testGroup "Hakyll.Web.Template.Tests" $ concat
       , testCase "applyJoinTemplateList" testApplyJoinTemplateList
       ]
 
-    , fromAssertions "readTemplate"
-        [ [Chunk "Hello ", Expr (Call "guest" [])]
-            @=? readTemplateElems "Hello $guest()$"
-        , [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]
-            @=? readTemplateElems "$if(a(\"bar\"))$foo$endif$"
+    , fromAssertions "parseTemplate"
+        [ Right [Chunk "Hello ", Expr (Call "guest" [])]
+            @=? parse "Hello $guest()$"
+        , Right [If (Call "a" [StringLiteral "bar"]) [Chunk "foo"] Nothing]
+            @=? parse "$if(a(\"bar\"))$foo$endif$"
         -- 'If' trim check.
-        , [ TrimL
+        , Right [ TrimL
           , If (Ident (TemplateKey "body"))
                [ TrimR
                , Chunk "\n"
@@ -54,29 +56,39 @@ tests = testGroup "Hakyll.Web.Template.Tests" $ concat
                      ])
           , TrimR
           ]
-          @=? readTemplateElems "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
+          @=? parse "$-if(body)-$\n$body$\n$-else-$\n$body$\n$-endif-$"
         -- 'For' trim check.
-        , [ TrimL
+        , Right [ TrimL
           , For (Ident (TemplateKey "authors"))
                 [TrimR, Chunk "\n   body   \n", TrimL]
                 Nothing
           , TrimR
           ]
-          @=? readTemplateElems "$-for(authors)-$\n   body   \n$-endfor-$"
+          @=? parse "$-for(authors)-$\n   body   \n$-endfor-$"
         -- 'Partial' trim check.
-        , [ TrimL
+        , Right [ TrimL
           , Partial (StringLiteral "path")
           , TrimR
           ]
-          @=? readTemplateElems "$-partial(\"path\")-$"
+          @=? parse "$-partial(\"path\")-$"
         -- 'Expr' trim check.
-        , [ TrimL
+        , Right [ TrimL
           , Expr (Ident (TemplateKey "foo"))
           , TrimR
           ]
-          @=? readTemplateElems "$-foo-$"
+          @=? parse "$-foo-$"
+        -- fail on incomplete template.
+        , assertBool "did not yield error" $ isLeft $
+          parse "a$b"
+        -- fail on mismatched template syntax.
+        , assertBool "did not fail to parse" $ isLeft $
+          parse "$for(xs)$\n  <p>foo</p>\n$endif$"
         ]
+
+    , [testCase "embeddedTemplate" testEmbeddedTemplate]
     ]
+  where
+    parse = parseTemplateElemsFile ""
 
 
 --------------------------------------------------------------------------------
@@ -113,6 +125,8 @@ testApplyJoinTemplateList :: Assertion
 testApplyJoinTemplateList = do
     store    <- newTestStore
     provider <- newTestProvider store
+    tpl      <- testCompilerDone store provider "tpl" $
+        compileTemplateItem (Item "tpl" "<b>$body$</b>")
     str      <- testCompilerDone store provider "item3" $
         applyJoinTemplateList ", " tpl defaultContext [i1, i2]
 
@@ -121,4 +135,22 @@ testApplyJoinTemplateList = do
   where
     i1  = Item "item1" "Hello"
     i2  = Item "item2" "World"
-    tpl = readTemplate "<b>$body$</b>"
+
+
+--------------------------------------------------------------------------------
+embeddedTemplate :: Template
+embeddedTemplate = $(embedTemplate "tests/data/embed.html")
+
+--------------------------------------------------------------------------------
+testEmbeddedTemplate :: Assertion
+testEmbeddedTemplate = do
+    store    <- newTestStore
+    provider <- newTestProvider store
+    str      <- testCompilerDone store provider "item3" $
+        applyTemplate embeddedTemplate defaultContext item
+
+    itemBody str @?= "<p>Hello, world</p>\n"
+    cleanTestEnv
+  where
+    item = Item "item1" "Hello, world"
+
