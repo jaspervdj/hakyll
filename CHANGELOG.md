@@ -190,7 +190,7 @@ up some stuff and build on a wider variety of setups (stack/cabal).
 - Improve error messages for template parsing (contribution by Lorenzo
   Tabacchini)
 - Improvements to the installation instructions (contribution by Thomas Koch)
-- Move from `snap` to `warp` for preview servier (contribution by Arguggi)
+- Move from `snap` to `warp` for preview server (contribution by Arguggi)
 - Fix error in CompressCSS (contribution by Luca Molteni)
 - Move example from XHTML to HTML5 (contribution by Peter Doherty)
 - Make errors in check less verbose (contribution by Jan Tojnar)
