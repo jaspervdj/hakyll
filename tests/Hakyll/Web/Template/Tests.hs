@@ -23,6 +23,7 @@ import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.Internal
 import           Hakyll.Web.Template.List
 import           TestSuite.Util
+import           Data.FileEmbed (makeRelativeToProject)
 
 
 --------------------------------------------------------------------------------
@@ -139,7 +140,7 @@ testApplyJoinTemplateList = do
 
 --------------------------------------------------------------------------------
 embeddedTemplate :: Template
-embeddedTemplate = $(embedTemplate "tests/data/embed.html")
+embeddedTemplate = $(makeRelativeToProject "tests/data/embed.html" >>= embedTemplate)
 
 --------------------------------------------------------------------------------
 testEmbeddedTemplate :: Assertion
