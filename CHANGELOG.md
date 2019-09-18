@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.13.0.1 (2019-09-18)
+
+- Add missing test files (contribution by Justin Humm)
+
 ## Hakyll 4.13.0.0 (2019-08-30)
 
 - Improved documentation in many places (contribution by Bergi)
