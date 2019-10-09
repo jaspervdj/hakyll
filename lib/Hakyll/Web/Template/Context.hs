@@ -14,7 +14,7 @@
 --
 -- > $partial(concat("templates/categories/", category))$
 --
--- This will evaluate the @category@ field in the context, then prepend he path,
+-- This will evaluate the @category@ field in the context, then prepend the path,
 -- and include the referenced file as a template.
 
 
