@@ -69,7 +69,7 @@ data FeedConfiguration = FeedConfiguration
     , -- | Name of the feed author.
       feedAuthorName  :: String
     , -- | Email of the feed author.
-      feedAuthorEmail :: String
+      feedAuthorEmail :: Maybe String
     , -- | Absolute root URL of the feed site (e.g. @http://jaspervdj.be@)
       feedRoot        :: String
     } deriving (Show, Eq)
@@ -97,7 +97,7 @@ renderFeed feedTpl itemTpl config itemContext items = do
         [ itemContext
         , constField "root" (feedRoot config)
         , constField "authorName"  (feedAuthorName config)
-        , constField "authorEmail" (feedAuthorEmail config)
+        , emailField
         ]
 
     feedContext = mconcat
@@ -105,7 +105,7 @@ renderFeed feedTpl itemTpl config itemContext items = do
          , constField "title"       (feedTitle config)
          , constField "description" (feedDescription config)
          , constField "authorName"  (feedAuthorName config)
-         , constField "authorEmail" (feedAuthorEmail config)
+         , emailField
          , constField "root"        (feedRoot config)
          , urlField   "url"
          , updatedField
@@ -119,6 +119,10 @@ renderFeed feedTpl itemTpl config itemContext items = do
         (x : _) -> unContext itemContext' "updated" [] x >>= \cf -> case cf of
             StringField s -> return s
             _             -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
+
+    emailField = case feedAuthorEmail config of
+        Nothing    -> missingField
+        Just email -> constField "authorEmail" email
 
 --------------------------------------------------------------------------------
 -- | Render an RSS feed using given templates with a number of items.
