@@ -46,7 +46,7 @@ main = do
         ["-f", dstDir] ->
             createFiles True srcDir files dstDir
         _ -> do
-            putStrLn $ "Usage: " ++ progName ++ "[-f] <directory>"
+            putStrLn $ "Usage: " ++ progName ++ " [-f] <directory>"
             exitFailure
 
     where
