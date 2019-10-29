@@ -326,8 +326,10 @@ categoryField =
 -- | Render one tag link
 simpleRenderLink :: String -> (Maybe FilePath) -> Maybe H.Html
 simpleRenderLink _   Nothing         = Nothing
-simpleRenderLink tag (Just filePath) =
-  Just $ H.a ! A.href (toValue $ toUrl filePath) $ toHtml tag
+simpleRenderLink tag (Just filePath) = Just $
+    H.a ! A.title (H.stringValue ("All pages tagged '"++tag++"'."))
+        ! A.href (toValue $ toUrl filePath)
+        $ toHtml tag
 
 
 --------------------------------------------------------------------------------
