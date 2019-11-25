@@ -24,6 +24,7 @@ staticServer :: Logger               -- ^ Logger
              -> IO ()                -- ^ Blocks forever
 staticServer logger directory host port = do
     Logger.header logger $ "Listening on http://" ++ host ++ ":" ++ show port
+    Logger.flush logger -- ensure this line is logged before Warp errors
     Warp.runSettings warpSettings $
         Static.staticApp (Static.defaultFileServerSettings directory)
   where
