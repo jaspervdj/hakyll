@@ -184,6 +184,8 @@ directly with the default Hakyll site.
   [source](https://github.com/abhin4v/abhin4v.github.io)
 - <https://dailyreadingnotes.com/>,
   [source](https://github.com/hackeryarn/daily-reading-notes)
+- <https://benedikt-mayer.github.io/>,
+  [source](https://github.com/benedikt-mayer/benedikt-mayer.github.io)
 
 ## Hakyll 3.X
 
