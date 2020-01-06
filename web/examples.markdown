@@ -188,6 +188,8 @@ directly with the default Hakyll site.
   [source](https://github.com/benedikt-mayer/benedikt-mayer.github.io)
 - <https://svejcar.dev/>,
   [source](https://github.com/vaclavsvejcar/svejcar-dev)
+- <https://robertwpearce.com/>,
+  [source](https://github.com/rpearce/robertwpearce.com)
 
 ## Hakyll 3.X
 
