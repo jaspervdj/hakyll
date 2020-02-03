@@ -32,6 +32,7 @@ module Hakyll.Web.Feed
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Item
 import           Hakyll.Core.Util.String     (replaceAll)
+import           Hakyll.Web.Html             (escapeHtml)
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.List
@@ -95,21 +96,22 @@ renderFeed feedTpl itemTpl config itemContext items = do
   where
     applyFilter :: (Monad m,Functor f) => (String -> String) -> f String -> m (f String)
     applyFilter tr str = return $ fmap tr str
+
     protectCDATA :: String -> String
     protectCDATA = replaceAll "]]>" (const "]]&gt;")
 
     itemContext' = mconcat
         [ itemContext
-        , constField "root" (feedRoot config)
-        , constField "authorName"  (feedAuthorName config)
+        , constField "root"        (feedRoot config)
+        , constField "authorName"  (escapeHtml $ feedAuthorName config)
         , constField "authorEmail" (feedAuthorEmail config)
         ]
 
     feedContext = mconcat
          [ bodyField  "body"
-         , constField "title"       (feedTitle config)
-         , constField "description" (feedDescription config)
-         , constField "authorName"  (feedAuthorName config)
+         , constField "title"       (escapeHtml $ feedTitle config)
+         , constField "description" (escapeHtml $ feedDescription config)
+         , constField "authorName"  (escapeHtml $ feedAuthorName config)
          , constField "authorEmail" (feedAuthorEmail config)
          , constField "root"        (feedRoot config)
          , urlField   "url"
