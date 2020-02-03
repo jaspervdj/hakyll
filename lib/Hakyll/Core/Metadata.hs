@@ -16,16 +16,18 @@ module Hakyll.Core.Metadata
 --------------------------------------------------------------------------------
 import           Control.Arrow                  (second)
 import           Control.Monad                  (forM)
-import           Data.Binary                    (Binary (..), getWord8,
-                                                 putWord8, Get)
+import           Data.Binary                    (Binary (..), Get, getWord8,
+                                                 putWord8)
 import qualified Data.HashMap.Strict            as HMS
+import           Data.List                      (intercalate)
 import qualified Data.Set                       as S
 import qualified Data.Text                      as T
 import qualified Data.Vector                    as V
-import qualified Data.Yaml.Extended                      as Yaml
+import qualified Data.Yaml.Extended             as Yaml
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
+import           Hakyll.Core.Util.String        (splitAll)
 
 
 --------------------------------------------------------------------------------
@@ -34,13 +36,38 @@ type Metadata = Yaml.Object
 
 --------------------------------------------------------------------------------
 lookupString :: String -> Metadata -> Maybe String
-lookupString key meta = HMS.lookup (T.pack key) meta >>= Yaml.toString
+lookupString = lookupA tryLookupString
 
 
 --------------------------------------------------------------------------------
 lookupStringList :: String -> Metadata -> Maybe [String]
-lookupStringList key meta =
+lookupStringList = lookupA tryLookupStringList
+
+
+--------------------------------------------------------------------------------
+lookupA :: (String -> Metadata -> Maybe a) -> String -> Metadata -> Maybe a
+lookupA f key meta = case f key meta of
+    res@(Just _) -> res
+    Nothing      -> case splitAll "\\." key of
+        (h:t) -> tryLookupMeta h meta >>= lookupA f (intercalate "." t)
+        _     -> Nothing
+
+--------------------------------------------------------------------------------
+tryLookupString :: String -> Metadata -> Maybe String
+tryLookupString key meta = HMS.lookup (T.pack key) meta >>= Yaml.toString
+
+
+--------------------------------------------------------------------------------
+tryLookupStringList :: String -> Metadata -> Maybe [String]
+tryLookupStringList key meta =
     HMS.lookup (T.pack key) meta >>= Yaml.toList >>= mapM Yaml.toString
+
+
+--------------------------------------------------------------------------------
+tryLookupMeta :: String -> Metadata -> Maybe Metadata
+tryLookupMeta key meta = case HMS.lookup (T.pack key) meta of
+    Just (Yaml.Object o) -> Just o
+    _                    -> Nothing
 
 
 --------------------------------------------------------------------------------
