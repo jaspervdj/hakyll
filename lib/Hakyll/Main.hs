@@ -3,7 +3,13 @@
 {-# LANGUAGE CPP #-}
 
 module Hakyll.Main
-    ( hakyll
+    ( optionParser
+    , commandParser
+    , defaultParser
+    , defaultParserPure
+    , defaultParserPrefs
+    , defaultParserInfo
+    , hakyll
     , hakyllWith
     , hakyllWithArgs
     , hakyllWithExitCode
@@ -72,11 +78,24 @@ hakyllWithExitCodeAndArgs conf args rules = do
 --------------------------------------------------------------------------------
 defaultParser :: Config.Configuration -> IO Options
 defaultParser conf =
-    OA.customExecParser (OA.prefs OA.showHelpOnError)
-        (OA.info (OA.helper <*> optionParser conf)
-        (OA.fullDesc <> OA.progDesc
-        (progName ++ " - Static site compiler created with Hakyll")))
+    OA.customExecParser defaultParserPrefs (defaultParserInfo conf)
 
+
+--------------------------------------------------------------------------------
+defaultParserPure :: Config.Configuration -> [String] -> OA.ParserResult Options
+defaultParserPure conf =
+  OA.execParserPure defaultParserPrefs (defaultParserInfo conf)
+
+
+--------------------------------------------------------------------------------
+defaultParserPrefs :: OA.ParserPrefs
+defaultParserPrefs = OA.prefs OA.showHelpOnError
+
+--------------------------------------------------------------------------------
+defaultParserInfo :: Config.Configuration -> OA.ParserInfo Options
+defaultParserInfo conf =
+  OA.info (OA.helper <*> optionParser conf) (OA.fullDesc <> OA.progDesc (
+                                                progName ++ " - Static site compiler created with Hakyll"))
 
 --------------------------------------------------------------------------------
 invokeCommands :: Command -> Config.Configuration ->
