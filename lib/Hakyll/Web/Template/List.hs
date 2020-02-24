@@ -60,7 +60,7 @@ applyJoinTemplateList delimiter tpl context items = do
 --------------------------------------------------------------------------------
 -- | Sort pages chronologically. Uses the same method as 'dateField' for
 -- extracting the date.
-chronological :: MonadMetadata m => [Item a] -> m [Item a]
+chronological :: (MonadMetadata m, MonadFail m) => [Item a] -> m [Item a]
 chronological =
     sortByM $ getItemUTC defaultTimeLocale . itemIdentifier
   where
@@ -71,14 +71,14 @@ chronological =
 
 --------------------------------------------------------------------------------
 -- | The reverse of 'chronological'
-recentFirst :: MonadMetadata m => [Item a] -> m [Item a]
+recentFirst :: (MonadMetadata m, MonadFail m) => [Item a] -> m [Item a]
 recentFirst = liftM reverse . chronological
 
 
 --------------------------------------------------------------------------------
 -- | Version of 'chronological' which doesn't need the actual items.
 sortChronological
-    :: MonadMetadata m => [Identifier] -> m [Identifier]
+    :: (MonadMetadata m, MonadFail m) => [Identifier] -> m [Identifier]
 sortChronological ids =
     liftM (map itemIdentifier) $ chronological [Item i () | i <- ids]
 
@@ -86,6 +86,6 @@ sortChronological ids =
 --------------------------------------------------------------------------------
 -- | Version of 'recentFirst' which doesn't need the actual items.
 sortRecentFirst
-    :: MonadMetadata m => [Identifier] -> m [Identifier]
+    :: (MonadMetadata m, MonadFail m) => [Identifier] -> m [Identifier]
 sortRecentFirst ids =
     liftM (map itemIdentifier) $ recentFirst [Item i () | i <- ids]

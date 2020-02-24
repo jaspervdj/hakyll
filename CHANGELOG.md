@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Unreleased
+
+- Support GHC-8.8. Add `MonadFail` instances and constraints.
+
 ## Hakyll 4.13.0.1 (2019-09-18)
 
 - Add missing test files (contribution by Justin Humm)

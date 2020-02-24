@@ -365,7 +365,7 @@ dateFieldWith locale key format = field key $ \i -> do
 -- | Parser to try to extract and parse the time from the @published@
 -- field or from the filename. See 'dateField' for more information.
 -- Exported for user convenience.
-getItemUTC :: MonadMetadata m
+getItemUTC :: (MonadMetadata m, MonadFail m)
            => TimeLocale        -- ^ Output time locale
            -> Identifier        -- ^ Input page
            -> m UTCTime         -- ^ Parsed UTCTime
