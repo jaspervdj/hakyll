@@ -4,9 +4,19 @@ title: Releases
 
 # Releases
 
-## Unreleased
+## Hakyll 4.13.1.0 (2020-02-26)
 
-- Support GHC-8.8. Add `MonadFail` instances and constraints.
+- Fix timezone parsing bug with time-1.9
+- Remove constant field for homepage title in example site (by Liang-Ting Chen)
+- Clean up `stack.yaml` (by Hexirp)
+- Use crytonite instead of cryptohash (by Hexirp)
+- Expose CLI argument parser internals (by Jim McStanton)
+- Support GHC-8.8. Add `MonadFail` instances and constraints (by Veronika
+  Romashkina)
+- Fix file path compatibility with Windows (by Hexirp)
+- Fix logging output flushing in `site server` (by robx)
+- Fix spacing of command line usage in `hakyll-init` (by robx)
+- Add titles to tag fields by default
 
 ## Hakyll 4.13.0.1 (2019-09-18)
 
