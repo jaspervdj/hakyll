@@ -16,7 +16,8 @@ module Hakyll.Core.Store
 
 
 --------------------------------------------------------------------------------
-import qualified Crypto.Hash.MD5      as MD5
+import qualified Data.ByteArray       as BA
+import qualified Crypto.Hash          as CH
 import           Data.Binary          (Binary, decode, encodeFile)
 import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as BL
@@ -193,8 +194,21 @@ deleteFile = (`catchIOError` \_ -> return ()) . removeFile
 --------------------------------------------------------------------------------
 -- | Mostly meant for internal usage
 hash :: [String] -> String
-hash = toHex . B.unpack . MD5.hash . T.encodeUtf8 . T.pack . intercalate "/"
+hash = toHex . B.unpack . hashMD5 . T.encodeUtf8 . T.pack . intercalate "/"
   where
     toHex [] = ""
     toHex (x : xs) | x < 16 = '0' : showHex x (toHex xs)
                    | otherwise = showHex x (toHex xs)
+
+
+--------------------------------------------------------------------------------
+-- | Hash by MD5
+hashMD5 :: B.ByteString -> B.ByteString
+hashMD5 x =
+  let
+    digest :: CH.Digest CH.MD5
+    digest = CH.hash x
+    bytes :: B.ByteString
+    bytes = BA.convert digest
+  in
+    bytes

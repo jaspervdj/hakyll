@@ -23,5 +23,6 @@ build:
   haddock-deps: false
 
 extra-deps:
+- 'lrucache-1.2.0.1'
 - 'http2-1.6.5'
 - 'warp-3.2.28'

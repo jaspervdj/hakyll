@@ -3,12 +3,11 @@
 import           Control.Arrow    (second)
 import           Control.Monad    (filterM, forM_)
 import           Data.List        (isPrefixOf, sortBy)
-import           Data.Monoid      ((<>))
 import           Data.Ord         (comparing)
 import           Hakyll
 import           System.Directory (copyFile)
 import           System.FilePath  (dropTrailingPathSeparator, splitPath)
-import           Text.Pandoc
+import qualified Text.Pandoc      as Pandoc
 
 
 --------------------------------------------------------------------------------
@@ -67,9 +66,15 @@ main = hakyllWith config $ do
     match "templates/*" $ compile templateCompiler
   where
     withToc = defaultHakyllWriterOptions
-        { writerTableOfContents = True
-        , writerTemplate        = Just "$toc$\n$body$"
+        { Pandoc.writerTableOfContents = True
+        , Pandoc.writerTemplate        = Just tocTemplate
         }
+
+    -- When did it get so hard to compile a string to a Pandoc template?
+    tocTemplate =
+        either error id $ either (error . show) id $
+        Pandoc.runPure $ Pandoc.runWithDefaultPartials $
+        Pandoc.compileTemplate "" "$toc$\n$body$"
 
 
 --------------------------------------------------------------------------------
