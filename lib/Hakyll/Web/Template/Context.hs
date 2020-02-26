@@ -385,8 +385,11 @@ getItemUTC locale id' = do
     parseTime' = parseTimeM True locale
     formats    =
         [ "%a, %d %b %Y %H:%M:%S %Z"
+        , "%a, %d %b %Y %H:%M:%S"
         , "%Y-%m-%dT%H:%M:%S%Z"
+        , "%Y-%m-%dT%H:%M:%S"
         , "%Y-%m-%d %H:%M:%S%Z"
+        , "%Y-%m-%d %H:%M:%S"
         , "%Y-%m-%d"
         , "%B %e, %Y %l:%M %p"
         , "%B %e, %Y"
