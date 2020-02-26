@@ -10,6 +10,6 @@ jobs:
     - uses: 'actions/cache@v1'
       with:
         path: '$HOME/.stack'
-        key: "${{ runner.os }}-v1-stack-${{ hashFiles('stack.yaml') }}"
-        restore-keys: '${{ runner.os }}-v1-stack'
+        key: "${{ runner.os }}-v2-stack-${{ hashFiles('stack.yaml.lock') }}"
+        restore-keys: '${{ runner.os }}-v2-stack'
     - run: 'stack build --test'
