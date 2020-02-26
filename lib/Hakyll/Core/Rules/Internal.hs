@@ -88,7 +88,7 @@ emptyRulesState = RulesState Nothing Nothing
 -- | The monad used to compose rules
 newtype Rules a = Rules
     { unRules :: RWST RulesRead RuleSet RulesState IO a
-    } deriving (Monad, Functor, Applicative)
+    } deriving (Monad, MonadFail, Functor, Applicative)
 
 
 --------------------------------------------------------------------------------

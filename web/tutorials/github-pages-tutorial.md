@@ -77,7 +77,14 @@ Ensure we are in the correct branch.
 git checkout develop
 ```
 
-Get a clean build of our site.
+We need to be able to run the executable that generates the website, so we need
+to compile it first.  If you are using `stack`, this can be done using:
+
+```
+stack build
+```
+
+Now get a clean build of our site.
 
 ```
 stack exec myblog clean
