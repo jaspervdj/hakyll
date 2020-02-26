@@ -3,19 +3,22 @@
 {-# LANGUAGE CPP #-}
 
 module Hakyll.Main
-    ( optionParser
-    , commandParser
-    , defaultParser
-    , defaultParserPure
-    , defaultParserPrefs
-    , defaultParserInfo
+    ( -- * Entry points
     , hakyll
     , hakyllWith
     , hakyllWithArgs
     , hakyllWithExitCode
     , hakyllWithExitCodeAndArgs
+
+      -- * Command line argument parsers
     , Options(..)
     , Command(..)
+    , optionParser
+    , commandParser
+    , defaultParser
+    , defaultParserPure
+    , defaultParserPrefs
+    , defaultParserInfo
     ) where
 
 
