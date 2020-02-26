@@ -4,7 +4,7 @@
 
 module Hakyll.Main
     ( -- * Entry points
-    , hakyll
+      hakyll
     , hakyllWith
     , hakyllWithArgs
     , hakyllWithExitCode
