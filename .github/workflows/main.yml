@@ -1,0 +1,15 @@
+name: 'CI'
+on:
+- 'push'
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: 'actions/checkout@v1'
+    - uses: 'mstksg/setup-stack@v1'
+    - uses: 'actions/cache@v1'
+      with:
+        path: '$HOME/.stack'
+        key: "${{ runner.os }}-v1-stack-${{ hashFiles('stack.yaml') }}"
+        restore-keys: '${{ runner.os }}-v1-stack'
+    - run: 'stack build --test'
