@@ -19,7 +19,7 @@ Linux distro packages:
 
 - [Debian unstable](http://packages.debian.org/source/sid/haskell-hakyll)
 - [Fedora](https://apps.fedoraproject.org/packages/ghc-hakyll)
-- [Nix](https://nixos.org/nixos/packages.html#hakyll): `$ nix-env -i hakyll` 
+- [Nix](https://nixos.org/nixos/packages.html#hakyll): `$ nix-env -iA nixos.haskellPackages.hakyll` 
 
 Building the example site
 -------------------------
@@ -37,11 +37,25 @@ If `hakyll-init` is not found, you should make sure your stack bin path
 (usually `$HOME/.local/bin`) is in your `$PATH`. You can check your stack local
 bin path by running `stack path --local-bin`.
 
+Now, change into `my-site` directory and create a file `stack.yaml`
+here with the following content:
+
+    resolver: lts-14.16  # Adapt this as needed
+    packages:
+      - .
+    extra-deps:
+      - hakyll-4.13.0.1
+
+On NixOS you will probably have to add the following lines to this
+file:
+
+    nix:
+      enable: true
+      packages: [zlib.dev, zlib.out]
+
 The file `site.hs` holds the configuration of your site, as an executable
 haskell program. We can compile and run it like this:
 
-    $ cd my-site
-    $ stack init  # creates stack.yaml file based on my-site.cabal
     $ stack build
     $ stack exec site build
 
