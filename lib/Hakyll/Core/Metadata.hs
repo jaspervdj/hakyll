@@ -66,7 +66,7 @@ getMetadataField identifier key = do
 --------------------------------------------------------------------------------
 -- | Version of 'getMetadataField' which throws an error if the field does not
 -- exist.
-getMetadataField' :: MonadMetadata m => Identifier -> String -> m String
+getMetadataField' :: (MonadFail m, MonadMetadata m) => Identifier -> String -> m String
 getMetadataField' identifier key = do
     field <- getMetadataField identifier key
     case field of

@@ -11,6 +11,9 @@ tags
 cabal.sandbox.config
 .cabal-sandbox/
 .stack-work
+dist
+dist-*
+.ghc.environment.*
 
 # Ignore test builds.
 tests/Main
