@@ -16,6 +16,7 @@ module Hakyll.Core.Metadata
 --------------------------------------------------------------------------------
 import           Control.Arrow                  (second)
 import           Control.Monad                  (forM)
+import           Control.Monad.Fail             (MonadFail)
 import           Data.Binary                    (Binary (..), getWord8,
                                                  putWord8, Get)
 import qualified Data.HashMap.Strict            as HMS

@@ -20,6 +20,7 @@ module Hakyll.Web.Template.List
 
 --------------------------------------------------------------------------------
 import           Control.Monad               (liftM)
+import           Control.Monad.Fail          (MonadFail)
 import           Data.List                   (intersperse, sortBy)
 import           Data.Ord                    (comparing)
 import           Data.Time.Locale.Compat     (defaultTimeLocale)
