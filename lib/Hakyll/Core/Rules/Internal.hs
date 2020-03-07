@@ -13,6 +13,7 @@ module Hakyll.Core.Rules.Internal
 
 
 --------------------------------------------------------------------------------
+import           Control.Monad.Fail             (MonadFail)
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
 import           Control.Monad.Trans            (liftIO)
