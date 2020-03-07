@@ -16,13 +16,14 @@ module Hakyll.Core.Metadata
 --------------------------------------------------------------------------------
 import           Control.Arrow                  (second)
 import           Control.Monad                  (forM)
-import           Data.Binary                    (Binary (..), getWord8,
-                                                 putWord8, Get)
+import qualified Control.Monad.Fail             as Fail
+import           Data.Binary                    (Binary (..), Get, getWord8,
+                                                 putWord8)
 import qualified Data.HashMap.Strict            as HMS
 import qualified Data.Set                       as S
 import qualified Data.Text                      as T
 import qualified Data.Vector                    as V
-import qualified Data.Yaml.Extended                      as Yaml
+import qualified Data.Yaml.Extended             as Yaml
 import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
@@ -66,12 +67,12 @@ getMetadataField identifier key = do
 --------------------------------------------------------------------------------
 -- | Version of 'getMetadataField' which throws an error if the field does not
 -- exist.
-getMetadataField' :: (MonadFail m, MonadMetadata m) => Identifier -> String -> m String
+getMetadataField' :: (Fail.MonadFail m, MonadMetadata m) => Identifier -> String -> m String
 getMetadataField' identifier key = do
     field <- getMetadataField identifier key
     case field of
         Just v  -> return v
-        Nothing -> fail $ "Hakyll.Core.Metadata.getMetadataField': " ++
+        Nothing -> Fail.fail $ "Hakyll.Core.Metadata.getMetadataField': " ++
             "Item " ++ show identifier ++ " has no metadata field " ++ show key
 
 

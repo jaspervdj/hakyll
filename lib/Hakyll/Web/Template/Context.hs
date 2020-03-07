@@ -54,6 +54,7 @@ module Hakyll.Web.Template.Context
 --------------------------------------------------------------------------------
 import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
+import qualified Control.Monad.Fail            as Fail
 import           Data.List                     (intercalate, tails)
 #if MIN_VERSION_base(4,9,0)
 import           Data.Semigroup                (Semigroup (..))
@@ -365,7 +366,7 @@ dateFieldWith locale key format = field key $ \i -> do
 -- | Parser to try to extract and parse the time from the @published@
 -- field or from the filename. See 'dateField' for more information.
 -- Exported for user convenience.
-getItemUTC :: (MonadMetadata m, MonadFail m)
+getItemUTC :: (MonadMetadata m, Fail.MonadFail m)
            => TimeLocale        -- ^ Output time locale
            -> Identifier        -- ^ Input page
            -> m UTCTime         -- ^ Parsed UTCTime
@@ -380,7 +381,7 @@ getItemUTC locale id' = do
         [parseTime' "%Y-%m-%d" $ intercalate "-" $ take 3 $ splitAll "-" fnCand | fnCand <- reverse paths] ++
         [parseTime' "%Y-%m-%d" $ intercalate "-" $ fnCand | fnCand <- map (take 3) $ reverse . tails $ paths]
   where
-    empty'     = fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
+    empty'     = Fail.fail $ "Hakyll.Web.Template.Context.getItemUTC: " ++
         "could not parse time for " ++ show id'
     parseTime' = parseTimeM True locale
     formats    =

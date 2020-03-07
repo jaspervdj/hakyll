@@ -13,6 +13,7 @@ module Hakyll.Core.Rules.Internal
 
 
 --------------------------------------------------------------------------------
+import qualified Control.Monad.Fail             as Fail
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
 import           Control.Monad.Trans            (liftIO)
@@ -88,7 +89,7 @@ emptyRulesState = RulesState Nothing Nothing
 -- | The monad used to compose rules
 newtype Rules a = Rules
     { unRules :: RWST RulesRead RuleSet RulesState IO a
-    } deriving (Monad, MonadFail, Functor, Applicative)
+    } deriving (Monad, Fail.MonadFail, Functor, Applicative)
 
 
 --------------------------------------------------------------------------------
