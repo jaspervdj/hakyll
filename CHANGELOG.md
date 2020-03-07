@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.13.2.0 (2020-03-07)
+
+- Fix compatibility with GHC-8.6 (by Nikolay Yakimov).
+
 ## Hakyll 4.13.1.0 (2020-02-26)
 
 - Fix timezone parsing bug with time-1.9
