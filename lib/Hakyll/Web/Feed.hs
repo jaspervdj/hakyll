@@ -85,10 +85,11 @@ data FeedConfiguration = FeedConfiguration
 renderFeed :: Template                -- ^ Default feed template
            -> Template                -- ^ Default item template
            -> FeedConfiguration       -- ^ Feed configuration
+           -> Context String          -- ^ Context for the feed
            -> Context String          -- ^ Context for the items
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
-renderFeed feedTpl itemTpl config itemContext items = do
+renderFeed feedTpl itemTpl config feedContext itemContext items = do
     protectedItems <- mapM (applyFilter protectCDATA) items
     body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
     applyTemplate feedTpl feedContext body
@@ -106,7 +107,8 @@ renderFeed feedTpl itemTpl config itemContext items = do
         ]
 
     feedContext = mconcat
-         [ bodyField  "body"
+         [ feedContext
+         , bodyField  "body"
          , constField "title"       (feedTitle config)
          , constField "description" (feedDescription config)
          , constField "authorName"  (feedAuthorName config)
@@ -131,12 +133,14 @@ renderRssWithTemplates ::
        Template                -- ^ Feed template
     -> Template                -- ^ Item template
     -> FeedConfiguration       -- ^ Feed configuration
+    -> Context String          -- ^ Feed context
     -> Context String          -- ^ Item context
     -> [Item String]           -- ^ Feed items
     -> Compiler (Item String)  -- ^ Resulting feed
-renderRssWithTemplates feedTemplate itemTemplate config context = renderFeed
+renderRssWithTemplates feedTemplate itemTemplate config feedContext itemContext = renderFeed
     feedTemplate itemTemplate config
-    (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
+    feedContext
+    (makeItemContext "%a, %d %b %Y %H:%M:%S UT" itemContext)
 
 
 --------------------------------------------------------------------------------
@@ -145,17 +149,20 @@ renderAtomWithTemplates ::
        Template                -- ^ Feed template
     -> Template                -- ^ Item template
     -> FeedConfiguration       -- ^ Feed configuration
+    -> Context String          -- ^ Feed context
     -> Context String          -- ^ Item context
     -> [Item String]           -- ^ Feed items
     -> Compiler (Item String)  -- ^ Resulting feed
-renderAtomWithTemplates feedTemplate itemTemplate config context = renderFeed
+renderAtomWithTemplates feedTemplate itemTemplate config feedContext itemContext = renderFeed
     feedTemplate itemTemplate config
-    (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
+    feedContext
+    (makeItemContext "%Y-%m-%dT%H:%M:%SZ" itemContext)
 
 
 --------------------------------------------------------------------------------
 -- | Render an RSS feed with a number of items.
 renderRss :: FeedConfiguration       -- ^ Feed configuration
+          -> Context String          -- ^ Feed context
           -> Context String          -- ^ Item context
           -> [Item String]           -- ^ Feed items
           -> Compiler (Item String)  -- ^ Resulting feed
@@ -165,6 +172,7 @@ renderRss = renderRssWithTemplates rssTemplate rssItemTemplate
 --------------------------------------------------------------------------------
 -- | Render an Atom feed with a number of items.
 renderAtom :: FeedConfiguration       -- ^ Feed configuration
+           -> Context String          -- ^ Feed context
            -> Context String          -- ^ Item context
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
