@@ -233,7 +233,7 @@ Library
       Hakyll.Web.Pandoc.Binary
     Build-Depends:
       pandoc          >= 2.0.5    && < 2.10,
-      pandoc-citeproc >= 0.14     && < 0.17
+      pandoc-citeproc >= 0.14     && < 0.18
     Cpp-options:
       -DUSE_PANDOC
 
