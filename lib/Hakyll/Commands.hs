@@ -98,7 +98,7 @@ watch conf logger host port runServer rules = do
 #else
     -- Force windows users to compile with -threaded flag, as otherwise
     -- thread is blocked indefinitely.
-    catchIOError (void $ forkOS $ watchUpdates conf update) $ do
+    catchIOError (void $ forkOS $ watchUpdates conf update) $ \_ -> do
         fail $ "Hakyll.Commands.watch: Could not start update watching " ++
                "thread. Did you compile with -threaded flag?"
 #endif
