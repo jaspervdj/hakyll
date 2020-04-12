@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.13.3.0 (2020-04-12)
+
+- Fix compilation issue related to `MonadFail` on Windows (by Martín Emanuel)
+- Bump upper bound for `warp` to 3.4
+- Bump upper bound for `pandoc-citeproc` to 0.18
+
 ## Hakyll 4.13.2.0 (2020-03-07)
 
 - Fix compatibility with GHC-8.6 (by Nikolay Yakimov).
