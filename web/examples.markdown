@@ -190,6 +190,8 @@ directly with the default Hakyll site.
   [source](https://github.com/vaclavsvejcar/svejcar-dev)
 - <https://robertwpearce.com/>,
   [source](https://github.com/rpearce/robertwpearce.com)
+- <https://blog.thjread.com/>,
+  [source](https://github.com/thjread/thjread-blog)
 
 ## Hakyll 3.X
 
