@@ -221,3 +221,5 @@ directly with the default Hakyll site.
   [source](https://github.com/CharlesStain/alfredodinapoli.com)
 - <http://michaelxavier.net>,
   [source](https://github.com/michaelxavier/michaelxavier.net)
+- <https://www.cis.upenn.edu/~plclub/>,
+  [source](https://github.com/plclub/plclub-web)
