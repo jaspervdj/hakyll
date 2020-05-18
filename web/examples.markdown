@@ -192,6 +192,8 @@ directly with the default Hakyll site.
   [source](https://github.com/rpearce/robertwpearce.com)
 - <https://blog.thjread.com/>,
   [source](https://github.com/thjread/thjread-blog)
+- <https://odone.io/>,
+  [source](http://github.com/3v0k4/contact-page)
 
 ## Hakyll 3.X
 

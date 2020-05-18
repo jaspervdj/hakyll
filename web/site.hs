@@ -115,6 +115,7 @@ tutorialsCtx tuts =
     listField "articles"      defaultContext (ofType "article")       <>
     listField "externals"     defaultContext (ofType "external")      <>
     listField "robertwpearce" defaultContext (ofType "robertwpearce") <>
+    listField "riccardoodone" defaultContext (ofType "riccardoodone") <>
     defaultContext
   where
     ofType ty = filterM (\item -> do
