@@ -64,6 +64,7 @@ import           Data.List                               (inits, isPrefixOf,
                                                           tails)
 import           Data.Maybe                              (isJust)
 import qualified Data.Set                                as S
+import           System.FilePath                         (normalise, pathSeparator)
 
 
 --------------------------------------------------------------------------------
@@ -84,14 +85,14 @@ instance IsString Pattern where
 --------------------------------------------------------------------------------
 -- | Parse a pattern from a string
 fromGlob :: String -> Pattern
-fromGlob = Glob . parse'
+fromGlob = Glob . parse' . normalise
   where
-    parse' str =
-        let (chunk, rest) = break (`elem` "\\*") str
+    parse' str = 
+        let (chunk, rest) = break (== '*') str
         in case rest of
-            ('\\' : x   : xs) -> Literal (chunk ++ [x]) : parse' xs
             ('*'  : '*' : xs) -> Literal chunk : CaptureMany : parse' xs
             ('*'  : xs)       -> Literal chunk : Capture : parse' xs
+            ""                -> Literal chunk : []
             xs                -> Literal chunk : Literal xs : []
 
 
@@ -218,8 +219,8 @@ capture' (Literal l : ms) str
     | l `isPrefixOf` str = capture' ms $ drop (length l) str
     | otherwise          = Nothing
 capture' (Capture : ms) str =
-    -- Match until the next /
-    let (chunk, rest) = break (== '/') str
+    -- Match until the next path separator
+    let (chunk, rest) = break (== pathSeparator) str
     in msum $ [ fmap (i :) (capture' ms (t ++ rest)) | (i, t) <- splits chunk ]
 capture' (CaptureMany : ms) str =
     -- Match everything
@@ -262,3 +263,4 @@ fromCaptures' (m : ms) [] = case m of
 fromCaptures' (m : ms) ids@(i : is) = case m of
     Literal l -> l `mappend` fromCaptures' ms ids
     _         -> i `mappend` fromCaptures' ms is
+    
