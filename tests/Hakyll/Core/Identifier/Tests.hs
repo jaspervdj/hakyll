@@ -41,7 +41,6 @@ captureTests = fromAssertions "capture"
     , Just ["foo" </> "bar"]          @=? capture "**.html" "foo/bar.html"
     , Just ["foo" </> "bar", "wut"]   @=? capture "**/qux/*" "foo/bar/qux/wut"
     , Just ["lol", "fun" </> "large"] @=? capture "*cat/**.jpg" "lolcat/fun/large.jpg"
-    , Just []                         @=? capture "\\*.jpg" "*.jpg"
     , Nothing                         @=? capture "\\*.jpg" "foo.jpg"
     , Just ["xyz","42"]               @=? capture (fromRegex "cat-([a-z]+)/foo([0-9]+).jpg") "cat-xyz/foo42.jpg"
     ]
