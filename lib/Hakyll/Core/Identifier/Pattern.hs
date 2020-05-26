@@ -183,7 +183,7 @@ matches (Complement p) i = not $ matches p i
 matches (And x y)      i = matches x i && matches y i
 matches (Glob p)       i = isJust $ capture (Glob p) i
 matches (List l)       i = i `S.member` l
-matches (Regex r)      i = toFilePath i =~ r
+matches (Regex r)      i = (normaliseRegex $ toFilePath i) =~ r
 matches (Version v)    i = identifierVersion i == v
 
 
@@ -205,7 +205,7 @@ splits = inits &&& tails >>> uncurry zip >>> reverse
 capture :: Pattern -> Identifier -> Maybe [String]
 capture (Glob p) i = capture' p (toFilePath i)
 capture (Regex pat) i = Just groups
-  where (_, _, _, groups) = ((toFilePath i) =~ pat) :: (String, String, String, [String])
+  where (_, _, _, groups) = ((normaliseRegex $ toFilePath i) =~ pat) :: (String, String, String, [String])
 capture _        _ = Nothing
 
 
@@ -263,4 +263,9 @@ fromCaptures' (m : ms) [] = case m of
 fromCaptures' (m : ms) ids@(i : is) = case m of
     Literal l -> l `mappend` fromCaptures' ms ids
     _         -> i `mappend` fromCaptures' ms is
-    
+
+
+--------------------------------------------------------------------------------
+-- | Normalise filepaths to have '/' as a path separator for Regex matching
+normaliseRegex :: FilePath -> FilePath
+normaliseRegex = concatMap (\c -> if c == '\\' then ['/'] else [c])
