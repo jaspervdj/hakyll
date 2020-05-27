@@ -174,11 +174,11 @@ gsubRoute :: String              -- ^ Pattern
           -> (String -> String)  -- ^ Replacement
           -> Routes              -- ^ Resulting route
 gsubRoute pattern replacement = customRoute $
-    normalise . replaceAll pattern (replacement . normaliseRegex) . normaliseRegex . toFilePath
+    normalise . replaceAll pattern (replacement . removeWinPathSeparator) . removeWinPathSeparator . toFilePath
     where
         -- Filepaths on Windows containing `\\' will trip Regex matching, which
         -- is used in replaceAll. We normalise filepaths to have '/' as a path separator
-        normaliseRegex = concatMap (\c -> if c == '\\' then ['/'] else [c])
+        -- using removeWinPathSeparator
 
 
 --------------------------------------------------------------------------------
