@@ -64,6 +64,7 @@ import           Data.List                               (inits, isPrefixOf,
                                                           tails)
 import           Data.Maybe                              (isJust)
 import qualified Data.Set                                as S
+import           System.FilePath                         (normalise, pathSeparator)
 
 
 --------------------------------------------------------------------------------
@@ -84,14 +85,14 @@ instance IsString Pattern where
 --------------------------------------------------------------------------------
 -- | Parse a pattern from a string
 fromGlob :: String -> Pattern
-fromGlob = Glob . parse'
+fromGlob = Glob . parse' . normalise
   where
-    parse' str =
-        let (chunk, rest) = break (`elem` "\\*") str
+    parse' str = 
+        let (chunk, rest) = break (== '*') str
         in case rest of
-            ('\\' : x   : xs) -> Literal (chunk ++ [x]) : parse' xs
             ('*'  : '*' : xs) -> Literal chunk : CaptureMany : parse' xs
             ('*'  : xs)       -> Literal chunk : Capture : parse' xs
+            ""                -> Literal chunk : []
             xs                -> Literal chunk : Literal xs : []
 
 
@@ -182,7 +183,7 @@ matches (Complement p) i = not $ matches p i
 matches (And x y)      i = matches x i && matches y i
 matches (Glob p)       i = isJust $ capture (Glob p) i
 matches (List l)       i = i `S.member` l
-matches (Regex r)      i = toFilePath i =~ r
+matches (Regex r)      i = (normaliseRegex $ toFilePath i) =~ r
 matches (Version v)    i = identifierVersion i == v
 
 
@@ -204,7 +205,7 @@ splits = inits &&& tails >>> uncurry zip >>> reverse
 capture :: Pattern -> Identifier -> Maybe [String]
 capture (Glob p) i = capture' p (toFilePath i)
 capture (Regex pat) i = Just groups
-  where (_, _, _, groups) = ((toFilePath i) =~ pat) :: (String, String, String, [String])
+  where (_, _, _, groups) = ((normaliseRegex $ toFilePath i) =~ pat) :: (String, String, String, [String])
 capture _        _ = Nothing
 
 
@@ -218,8 +219,8 @@ capture' (Literal l : ms) str
     | l `isPrefixOf` str = capture' ms $ drop (length l) str
     | otherwise          = Nothing
 capture' (Capture : ms) str =
-    -- Match until the next /
-    let (chunk, rest) = break (== '/') str
+    -- Match until the next path separator
+    let (chunk, rest) = break (== pathSeparator) str
     in msum $ [ fmap (i :) (capture' ms (t ++ rest)) | (i, t) <- splits chunk ]
 capture' (CaptureMany : ms) str =
     -- Match everything
@@ -262,3 +263,9 @@ fromCaptures' (m : ms) [] = case m of
 fromCaptures' (m : ms) ids@(i : is) = case m of
     Literal l -> l `mappend` fromCaptures' ms ids
     _         -> i `mappend` fromCaptures' ms is
+
+
+--------------------------------------------------------------------------------
+-- | Normalise filepaths to have '/' as a path separator for Regex matching
+normaliseRegex :: FilePath -> FilePath
+normaliseRegex = concatMap (\c -> if c == '\\' then ['/'] else [c])
