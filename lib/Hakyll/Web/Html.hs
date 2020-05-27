@@ -26,12 +26,16 @@ import           Data.Char                       (digitToInt, intToDigit,
                                                   isDigit, toLower)
 import           Data.List                       (isPrefixOf)
 import qualified Data.Set                        as S
-import           System.FilePath.Posix           (joinPath, splitPath,
+import           System.FilePath                 (joinPath, splitPath,
                                                   takeDirectory)
 import           Text.Blaze.Html                 (toHtml)
 import           Text.Blaze.Html.Renderer.String (renderHtml)
 import qualified Text.HTML.TagSoup               as TS
 import           Network.URI                     (isUnreserved, escapeURIString)
+
+
+--------------------------------------------------------------------------------
+import           Hakyll.Core.Util.String         (removeWinPathSeparator)
 
 
 --------------------------------------------------------------------------------
@@ -116,7 +120,7 @@ parseTags' = TS.parseTagsOptions (TS.parseOptions :: TS.ParseOptions String)
 --
 -- This also sanitizes the URL, e.g. converting spaces into '%20'
 toUrl :: FilePath -> String
-toUrl url = case url of
+toUrl url = case (removeWinPathSeparator url) of
     ('/' : xs) -> '/' : sanitize xs
     xs         -> '/' : sanitize xs
   where
@@ -130,8 +134,8 @@ toUrl url = case url of
 --------------------------------------------------------------------------------
 -- | Get the relative url to the site root, for a given (absolute) url
 toSiteRoot :: String -> String
-toSiteRoot = emptyException . joinPath . map parent
-           . filter relevant . splitPath . takeDirectory
+toSiteRoot = removeWinPathSeparator . emptyException . joinPath 
+           . map parent . filter relevant . splitPath . takeDirectory
   where
     parent            = const ".."
     emptyException [] = "."
