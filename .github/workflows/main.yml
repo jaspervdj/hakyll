@@ -1,20 +1,55 @@
+# This Github Actions workflow is modified from
+# https://kodimensional.dev/github-actions
 name: 'CI'
-on: ['push']
+
+# Trigger the workflow on push or pull request, but only for the master branch
+on: [push, pull_request]
+
 jobs:
   build:
+
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+
+    env:
+      ARGS: --no-terminal --fast
       
     name: ${{ matrix.os }}
-    runs-on: $${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     
     steps:
-    - uses: 'actions/checkout@v1'
-    - uses: 'mstksg/setup-stack@v1'
-    - uses: 'actions/cache@v1'
+    - uses: actions/checkout@v2
+      if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
+
+    # https://github.com/actions/setup-haskell
+    - uses: actions/setup-haskell@v1.1
+      name: Setup Haskell Stack
       with:
-        path: '~/.stack'
-        key: "${{ runner.os }}-v3-stack-${{ hashFiles('stack.yaml.lock') }}"
-        restore-keys: '${{ runner.os }}-v3-stack'
-    - run: 'stack build --test'
+        stack-version: "latest"
+        enable-stack: true
+        stack-no-global: true
+    
+    # https://github.com/actions/cache
+    - uses: actions/cache@v2
+      name: Cache ~/.stack
+      with:
+        path: ~/.stack
+        key: ${{ runner.os }}-${{ hashFiles('stack.yaml') }}
+
+    # There are strange problems with CI on Windows, where builds with GHC 8.8.*
+    # always fail. Therefore, we distinguish between builds on Ubuntu and Windows
+    # and use an older compiler on Windows.
+    # See here for bug reports:
+    #   https://gitlab.haskell.org/ghc/ghc/issues/17599
+    #   https://gitlab.haskell.org/ghc/ghc/issues/17926
+    
+    - name: Test (Ubuntu)
+      run: |
+        stack test $ARGS --stack-yaml stack.yaml
+      if: ${{ runner.os == 'Linux' }}
+
+    - name: Test (Windows)
+      run: |
+        stack test $ARGS --stack-yaml stack.yaml --compiler ghc-8.6.5
+      if: ${{ runner.os == 'Windows' }} 
