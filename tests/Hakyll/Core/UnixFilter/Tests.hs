@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP               #-}
 module Hakyll.Core.UnixFilter.Tests
     ( tests
     ) where
@@ -22,10 +23,17 @@ import           TestSuite.Util
 --------------------------------------------------------------------------------
 tests :: TestTree
 tests = testGroup "Hakyll.Core.UnixFilter.Tests"
+#ifdef mingw32_HOST_OS
+    -- The `rev` utility is not present by default on Windows
+    [ testCase "unixFilter false" unixFilterFalse
+    , testCase "unixFilter error" unixFilterError
+    ]
+#else
     [ testCase "unixFilter rev"   unixFilterRev
     , testCase "unixFilter false" unixFilterFalse
     , testCase "unixFilter error" unixFilterError
     ]
+#endif
 
 testMarkdown :: Identifier
 testMarkdown = "russian.md"
