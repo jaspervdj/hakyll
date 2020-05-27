@@ -17,7 +17,7 @@ import           Hakyll.Core.Metadata
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules
 import           Hakyll.Core.Rules.Internal
-import           System.FilePath                ((</>))
+import           System.FilePath                ((</>), normalise)
 import           Test.Tasty                     (TestTree, testGroup)
 import           Test.Tasty.HUnit               (Assertion, (@=?))
 import           TestSuite.Util
@@ -39,15 +39,15 @@ case01 = do
     let identifiers     = S.fromList $ map fst $ rulesCompilers ruleSet
         routes          = rulesRoutes ruleSet
         checkRoute ex i =
-            runRoutes routes provider i >>= \(r, _) -> Just ex @=? r
+            runRoutes routes provider i >>= \(r, _) -> Just (normalise ex) @=? r
 
     -- Test that we have some identifiers and that the routes work out
     S.fromList expected @=? identifiers
     checkRoute "example.html"    "example.md"
-    checkRoute "example.md"      (sv "raw" "example.md")
-    checkRoute "example.md"      (sv "nav" "example.md")
-    checkRoute "example.mv1"     (sv "mv1" "example.md")
-    checkRoute "example.mv2"     (sv "mv2" "example.md")
+    checkRoute "example.md"            (sv "raw" "example.md")
+    checkRoute "example.md"            (sv "nav" "example.md")
+    checkRoute "example.mv1"           (sv "mv1" "example.md")
+    checkRoute "example.mv2"           (sv "mv2" "example.md")
     checkRoute "food/example.md" (sv "metadataMatch" "example.md")
     readIORef ioref >>= (True @=?)
     cleanTestEnv
