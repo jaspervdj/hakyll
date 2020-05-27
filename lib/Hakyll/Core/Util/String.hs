@@ -6,6 +6,7 @@ module Hakyll.Core.Util.String
     , replaceAll
     , splitAll
     , needlePrefix
+    , removeWinPathSeparator
     ) where
 
 
@@ -76,3 +77,9 @@ needlePrefix needle haystack = go [] haystack
     go acc xss@(x:xs)
         | needle `isPrefixOf` xss = Just $ reverse acc
         | otherwise               = go (x : acc) xs
+
+
+--------------------------------------------------------------------------------
+-- | Translate native Windows path separators '\\' to '/' if present.
+removeWinPathSeparator :: String -> String
+removeWinPathSeparator = concatMap (\c -> if c == '\\' then ['/'] else [c])
