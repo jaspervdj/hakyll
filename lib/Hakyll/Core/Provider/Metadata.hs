@@ -27,7 +27,7 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Internal
 import           System.IO                     as IO
-import           System.IO.Error               (modifyIOError, ioeSetLocation)
+import           System.IO.Error               (ioeSetLocation, modifyIOError)
 
 
 --------------------------------------------------------------------------------
@@ -42,7 +42,8 @@ loadMetadata p identifier = do
         Nothing  -> return mempty
         Just mi' -> loadMetadataFile $ resourceFilePath p mi'
 
-    return (md <> emd, body)
+    mdp <- providerMetadata p fp
+    return (md <> emd <> mdp, body)
   where
     normal = setVersion Nothing identifier
     fp     = resourceFilePath p identifier

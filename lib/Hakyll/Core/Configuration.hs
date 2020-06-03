@@ -8,14 +8,15 @@ module Hakyll.Core.Configuration
 
 
 --------------------------------------------------------------------------------
-import           Data.Default     (Default (..))
-import           Data.List        (isPrefixOf, isSuffixOf)
-import           System.Directory (canonicalizePath)
-import           System.Exit      (ExitCode)
-import           System.FilePath  (isAbsolute, normalise, takeFileName)
-import           System.IO.Error  (catchIOError)
-import           System.Process   (system)
+import           Data.Default         (Default (..))
+import           Data.List            (isPrefixOf, isSuffixOf)
+import           System.Directory     (canonicalizePath)
+import           System.Exit          (ExitCode)
+import           System.FilePath      (isAbsolute, normalise, takeFileName)
+import           System.IO.Error      (catchIOError)
+import           System.Process       (system)
 
+import           Hakyll.Core.Metadata
 
 --------------------------------------------------------------------------------
 data Configuration = Configuration
@@ -78,6 +79,10 @@ data Configuration = Configuration
       -- One can also override the port as a command line argument:
       -- ./site preview -p 1234
       previewPort          :: Int
+    , -- | Function to extract metadata from the files
+      --
+      -- By default it returns empty metadata
+      provideMetadata      :: FilePath -> IO Metadata
     }
 
 --------------------------------------------------------------------------------
@@ -98,6 +103,7 @@ defaultConfiguration = Configuration
     , inMemoryCache        = True
     , previewHost          = "127.0.0.1"
     , previewPort          = 8000
+    , provideMetadata      = const (return mempty)
     }
   where
     ignoreFile' path
