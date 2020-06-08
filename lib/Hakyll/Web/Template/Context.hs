@@ -60,8 +60,7 @@ import           Data.List                     (intercalate, tails)
 import           Data.Semigroup                (Semigroup (..))
 #endif
 import           Data.Time.Clock               (UTCTime (..))
-import           Data.Time.Format              (formatTime)
-import qualified Data.Time.Format              as TF
+import           Data.Time.Format              (formatTime, parseTimeM)
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
@@ -463,10 +462,3 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
 missingField :: Context a
 missingField = Context $ \k _ _ -> noResult $
     "Missing field '" ++ k ++ "' in context"
-
-parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime
-#if MIN_VERSION_time(1,5,0)
-parseTimeM = TF.parseTimeM
-#else
-parseTimeM _ = TF.parseTime
-#endif
