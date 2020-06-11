@@ -1,0 +1,27 @@
+resolver: lts-16.0
+save-hackage-creds: false
+
+flags:
+  hakyll:
+    previewServer: true
+    watchServer:   true
+    checkExternal: true
+    usePandoc:     true
+    buildWebsite:  true
+
+packages:
+  - '.'
+
+nix:
+  enable: false
+  packages:
+    - zlib
+
+build:
+  haddock: true
+  haddock-hyperlink-source: true
+  haddock-deps: false
+
+extra-deps:
+- 'lrucache-1.2.0.1'
+- 'warp-3.3.9'

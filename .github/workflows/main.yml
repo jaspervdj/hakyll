@@ -1,20 +1,58 @@
-name: 'CI'
-on: ['push']
+name: CI
+on: [push]
+
 jobs:
-  build:
+  Ubuntu:
+    runs-on: ubuntu-latest
+    
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
-      
-    name: ${{ matrix.os }}
-    runs-on: $${{ matrix.os }}
-    
+        ghc-ver: [8.8.3]
+
+    env:
+      ARGS: "--stack-yaml stack-${{ matrix.ghc-ver }}.yaml --no-terminal --system-ghc --fast"
+
     steps:
-    - uses: 'actions/checkout@v1'
+    - uses: 'actions/checkout@v2'
+    - uses: actions/setup-haskell@v1.1
+      with:
+        ghc-version: ${{ matrix.ghc-ver }}
     - uses: 'mstksg/setup-stack@v1'
     - uses: 'actions/cache@v1'
       with:
         path: '~/.stack'
-        key: "${{ runner.os }}-v3-stack-${{ hashFiles('stack.yaml.lock') }}"
-        restore-keys: '${{ runner.os }}-v3-stack'
-    - run: 'stack build --test'
+        key: "v3-stack-${{ hashFiles('stack-${{ matrix-ghc-ver }}.yaml') }}"
+        restore-keys: 'v3-stack'
+    - name: Install dependencies
+      run: |
+        stack build ${ARGS} --test --only-dependencies
+    - name: Build Hakyll
+      run: |
+        stack build ${ARGS} --test
+
+  Windows:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        ghc-ver: [8.8.3]
+
+    env:
+      ARGS: "--stack-yaml stack-${{ matrix.ghc-ver }}.yaml --no-terminal --system-ghc --fast"
+
+    steps:
+    - uses: 'actions/checkout@v2'
+    - uses: actions/setup-haskell@v1.1
+      with:
+        ghc-version: ${{ matrix.ghc-ver }}
+    - uses: 'actions/cache@v1'
+      with:
+        path: '~/.stack'
+        key: "v3-stack-${{ hashFiles('stack-${{ matrix-ghc-ver }}.yaml') }}"
+        restore-keys: 'v3-stack'
+    - name: Install dependencies
+      run: |
+        stack build ${ARGS} --test --only-dependencies
+    - name: Build Hakyll
+      run: |
+        stack build ${ARGS} --test
