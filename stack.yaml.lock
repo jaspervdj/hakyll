@@ -3,21 +3,7 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    hackage: lrucache-1.2.0.1@sha256:18fc3d7052012c7ab3cd395160f34b53c5e1ec5379cc45185baf35b90ffadc2e,1254
-    pantry-tree:
-      size: 619
-      sha256: 61b2a39a11873f2d8a577e1f6b5e848d2f465ea7f6837ce15436796d3a20eda0
-  original:
-    hackage: lrucache-1.2.0.1
-- completed:
-    hackage: warp-3.3.9@sha256:fc09116f4298811129b3a405f8487459ea7a052132f7474c3cd598cdc7d3d77b,10797
-    pantry-tree:
-      size: 3898
-      sha256: 54ca89c1bebb00b20a54aca8838e2e32ff68775d84b50a3139438b49646b431f
-  original:
-    hackage: warp-3.3.9
+packages: []
 snapshots:
 - completed:
     size: 491387
