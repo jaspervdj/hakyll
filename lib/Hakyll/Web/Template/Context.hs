@@ -21,6 +21,7 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE RankNTypes                #-}
 module Hakyll.Web.Template.Context
     ( ContextField (..)
     , Context (..)
@@ -48,6 +49,7 @@ module Hakyll.Web.Template.Context
     , teaserField
     , teaserFieldWithSeparator
     , missingField
+    , bindItem
     ) where
 
 
@@ -177,7 +179,11 @@ listField key c xs = listFieldWith key c (const xs)
 
 
 --------------------------------------------------------------------------------
--- | Creates a list field like 'listField', but supplies the current page
+-- | Produces a new 'Context' which has list field 'key'. All fields from
+-- 'c' are also accessible from the produced context.
+-- Be careful when doing @listFieldWith k ca f <> cb@ as any fields in @ca@
+-- will override fields in @cb@ with the same name.
+-- Creates a list field like 'listField', but supplies the current page
 -- to the compiler.
 listFieldWith
     :: String -> Context a -> (Item b -> Compiler [Item a]) -> Context b
@@ -470,3 +476,10 @@ parseTimeM = TF.parseTimeM
 #else
 parseTimeM _ = TF.parseTime
 #endif
+
+--------------------------------------------------------------------------------
+
+-- | Binds an 'Item' to a given 'Context', allowing it to be combined with any
+-- other 'Context' of any type.
+bindItem :: Context a -> Item a -> forall b. Context b
+bindItem (Context ctx) ia = Context $ \k args _ -> ctx k args ia

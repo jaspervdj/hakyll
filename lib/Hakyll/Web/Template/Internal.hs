@@ -21,7 +21,8 @@ module Hakyll.Web.Template.Internal
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad.Except                 (catchError)
+import           Control.Monad                        (forM)
+import           Control.Monad.Except                 (MonadError (..), catchError)
 import           Data.Binary                          (Binary)
 import           Data.List                            (intercalate)
 import qualified Data.List.NonEmpty                   as NonEmpty
@@ -171,7 +172,7 @@ applyTemplate' tes context x = go tes
         StringField _  -> expected "list" "string" typeMsg
         ListField c xs -> withErrorMessage bodyMsg $ do
             sep <- maybe (return "") go s
-            bs  <- mapM (applyTemplate' b c) xs
+            bs  <- forM xs $ applyTemplate' b $ c <> bindItem context x
             return $ intercalate sep bs
       where
         headMsg = "In expr '$for(" ++ show e ++ ")$'"
