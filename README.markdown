@@ -1,6 +1,6 @@
 # hakyll
 
-[![Build Status](https://img.shields.io/circleci/project/github/jaspervdj/hakyll.svg)](https://circleci.com/gh/jaspervdj/hakyll)
+![CI](https://github.com/jaspervdj/hakyll/workflows/CI/badge.svg)
 
 Hakyll is a static site generator library in Haskell. More information
 (including a tutorial) can be found on

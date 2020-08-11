@@ -46,7 +46,7 @@ module Hakyll.Core.Routes
 #if MIN_VERSION_base(4,9,0)
 import           Data.Semigroup                 (Semigroup (..))
 #endif
-import           System.FilePath                (replaceExtension)
+import           System.FilePath                (replaceExtension, normalise)
 
 
 --------------------------------------------------------------------------------
@@ -174,7 +174,11 @@ gsubRoute :: String              -- ^ Pattern
           -> (String -> String)  -- ^ Replacement
           -> Routes              -- ^ Resulting route
 gsubRoute pattern replacement = customRoute $
-    replaceAll pattern replacement . toFilePath
+    normalise . replaceAll pattern (replacement . removeWinPathSeparator) . removeWinPathSeparator . toFilePath
+    where
+        -- Filepaths on Windows containing `\\' will trip Regex matching, which
+        -- is used in replaceAll. We normalise filepaths to have '/' as a path separator
+        -- using removeWinPathSeparator
 
 
 --------------------------------------------------------------------------------

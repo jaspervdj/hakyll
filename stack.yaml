@@ -22,6 +22,4 @@ build:
   haddock-hyperlink-source: true
   haddock-deps: false
 
-extra-deps:
-- 'lrucache-1.2.0.1'
-- 'warp-3.3.9'
+extra-deps: []

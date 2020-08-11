@@ -10,7 +10,7 @@ import           Data.Maybe             (fromMaybe)
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Routes
-import           System.FilePath        ((</>))
+import           System.FilePath        ((</>), normalise)
 import           Test.Tasty             (TestTree, testGroup)
 import           Test.Tasty.HUnit       (Assertion, (@=?))
 import           TestSuite.Util
@@ -46,5 +46,5 @@ testRoutes expected r id' = do
     store      <- newTestStore
     provider   <- newTestProvider store
     (route, _) <- runRoutes r provider id'
-    Just expected @=? route
+    Just (normalise expected) @=? route
     cleanTestEnv
