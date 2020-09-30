@@ -3,10 +3,59 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: commonmark-0.1.0.2@sha256:fbff7a2ade0ce7d699964a87f765e503a3a9e22542c05f0f02ba7aad64e38af4,3278
+    pantry-tree:
+      size: 1346
+      sha256: 991da6da60804286b9ea23a1522e18ceeabddfdf416787231db9fd047c163f53
+  original:
+    hackage: commonmark-0.1.0.2
+- completed:
+    hackage: commonmark-extensions-0.2.0.1@sha256:647aa8dba5fd46984ddedc15c3693c9c4d9655503d42006576bd8f0dadf8cd39,3176
+    pantry-tree:
+      size: 2927
+      sha256: 89e1ee05938d558834c397a3a22cdacc755a1941c144f4c1f3daf8a1ede943ce
+  original:
+    hackage: commonmark-extensions-0.2.0.1
+- completed:
+    hackage: commonmark-pandoc-0.2.0.1@sha256:529c6e2c6cabf61558b66a28123eafc1d90d3324be29819f59f024e430312c1f,1105
+    pantry-tree:
+      size: 326
+      sha256: d9954a15f73c8fe55a5097e1cc0957fa626d340ef36e2beefb8caae66008c3dc
+  original:
+    hackage: commonmark-pandoc-0.2.0.1
+- completed:
+    hackage: hslua-1.1.2@sha256:6c231b2af447430d1ed04f065d40bb6882ece93cc7f32f4051dc99deb69beeae,9694
+    pantry-tree:
+      size: 6820
+      sha256: 62e61f6d08191159a070dcbaa20284a581835de620105a254dbee1c7ddfabd9d
+  original:
+    hackage: hslua-1.1.2
+- completed:
+    hackage: jira-wiki-markup-1.3.2@sha256:b5f0901208a0ee07aff60f5356aeb851b7aa7950c75a18a15fd34247a35886d8,3819
+    pantry-tree:
+      size: 1180
+      sha256: 90fa545210a211b8ec88b59f92fe2877ebf2f9e55e2ce2fba6103a3615bd0ab9
+  original:
+    hackage: jira-wiki-markup-1.3.2
+- completed:
+    hackage: pandoc-2.10.1@sha256:23d7ec480c7cb86740475a419d6ca4819987b6dd23bbae9b50bc3d42a7ed2f9f,36933
+    pantry-tree:
+      size: 89646
+      sha256: 08c8b20356152b9ee8161bacafda2dc1bed13d7db4cbf38ab040c1977b2d28d5
+  original:
+    hackage: pandoc-2.10.1
+- completed:
+    hackage: pandoc-types-1.21@sha256:b61ed625da4d1a0d8057fcca4c0c5e174c9f45d94b41504db1532f3fc581e945,4037
+    pantry-tree:
+      size: 713
+      sha256: e26eb93747538e29168032985a03b428039a16000fea1a4a8d9b9b032ac98b5f
+  original:
+    hackage: pandoc-types-1.21
 snapshots:
 - completed:
-    size: 491387
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/6.yaml
-    sha256: 8d81505a6de861e167a58534ab62330afb75bfa108735c7db1204f7ef2a39d79
-  original: lts-15.6
+    size: 532380
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/9.yaml
+    sha256: 14a7cec114424e4286adde73364438927a553ed248cc50f069a30a67e3ee1e69
+  original: lts-16.9

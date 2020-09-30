@@ -1,55 +1,91 @@
-# This Github Actions workflow is modified from
-# https://kodimensional.dev/github-actions
-name: 'CI'
+name: CI
 
 # Trigger the workflow on push or pull request, but only for the master branch
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches: [master]
 
 jobs:
-  build:
-
+  cabal:
+    name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        cabal: ["3.2"]
+        ghc:
+          - "8.6.5"
+          - "8.8.3"
+          - "8.10.1"
+        exclude:
+          - os: macOS-latest
+            ghc: 8.8.3
+          - os: macOS-latest
+            ghc: 8.6.5
+          - os: windows-latest
+            ghc: 8.8.3
+          - os: windows-latest
+            ghc: 8.6.5
 
-    env:
-      ARGS: --no-terminal --fast
-      
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    
     steps:
     - uses: actions/checkout@v2
       if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
 
-    # https://github.com/actions/setup-haskell
+    - uses: actions/setup-haskell@v1.1.1
+      id: setup-haskell-cabal
+      name: Setup Haskell
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+
+    - name: Freeze
+      run: |
+        cabal freeze
+
+    - uses: actions/cache@v1
+      name: Cache ~/.cabal/store
+      with:
+        path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+
+    - name: Build
+      run: |
+        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal build all
+
+    - name: Test
+      run: |
+        cabal test all
+
+  stack:
+    name: stack / ghc ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        stack: ["2.3.1"]
+        ghc: ["8.8.3"]
+
+    steps:
+    - uses: actions/checkout@v2
+      if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
+
     - uses: actions/setup-haskell@v1.1
       name: Setup Haskell Stack
       with:
-        stack-version: "latest"
-        enable-stack: true
-        stack-no-global: true
-    
-    # https://github.com/actions/cache
-    - uses: actions/cache@v2
+        ghc-version: ${{ matrix.ghc }}
+        stack-version: ${{ matrix.stack }}
+
+    - uses: actions/cache@v1
       name: Cache ~/.stack
       with:
         path: ~/.stack
-        key: ${{ runner.os }}-${{ hashFiles('stack.yaml') }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-stack
 
-    # There are strange problems with CI on Windows, where builds with GHC 8.8.*
-    # always fail. Therefore, we distinguish between builds on Ubuntu and Windows
-    # and use an older compiler on Windows.
-    # See here for bug reports:
-    #   https://gitlab.haskell.org/ghc/ghc/issues/17599
-    #   https://gitlab.haskell.org/ghc/ghc/issues/17926
-    
-    - name: Test (Ubuntu)
+    - name: Build
       run: |
-        stack test $ARGS --stack-yaml stack.yaml
-      if: ${{ runner.os == 'Linux' }}
+        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
 
-    - name: Test (Windows)
+    - name: Test
       run: |
-        stack test $ARGS --stack-yaml stack.yaml --compiler ghc-8.6.5
-      if: ${{ runner.os == 'Windows' }} 
+        stack test --system-ghc

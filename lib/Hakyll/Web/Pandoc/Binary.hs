@@ -14,6 +14,10 @@ import           Text.Pandoc
 
 instance Binary Alignment
 instance Binary Block
+instance Binary Caption
+instance Binary Cell
+instance Binary ColSpan
+instance Binary ColWidth
 instance Binary CSL.Reference
 instance Binary Citation
 instance Binary CitationMode
@@ -29,5 +33,11 @@ instance Binary REF.Literal
 instance Binary REF.RefDate
 instance Binary REF.RefType
 instance Binary REF.Season
+instance Binary Row
+instance Binary RowHeadColumns
+instance Binary RowSpan
 instance Binary STY.Agent
 instance Binary STY.Formatted
+instance Binary TableBody
+instance Binary TableFoot
+instance Binary TableHead
