@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.13.4.1 (2020-09-30)
+
+- Bump `pandoc` to 2.10.*
+- Bump upper bound for `template-haskell` to 2.17
+- Bump `QuickCheck` upper bound to 2.15
+
 ## Hakyll 4.13.4.0 (2020-06-20)
 
 - Miscellaneous Windows-specific fixes and CI (by Laurent P. René de Cotret)
