@@ -1,4 +1,4 @@
-# hakyll
+# hakyll - An Amazing Project
 
 ![CI](https://github.com/jaspervdj/hakyll/workflows/CI/badge.svg)
 
