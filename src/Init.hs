@@ -11,7 +11,8 @@ import           Data.Char             (isAlphaNum, isNumber)
 import           Data.List             (foldl', intercalate, isPrefixOf)
 import           Data.Version          (Version (..))
 import           System.Directory      (canonicalizePath, copyFile,
-                                        doesFileExist)
+                                        doesFileExist,
+                                        setPermissions, getPermissions, writable)
 import           System.Environment    (getArgs, getProgName)
 import           System.Exit           (exitFailure)
 import           System.FilePath       (splitDirectories, (</>))
@@ -65,6 +66,10 @@ main = do
                         putStrLn $ "Creating " ++ dst
                         makeDirectories dst
                         copyFile src dst
+                        -- On some systems, the source folder may be readonly,
+                        -- and copyFile will therefore create a readonly project...
+                        p <- getPermissions dst
+                        setPermissions dst (p {writable = True})
 
                     putStrLn $ "Creating " ++ cabalPath
                     createCabal cabalPath name
