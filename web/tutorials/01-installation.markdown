@@ -21,7 +21,7 @@ Hakyll.
 
 3.  There are also some Linux distro packages:
 
-    - [Debian unstable](http://packages.debian.org/source/sid/haskell-hakyll)
+    - [Debian](https://packages.debian.org/source/stable/haskell-hakyll)
     - [Fedora](https://apps.fedoraproject.org/packages/ghc-hakyll)
     - [Nix]: `$ nix-env -iA nixos.haskellPackages.hakyll`
 
