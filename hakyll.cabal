@@ -232,7 +232,7 @@ Library
     Other-Modules:
       Hakyll.Web.Pandoc.Binary
     Build-Depends:
-      pandoc          >= 2.10     && < 2.11,
+      pandoc          >= 2.10     && < 2.12,
       pandoc-citeproc >= 0.14     && < 0.18
     Cpp-options:
       -DUSE_PANDOC
@@ -327,4 +327,4 @@ Executable hakyll-website
     base      >= 4     && < 5,
     directory >= 1.0   && < 1.4,
     filepath  >= 1.0   && < 1.5,
-    pandoc    >= 2.10  && < 2.11
+    pandoc    >= 2.10  && < 2.12
