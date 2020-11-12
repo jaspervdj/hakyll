@@ -8,6 +8,8 @@ module Hakyll.Core.File
     , copyFileCompiler
     , TmpFile (..)
     , newTmpFile
+    , SymlinkFile (..)
+    , symlinkFileCompiler
     ) where
 
 
@@ -20,6 +22,7 @@ import           System.Directory              (copyFileWithMetadata)
 import           System.Directory              (copyFile)
 #endif
 import           System.Directory              (doesFileExist,
+                                                createFileLink,
                                                 renameFile)
 import           System.FilePath               ((</>))
 import           System.Random                 (randomIO)
@@ -56,6 +59,19 @@ copyFileCompiler = do
     provider   <- compilerProvider <$> compilerAsk
     makeItem $ CopyFile $ resourceFilePath provider identifier
 
+--------------------------------------------------------------------------------
+-- | This will not copy a file but create a symlink, which can save space & time for static sites with many large static files which would normally be handled by copyFileCompiler. (Note: the user will need to make sure their sync method handles symbolic links correctly!)
+newtype SymlinkFile = SymlinkFile FilePath
+    deriving (Binary, Eq, Ord, Show, Typeable)
+--------------------------------------------------------------------------------
+instance Writable SymlinkFile where
+    write dst (Item _ (SymlinkFile src)) = createFileLink src dst
+--------------------------------------------------------------------------------
+symlinkFileCompiler :: Compiler (Item SymlinkFile)
+symlinkFileCompiler = do
+    identifier <- getUnderlying
+    provider   <- compilerProvider <$> compilerAsk
+    makeItem $ SymlinkFile $ resourceFilePath provider identifier
 
 --------------------------------------------------------------------------------
 newtype TmpFile = TmpFile FilePath
