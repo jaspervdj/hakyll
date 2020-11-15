@@ -11,6 +11,7 @@
 module Hakyll.Web.Template.List
     ( applyTemplateList
     , applyJoinTemplateList
+    , chronologicalWithFallback
     , chronological
     , recentFirst
     , sortChronological
@@ -19,10 +20,12 @@ module Hakyll.Web.Template.List
 
 
 --------------------------------------------------------------------------------
+import           Control.Applicative         ((<|>))
 import           Control.Monad               (liftM)
 import           Control.Monad.Fail          (MonadFail)
 import           Data.List                   (intersperse, sortBy)
 import           Data.Ord                    (comparing)
+import           Data.Time                   (UTCTime)
 import           Data.Time.Locale.Compat     (defaultTimeLocale)
 
 
@@ -59,16 +62,29 @@ applyJoinTemplateList delimiter tpl context items = do
 
 
 --------------------------------------------------------------------------------
--- | Sort pages chronologically. Uses the same method as 'dateField' for
--- extracting the date.
-chronological :: (MonadMetadata m, MonadFail m) => [Item a] -> m [Item a]
-chronological =
-    sortByM $ getItemUTC defaultTimeLocale . itemIdentifier
+-- | Sort pages chronologically, using a custom getUTC function.
+chronologicalWithGetUTC :: (MonadMetadata m, MonadFail m) =>
+  (Item a -> m UTCTime) -> [Item a] -> m [Item a]
+chronologicalWithGetUTC getUTC = sortByM getUTC
   where
     sortByM :: (Monad m, Ord k) => (a -> m k) -> [a] -> m [a]
     sortByM f xs = liftM (map fst . sortBy (comparing snd)) $
                    mapM (\x -> liftM (x,) (f x)) xs
 
+--------------------------------------------------------------------------------
+-- | Sort pages chronologically. Same as 'chronological', except it will
+-- try to use the item's last modification if necessary.
+chronologicalWithFallback :: [Item a] -> Compiler [Item a]
+chronologicalWithFallback =
+  chronologicalWithGetUTC
+    (\(Item i _) -> getItemUTC defaultTimeLocale i <|> getItemModificationTime i)
+
+--------------------------------------------------------------------------------
+-- | Sort pages chronologically. Uses the same method as 'dateField' for
+-- extracting the date.
+chronological :: (MonadMetadata m, MonadFail m) => [Item a] -> m [Item a]
+chronological =
+  chronologicalWithGetUTC $ getItemUTC defaultTimeLocale . itemIdentifier
 
 --------------------------------------------------------------------------------
 -- | The reverse of 'chronological'
