@@ -1,4 +1,4 @@
-resolver: lts-16.9
+resolver: lts-16.21
 save-hackage-creds: false
 
 flags:
