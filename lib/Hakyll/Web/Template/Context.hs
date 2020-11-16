@@ -47,6 +47,7 @@ module Hakyll.Web.Template.Context
     , modificationTimeFieldWith
     , teaserField
     , teaserFieldWithSeparator
+    , snapshotField
     , missingField
     ) where
 
@@ -454,6 +455,23 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
             "Hakyll.Web.Template.Context: no teaser defined for " ++
             show (itemIdentifier item)
         Just t -> return t
+
+
+--------------------------------------------------------------------------------
+-- | Make a snapshot available under a certain key.
+--
+-- This can be useful in combination with 'teaserField' for instance to provide
+-- a description key for feeds.  If there is no teaser present, the whole content
+-- of a snapshot can be made available as a fallback.
+--
+-- For example,
+--
+-- >>> (mappend <$> teaserField <*> snapshotField) "description" "content"
+snapshotField :: String                      -- ^ Key to use
+              -> Snapshot                    -- ^ Snapshot to load 
+              -> Context String              -- ^ Resulting context
+snapshotField key snapshot = field key $ \item ->
+    itemBody <$> loadSnapshot (itemIdentifier item) snapshot
 
 
 --------------------------------------------------------------------------------
