@@ -2,6 +2,7 @@
 -- | An item is a combination of some content and its 'Identifier'. This way, we
 -- can still use the 'Identifier' to access metadata.
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveTraversable  #-}
 module Hakyll.Core.Item
     ( Item (..)
     , itemSetBody
@@ -25,23 +26,7 @@ import           Hakyll.Core.Identifier
 data Item a = Item
     { itemIdentifier :: Identifier
     , itemBody       :: a
-    } deriving (Show, Typeable)
-
-
---------------------------------------------------------------------------------
-instance Functor Item where
-    fmap f (Item i x) = Item i (f x)
-
-
---------------------------------------------------------------------------------
-instance Foldable Item where
-    foldr f z (Item _ x) = f x z
-
-
---------------------------------------------------------------------------------
-instance Traversable Item where
-    traverse f (Item i x) = Item i <$> f x
-
+    } deriving (Show, Typeable, Functor, Foldable, Traversable)
 
 --------------------------------------------------------------------------------
 instance Binary a => Binary (Item a) where
