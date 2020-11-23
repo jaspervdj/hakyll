@@ -10,10 +10,7 @@ type: article
 
 Working with Hakyll on a GitHub Pages-hosted website is complicated slightly due to Hakyll outputting files to a ```_site``` subdirectory, our desire to have the source code as well as the compiled site stored in a single repository, and our desire to automate it.
 
-This guide will walkthrough the creation and setup of a GitHub site that has two independent branches.
-
-1. ```master``` - This is where your site lives. It's what you see when you go to ```https://<your repo>.github.io```. This branch *needs* to be called master.
-2. ```develop``` - This is where your website's source is. That's all your Haskell code, your posts and templates, etc, and it's where you do work from. This name was chosen arbitrarily and can be freely substituted for any name of your choosing.
+This guide will walkthrough the creation and setup of a GitHub site that works on a single `master` branch.
 
 When you're finished, you will be able to, with one command, refresh your website's contents and send any changes to your GitHub Page.
 
@@ -27,14 +24,15 @@ These instructions should be easy to adapt for any situation though.
 
 ## GitHub Setup
 
-1. If required, create a new repository for your blog.
-2. If required, create a ```master``` branch.
-2. If applicable/desired, create/add to your repository any files that your site needs that will not be produced by your Hakyll project. For example, ```CNAME``` as outlined [here](https://help.github.com/articles/setting-up-your-pages-site-repository/).
-3. Create a ```.gitignore``` file with at a minimum, the following entries:
+1. If required, create a new GitHub repository for your blog.
+2. If required, create a `master` branch.
+3. in the Settings of your GitHub project define that the `/docs` folder from the `master` branch should be used as document-root of your site.
+   Please refer to the [documentation](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#choosing-a-publishing-source)
+   in case of problems.
+4. Create a .gitignore file with at a minimum, the following entries:
 
 ```
 _cache/
-_site/
 .stack-work/
 ```
 
@@ -47,10 +45,8 @@ _site/
 2. Create a ```.gitignore``` file in your blog's directory with at a minimum, the same directories listed as in the GitHub repository.
 3. Use the following git commands to setup your local repository.
 
-```
+```bash
 git init
-# create new branch called develop and switch to it.
-git checkout -b develop
 # track all the source files for our blog.
 git add .
 # make our first commit
@@ -59,102 +55,69 @@ git commit -m "initial commit."
 git remote add origin <URL to your GitHub pages repository>
 ```
 
+### Modify site.hs
+
+In order to make Hakyll generate the site into the `/docs` folder you'll have to edit the Hakyll Main module (`site.hs` if you use the stack template):
+
+```haskell
+config :: Configuration
+config = defaultConfiguration
+  { destinationDirectory = "docs"
+  }
+
+main :: IO ()
+main = do
+  hakyllWith config $ do
+  ...
+```
+
 ## Deployment
 
-So everything's all setup and we're ready to deploy.
+So everything’s all setup, and we’re ready to deploy.
 
-> **Note:** Performing the following commands from your ```develop``` branch is recommended since you will end up back in that branch at the end.
+We need to be able to run the executable that generates the website, so we need to compile it first. If you are using stack, this can be done using:
 
-Temporarily save any uncommitted changes that may exist in the current branch.
-
-```
-git stash
-```
-
-Ensure we are in the correct branch.
-
-```
-git checkout develop
-```
-
-We need to be able to run the executable that generates the website, so we need
-to compile it first.  If you are using `stack`, this can be done using:
-
-```
+```bash
 stack build
 ```
 
-Now get a clean build of our site.
+Next we get a clean build of our site:
 
-```
+```bash
 stack exec myblog clean
 stack exec myblog build
 ```
 
-Update the local list of remote branches to ensure we're able to checkout the branch we want in the next step.
+After this step you should see a folder `docs` under your projects root folder, which contains the generated Hakyll site.
 
-```
-git fetch --all
-```
+Now we commit our changes:
 
-Switch to the `master` branch. 
-
-> **Note:** Checking out this branch does not overwrite the files that Hakyll just produced because we have '_site' listed in both .gitignore files.
-
-```
-git checkout -b master --track origin/master
-```
-
-Next, copy the freshly made contents of '_site' over the old ones.
-
-> **Note:** Deleting a file from your site's source will not remove it from your `master` repository if it has already been published. An alternative to `cp` is discussed at the end of this guide.
-
-```
-cp -a _site/. .
-```
-
-Commit our changes.
-
-```
+```bash
 git add -A
 git commit -m "Publish."
 ```
 
-And send them to GitHub.
+And send them to GitHub:
 
-```
+```bash
 git push origin master:master
 ```
 
-Final clean up and return to the original state.
+That's all.
 
-```
-git checkout develop
-git branch -D master
-git stash pop
-```
+Within a few seconds your Hakyll site should be visible under your GitHub Pages URL!
 
 ## Putting it all together
 
 Below is a complete listing of all the commands used to automate deployment to Github Pages. A `deployCommand` can be set as part of Hakyll's configuration options. More information and an example is provided [here](https://jaspervdj.be/hakyll/reference/Hakyll-Core-Configuration.html).
 
 ```
-# Temporarily store uncommited changes
-git stash
-
 # Verify correct branch
-git checkout develop
+git checkout master
 
 # Build new files
 stack exec myblog clean
 stack exec myblog build
-
-# Get previous files
-git fetch --all
-git checkout -b master --track origin/master
-
-# Overwrite existing files with new files
-cp -a _site/. .
 
 # Commit
 git add -A
@@ -162,27 +125,6 @@ git commit -m "Publish."
 
 # Push
 git push origin master:master
-
-# Restoration
-git checkout develop
-git branch -D master
-git stash pop
 ```
 
 *And that's it.*
-
-## Removing old files with `rsync`
-
-Earlier it was mentioned a flaw is that deleted files will persist in the published site until deleted manually. This is easily overcome by using `rsync` instead of `cp`.
-
-```
-rsync -a --filter='P _site/'      \
-         --filter='P _cache/'     \
-         --filter='P .git/'       \
-         --filter='P .gitignore'  \
-         --filter='P .stack-work' \
-         --delete-excluded        \
-         _site/ .
-```
-
-The only drawback this approach has is the requirement that *every* file in your site "go through" Hakyll. Fortunately, in many cases this is not an issue.
