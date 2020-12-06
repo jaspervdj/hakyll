@@ -59,6 +59,11 @@ Data-files:
 
 Extra-source-files:
   CHANGELOG.md
+  tests/data/biblio/biblio01.golden
+  tests/data/biblio/chicago.csl
+  tests/data/biblio/default.html
+  tests/data/biblio/page.markdown
+  tests/data/biblio/refs.bib
   tests/data/embed.html
   tests/data/example.md
   tests/data/example.md.metadata
@@ -266,6 +271,7 @@ Test-suite hakyll-tests
     hakyll,
     QuickCheck                 >= 2.8  && < 2.15,
     tasty                      >= 0.11 && < 1.4,
+    tasty-golden               >= 2.3  && < 2.4,
     tasty-hunit                >= 0.9  && < 0.11,
     tasty-quickcheck           >= 0.8  && < 0.11,
     -- Copy pasted from hakyll dependencies:
@@ -291,6 +297,7 @@ Test-suite hakyll-tests
 
   If flag(usePandoc)
     Other-modules:
+      Hakyll.Web.Pandoc.Biblio.Tests
       Hakyll.Web.Pandoc.FileType.Tests
     Cpp-options:
       -DUSE_PANDOC
