@@ -1,5 +1,7 @@
 resolver: lts-16.21
 save-hackage-creds: false
+system-ghc: true
+skip-ghc-check: true
 
 flags:
   hakyll:
@@ -23,10 +25,15 @@ build:
   haddock-deps: false
 
 extra-deps:
-- 'commonmark-0.1.0.2'
-- 'commonmark-extensions-0.2.0.1'
+- 'citeproc-0.2'
+- 'commonmark-0.1.1.2'
+- 'commonmark-extensions-0.2.0.4'
 - 'commonmark-pandoc-0.2.0.1'
-- 'hslua-1.1.2'
+- 'hslua-1.3.0'
+- 'hslua-module-text-0.3.0.1'
 - 'jira-wiki-markup-1.3.2'
-- 'pandoc-2.10.1'
-- 'pandoc-types-1.21'
+- 'pandoc-2.11.2'
+- 'pandoc-types-1.22'
+- 'rfc5051-0.2'
+- 'skylighting-0.10.1'
+- 'skylighting-core-0.10.1'
