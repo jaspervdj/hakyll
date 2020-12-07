@@ -24,6 +24,7 @@ import qualified Hakyll.Web.CompressCss.Tests
 import qualified Hakyll.Web.Html.RelativizeUrls.Tests
 import qualified Hakyll.Web.Html.Tests
 #ifdef USE_PANDOC
+import qualified Hakyll.Web.Pandoc.Biblio.Tests
 import qualified Hakyll.Web.Pandoc.FileType.Tests
 #endif
 import qualified Hakyll.Web.Template.Context.Tests
@@ -48,6 +49,7 @@ main = defaultMain $ testGroup "Hakyll"
     , Hakyll.Web.Html.RelativizeUrls.Tests.tests
     , Hakyll.Web.Html.Tests.tests
 #ifdef USE_PANDOC
+    , Hakyll.Web.Pandoc.Biblio.Tests.tests
     , Hakyll.Web.Pandoc.FileType.Tests.tests
 #endif
     , Hakyll.Web.Tags.Tests.tests
