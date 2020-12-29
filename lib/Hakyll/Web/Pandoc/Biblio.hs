@@ -122,6 +122,7 @@ readPandocBiblio ropt csl biblio item = do
     zeroTime = Time.UTCTime (toEnum 0) 0
 
 --------------------------------------------------------------------------------
+-- | Compiles the markdown via Pandoc. Requires the csl and bib files to be known to the compiler via match statements.
 pandocBiblioCompiler :: String -> String -> Compiler (Item String)
 pandocBiblioCompiler cslFileName bibFileName = do
     csl <- load $ fromFilePath cslFileName
