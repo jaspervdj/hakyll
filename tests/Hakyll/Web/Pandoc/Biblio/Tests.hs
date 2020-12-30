@@ -1,6 +1,5 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE CPP               #-}
 module Hakyll.Web.Pandoc.Biblio.Tests
     ( tests
     ) where
@@ -37,11 +36,7 @@ goldenTest01 :: TestTree
 goldenTest01 =
     goldenVsString
         "biblio01"
-#if MIN_VERSION_pandoc(2,11,3)
         (goldenTestsDataDir </> "biblio01.golden")
-#else
-        (goldenTestsDataDir </> "biblio01-pre-pandoc-2.11.3.golden")
-#endif
         (do
             -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
             logger <- Logger.new Logger.Error
