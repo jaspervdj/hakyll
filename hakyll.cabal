@@ -299,6 +299,8 @@ Test-suite hakyll-tests
     Other-modules:
       Hakyll.Web.Pandoc.Biblio.Tests
       Hakyll.Web.Pandoc.FileType.Tests
+    Build-Depends:
+      pandoc >= 2.11 && < 2.12
     Cpp-options:
       -DUSE_PANDOC
 
