@@ -194,6 +194,8 @@ directly with the default Hakyll site.
   [source](https://github.com/thjread/thjread-blog)
 - <https://xvw.github.io/>,
   [source](https://github.com/xvw/planet)
+- <https://jeancharles.quillet.org/>,
+  [source](https://github.com/jecaro/jeancharles.quillet)
 
 ## Hakyll 3.X
 
