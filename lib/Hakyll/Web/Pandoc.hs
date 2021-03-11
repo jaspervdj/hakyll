@@ -8,6 +8,8 @@ module Hakyll.Web.Pandoc
     , writePandocWith
     , renderPandoc
     , renderPandocWith
+    , renderPandocWithTransform
+    , renderPandocWithTransformM
 
       -- * Derived compilers
     , pandocCompiler
@@ -104,6 +106,32 @@ renderPandocWith ropt wopt item =
 
 
 --------------------------------------------------------------------------------
+-- | An extension of `renderPandocWith`, which allows you to specify a custom
+-- Pandoc transformation on the input `Item`.
+-- Useful if you want to do your own transformations before running 
+-- custom Pandoc transformations, e.g. using a `funcField` to transform raw content.
+renderPandocWithTransform :: ReaderOptions -> WriterOptions
+                    -> (Pandoc -> Pandoc)
+                    -> Item String
+                    -> Compiler (Item String)
+renderPandocWithTransform ropt wopt f = 
+    renderPandocWithTransformM ropt wopt (return . f) 
+
+
+--------------------------------------------------------------------------------
+-- | Similar to `renderPandocWithTransform`, but the Pandoc transformation is
+-- monadic. This is useful when you want the pandoc
+-- transformation to use the `Compiler` information such as routes,
+-- metadata, etc. along with your own transformations beforehand.
+renderPandocWithTransformM :: ReaderOptions -> WriterOptions
+                    -> (Pandoc -> Compiler Pandoc)
+                    -> Item String
+                    -> Compiler (Item String)
+renderPandocWithTransformM ropt wopt f i = 
+    writePandocWith wopt <$> (traverse f =<< readPandocWith ropt i) 
+
+
+--------------------------------------------------------------------------------
 -- | Read a page render using pandoc
 pandocCompiler :: Compiler (Item String)
 pandocCompiler =
@@ -137,9 +165,8 @@ pandocCompilerWithTransform ropt wopt f =
 pandocCompilerWithTransformM :: ReaderOptions -> WriterOptions
                     -> (Pandoc -> Compiler Pandoc)
                     -> Compiler (Item String)
-pandocCompilerWithTransformM ropt wopt f =
-    writePandocWith wopt <$>
-        (traverse f =<< readPandocWith ropt =<< getResourceBody)
+pandocCompilerWithTransformM ropt wopt f = 
+    getResourceBody >>= renderPandocWithTransformM ropt wopt f
 
 
 --------------------------------------------------------------------------------
