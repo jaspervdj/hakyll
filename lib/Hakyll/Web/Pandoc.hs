@@ -137,9 +137,20 @@ pandocCompilerWithTransform ropt wopt f =
 pandocCompilerWithTransformM :: ReaderOptions -> WriterOptions
                     -> (Pandoc -> Compiler Pandoc)
                     -> Compiler (Item String)
-pandocCompilerWithTransformM ropt wopt f =
-    writePandocWith wopt <$>
-        (traverse f =<< readPandocWith ropt =<< getResourceBody)
+pandocCompilerWithTransformM ropt wopt f = 
+    getResourceBody >>= applyPandocWith ropt wopt f
+
+
+--------------------------------------------------------------------------------
+-- | Similar to pandocCompilerWithTransformM, but takes an `Item String` as an
+-- additional argument. Useful if you want to do transformations before passing
+-- data into Pandoc, e.g. using custom templating functions.
+applyPandocWith :: ReaderOptions -> WriterOptions
+                    -> (Pandoc -> Compiler Pandoc)
+                    -> Item String
+                    -> Compiler (Item String)
+applyPandocWith ropt wopt f = 
+    readPandocWith ropt >=> traverse f >=> pure . writePandocWith wopt
 
 
 --------------------------------------------------------------------------------
