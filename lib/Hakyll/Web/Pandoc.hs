@@ -143,8 +143,8 @@ pandocCompilerWithTransformM ropt wopt f =
 
 --------------------------------------------------------------------------------
 -- | Similar to pandocCompilerWithTransformM, but takes an `Item String` as an
--- additional argument. Useful if you want to do transformations before passing
--- data into Pandoc, e.g. using custom templating functions.
+-- additional argument. Useful if you want to do transformations before doing a
+-- custom Pandoc transformation, e.g. using custom templating functions.
 applyPandocWith :: ReaderOptions -> WriterOptions
                     -> (Pandoc -> Compiler Pandoc)
                     -> Item String
