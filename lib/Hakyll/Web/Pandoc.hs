@@ -149,8 +149,8 @@ applyPandocWith :: ReaderOptions -> WriterOptions
                     -> (Pandoc -> Compiler Pandoc)
                     -> Item String
                     -> Compiler (Item String)
-applyPandocWith ropt wopt f = 
-    readPandocWith ropt >=> traverse f >=> pure . writePandocWith wopt
+applyPandocWith ropt wopt f i = 
+    writePandocWith wopt <$> (traverse f =<< readPandocWith ropt i) 
 
 
 --------------------------------------------------------------------------------
