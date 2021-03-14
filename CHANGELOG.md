@@ -4,6 +4,15 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.14.0.0 (2021-03-14)
+
+- Add `renderPandocWithTransform` and `renderPandocWithTransformM` (by Norman
+  Liu)
+- Make sure the initial project is writable (by Tobias Bora)
+- Bump `pandoc` to 2.11.*
+- Bump `file-embed` upper bound to 0.0.14
+- Bump `random` upper bound to 1.2
+
 ## Hakyll 4.13.4.1 (2020-09-30)
 
 - Bump `pandoc` to 2.10.*
