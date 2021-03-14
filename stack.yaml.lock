@@ -3,94 +3,10 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    hackage: citeproc-0.2@sha256:72a6b976a1d3ff2107043cfeb942e278ce2b93f0e31752da86bc6431b862ae19,5431
-    pantry-tree:
-      size: 78527
-      sha256: 1dd0f1ee7bc43367fbb745ba859ad6e2eb3b8d16d515c47deba31a5bd09bc0e2
-  original:
-    hackage: citeproc-0.2
-- completed:
-    hackage: commonmark-0.1.1.2@sha256:c06ab05f0f224ab7982502a96e17952823a9b6dae8505fb35194b0baa9e2a975,3278
-    pantry-tree:
-      size: 1346
-      sha256: 6a187bbbfaf61b4b1bf87ee5027e7edb5b7157ad3380982b07b876e9a60cd63d
-  original:
-    hackage: commonmark-0.1.1.2
-- completed:
-    hackage: commonmark-extensions-0.2.0.4@sha256:6a437bcfa3c757af4262b71336513619990eafb5cfdc33e57a499c93ad225608,3184
-    pantry-tree:
-      size: 2928
-      sha256: ac8993e356edabc65a40d6c6909696c5f2dfe2a5298089da820c29ca75852360
-  original:
-    hackage: commonmark-extensions-0.2.0.4
-- completed:
-    hackage: commonmark-pandoc-0.2.0.1@sha256:529c6e2c6cabf61558b66a28123eafc1d90d3324be29819f59f024e430312c1f,1105
-    pantry-tree:
-      size: 326
-      sha256: d9954a15f73c8fe55a5097e1cc0957fa626d340ef36e2beefb8caae66008c3dc
-  original:
-    hackage: commonmark-pandoc-0.2.0.1
-- completed:
-    hackage: hslua-1.3.0@sha256:d9b758f6234286a7df267cae15332507a1d3be56baf03ff7ae073269bc55c4e8,11023
-    pantry-tree:
-      size: 7716
-      sha256: e2cc992f8ea4781718386c3c0def49f04be96b4b0c459b629df555b0c045efc2
-  original:
-    hackage: hslua-1.3.0
-- completed:
-    hackage: hslua-module-text-0.3.0.1@sha256:e245d7bf9746101664dcde9c33b1c8cd792d404fddb8d9346ae6abb6b971dd93,1741
-    pantry-tree:
-      size: 415
-      sha256: 70932f637ef2a81024d43270f3b28ce870d7b43c405fb399d51d07f170da76ea
-  original:
-    hackage: hslua-module-text-0.3.0.1
-- completed:
-    hackage: jira-wiki-markup-1.3.2@sha256:b5f0901208a0ee07aff60f5356aeb851b7aa7950c75a18a15fd34247a35886d8,3819
-    pantry-tree:
-      size: 1180
-      sha256: 90fa545210a211b8ec88b59f92fe2877ebf2f9e55e2ce2fba6103a3615bd0ab9
-  original:
-    hackage: jira-wiki-markup-1.3.2
-- completed:
-    hackage: pandoc-2.11.2@sha256:e21f0af1750c4d7a3cf9096c46403c55043c9ac06c7c37627ecb312499eb3136,39349
-    pantry-tree:
-      size: 114848
-      sha256: ef31f41960bd8ae1a1b02b2c56a692583398f2cb3fc7c0177583b698a6a60fdf
-  original:
-    hackage: pandoc-2.11.2
-- completed:
-    hackage: pandoc-types-1.22@sha256:15512ce011555ee720820f11cac0598317293406da5812337cbb1550d144e3bd,4071
-    pantry-tree:
-      size: 737
-      sha256: 28e43150f4bb0d4d880cf92ade20fefcd8705ee95cfe4a1d0bb5efd320982a9d
-  original:
-    hackage: pandoc-types-1.22
-- completed:
-    hackage: rfc5051-0.2@sha256:da5d77731f2ac6fe313a67919419b0833e09cd7f1a81869ed82a54dbf8962bf2,1678
-    pantry-tree:
-      size: 446
-      sha256: 191a30a13590a14dc8f606ff945298fee6afbb093a49bc5db71dbaf066f01930
-  original:
-    hackage: rfc5051-0.2
-- completed:
-    hackage: skylighting-0.10.1@sha256:69f9175c606289164347a2ae1507218bf0c2479a1ed93356d24e83e4097ef493,10031
-    pantry-tree:
-      size: 10837
-      sha256: 5b5516a196a75c6dffb33c3c9227d743d3c48e3d659fb7aad2cc01609e1e3a1f
-  original:
-    hackage: skylighting-0.10.1
-- completed:
-    hackage: skylighting-core-0.10.1@sha256:da0b01c22322f1312e9a5e37343f2153a3a8ba65a3d88ef51cf9b1360c466e08,8159
-    pantry-tree:
-      size: 13517
-      sha256: 48673ab1725d2aa6c019bb8a7d1419002d9a86a5dd54e2745b9d78846d793b29
-  original:
-    hackage: skylighting-core-0.10.1
+packages: []
 snapshots:
 - completed:
-    size: 532413
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/21.yaml
-    sha256: 7b5cac89352fa4a88606dc6cb250aee9291f21e2e988d464065f5aa51f5de33d
-  original: lts-16.21
+    size: 565266
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/5.yaml
+    sha256: 78e8ebabf11406261abbc95b44f240acf71802630b368888f6d758de7fc3a2f7
+  original: lts-17.5
