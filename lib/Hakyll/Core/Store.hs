@@ -16,20 +16,14 @@ module Hakyll.Core.Store
 
 
 --------------------------------------------------------------------------------
-import qualified Data.ByteArray       as BA
-import qualified Crypto.Hash          as CH
+import qualified Data.Hashable        as DH
 import           Data.Binary          (Binary, decode, encodeFile)
-import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cache.LRU.IO    as Lru
 import           Data.List            (intercalate)
 import           Data.Maybe           (isJust)
-import qualified Data.Text            as T
-import qualified Data.Text.Encoding   as T
 import           Data.Typeable        (TypeRep, Typeable, cast, typeOf)
-import           Numeric              (showHex)
-import           System.Directory     (createDirectoryIfMissing)
-import           System.Directory     (doesFileExist, removeFile)
+import           System.Directory     (createDirectoryIfMissing, doesFileExist, removeFile)
 import           System.FilePath      ((</>))
 import           System.IO            (IOMode (..), hClose, openFile)
 import           System.IO.Error      (catchIOError, ioeSetFileName,
@@ -194,21 +188,4 @@ deleteFile = (`catchIOError` \_ -> return ()) . removeFile
 --------------------------------------------------------------------------------
 -- | Mostly meant for internal usage
 hash :: [String] -> String
-hash = toHex . B.unpack . hashMD5 . T.encodeUtf8 . T.pack . intercalate "/"
-  where
-    toHex [] = ""
-    toHex (x : xs) | x < 16 = '0' : showHex x (toHex xs)
-                   | otherwise = showHex x (toHex xs)
-
-
---------------------------------------------------------------------------------
--- | Hash by MD5
-hashMD5 :: B.ByteString -> B.ByteString
-hashMD5 x =
-  let
-    digest :: CH.Digest CH.MD5
-    digest = CH.hash x
-    bytes :: B.ByteString
-    bytes = BA.convert digest
-  in
-    bytes
+hash = show . DH.hash . intercalate "/"
