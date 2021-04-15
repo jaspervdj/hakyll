@@ -1,9 +1,9 @@
 {-# LANGUAGE BangPatterns #-}
 import           Control.Monad          (forM)
-import qualified Crypto.Hash.SHA256     as SHA256
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8  as BS8
 import qualified Data.ByteString.Lazy   as BSL
+import qualified Data.Hashable          as DH
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Hakyll
@@ -20,9 +20,7 @@ mkFileHashes dir = do
         return (fromFilePath path1, h)
   where
     hash :: FilePath -> IO String
-    hash fp = do
-        !h <- SHA256.hashlazy <$> BSL.readFile fp
-        return $! BS8.unpack $! Base16.encode h
+    hash fp = (show . DH.hash) <$> BSL.readFile fp
 
 main :: IO ()
 main = hakyll $ do
