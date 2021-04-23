@@ -5,11 +5,8 @@ module Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
-import           Control.Concurrent              (getNumCapabilities)
-import           Control.Concurrent.Async.Lifted (mapConcurrently_)
-import           Control.Concurrent.QSemN        (QSemN, newQSemN, signalQSemN, waitQSemN)
+import           Control.Concurrent.Async.Lifted (forConcurrently_)
 import           Control.Concurrent.STM          (atomically, modifyTVar', readTVarIO, newTVarIO, TVar)
-import           Control.Exception.Lifted        (bracket_)
 import           Control.Monad                   (unless)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader            (ask)
@@ -64,10 +61,6 @@ run config logger rules = do
     mOldFacts <- Store.get store factsKey
     let (oldFacts) = case mOldFacts of Store.Found f -> f
                                        _             -> mempty
-    
-    -- Number of physical cores available for compilation
-    numproc <- getNumCapabilities 
-    Logger.debug logger $ "Using at most " ++ " cores..."
 
     -- Build runtime read/state
     let compilers = rulesCompilers ruleSet
@@ -78,7 +71,6 @@ run config logger rules = do
             , runtimeStore         = store
             , runtimeRoutes        = rulesRoutes ruleSet
             , runtimeUniverse      = M.fromList compilers
-            , runtimeCapabilities  = numproc
             }
 
     state <- newTVarIO $ RuntimeState 
@@ -118,7 +110,6 @@ data RuntimeRead = RuntimeRead
     , runtimeStore         :: Store
     , runtimeRoutes        :: Routes
     , runtimeUniverse      :: Map Identifier (Compiler SomeItem)
-    , runtimeCapabilities  :: Int
     }
 
 
@@ -195,24 +186,11 @@ scheduleOutOfDate = do
 --------------------------------------------------------------------------------
 pickAndChase :: Runtime ()
 pickAndChase = do
-    numproc <- runtimeCapabilities <$> ask
     todo <- runtimeTodo <$> getRuntimeState
     unless (null todo) $ do
         checkForDependencyCycle
-        mapConcurrentlyN_ numproc chase (M.keys todo)
+        forConcurrently_ (M.keys todo) chase
         pickAndChase
-
-
---------------------------------------------------------------------------------
--- | Maps a function and discard the results, performing at most @N@ actions concurrently.
-mapConcurrentlyN_ :: Traversable t => Int -> (a -> Runtime ()) -> t a -> Runtime ()
-mapConcurrentlyN_ n f xs = do
-  -- Emulating a pool of processes with locked access
-  sem <- liftIO $ newQSemN n
-  mapConcurrently_ (with sem . f) xs
-  where
-    with :: QSemN -> Runtime a -> Runtime a
-    with s = bracket_ (liftIO $ waitQSemN s 1) (liftIO $ signalQSemN s 1)
 
 
 --------------------------------------------------------------------------------
