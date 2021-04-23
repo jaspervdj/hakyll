@@ -73,7 +73,13 @@ run config logger rules = do
             , runtimeUniverse      = M.fromList compilers
             }
 
-    state <- newTVarIO $ RuntimeState S.empty S.empty M.empty oldFacts M.empty
+    state <- newTVarIO $ RuntimeState 
+            { runtimeDone         = S.empty
+            , runtimeSnapshots    = S.empty
+            , runtimeTodo         = M.empty
+            , runtimeFacts        = oldFacts
+            , runtimeDependencies = M.empty
+            }
 
     -- Run the program and fetch the resulting state
     result <- runExceptT $ runRWST build read' state
@@ -131,6 +137,11 @@ modifyRuntimeState f = get >>= \s -> liftIO . atomically $ modifyTVar' s f
 
 
 --------------------------------------------------------------------------------
+getRuntimeState :: Runtime RuntimeState
+getRuntimeState = liftIO . readTVarIO =<< get
+
+
+--------------------------------------------------------------------------------
 build :: Runtime ()
 build = do
     logger <- runtimeLogger <$> ask
@@ -152,7 +163,7 @@ scheduleOutOfDate = do
         modified    = S.fromList $ flip filter identifiers $
             resourceModified provider
     
-    state <- liftIO . readTVarIO =<< get
+    state <- getRuntimeState
     let facts = runtimeFacts state
         todo  = runtimeTodo state
         
@@ -175,7 +186,7 @@ scheduleOutOfDate = do
 --------------------------------------------------------------------------------
 pickAndChase :: Runtime ()
 pickAndChase = do
-    todo <- fmap runtimeTodo . liftIO . readTVarIO =<< get
+    todo <- runtimeTodo <$> getRuntimeState
     unless (null todo) $ do
         checkForDependencyCycle
         forConcurrently_ (M.keys todo) chase
@@ -186,7 +197,7 @@ pickAndChase = do
 -- | Check for cyclic dependencies in the current state
 checkForDependencyCycle :: Runtime ()
 checkForDependencyCycle = do
-    deps <- fmap runtimeDependencies . liftIO . readTVarIO =<< get
+    deps <- runtimeDependencies <$> getRuntimeState
     let (depgraph, nodeFromVertex, _) = G.graphFromEdges [(k, k, S.toList dps) | (k, dps) <- M.toList deps]
         dependencyCycles = map ((\(_, k, _) -> k) . nodeFromVertex) $ cycles depgraph
 
@@ -212,7 +223,7 @@ chase id' = do
     store     <- runtimeStore         <$> ask
     config    <- runtimeConfiguration <$> ask
 
-    state     <- liftIO . readTVarIO =<< get
+    state     <- getRuntimeState
 
     Logger.debug logger $ "Processing " ++ show id'
 
