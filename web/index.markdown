@@ -39,4 +39,5 @@ using [stack] by using `stack install hakyll`. Then, you can:
 - read the [tutorials](/tutorials.html);
 - mail the [google discussion group](http://groups.google.com/group/hakyll);
 - ask questions on the IRC channel: `#hakyll` on
-  [freenode](http://freenode.net/).
+  [irc.libera.chat](https://libera.chat/) (we *do not* have a channel on
+  Freenode anymore).
