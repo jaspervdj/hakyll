@@ -51,11 +51,11 @@ use `cabal new-run site [command]`.
 
 You can build the site using:
 
-    my-site build
+    site build
 
 And preview (and build) it using:
 
-    my-site watch
+    site watch
 
 Using stack
 ===========
