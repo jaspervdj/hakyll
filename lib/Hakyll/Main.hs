@@ -25,12 +25,16 @@ module Hakyll.Main
 --------------------------------------------------------------------------------
 import           System.Environment        (getProgName)
 import           System.Exit               (ExitCode (ExitSuccess), exitWith)
+import           System.FilePath           (isValid)
 import           System.IO.Unsafe          (unsafePerformIO)
+
 
 
 --------------------------------------------------------------------------------
 import           Data.Monoid               ((<>))
 import qualified Options.Applicative       as OA
+import qualified Text.Parsec               as P
+import           Text.Printf               (printf)
 
 
 --------------------------------------------------------------------------------
@@ -39,6 +43,7 @@ import qualified Hakyll.Commands           as Commands
 import qualified Hakyll.Core.Configuration as Config
 import qualified Hakyll.Core.Logger        as Logger
 import           Hakyll.Core.Rules
+import           Hakyll.Core.Util.Parser   (directories)
 
 
 --------------------------------------------------------------------------------
@@ -105,14 +110,14 @@ invokeCommands :: Command -> Config.Configuration ->
                   Check.Check -> Logger.Logger -> Rules a -> IO ExitCode
 invokeCommands args conf check logger rules =
     case args of
-        Build          -> Commands.build conf logger rules
-        Check   _      -> Commands.check conf logger check
-        Clean          -> Commands.clean conf logger >> ok
-        Deploy         -> Commands.deploy conf
-        Preview p      -> Commands.preview conf logger rules p >> ok
-        Rebuild        -> Commands.rebuild conf logger rules
-        Server  _ _    -> Commands.server conf logger (host args) (port args) >> ok
-        Watch   _ p s  -> Commands.watch conf logger (host args) p (not s) rules >> ok
+        Build           -> Commands.build conf logger rules
+        Check   _       -> Commands.check conf logger check
+        Clean           -> Commands.clean conf logger >> ok
+        Deploy          -> Commands.deploy conf
+        Preview p       -> Commands.preview conf logger rules p >> ok
+        Rebuild         -> Commands.rebuild conf logger rules
+        Server  _ _     -> Commands.server conf logger (host args) (port args) >> ok
+        Watch   _ p s e -> Commands.watch conf logger (host args) p (not s) e rules >> ok
     where
         ok = return ExitSuccess
 
@@ -139,7 +144,7 @@ data Command
     -- ^ Clean and build again.
     | Server  {host :: String, port :: Int}
     -- ^ Start a preview server.
-    | Watch   {host :: String, port :: Int, no_server :: Bool }
+    | Watch   {host :: String, port :: Int, no_server :: Bool, exclude_dir :: [FilePath]}
     -- ^ Autocompile on changes and start a preview server.
     deriving (Show)
 
@@ -150,6 +155,21 @@ optionParser conf = Options <$> verboseParser <*> commandParser conf
     where
     verboseParser = OA.switch (OA.long "verbose" <> OA.short 'v' <> OA.help "Run in verbose mode")
 
+directoriesParser :: OA.ReadM [FilePath]
+directoriesParser =
+  OA.eitherReader
+    ( \str ->
+        case P.parse directories "" str of
+          Left _ -> Left $ printf "cannot parse value '%s'" str
+          Right dirs ->
+            mapM
+              ( \dir ->
+                  if isValid dir
+                    then Right dir
+                    else Left $ printf "invalid dir '%s'" dir
+              )
+              dirs
+    )
 
 commandParser :: Config.Configuration -> OA.Parser Command
 commandParser conf = OA.subparser $ foldr ((<>) . produceCommand) mempty commands
@@ -189,8 +209,10 @@ commandParser conf = OA.subparser $ foldr ((<>) . produceCommand) mempty command
           , OA.fullDesc <> OA.progDesc "Start a preview server"
           )
         , ( "watch"
-          , pure Watch <*> hostParser <*> portParser <*> OA.switch (OA.long "no-server" <> OA.help "Disable the built-in web server")
-          , OA.fullDesc <> OA.progDesc "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server."
+          , pure Watch <*> hostParser <*> portParser
+            <*> OA.switch (OA.long "no-server" <> OA.help "Disable the built-in web server")
+            <*> OA.option directoriesParser (OA.long "exclude-dir" <> OA.help "Exclude one or more directories from being watched" <> OA.value [])
+          , OA.fullDesc <> OA.progDesc "Autocompile on changes and start a preview server. You can watch and recompile without running a server with --no-server. You can exclude one or more directories with --exclude-dir=\"dir\", --exclude-dir=\"{dir1,dir2}\"."
           )
         ]
 

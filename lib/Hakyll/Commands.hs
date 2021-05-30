@@ -77,7 +77,7 @@ preview :: Configuration -> Logger -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 preview conf logger rules port  = do
     deprecatedMessage
-    watch conf logger "0.0.0.0" port True rules
+    watch conf logger "0.0.0.0" port True [] rules
   where
     deprecatedMessage = mapM_ putStrLn [ "The preview command has been deprecated."
                                        , "Use the watch command for recompilation and serving."
@@ -90,15 +90,15 @@ preview _ _ _ _ = previewServerDisabled
 --------------------------------------------------------------------------------
 -- | Watch and recompile for changes
 
-watch :: Configuration -> Logger -> String -> Int -> Bool -> Rules a -> IO ()
+watch :: Configuration -> Logger -> String -> Int -> Bool -> [FilePath] -> Rules a -> IO ()
 #ifdef WATCH_SERVER
-watch conf logger host port runServer rules = do
+watch conf logger host port runServer excludedDirs rules = do
 #ifndef mingw32_HOST_OS
-    _ <- forkIO $ watchUpdates conf update
+    _ <- forkIO $ watchUpdates conf excludedDirs update
 #else
     -- Force windows users to compile with -threaded flag, as otherwise
     -- thread is blocked indefinitely.
-    catchIOError (void $ forkOS $ watchUpdates conf update) $ \_ -> do
+    catchIOError (void $ forkOS $ watchUpdates conf excludedDirs update) $ \_ -> do
         fail $ "Hakyll.Commands.watch: Could not start update watching " ++
                "thread. Did you compile with -threaded flag?"
 #endif

@@ -11,6 +11,7 @@ import           Control.Concurrent.MVar        (newEmptyMVar, takeMVar,
                                                  tryPutMVar)
 import           Control.Exception              (AsyncException, fromException,
                                                  handle, throw)
+import           Data.List                      (isPrefixOf)
 import           Control.Monad                  (forever, void, when)
 import           System.Directory               (canonicalizePath)
 import           System.FilePath                (pathSeparators)
@@ -37,8 +38,8 @@ import           Hakyll.Core.Identifier.Pattern
 --------------------------------------------------------------------------------
 -- | A thread that watches for updates in a 'providerDirectory' and recompiles
 -- a site as soon as any changes occur
-watchUpdates :: Configuration -> IO Pattern -> IO ()
-watchUpdates conf update = do
+watchUpdates :: Configuration -> [FilePath] -> IO Pattern -> IO ()
+watchUpdates conf excludedDirs update = do
     let providerDir = providerDirectory conf
     shouldBuild     <- newEmptyMVar
     pattern         <- update
@@ -52,8 +53,10 @@ watchUpdates conf update = do
                 relative   = dropWhile (`elem` pathSeparators) $
                     drop (length fullProviderDir) path
                 identifier = fromFilePath relative
+                isExcluded = any (`isPrefixOf` relative) excludedDirs
 
-            shouldIgnore <- shouldIgnoreFile conf path
+
+            shouldIgnore <- (|| isExcluded) <$> shouldIgnoreFile conf path
             return $ not shouldIgnore && matches pattern identifier
 
     -- This thread continually watches the `shouldBuild` MVar and builds
