@@ -8,6 +8,7 @@ module Hakyll.Core.Runtime.Tests
 --------------------------------------------------------------------------------
 import qualified Data.ByteString     as B
 import           System.FilePath     ((</>))
+import           System.Exit         (ExitCode (..))
 import           Test.Tasty          (TestTree, testGroup)
 import           Test.Tasty.HUnit    (Assertion, (@?=))
 
@@ -22,7 +23,7 @@ import           TestSuite.Util
 --------------------------------------------------------------------------------
 tests :: TestTree
 tests = testGroup "Hakyll.Core.Runtime.Tests" $
-    fromAssertions "run" [case01, case02]
+    fromAssertions "run" [case01, case02, case03]
 
 
 --------------------------------------------------------------------------------
@@ -92,5 +93,32 @@ case02 = do
     favicon <- readFile $
         destinationDirectory testConfiguration </> "favicon.ico"
     favicon @?= "Test"
+
+    cleanTestEnv
+
+
+--------------------------------------------------------------------------------
+-- Test that dependency cycles are correctly identified
+case03 :: Assertion
+case03 = do
+    logger  <- Logger.new Logger.Error
+    (ec, _) <- run testConfiguration logger $ do
+
+        create ["partial.html.out1"] $ do
+            route idRoute
+            compile $ do
+                example <- loadSnapshotBody "partial.html.out2" "raw"
+                makeItem example
+                    >>= loadAndApplyTemplate "partial.html" defaultContext
+
+        create ["partial.html.out2"] $ do
+            route idRoute
+            compile $ do
+                example <- loadSnapshotBody "partial.html.out1" "raw"
+                makeItem example
+                    >>= loadAndApplyTemplate "partial.html" defaultContext
+
+
+    ec @?= ExitFailure 1
 
     cleanTestEnv

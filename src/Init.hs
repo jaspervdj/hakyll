@@ -120,7 +120,7 @@ createCabal path name =
       , "  main-is:          site.hs"
       , "  build-depends:    base == 4.*"
       , "                  , hakyll == " ++ version' ++ ".*"
-      , "  ghc-options:      -threaded"
+      , "  ghc-options:      -threaded -rtsopts -with-rtsopts=-N"
       , "  default-language: Haskell2010"
       ]
   where
