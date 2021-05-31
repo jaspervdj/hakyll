@@ -239,7 +239,7 @@ Library
     Other-Modules:
       Hakyll.Web.Pandoc.Binary
     Build-Depends:
-      pandoc >= 2.11 && < 2.14
+      pandoc >= 2.11 && < 2.15
     Cpp-options:
       -DUSE_PANDOC
 
