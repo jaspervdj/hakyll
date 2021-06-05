@@ -20,7 +20,18 @@ tests :: TestTree
 tests = testGroup "Hakyll.Web.Html.Tests" $ concat
     [ fromAssertions "demoteHeaders"
         [ "<h2>A h1 title</h2>" @=?
-            demoteHeaders "<h1>A h1 title</h1>"
+            demoteHeaders "<h1>A h1 title</h1>" -- Assert single-step demotion
+        , "<h6>A h6 title</h6>" @=?
+            demoteHeaders "<h6>A h6 title</h6>" -- Assert maximum demotion is h6
+        ]
+
+    , fromAssertions "demoteHeadersBy"
+        [ "<h3>A h1 title</h3>" @=?
+            demoteHeadersBy 2 "<h1>A h1 title</h1>"
+        , "<h6>A h5 title</h6>" @=?
+            demoteHeadersBy 2 "<h5>A h5 title</h5>" -- Assert that h6 is the lowest possible demoted header.
+        , "<h4>A h4 title</h4>" @=?
+            demoteHeadersBy 0 "<h4>A h4 title</h4>" -- Assert that a demotion of @N < 1@ is a no-op.
         ]
 
     , fromAssertions "withUrls"
