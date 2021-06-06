@@ -7,6 +7,7 @@ module Hakyll.Web.Html
 
       -- * Headers
     , demoteHeaders
+    , demoteHeadersBy
 
       -- * Url manipulation
     , getUrls
@@ -50,13 +51,20 @@ withTagList f = renderTags' . f . parseTags'
 --------------------------------------------------------------------------------
 -- | Map every @h1@ to an @h2@, @h2@ to @h3@, etc.
 demoteHeaders :: String -> String
-demoteHeaders = withTags $ \tag -> case tag of
+demoteHeaders = demoteHeadersBy 1
+
+--------------------------------------------------------------------------------
+-- | Maps any @hN@ to an @hN+amount@ for any @amount > 0 && 1 <= N+amount <= 6@.
+demoteHeadersBy :: Int -> String -> String
+demoteHeadersBy amount
+  | amount < 1 = id
+  | otherwise = withTags $ \tag -> case tag of
     TS.TagOpen t a -> TS.TagOpen (demote t) a
     TS.TagClose t  -> TS.TagClose (demote t)
     t              -> t
   where
     demote t@['h', n]
-        | isDigit n = ['h', intToDigit (min 6 $ digitToInt n + 1)]
+        | isDigit n = ['h', intToDigit (min 6 $ digitToInt n + amount)]
         | otherwise = t
     demote t        = t
 
