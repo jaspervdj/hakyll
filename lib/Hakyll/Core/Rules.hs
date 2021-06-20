@@ -29,6 +29,7 @@ module Hakyll.Core.Rules
     , preprocess
     , Dependency (..)
     , rulesExtraDependencies
+    , forceCompile
     ) where
 
 
@@ -221,3 +222,11 @@ rulesExtraDependencies deps rules =
             | (i, c) <- rulesCompilers ruleSet
             ]
         }
+
+
+--------------------------------------------------------------------------------
+-- | Force the item(s) to always be recompiled, whether or not the
+-- dependencies are out of date.  This can be useful if you are using
+-- I/O to generate part (or all) of an item.
+forceCompile :: Rules a -> Rules a
+forceCompile = rulesExtraDependencies [AlwaysOutOfDate]
