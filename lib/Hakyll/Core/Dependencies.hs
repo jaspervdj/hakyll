@@ -33,6 +33,7 @@ import           Hakyll.Core.Identifier.Pattern
 data Dependency
     = PatternDependency Pattern (Set Identifier)
     | IdentifierDependency Identifier
+    | AlwaysOutOfDate
     deriving (Show, Typeable)
 
 
@@ -40,9 +41,11 @@ data Dependency
 instance Binary Dependency where
     put (PatternDependency p is) = putWord8 0 >> put p >> put is
     put (IdentifierDependency i) = putWord8 1 >> put i
+    put AlwaysOutOfDate = putWord8 2
     get = getWord8 >>= \t -> case t of
         0 -> PatternDependency <$> get <*> get
         1 -> IdentifierDependency <$> get
+        2 -> pure AlwaysOutOfDate
         _ -> error "Data.Binary.get: Invalid Dependency"
 
 
@@ -84,13 +87,30 @@ markOod id' = State.modify $ \s ->
 
 
 --------------------------------------------------------------------------------
-dependenciesFor :: Identifier -> DependencyM [Identifier]
+-- | Collection of dependencies that should be checked to determine
+-- if an identifier needs rebuilding.
+data Dependencies
+  = DependsOn [Identifier]
+  | MustRebuild
+  deriving (Show)
+
+instance Semigroup Dependencies where
+  DependsOn ids <> DependsOn moreIds = DependsOn (ids <> moreIds)
+  MustRebuild <> _ = MustRebuild
+  _ <> MustRebuild = MustRebuild
+
+instance Monoid Dependencies where
+  mempty = DependsOn []
+
+--------------------------------------------------------------------------------
+dependenciesFor :: Identifier -> DependencyM Dependencies
 dependenciesFor id' = do
     facts <- dependencyFacts <$> State.get
-    return $ concatMap dependenciesFor' $ fromMaybe [] $ M.lookup id' facts
+    return $ foldMap dependenciesFor' $ fromMaybe [] $ M.lookup id' facts
   where
-    dependenciesFor' (IdentifierDependency i) = [i]
-    dependenciesFor' (PatternDependency _ is) = S.toList is
+    dependenciesFor' (IdentifierDependency i) = DependsOn [i]
+    dependenciesFor' (PatternDependency _ is) = DependsOn $ S.toList is
+    dependenciesFor' AlwaysOutOfDate          = MustRebuild
 
 
 --------------------------------------------------------------------------------
@@ -113,6 +133,7 @@ checkChangedPatterns = do
             {dependencyFacts = M.insert id' deps' $ dependencyFacts s}
   where
     go _   ds (IdentifierDependency i) = return $ IdentifierDependency i : ds
+    go _   ds AlwaysOutOfDate          = return $ AlwaysOutOfDate : ds
     go id' ds (PatternDependency p ls) = do
         universe <- ask
         let ls' = S.fromList $ filterMatches p universe
@@ -136,11 +157,17 @@ bruteForce = do
 
     check (todo, changed) id' = do
         deps <- dependenciesFor id'
-        ood  <- dependencyOod <$> State.get
-        case find (`S.member` ood) deps of
-            Nothing -> return (id' : todo, changed)
-            Just d  -> do
-                tell [show id' ++ " is out-of-date because " ++
-                    show d ++ " is out-of-date"]
-                markOod id'
-                return (todo, True)
+        case deps of
+          DependsOn depList -> do
+            ood  <- dependencyOod <$> State.get
+            case find (`S.member` ood) depList of
+                Nothing -> return (id' : todo, changed)
+                Just d  -> do
+                    tell [show id' ++ " is out-of-date because " ++
+                        show d ++ " is out-of-date"]
+                    markOod id'
+                    return (todo, True)
+          MustRebuild -> do
+            tell [show id' ++ " will be forcibly rebuilt"]
+            markOod id'
+            return (todo, True)
