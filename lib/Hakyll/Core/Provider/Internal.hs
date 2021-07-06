@@ -45,6 +45,7 @@ import           System.Time            (formatCalendarTime, toCalendarTime)
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Metadata
 import           Hakyll.Core.Store      (Store)
 import qualified Hakyll.Core.Store      as Store
 import           Hakyll.Core.Util.File
@@ -95,16 +96,19 @@ data Provider = Provider
       providerOldFiles  :: Map Identifier ResourceInfo
     , -- | Underlying persistent store for caching
       providerStore     :: Store
-    } deriving (Show)
+      -- | A custom function to extract metadata from files
+    , providerMetadata  :: FilePath -> IO Metadata
+    }
 
 
 --------------------------------------------------------------------------------
 -- | Create a resource provider
 newProvider :: Store                  -- ^ Store to use
             -> (FilePath -> IO Bool)  -- ^ Should we ignore this file?
+            -> (FilePath -> IO Metadata)  -- ^ Metadata provider
             -> FilePath               -- ^ Search directory
             -> IO Provider            -- ^ Resulting provider
-newProvider store ignore directory = do
+newProvider store ignore metadata directory = do
     list <- map fromFilePath <$> getRecursiveContents ignore directory
     let universe = S.fromList list
     files <- fmap (maxmtime . M.fromList) $ forM list $ \identifier -> do
@@ -116,7 +120,7 @@ newProvider store ignore directory = do
     oldFiles <- fromMaybe mempty . Store.toMaybe <$> Store.get store oldKey
     oldFiles `deepseq` Store.set store oldKey files
 
-    return $ Provider directory files oldFiles store
+    return $ Provider directory files oldFiles store metadata
   where
     oldKey = ["Hakyll.Core.Provider.Internal.newProvider", "oldFiles"]
 

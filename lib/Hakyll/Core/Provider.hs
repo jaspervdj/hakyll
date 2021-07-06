@@ -5,6 +5,7 @@ module Hakyll.Core.Provider
     ( -- * Constructing resource providers
       Internal.Provider
     , newProvider
+    , newProvider'
 
       -- * Querying resource properties
     , Internal.resourceList
@@ -24,20 +25,29 @@ module Hakyll.Core.Provider
 
 
 --------------------------------------------------------------------------------
+import           Hakyll.Core.Metadata
 import qualified Hakyll.Core.Provider.Internal      as Internal
 import qualified Hakyll.Core.Provider.MetadataCache as Internal
 import           Hakyll.Core.Store                  (Store)
 
 
 --------------------------------------------------------------------------------
--- | Create a resource provider
+-- | Create a resource provider with the void metadata provider
 newProvider :: Store                   -- ^ Store to use
             -> (FilePath -> IO Bool)   -- ^ Should we ignore this file?
             -> FilePath                -- ^ Search directory
             -> IO Internal.Provider    -- ^ Resulting provider
-newProvider store ignore directory = do
+newProvider store ignore = newProvider' store ignore (const $ return mempty)
+
+-- | Create a resource provider
+newProvider' :: Store                   -- ^ Store to use
+            -> (FilePath -> IO Bool)   -- ^ Should we ignore this file?
+            -> (FilePath -> IO Metadata)   -- ^ Metadata provider
+            -> FilePath                -- ^ Search directory
+            -> IO Internal.Provider    -- ^ Resulting provider
+newProvider' store ignore metadata directory = do
     -- Delete metadata cache where necessary
-    p <- Internal.newProvider store ignore directory
+    p <- Internal.newProvider store ignore metadata directory
     mapM_ (Internal.resourceInvalidateMetadataCache p) $
         filter (Internal.resourceModified p) $ Internal.resourceList p
     return p
