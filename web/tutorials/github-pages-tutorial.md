@@ -66,8 +66,7 @@ config = defaultConfiguration
   }
 
 main :: IO ()
-main = do
-  hakyllWith config $ do
+main = hakyllWith config $ do
   ...
 ```
 
