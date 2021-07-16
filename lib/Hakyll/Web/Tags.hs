@@ -47,7 +47,6 @@ module Hakyll.Web.Tags
     , getCategory
     , buildTagsWith
     , buildTags
-    , buildTagsByField
     , buildCategories
     , tagsRules
     , renderTags
