@@ -43,6 +43,7 @@
 module Hakyll.Web.Tags
     ( Tags (..)
     , getTags
+    , getTagsByField
     , getCategory
     , buildTagsWith
     , buildTags
@@ -105,11 +106,16 @@ data Tags = Tags
 -- | Obtain tags from a page in the default way: parse them from the @tags@
 -- metadata field. This can either be a list or a comma-separated string.
 getTags :: MonadMetadata m => Identifier -> m [String]
-getTags identifier = do
+getTags = getTagsByField "tags"
+
+-- | Obtain tags from a page by name of the metadata field. These can be a list
+-- or a comma-separated string
+getTagsByField :: MonadMetadata m => String -> Identifier -> m [String]
+getTagsByField fieldName identifier = do
     metadata <- getMetadata identifier
     return $ fromMaybe [] $
-        (lookupStringList "tags" metadata) `mplus`
-        (map trim . splitAll "," <$> lookupString "tags" metadata)
+        (lookupStringList fieldName metadata) `mplus`
+        (map trim . splitAll "," <$> lookupString fieldName metadata)
 
 
 --------------------------------------------------------------------------------
