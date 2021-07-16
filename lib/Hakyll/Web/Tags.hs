@@ -112,11 +112,11 @@ getTags = getTagsByField "tags"
 -- | Obtain tags from a page by name of the metadata field. These can be a list
 -- or a comma-separated string
 getTagsByField :: MonadMetadata m => String -> Identifier -> m [String]
-getTagsByField field identifier = do
+getTagsByField fieldName identifier = do
     metadata <- getMetadata identifier
     return $ fromMaybe [] $
-        (lookupStringList field metadata) `mplus`
-        (map trim . splitAll "," <$> lookupString field metadata)
+        (lookupStringList fieldName metadata) `mplus`
+        (map trim . splitAll "," <$> lookupString fieldName metadata)
 
 
 --------------------------------------------------------------------------------
@@ -148,11 +148,6 @@ buildTagsWith f pattern makeId = do
 --------------------------------------------------------------------------------
 buildTags :: MonadMetadata m => Pattern -> (String -> Identifier) -> m Tags
 buildTags = buildTagsWith getTags
-
-
---------------------------------------------------------------------------------
-buildTagsByField :: MonadMetadata m => String -> Pattern -> (String -> Identifier) -> m Tags
-buildTagsByField field = buildTagsWith (getTagsByField field)
 
 
 --------------------------------------------------------------------------------
