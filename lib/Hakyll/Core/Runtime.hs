@@ -6,12 +6,12 @@ module Hakyll.Core.Runtime
 
 --------------------------------------------------------------------------------
 import           Control.Concurrent.Async.Lifted (forConcurrently_)
-import           Control.Concurrent.STM          (atomically, modifyTVar', readTVarIO, newTVarIO, TVar)
+import           Control.Concurrent.MVar         (modifyMVar_, readMVar, newMVar, MVar)
 import           Control.Monad                   (unless)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader            (ask)
 import           Control.Monad.RWS               (RWST, runRWST)
-import           Control.Monad.State             (get)          
+import           Control.Monad.State             (get)
 import           Control.Monad.Trans             (liftIO)
 import qualified Data.Array                      as A
 import           Data.Graph                      (Graph)
@@ -73,7 +73,7 @@ run config logger rules = do
             , runtimeUniverse      = M.fromList compilers
             }
 
-    state <- newTVarIO $ RuntimeState 
+    state <- newMVar $ RuntimeState
             { runtimeDone         = S.empty
             , runtimeSnapshots    = S.empty
             , runtimeTodo         = M.empty
@@ -90,7 +90,7 @@ run config logger rules = do
             return (ExitFailure 1, ruleSet)
 
         Right (_, s, _) -> do
-            facts <- fmap runtimeFacts . liftIO . readTVarIO $ s
+            facts <- fmap runtimeFacts . liftIO . readMVar $ s
             Store.set store factsKey facts
 
             Logger.debug logger "Removing tmp directory..."
@@ -124,21 +124,19 @@ data RuntimeState = RuntimeState
 
 
 --------------------------------------------------------------------------------
-type Runtime a = RWST RuntimeRead () (TVar RuntimeState) (ExceptT String IO) a
+type Runtime a = RWST RuntimeRead () (MVar RuntimeState) (ExceptT String IO) a
 
 
 --------------------------------------------------------------------------------
 -- Because compilation of rules often revolves around IO,
--- it is not possible to live in the STM monad and hence benefit from
--- its guarantees.
--- Be very careful when modifying the state
+-- be very careful when modifying the state
 modifyRuntimeState :: (RuntimeState -> RuntimeState) -> Runtime ()
-modifyRuntimeState f = get >>= \s -> liftIO . atomically $ modifyTVar' s f
+modifyRuntimeState f = get >>= \s -> liftIO $ modifyMVar_ s (pure . f)
 
 
 --------------------------------------------------------------------------------
 getRuntimeState :: Runtime RuntimeState
-getRuntimeState = liftIO . readTVarIO =<< get
+getRuntimeState = liftIO . readMVar =<< get
 
 
 --------------------------------------------------------------------------------
@@ -162,11 +160,11 @@ scheduleOutOfDate = do
     let identifiers = M.keys universe
         modified    = S.fromList $ flip filter identifiers $
             resourceModified provider
-    
+
     state <- getRuntimeState
     let facts = runtimeFacts state
         todo  = runtimeTodo state
-        
+
     let (ood, facts', msgs) = outOfDate identifiers modified facts
         todo'               = M.filterWithKey
             (\id' _ -> id' `S.member` ood) universe
@@ -309,15 +307,15 @@ chase id' = do
 
             let deps' = if depDone
                             then deps
-                            else M.insertWith S.union id' (S.singleton depId) deps  
+                            else M.insertWith S.union id' (S.singleton depId) deps
 
             modifyRuntimeState $ \s -> s
-                { runtimeTodo         = M.insert id' 
-                    (if depDone then c else compilerResult result) 
+                { runtimeTodo         = M.insert id'
+                    (if depDone then c else compilerResult result)
                     (runtimeTodo s)
                 , runtimeDependencies = deps'
                 }
 
             Logger.debug logger $ "Require " ++ show depId ++
                 " (snapshot " ++ depSnapshot ++ ") "
-            
+
