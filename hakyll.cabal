@@ -146,6 +146,8 @@ Library
     Hakyll.Web.Feed
     Hakyll.Web.Html
     Hakyll.Web.Html.RelativizeUrls
+    Hakyll.Web.Meta.OpenGraph
+    Hakyll.Web.Meta.TwitterCard
     Hakyll.Web.Paginate
     Hakyll.Web.Redirect
     Hakyll.Web.Tags
