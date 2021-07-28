@@ -42,8 +42,9 @@ watchUpdates conf update = do
     let providerDir = providerDirectory conf
     shouldBuild     <- newEmptyMVar
     pattern         <- update
-    fullProviderDir <- canonicalizePath $ providerDirectory conf
+    fullProviderDir <- canonicalizePath providerDir
     manager         <- FSNotify.startManager
+    checkIgnore     <- shouldWatchIgnore conf
 
     let allowed event = do
             -- Absolute path of the changed file. This must be inside provider
@@ -52,8 +53,7 @@ watchUpdates conf update = do
                 relative   = dropWhile (`elem` pathSeparators) $
                     drop (length fullProviderDir) path
                 identifier = fromFilePath relative
-
-            shouldIgnore <- shouldIgnoreFile conf path
+            shouldIgnore <- checkIgnore path
             return $ not shouldIgnore && matches pattern identifier
 
     -- This thread continually watches the `shouldBuild` MVar and builds
