@@ -42,7 +42,10 @@ module Hakyll.Web.Meta.TwitterCard
   ( twitterCardField
   ) where
 
-import Hakyll
+import Hakyll.Core.Compiler
+import Hakyll.Core.Item
+import Hakyll.Web.Template
+import Hakyll.Web.Template.Context
 
 twitterCardField :: String -> Context String -> Context String
 twitterCardField k ctx = functionField k $ \_args i -> do

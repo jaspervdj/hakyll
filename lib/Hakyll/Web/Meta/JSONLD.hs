@@ -50,8 +50,11 @@ import Data.Aeson.Encoding (encodingToLazyByteString)
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.Encoding as LT
 
-import Hakyll
+import Hakyll.Core.Compiler
 import Hakyll.Core.Compiler.Internal
+import Hakyll.Core.Item
+import Hakyll.Web.Template
+import Hakyll.Web.Template.Context
 
 runContext :: Context String -> String -> Compiler String
 runContext ctx k = do

@@ -43,7 +43,10 @@ module Hakyll.Web.Meta.OpenGraph
   ( openGraphField
   ) where
 
-import Hakyll
+import Hakyll.Core.Compiler
+import Hakyll.Core.Item
+import Hakyll.Web.Template
+import Hakyll.Web.Template.Context
 
 openGraphField :: String -> Context String -> Context String
 openGraphField k ctx = functionField k $ \_args i -> do
