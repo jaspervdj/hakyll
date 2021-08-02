@@ -20,6 +20,9 @@ module Hakyll
     , module Hakyll.Web.Feed
     , module Hakyll.Web.Html
     , module Hakyll.Web.Html.RelativizeUrls
+    , module Hakyll.Web.Meta.JSONLD
+    , module Hakyll.Web.Meta.OpenGraph
+    , module Hakyll.Web.Meta.TwitterCard
     , module Hakyll.Web.Paginate
 #ifdef USE_PANDOC
     , module Hakyll.Web.Pandoc
@@ -53,6 +56,9 @@ import           Hakyll.Web.CompressCss
 import           Hakyll.Web.Feed
 import           Hakyll.Web.Html
 import           Hakyll.Web.Html.RelativizeUrls
+import           Hakyll.Web.Meta.JSONLD
+import           Hakyll.Web.Meta.OpenGraph
+import           Hakyll.Web.Meta.TwitterCard
 import           Hakyll.Web.Paginate
 #ifdef USE_PANDOC
 import           Hakyll.Web.Pandoc
