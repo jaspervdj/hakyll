@@ -14,7 +14,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 module Hakyll.Web.Pandoc.Biblio
-    ( CSL
+    ( CSL (..)
     , cslCompiler
     , Biblio (..)
     , biblioCompiler
