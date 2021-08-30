@@ -4,6 +4,46 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.14.1.0 (2021-08-30)
+
+- Add `Hakyll.Web.Html.demoteHeaderBy` function, which demotes an HTML header by
+    a given amount (contribution by Logan McGrath)
+- Add `Hakyll.Core.Rules.forceCompile` modifier which forces re-compilation of
+    an item even if its file wasn't modified. This is useful for data sources
+    which aren't local files (contribution by Fraser Tweedale)
+- Add `Hakyll.Web.Tags.getTagsByField` which extracts tags from a given field
+    instead of the default "tags" field (contribution by Jim McStanton and
+    Alexander Batischev)
+- Add `Hakyll.Core.Configuration.shouldWatchIgnore` function and the
+    corresponding `watchIgnore` field for `Configuration`. These are used to
+    ignore files in watch mode, which is useful when certain files are
+    pre-processed and the results are saved into the provider directory
+    (contribution by Aron Erben)
+- Add `Hakyll.Web.Meta` modules `JSONLD`, `OpenGraph`, and `TwitterCard`. These
+    help with semantic web metadata in pages. This adds dependency on `aeson`
+    (contribution by Fraser Tweedale)
+- Export `Hakyll.Web.Pandoc.Biblio.unCSL` function (contribution by Benjamin
+    Bray)
+- Make the runtime concurrent, which brings 30% speedups on real-world sites.
+    This adds dependencies on `array` and `lifted-async`. Please note that it
+    doesn't scale past the number of physical cores; ideas are welcome in
+    https://github.com/jaspervdj/hakyll/issues/850 (contribution by
+    Laurent P. René de Cotret and Vaibhav Sagar)
+- Fix binary's name in the first tutorial (contribution by Alexander Batischev)
+- Fix "Empty 'do' block" error in GitHub tutorial (contribution by
+    alexandroid000)
+- Move #hakyll IRC channel from Freenode to Libera.Chat (by Alexander Batischev
+    and henk)
+- Replace dependency on `cryptonite` and `memory` with dependency on `hashable`
+    (contribution by Laurent P. René de Cotret)
+- Bump `file-embed` upper bound to 0.0.15 (contribution by Alexander Batischev)
+- Bump `optparse-applicative` upper bound to 0.16 (contribution by Felix Yan)
+- Bump `pandoc` upper bound to 2.14 (contribution by Laurent P. René de Cotret)
+- Bump `tasty` upper bound to 1.4 (contribution by Felix Yan)
+- Bump `template-haskell` upper bound to 2.17, which is shipped with GHC 9
+    (contribution by Alexander Batischev)
+- Bump `time` upper bound to 1.11 (contribution by Alexander Batischev)
+
 ## Hakyll 4.14.0.0 (2021-03-14)
 
 - Add `renderPandocWithTransform` and `renderPandocWithTransformM` (by Norman
