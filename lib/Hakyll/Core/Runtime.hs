@@ -9,9 +9,7 @@ import           Control.Concurrent.Async.Lifted (forConcurrently_)
 import           Control.Concurrent.MVar         (modifyMVar_, readMVar, newMVar, MVar)
 import           Control.Monad                   (unless)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
-import           Control.Monad.Reader            (ask)
-import           Control.Monad.RWS               (RWST, runRWST)
-import           Control.Monad.State             (get)
+import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
 import qualified Data.Array                      as A
 import           Data.Graph                      (Graph)
@@ -62,17 +60,6 @@ run config logger rules = do
     let (oldFacts) = case mOldFacts of Store.Found f -> f
                                        _             -> mempty
 
-    -- Build runtime read/state
-    let compilers = rulesCompilers ruleSet
-        read'     = RuntimeRead
-            { runtimeConfiguration = config
-            , runtimeLogger        = logger
-            , runtimeProvider      = provider
-            , runtimeStore         = store
-            , runtimeRoutes        = rulesRoutes ruleSet
-            , runtimeUniverse      = M.fromList compilers
-            }
-
     state <- newMVar $ RuntimeState
             { runtimeDone         = S.empty
             , runtimeSnapshots    = S.empty
@@ -81,16 +68,28 @@ run config logger rules = do
             , runtimeDependencies = M.empty
             }
 
+    -- Build runtime read/state
+    let compilers = rulesCompilers ruleSet
+        read'     = RuntimeRead
+            { runtimeConfiguration = config
+            , runtimeLogger        = logger
+            , runtimeProvider      = provider
+            , runtimeState         = state
+            , runtimeStore         = store
+            , runtimeRoutes        = rulesRoutes ruleSet
+            , runtimeUniverse      = M.fromList compilers
+            }
+
     -- Run the program and fetch the resulting state
-    result <- runExceptT $ runRWST build read' state
+    result <- runExceptT $ runReaderT build read'
     case result of
         Left e          -> do
             Logger.error logger e
             Logger.flush logger
             return (ExitFailure 1, ruleSet)
 
-        Right (_, s, _) -> do
-            facts <- fmap runtimeFacts . liftIO . readMVar $ s
+        Right _ -> do
+            facts <- fmap runtimeFacts . liftIO . readMVar $ state
             Store.set store factsKey facts
 
             Logger.debug logger "Removing tmp directory..."
@@ -107,6 +106,7 @@ data RuntimeRead = RuntimeRead
     { runtimeConfiguration :: Configuration
     , runtimeLogger        :: Logger
     , runtimeProvider      :: Provider
+    , runtimeState         :: MVar RuntimeState
     , runtimeStore         :: Store
     , runtimeRoutes        :: Routes
     , runtimeUniverse      :: Map Identifier (Compiler SomeItem)
@@ -124,19 +124,19 @@ data RuntimeState = RuntimeState
 
 
 --------------------------------------------------------------------------------
-type Runtime a = RWST RuntimeRead () (MVar RuntimeState) (ExceptT String IO) a
+type Runtime a = ReaderT RuntimeRead (ExceptT String IO) a
 
 
 --------------------------------------------------------------------------------
 -- Because compilation of rules often revolves around IO,
 -- be very careful when modifying the state
 modifyRuntimeState :: (RuntimeState -> RuntimeState) -> Runtime ()
-modifyRuntimeState f = get >>= \s -> liftIO $ modifyMVar_ s (pure . f)
+modifyRuntimeState f = liftIO . flip modifyMVar_ (pure . f) . runtimeState =<< ask
 
 
 --------------------------------------------------------------------------------
 getRuntimeState :: Runtime RuntimeState
-getRuntimeState = liftIO . readMVar =<< get
+getRuntimeState = liftIO . readMVar . runtimeState =<< ask
 
 
 --------------------------------------------------------------------------------
