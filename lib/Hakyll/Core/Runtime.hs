@@ -7,7 +7,7 @@ module Hakyll.Core.Runtime
 --------------------------------------------------------------------------------
 import           Control.Concurrent.Async.Lifted (forConcurrently_)
 import           Control.Concurrent.MVar         (modifyMVar_, readMVar, newMVar, MVar)
-import           Control.Monad                   (unless)
+import           Control.Monad                   (join, unless)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
@@ -19,6 +19,7 @@ import           Data.Map                        (Map)
 import qualified Data.Map                        as M
 import           Data.Set                        (Set)
 import qualified Data.Set                        as S
+import           Data.Traversable                (for)
 import           System.Exit                     (ExitCode (..))
 import           System.FilePath                 ((</>))
 
@@ -288,33 +289,29 @@ chase id' = do
                 }
 
         -- Try something else first
-        CompilerRequire dep c -> do
-            let (depId, depSnapshot) = dep
-            Logger.debug logger $
-                "Compiler requirement found for: " ++ show id' ++
-                ", requirement: " ++ show depId
-
+        CompilerRequire reqs c -> do
             let done      = runtimeDone state
                 snapshots = runtimeSnapshots state
                 deps      = runtimeDependencies state
 
-            -- Done if we either completed the entire item (runtimeDone) or
-            -- if we previously saved the snapshot (runtimeSnapshots).
-            let depDone =
-                    depId `S.member` done ||
-                    (depId, depSnapshot) `S.member` snapshots
+            deps' <- fmap join . for reqs $ \dep -> do
+                let (depId, depSnapshot) = dep
+                Logger.debug logger $
+                    "Compiler requirement found for: " ++ show id' ++
+                    ": " ++ show depId ++ " (snapshot " ++ depSnapshot ++ ")"
 
-            let deps' = if depDone
-                            then deps
-                            else M.insertWith S.union id' (S.singleton depId) deps
+                -- Done if we either completed the entire item (runtimeDone) or
+                -- if we previously saved the snapshot (runtimeSnapshots).
+                let depDone =
+                        depId `S.member` done ||
+                        (depId, depSnapshot) `S.member` snapshots
+
+                -- return values to add to runtimeDependencies
+                pure $ if depDone then [] else [depId]
 
             modifyRuntimeState $ \s -> s
                 { runtimeTodo         = M.insert id'
-                    (if depDone then c else compilerResult result)
+                    (if null deps' then c else compilerResult result)
                     (runtimeTodo s)
-                , runtimeDependencies = deps'
+                , runtimeDependencies = M.insertWith S.union id' (S.fromList deps') deps
                 }
-
-            Logger.debug logger $ "Require " ++ show depId ++
-                " (snapshot " ++ depSnapshot ++ ") "
-
