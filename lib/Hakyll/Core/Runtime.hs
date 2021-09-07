@@ -11,8 +11,7 @@ import           Control.Monad                   (unless)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
-import qualified Data.Array                      as A
-import           Data.Graph                      (Graph)
+import           Data.Foldable                   (toList)
 import qualified Data.Graph                      as G
 import           Data.List                       (intercalate)
 import           Data.Map                        (Map)
@@ -196,18 +195,13 @@ checkForDependencyCycle :: Runtime ()
 checkForDependencyCycle = do
     deps <- runtimeDependencies <$> getRuntimeState
     let (depgraph, nodeFromVertex, _) = G.graphFromEdges [(k, k, S.toList dps) | (k, dps) <- M.toList deps]
-        dependencyCycles = map ((\(_, k, _) -> k) . nodeFromVertex) $ cycles depgraph
+        cycles = (>>= toList) . filter ((>1) . length) $ G.scc depgraph
+        dependencyCycles = (\(_, k, _) -> k) . nodeFromVertex <$> cycles
 
     unless (null dependencyCycles) $ do
         throwError $ "Hakyll.Core.Runtime.pickAndChase: " ++
             "Dependency cycle detected: " ++ intercalate ", " (map show dependencyCycles) ++
             " are inter-dependent."
-    where
-        cycles :: Graph -> [G.Vertex]
-        cycles g = map fst . filter (uncurry $ reachableFromAny g) . A.assocs $ g
-
-        reachableFromAny :: Graph -> G.Vertex -> [G.Vertex] -> Bool
-        reachableFromAny graph node = elem node . concatMap (G.reachable graph)
 
 
 --------------------------------------------------------------------------------
