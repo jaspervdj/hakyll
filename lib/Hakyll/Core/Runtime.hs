@@ -158,24 +158,23 @@ scheduleOutOfDate = do
     universe <- runtimeUniverse <$> ask
 
     let identifiers = M.keys universe
-        modified    = S.fromList $ flip filter identifiers $
-            resourceModified provider
+        modified    = S.filter (resourceModified provider) (M.keysSet universe)
 
     state <- getRuntimeState
     let facts = runtimeFacts state
         todo  = runtimeTodo state
+        done  = runtimeDone state
 
     let (ood, facts', msgs) = outOfDate identifiers modified facts
-        todo'               = M.filterWithKey
-            (\id' _ -> id' `S.member` ood) universe
+        todo'               = M.filterWithKey (\id' _ -> id' `S.member` ood) universe
+        done'               = done `S.union` (M.keysSet universe `S.difference` ood)
 
     -- Print messages
     mapM_ (Logger.debug logger) msgs
 
     -- Update facts and todo items
     modifyRuntimeState $ \s -> s
-        { runtimeDone  = runtimeDone s `S.union`
-            (S.fromList identifiers `S.difference` ood)
+        { runtimeDone  = done'
         , runtimeTodo  = todo `M.union` todo'
         , runtimeFacts = facts'
         }
