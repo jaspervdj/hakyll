@@ -22,6 +22,7 @@ module Hakyll.Core.Compiler
     , Internal.loadAllSnapshots
 
     , cached
+    , recompilingUnsafeCompiler
     , unsafeCompiler
     , debugCompiler
     , noResult
@@ -185,9 +186,18 @@ cached name compiler = do
 
 
 --------------------------------------------------------------------------------
--- | Run an IO computation without dependencies in a Compiler
+-- | Run an IO computation without dependencies in a Compiler.
+-- You probably want 'recompilingUnsafeCompiler' instead.
 unsafeCompiler :: IO a -> Compiler a
 unsafeCompiler = compilerUnsafeIO
+
+--------------------------------------------------------------------------------
+-- | Run an IO computation in a Compiler.  Unlike 'unsafeCompiler',
+-- this function will cause the item to be recompiled every time.
+recompilingUnsafeCompiler :: IO a -> Compiler a
+recompilingUnsafeCompiler io = Compiler $ \_ -> do
+  a <- io
+  pure $ CompilerDone a mempty { compilerDependencies = [AlwaysOutOfDate] }
 
 
 --------------------------------------------------------------------------------
