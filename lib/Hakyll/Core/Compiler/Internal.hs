@@ -135,7 +135,7 @@ compilerErrorMessages (CompilationNoResult x) = x
 data CompilerResult a
     = CompilerDone a CompilerWrite
     | CompilerSnapshot Snapshot (Compiler a)
-    | CompilerRequire (Identifier, Snapshot) (Compiler a)
+    | CompilerRequire [(Identifier, Snapshot)] (Compiler a)
     | CompilerError (CompilerErrors String)
 
 
