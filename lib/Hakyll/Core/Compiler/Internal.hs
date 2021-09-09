@@ -364,7 +364,6 @@ compilerGetMetadata identifier = do
 compilerGetMatches :: Pattern -> Compiler [Identifier]
 compilerGetMatches pattern = do
     universe <- compilerUniverse <$> compilerAsk
-    let matching = filterMatches pattern $ S.toList universe
-        set'     = S.fromList matching
-    compilerTellDependencies [PatternDependency pattern set']
-    return matching
+    let matching = S.filter (matches pattern) universe
+    compilerTellDependencies [PatternDependency pattern matching]
+    pure $ S.toList matching
