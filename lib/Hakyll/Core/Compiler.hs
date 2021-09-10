@@ -162,17 +162,17 @@ cached name compiler = do
     unless (resourceExists provider id') $ fail $ itDoesntEvenExist id'
 
     let modified = resourceModified provider id'
+        k = [name, show id']
+        go = compiler >>= \v -> v <$ compilerUnsafeIO (Store.set store k v)
     if modified
-        then do
-            x <- compiler
-            compilerUnsafeIO $ Store.set store [name, show id'] x
-            return x
-        else do
-            compilerTellCacheHits 1
-            x        <- compilerUnsafeIO $ Store.get store [name, show id']
-            progName <- compilerUnsafeIO getProgName
-            case x of Store.Found x' -> return x'
-                      _              -> fail $ error' progName
+        then go
+        else compilerUnsafeIO (Store.get store k) >>= \r -> case r of
+            -- found: report cache hit and return value
+            Store.Found v   -> v <$ compilerTellCacheHits 1
+            -- not found: unexpected, but recoverable
+            Store.NotFound  -> go
+            -- other results: unrecoverable error
+            _               -> fail . error' =<< compilerUnsafeIO getProgName
   where
     error' progName =
         "Hakyll.Core.Compiler.cached: Cache corrupt! " ++
