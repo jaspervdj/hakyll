@@ -48,8 +48,8 @@ import           System.IO.Error            (catchIOError)
 
 --------------------------------------------------------------------------------
 -- | Build the site
-build :: Configuration -> Logger -> Rules a -> IO ExitCode
-build conf logger rules = fst <$> run conf logger rules
+build :: RunMode -> Configuration -> Logger -> Rules a -> IO ExitCode
+build mode conf logger rules = fst <$> run mode conf logger rules
 
 
 --------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ watch conf logger host port runServer rules = do
     server'
   where
     update = do
-        (_, ruleSet) <- run conf logger rules
+        (_, ruleSet) <- run RunModeNormal conf logger rules
         return $ rulesPattern ruleSet
     loop = threadDelay 100000 >> loop
     server' = if runServer then server conf logger host port else loop
@@ -117,7 +117,7 @@ watch _ _ _ _ _ _ = watchServerDisabled
 -- | Rebuild the site
 rebuild :: Configuration -> Logger -> Rules a -> IO ExitCode
 rebuild conf logger rules =
-    clean conf logger >> build conf logger rules
+    clean conf logger *> build RunModeNormal conf logger rules
 
 --------------------------------------------------------------------------------
 -- | Start a server

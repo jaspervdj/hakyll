@@ -39,6 +39,7 @@ import qualified Hakyll.Commands           as Commands
 import qualified Hakyll.Core.Configuration as Config
 import qualified Hakyll.Core.Logger        as Logger
 import           Hakyll.Core.Rules
+import           Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
@@ -105,7 +106,7 @@ invokeCommands :: Command -> Config.Configuration ->
                   Check.Check -> Logger.Logger -> Rules a -> IO ExitCode
 invokeCommands args conf check logger rules =
     case args of
-        Build          -> Commands.build conf logger rules
+        Build   mode   -> Commands.build mode conf logger rules
         Check   _      -> Commands.check conf logger check
         Clean          -> Commands.clean conf logger >> ok
         Deploy         -> Commands.deploy conf
@@ -125,7 +126,7 @@ data Options = Options {verbosity :: Bool, optCommand :: Command}
 
 -- | The command to run.
 data Command
-    = Build
+    = Build RunMode
     -- ^ Generate the site.
     | Check   {internal_links :: Bool}
     -- ^ Validate the site output.
@@ -161,7 +162,7 @@ commandParser conf = OA.subparser $ foldr ((<>) . produceCommand) mempty command
 
     commands =
         [ ( "build"
-          , pure Build
+          , pure Build <*> OA.flag RunModeNormal RunModePrintOutOfDate (OA.long "dry-run" <> OA.help "Don't build, only print out-of-date items")
           , OA.fullDesc <> OA.progDesc "Generate the site"
           )
         , ( "check"

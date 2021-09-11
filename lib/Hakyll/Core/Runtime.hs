@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 module Hakyll.Core.Runtime
     ( run
+    , RunMode(..)
     ) where
 
 
@@ -12,6 +13,7 @@ import           Control.Monad.Except            (ExceptT, runExceptT, throwErro
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
 import qualified Data.Array                      as A
+import           Data.Foldable                   (traverse_)
 import           Data.Graph                      (Graph)
 import qualified Data.Graph                      as G
 import           Data.List                       (intercalate)
@@ -43,9 +45,19 @@ import           Hakyll.Core.Util.File
 import           Hakyll.Core.Writable
 
 
+factsKey :: [String]
+factsKey = ["Hakyll.Core.Runtime.run", "facts"]
+
+
 --------------------------------------------------------------------------------
-run :: Configuration -> Logger -> Rules a -> IO (ExitCode, RuleSet)
-run config logger rules = do
+-- | Whether to execute a normal run (build the site) or a dry run.
+data RunMode = RunModeNormal | RunModePrintOutOfDate
+    deriving (Show)
+
+
+--------------------------------------------------------------------------------
+run :: RunMode -> Configuration -> Logger -> Rules a -> IO (ExitCode, RuleSet)
+run mode config logger rules = do
     -- Initialization
     Logger.header logger "Initialising..."
     Logger.message logger "Creating store..."
@@ -82,7 +94,7 @@ run config logger rules = do
             }
 
     -- Run the program and fetch the resulting state
-    result <- runExceptT $ runReaderT build read'
+    result <- runExceptT $ runReaderT (build mode) read'
     case result of
         Left e          -> do
             Logger.error logger e
@@ -90,16 +102,11 @@ run config logger rules = do
             return (ExitFailure 1, ruleSet)
 
         Right _ -> do
-            facts <- fmap runtimeFacts . liftIO . readMVar $ state
-            Store.set store factsKey facts
-
             Logger.debug logger "Removing tmp directory..."
             removeDirectory $ tmpDirectory config
 
             Logger.flush logger
             return (ExitSuccess, ruleSet)
-  where
-    factsKey = ["Hakyll.Core.Runtime.run", "facts"]
 
 
 --------------------------------------------------------------------------------
@@ -141,14 +148,23 @@ getRuntimeState = liftIO . readMVar . runtimeState =<< ask
 
 
 --------------------------------------------------------------------------------
-build :: Runtime ()
-build = do
+build :: RunMode -> Runtime ()
+build mode = do
     logger <- runtimeLogger <$> ask
     Logger.header logger "Checking for out-of-date items"
     scheduleOutOfDate
-    Logger.header logger "Compiling"
-    pickAndChase
-    Logger.header logger "Success"
+    case mode of
+        RunModeNormal -> do
+            Logger.header logger "Compiling"
+            pickAndChase
+            Logger.header logger "Success"
+            facts <- runtimeFacts <$> getRuntimeState
+            store <- runtimeStore <$> ask
+            liftIO $ Store.set store factsKey facts
+        RunModePrintOutOfDate -> do
+            Logger.header logger "Out of date items:"
+            todo <- runtimeTodo <$> getRuntimeState
+            traverse_ (Logger.message logger . show) (M.keys todo)
 
 
 --------------------------------------------------------------------------------
