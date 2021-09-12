@@ -30,7 +30,7 @@ tests = testGroup "Hakyll.Core.Runtime.Tests" $
 case01 :: Assertion
 case01 = do
     logger <- Logger.new Logger.Error
-    _      <- run testConfiguration logger $ do
+    _      <- run RunModeNormal testConfiguration logger $ do
         match "images/*" $ do
             route idRoute
             compile copyFileCompiler
@@ -81,7 +81,7 @@ case01 = do
 case02 :: Assertion
 case02 = do
     logger <- Logger.new Logger.Error
-    _      <- run testConfiguration logger $ do
+    _      <- run RunModeNormal testConfiguration logger $ do
         match "images/favicon.ico" $ do
             route   $ gsubRoute "images/" (const "")
             compile $ makeItem ("Test" :: String)
@@ -102,7 +102,7 @@ case02 = do
 case03 :: Assertion
 case03 = do
     logger  <- Logger.new Logger.Error
-    (ec, _) <- run testConfiguration logger $ do
+    (ec, _) <- run RunModeNormal testConfiguration logger $ do
 
         create ["partial.html.out1"] $ do
             route idRoute

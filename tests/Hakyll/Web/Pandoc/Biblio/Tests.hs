@@ -41,7 +41,7 @@ goldenTest01 =
             -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
             logger <- Logger.new Logger.Error
             let config = testConfiguration { providerDirectory = goldenTestsDataDir }
-            _ <- run config logger $ do
+            _ <- run RunModeNormal config logger $ do
                 let myPandocBiblioCompiler = do
                         csl <- load "chicago.csl"
                         bib <- load "refs.bib"
