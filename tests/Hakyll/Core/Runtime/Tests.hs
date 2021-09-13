@@ -23,7 +23,7 @@ import           TestSuite.Util
 --------------------------------------------------------------------------------
 tests :: TestTree
 tests = testGroup "Hakyll.Core.Runtime.Tests" $
-    fromAssertions "run" [case01, case02, case03, case04]
+    fromAssertions "run" [case01, case02, case03, case04, case05]
 
 
 --------------------------------------------------------------------------------
@@ -125,10 +125,37 @@ case03 = do
 
 
 --------------------------------------------------------------------------------
+-- Test that dependency cycles are correctly identified when snapshots 
+-- are also involved. See issue #878.
+case04 :: Assertion
+case04 = do
+    logger  <- Logger.new Logger.Error
+    (ec, _) <- run RunModeNormal testConfiguration logger $ do
+
+        create ["partial.html.out1"] $ do
+            route idRoute
+            compile $ do
+                example <- loadSnapshotBody "partial.html.out2" "raw"
+                makeItem example
+                    >>= loadAndApplyTemplate "partial.html" defaultContext
+
+        create ["partial.html.out2"] $ do
+            route idRoute
+            compile $ do
+                example <- loadSnapshotBody "partial.html.out1" "raw"
+                makeItem example
+                    >>= loadAndApplyTemplate "partial.html" defaultContext
+
+    ec @?= ExitFailure 1
+
+    cleanTestEnv
+
+
+--------------------------------------------------------------------------------
 -- Test that dependency cycles are correctly identified in the presence of 
 -- snapshots. See issue #878.
-case04 :: Assertion 
-case04 = do
+case05 :: Assertion 
+case05 = do
     logger  <- Logger.new Logger.Debug 
     (ec, _) <- run RunModeNormal testConfiguration logger $ do
 
@@ -159,7 +186,6 @@ case04 = do
                     >>= loadAndApplyTemplate "template-empty.html" footerCtx
         
         create ["template-empty.html"] $ compile templateCompiler
-
 
     ec @?= ExitSuccess 
 

@@ -312,9 +312,8 @@ chase id' = do
         CompilerRequire reqs c -> do
             let done      = runtimeDone state
                 snapshots = runtimeSnapshots state
-                deps      = runtimeDependencies state
 
-            deps' <- fmap join . for reqs $ \(depId, depSnapshot) -> do
+            deps <- fmap join . for reqs $ \(depId, depSnapshot) -> do
                 Logger.debug logger $
                     "Compiler requirement found for: " ++ show id' ++
                     ": " ++ show depId ++ " (snapshot " ++ depSnapshot ++ ")"
@@ -324,13 +323,19 @@ chase id' = do
                 let depDone =
                         depId `S.member` done ||
                         (depId, depSnapshot) `S.member` snapshots
+                    actualDep = [(depId, depSnapshot) | not depDone]
 
-                -- return values to add to runtimeDependencies
-                pure $ if depDone then [] else [(depId, depSnapshot)]
+                -- Update the dependencies using the current snapshot as context
+                -- This ensures that dependency cycles on snapshots are caught as well
+                -- See Issue #878.
+                unless depDone $
+                    modifyRuntimeState $ \s -> s {
+                        runtimeDependencies = M.insertWith S.union (id', depSnapshot) (S.fromList actualDep) (runtimeDependencies s) }
+
+                pure actualDep
 
             modifyRuntimeState $ \s -> s
                 { runtimeTodo         = M.insert id'
-                    (if null deps' then c else compilerResult result)
+                    (if null deps then c else compilerResult result)
                     (runtimeTodo s)
-                , runtimeDependencies = M.insertWith S.union (id', "_final") (S.fromList deps') deps
                 }
