@@ -122,12 +122,16 @@ data RuntimeRead = RuntimeRead
 
 
 --------------------------------------------------------------------------------
+type RuntimeDependency = (Identifier, Snapshot)
+
+
+--------------------------------------------------------------------------------
 data RuntimeState = RuntimeState
     { runtimeDone         :: Set Identifier
     , runtimeSnapshots    :: Set (Identifier, Snapshot)
     , runtimeTodo         :: Map Identifier (Compiler SomeItem)
     , runtimeFacts        :: DependencyFacts
-    , runtimeDependencies :: Map Identifier (Set Identifier)
+    , runtimeDependencies :: Map RuntimeDependency (Set RuntimeDependency)
     }
 
 
@@ -310,8 +314,7 @@ chase id' = do
                 snapshots = runtimeSnapshots state
                 deps      = runtimeDependencies state
 
-            deps' <- fmap join . for reqs $ \dep -> do
-                let (depId, depSnapshot) = dep
+            deps' <- fmap join . for reqs $ \(depId, depSnapshot) -> do
                 Logger.debug logger $
                     "Compiler requirement found for: " ++ show id' ++
                     ": " ++ show depId ++ " (snapshot " ++ depSnapshot ++ ")"
@@ -323,11 +326,11 @@ chase id' = do
                         (depId, depSnapshot) `S.member` snapshots
 
                 -- return values to add to runtimeDependencies
-                pure $ if depDone then [] else [depId]
+                pure $ if depDone then [] else [(depId, depSnapshot)]
 
             modifyRuntimeState $ \s -> s
                 { runtimeTodo         = M.insert id'
                     (if null deps' then c else compilerResult result)
                     (runtimeTodo s)
-                , runtimeDependencies = M.insertWith S.union id' (S.fromList deps') deps
+                , runtimeDependencies = M.insertWith S.union (id', "_final") (S.fromList deps') deps
                 }
