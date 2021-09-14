@@ -6,6 +6,7 @@ module Hakyll.Core.Runtime.Tests
 
 
 --------------------------------------------------------------------------------
+import           Control.Monad       (void)
 import qualified Data.ByteString     as B
 import           System.FilePath     ((</>))
 import           System.Exit         (ExitCode (..))
@@ -23,7 +24,7 @@ import           TestSuite.Util
 --------------------------------------------------------------------------------
 tests :: TestTree
 tests = testGroup "Hakyll.Core.Runtime.Tests" $
-    fromAssertions "run" [case01, case02, case03, case04, case05]
+    fromAssertions "run" [case01, case02, case03, case04, case05, case06]
 
 
 --------------------------------------------------------------------------------
@@ -188,5 +189,31 @@ case05 = do
         create ["template-empty.html"] $ compile templateCompiler
 
     ec @?= ExitSuccess 
+
+    cleanTestEnv
+
+
+case06 :: Assertion
+case06 = do
+    logger  <- Logger.new Logger.Error
+    (ec, _) <- run RunModeNormal testConfiguration logger $ do
+
+        create ["one.html"] $ do
+            route idRoute
+            compile $ do
+                void $ makeItem ("one-one" :: String) >>= saveSnapshot "one"
+                _ <- loadSnapshotBody "two.html" "two" :: Compiler String
+                void $ makeItem ("one-three" :: String) >>= saveSnapshot "three"
+                makeItem ("one-two" :: String) >>= saveSnapshot "two"
+
+        create ["two.html"] $ do
+            route idRoute
+            compile $ do
+                _ <- loadSnapshotBody "one.html" "one" :: Compiler String
+                void $ makeItem ("two-two" :: String) >>= saveSnapshot "two"
+                text <- loadSnapshotBody "one.html" "two"
+                makeItem (text :: String)
+
+    ec @?= ExitSuccess
 
     cleanTestEnv
