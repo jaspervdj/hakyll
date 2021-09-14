@@ -156,7 +156,7 @@ case04 = do
 -- snapshots. See issue #878.
 case05 :: Assertion 
 case05 = do
-    logger  <- Logger.new Logger.Debug 
+    logger  <- Logger.new Logger.Error 
     (ec, _) <- run RunModeNormal testConfiguration logger $ do
 
         match "posts/*" $ do
