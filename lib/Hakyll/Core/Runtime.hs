@@ -75,6 +75,7 @@ run mode config logger rules = do
             , runtimeSnapshots    = S.empty
             , runtimeTodo         = M.empty
             , runtimeFacts        = oldFacts
+            , runtimeDependencies = M.empty
             }
 
     -- Build runtime read/state
@@ -123,6 +124,7 @@ data RuntimeState = RuntimeState
     , runtimeSnapshots    :: Set (Identifier, Snapshot)
     , runtimeTodo         :: Map Identifier (Compiler SomeItem)
     , runtimeFacts        :: DependencyFacts
+    , runtimeDependencies :: Map Identifier (Set (Identifier, Snapshot))
     }
 
 
@@ -199,7 +201,9 @@ pickAndChase = do
     unless (null todo) $ do
         acted <- mconcat <$> forConcurrently (M.keys todo) chase
         when (acted == Idled) $ do
-            throwError "Hakyll.Core.Runtime.pickAndChase: Infinite loop detected."
+            deps <- runtimeDependencies <$> getRuntimeState
+            throwError $ "Hakyll.Core.Runtime.pickAndChase: Dependency cycle detected: " ++ 
+                intercalate ", " [show k ++ " depends on " ++ show (S.toList v) | (k, v) <- M.toList deps]
         pickAndChase
 
 
@@ -321,6 +325,8 @@ chase id' = do
                 { runtimeTodo         = M.insert id'
                     (if null deps then c else compilerResult result)
                     (runtimeTodo s)
+                 -- We track dependencies only to inform users when an infinite loop is detected
+                , runtimeDependencies = M.insertWith S.union id' (S.fromList deps) (runtimeDependencies s)
                 }
 
             -- Progress has been made if at least one of the 
