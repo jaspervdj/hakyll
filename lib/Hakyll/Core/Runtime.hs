@@ -297,9 +297,10 @@ chase id' = do
             liftIO $ save store item
 
             modifyRuntimeState $ \s -> s
-                { runtimeDone  = S.insert id' (runtimeDone s)
-                , runtimeTodo  = M.delete id' (runtimeTodo s)
-                , runtimeFacts = M.insert id' facts (runtimeFacts s)
+                { runtimeDone         = S.insert id' (runtimeDone s)
+                , runtimeTodo         = M.delete id' (runtimeTodo s)
+                , runtimeFacts        = M.insert id' facts (runtimeFacts s)
+                , runtimeDependencies = M.delete id' (runtimeDependencies s)
                 }
             
             return Progressed
@@ -321,7 +322,7 @@ chase id' = do
                         (depId, depSnapshot) `S.member` snapshots
                     actualDep = [(depId, depSnapshot) | not depDone]
 
-                return actualDep
+                return actualDep  
 
             modifyRuntimeState $ \s -> s
                 { runtimeTodo         = M.insert id'

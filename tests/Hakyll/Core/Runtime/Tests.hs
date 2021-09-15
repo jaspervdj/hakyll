@@ -193,6 +193,11 @@ case05 = do
     cleanTestEnv
 
 
+--------------------------------------------------------------------------------
+-- Test that dependency cycles are correctly identified in the presence of 
+-- snapshots. The test case below was presented as an example which invalidated
+-- a previous approach to dependency cycle checking. 
+-- See https://github.com/jaspervdj/hakyll/pull/880#discussion_r708650172
 case06 :: Assertion
 case06 = do
     logger  <- Logger.new Logger.Error
