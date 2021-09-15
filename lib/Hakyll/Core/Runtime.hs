@@ -201,6 +201,8 @@ pickAndChase = do
     unless (null todo) $ do
         acted <- mconcat <$> forConcurrently (M.keys todo) chase
         when (acted == Idled) $ do
+            -- This clause happens when chasing *every item* in `todo` resulted in 
+            -- idling because tasks are all waiting on something: a dependency cycle  
             deps <- runtimeDependencies <$> getRuntimeState
             throwError $ "Hakyll.Core.Runtime.pickAndChase: Dependency cycle detected: " ++ 
                 intercalate ", " [show k ++ " depends on " ++ show (S.toList v) | (k, v) <- M.toList deps]
