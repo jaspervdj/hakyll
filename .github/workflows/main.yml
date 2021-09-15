@@ -28,12 +28,6 @@ jobs:
             ghc: 8.8.4
           - os: windows-latest
             ghc: 8.6.5
-          # Chocolatey only has 8.10.6 at the moment
-          - os: windows-latest
-            ghc: 8.10.7
-        include:
-          - os: windows-latest
-            ghc: 8.10.6
 
     steps:
     - uses: actions/checkout@v2
