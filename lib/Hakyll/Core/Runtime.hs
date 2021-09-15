@@ -6,16 +6,13 @@ module Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
-import           Control.Concurrent.Async.Lifted (forConcurrently_)
+import           Control.Concurrent.Async.Lifted (forConcurrently)
 import           Control.Concurrent.MVar         (modifyMVar_, readMVar, newMVar, MVar)
-import           Control.Monad                   (join, unless)
+import           Control.Monad                   (join, unless, when)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
-import qualified Data.Array                      as A
 import           Data.Foldable                   (traverse_)
-import           Data.Graph                      (Graph)
-import qualified Data.Graph                      as G
 import           Data.List                       (intercalate)
 import           Data.Map                        (Map)
 import qualified Data.Map                        as M
@@ -78,7 +75,6 @@ run mode config logger rules = do
             , runtimeSnapshots    = S.empty
             , runtimeTodo         = M.empty
             , runtimeFacts        = oldFacts
-            , runtimeDependencies = M.empty
             }
 
     -- Build runtime read/state
@@ -122,16 +118,11 @@ data RuntimeRead = RuntimeRead
 
 
 --------------------------------------------------------------------------------
-type RuntimeDependency = (Identifier, Snapshot)
-
-
---------------------------------------------------------------------------------
 data RuntimeState = RuntimeState
     { runtimeDone         :: Set Identifier
     , runtimeSnapshots    :: Set (Identifier, Snapshot)
     , runtimeTodo         :: Map Identifier (Compiler SomeItem)
     , runtimeFacts        :: DependencyFacts
-    , runtimeDependencies :: Map RuntimeDependency (Set RuntimeDependency)
     }
 
 
@@ -206,33 +197,28 @@ pickAndChase :: Runtime ()
 pickAndChase = do
     todo <- runtimeTodo <$> getRuntimeState
     unless (null todo) $ do
-        checkForDependencyCycle
-        forConcurrently_ (M.keys todo) chase
+        acted <- mconcat <$> forConcurrently (M.keys todo) chase
+        when (acted == Idled) $ do
+            throwError "Hakyll.Core.Runtime.pickAndChase: Infinite loop detected."
         pickAndChase
 
 
 --------------------------------------------------------------------------------
--- | Check for cyclic dependencies in the current state
-checkForDependencyCycle :: Runtime ()
-checkForDependencyCycle = do
-    deps <- runtimeDependencies <$> getRuntimeState
-    let (depgraph, nodeFromVertex, _) = G.graphFromEdges [(k, k, S.toList dps) | (k, dps) <- M.toList deps]
-        dependencyCycles = map ((\(_, k, _) -> k) . nodeFromVertex) $ cycles depgraph
+-- | Tracks whether a set of tasks has progressed overall (at least one task progressed)
+-- or has idled
+data Progress = Progressed | Idled deriving (Eq)
 
-    unless (null dependencyCycles) $ do
-        throwError $ "Hakyll.Core.Runtime.pickAndChase: " ++
-            "Dependency cycle detected: " ++ intercalate ", " (map show dependencyCycles) ++
-            " are inter-dependent."
-    where
-        cycles :: Graph -> [G.Vertex]
-        cycles g = map fst . filter (uncurry $ reachableFromAny g) . A.assocs $ g
+instance Semigroup Progress where
+    Idled      <> Idled      = Idled
+    Progressed <> _          = Progressed
+    _          <> Progressed = Progressed
 
-        reachableFromAny :: Graph -> G.Vertex -> [G.Vertex] -> Bool
-        reachableFromAny graph node = elem node . concatMap (G.reachable graph)
+instance Monoid Progress where
+    mempty = Idled
 
 
 --------------------------------------------------------------------------------
-chase :: Identifier -> Runtime ()
+chase :: Identifier -> Runtime Progress
 chase id' = do
     logger    <- runtimeLogger        <$> ask
     provider  <- runtimeProvider      <$> ask
@@ -272,6 +258,8 @@ chase id' = do
                 , runtimeTodo      = M.insert id' c (runtimeTodo s)
                 }
 
+            return Progressed
+
 
         -- Huge success
         CompilerDone (SomeItem item) cwrite -> do
@@ -307,6 +295,8 @@ chase id' = do
                 , runtimeTodo  = M.delete id' (runtimeTodo s)
                 , runtimeFacts = M.insert id' facts (runtimeFacts s)
                 }
+            
+            return Progressed
 
         -- Try something else first
         CompilerRequire reqs c -> do
@@ -325,17 +315,17 @@ chase id' = do
                         (depId, depSnapshot) `S.member` snapshots
                     actualDep = [(depId, depSnapshot) | not depDone]
 
-                -- Update the dependencies using the current snapshot as context
-                -- This ensures that dependency cycles on snapshots are caught as well
-                -- See Issue #878.
-                unless depDone $
-                    modifyRuntimeState $ \s -> s {
-                        runtimeDependencies = M.insertWith S.union (id', depSnapshot) (S.fromList actualDep) (runtimeDependencies s) }
-
-                pure actualDep
+                return actualDep
 
             modifyRuntimeState $ \s -> s
                 { runtimeTodo         = M.insert id'
                     (if null deps then c else compilerResult result)
                     (runtimeTodo s)
                 }
+
+            -- Progress has been made if at least one of the 
+            -- requirements can move forwards at the next pass
+            let progress | length deps < length reqs = Progressed
+                         | otherwise                 = Idled
+
+            return progress
