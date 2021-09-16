@@ -6,16 +6,13 @@ module Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
-import           Control.Concurrent.Async.Lifted (forConcurrently_)
+import           Control.Concurrent.Async.Lifted (forConcurrently)
 import           Control.Concurrent.MVar         (modifyMVar_, readMVar, newMVar, MVar)
-import           Control.Monad                   (join, unless)
+import           Control.Monad                   (join, unless, when)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
-import qualified Data.Array                      as A
 import           Data.Foldable                   (traverse_)
-import           Data.Graph                      (Graph)
-import qualified Data.Graph                      as G
 import           Data.List                       (intercalate)
 import           Data.Map                        (Map)
 import qualified Data.Map                        as M
@@ -127,7 +124,7 @@ data RuntimeState = RuntimeState
     , runtimeSnapshots    :: Set (Identifier, Snapshot)
     , runtimeTodo         :: Map Identifier (Compiler SomeItem)
     , runtimeFacts        :: DependencyFacts
-    , runtimeDependencies :: Map Identifier (Set Identifier)
+    , runtimeDependencies :: Map Identifier (Set (Identifier, Snapshot))
     }
 
 
@@ -202,33 +199,32 @@ pickAndChase :: Runtime ()
 pickAndChase = do
     todo <- runtimeTodo <$> getRuntimeState
     unless (null todo) $ do
-        checkForDependencyCycle
-        forConcurrently_ (M.keys todo) chase
+        acted <- mconcat <$> forConcurrently (M.keys todo) chase
+        when (acted == Idled) $ do
+            -- This clause happens when chasing *every item* in `todo` resulted in 
+            -- idling because tasks are all waiting on something: a dependency cycle  
+            deps <- runtimeDependencies <$> getRuntimeState
+            throwError $ "Hakyll.Core.Runtime.pickAndChase: Dependency cycle detected: " ++ 
+                intercalate ", " [show k ++ " depends on " ++ show (S.toList v) | (k, v) <- M.toList deps]
         pickAndChase
 
 
 --------------------------------------------------------------------------------
--- | Check for cyclic dependencies in the current state
-checkForDependencyCycle :: Runtime ()
-checkForDependencyCycle = do
-    deps <- runtimeDependencies <$> getRuntimeState
-    let (depgraph, nodeFromVertex, _) = G.graphFromEdges [(k, k, S.toList dps) | (k, dps) <- M.toList deps]
-        dependencyCycles = map ((\(_, k, _) -> k) . nodeFromVertex) $ cycles depgraph
+-- | Tracks whether a set of tasks has progressed overall (at least one task progressed)
+-- or has idled
+data Progress = Progressed | Idled deriving (Eq)
 
-    unless (null dependencyCycles) $ do
-        throwError $ "Hakyll.Core.Runtime.pickAndChase: " ++
-            "Dependency cycle detected: " ++ intercalate ", " (map show dependencyCycles) ++
-            " are inter-dependent."
-    where
-        cycles :: Graph -> [G.Vertex]
-        cycles g = map fst . filter (uncurry $ reachableFromAny g) . A.assocs $ g
+instance Semigroup Progress where
+    Idled      <> Idled      = Idled
+    Progressed <> _          = Progressed
+    _          <> Progressed = Progressed
 
-        reachableFromAny :: Graph -> G.Vertex -> [G.Vertex] -> Bool
-        reachableFromAny graph node = elem node . concatMap (G.reachable graph)
+instance Monoid Progress where
+    mempty = Idled
 
 
 --------------------------------------------------------------------------------
-chase :: Identifier -> Runtime ()
+chase :: Identifier -> Runtime Progress
 chase id' = do
     logger    <- runtimeLogger        <$> ask
     provider  <- runtimeProvider      <$> ask
@@ -268,6 +264,8 @@ chase id' = do
                 , runtimeTodo      = M.insert id' c (runtimeTodo s)
                 }
 
+            return Progressed
+
 
         -- Huge success
         CompilerDone (SomeItem item) cwrite -> do
@@ -299,19 +297,20 @@ chase id' = do
             liftIO $ save store item
 
             modifyRuntimeState $ \s -> s
-                { runtimeDone  = S.insert id' (runtimeDone s)
-                , runtimeTodo  = M.delete id' (runtimeTodo s)
-                , runtimeFacts = M.insert id' facts (runtimeFacts s)
+                { runtimeDone         = S.insert id' (runtimeDone s)
+                , runtimeTodo         = M.delete id' (runtimeTodo s)
+                , runtimeFacts        = M.insert id' facts (runtimeFacts s)
+                , runtimeDependencies = M.delete id' (runtimeDependencies s)
                 }
+            
+            return Progressed
 
         -- Try something else first
         CompilerRequire reqs c -> do
             let done      = runtimeDone state
                 snapshots = runtimeSnapshots state
-                deps      = runtimeDependencies state
 
-            deps' <- fmap join . for reqs $ \dep -> do
-                let (depId, depSnapshot) = dep
+            deps <- fmap join . for reqs $ \(depId, depSnapshot) -> do
                 Logger.debug logger $
                     "Compiler requirement found for: " ++ show id' ++
                     ": " ++ show depId ++ " (snapshot " ++ depSnapshot ++ ")"
@@ -321,13 +320,21 @@ chase id' = do
                 let depDone =
                         depId `S.member` done ||
                         (depId, depSnapshot) `S.member` snapshots
+                    actualDep = [(depId, depSnapshot) | not depDone]
 
-                -- return values to add to runtimeDependencies
-                pure $ if depDone then [] else [depId]
+                return actualDep  
 
             modifyRuntimeState $ \s -> s
                 { runtimeTodo         = M.insert id'
-                    (if null deps' then c else compilerResult result)
+                    (if null deps then c else compilerResult result)
                     (runtimeTodo s)
-                , runtimeDependencies = M.insertWith S.union id' (S.fromList deps') deps
+                 -- We track dependencies only to inform users when an infinite loop is detected
+                , runtimeDependencies = M.insertWith S.union id' (S.fromList deps) (runtimeDependencies s)
                 }
+
+            -- Progress has been made if at least one of the 
+            -- requirements can move forwards at the next pass
+            let progress | length deps < length reqs = Progressed
+                         | otherwise                 = Idled
+
+            return progress
