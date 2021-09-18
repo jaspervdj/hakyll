@@ -58,6 +58,7 @@ readPandocWith ropt item =
     reader ro t = case t of
         DocBook            -> readDocBook ro
         Html               -> readHtml ro
+        Jupyter            -> readIpynb ro
         LaTeX              -> readLaTeX ro
         LiterateHaskell t' -> reader (addExt ro Ext_literate_haskell) t'
         Markdown           -> readMarkdown ro
