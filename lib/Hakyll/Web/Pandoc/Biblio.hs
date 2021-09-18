@@ -19,7 +19,6 @@ module Hakyll.Web.Pandoc.Biblio
     , Biblio (..)
     , biblioCompiler
     , readPandocBiblio
-    , processPandocBiblio
     , pandocBiblioCompiler
     ) where
 
@@ -85,14 +84,6 @@ readPandocBiblio :: ReaderOptions
                  -> (Item String)
                  -> Compiler (Item Pandoc)
 readPandocBiblio ropt csl biblio item = do
-  pandoc <- readPandocWith ropt item
-  processPandocBiblio csl biblio pandoc
-
-processPandocBiblio :: Item CSL
-                    -> Item Biblio
-                    -> (Item Pandoc)
-                    -> Compiler (Item Pandoc)
-processPandocBiblio csl biblio item = do
     -- It's not straightforward to use the Pandoc API as of 2.11 to deal with
     -- citations, since it doesn't export many things in 'Text.Pandoc.Citeproc'.
     -- The 'citeproc' package is also hard to use.
@@ -102,8 +93,10 @@ processPandocBiblio csl biblio item = do
     --
     -- So we load the CSL and Biblio files and pass them to Pandoc using the
     -- ersatz filesystem.
-    let Pandoc.Pandoc (Pandoc.Meta meta) blocks = itemBody item
-        cslFile = Pandoc.FileInfo zeroTime . unCSL $ itemBody csl
+    Pandoc.Pandoc (Pandoc.Meta meta) blocks <- itemBody <$>
+        readPandocWith ropt item
+
+    let cslFile = Pandoc.FileInfo zeroTime . unCSL $ itemBody csl
         bibFile = Pandoc.FileInfo zeroTime . unBiblio $ itemBody biblio
         addBiblioFiles = \st -> st
             { Pandoc.stFiles =
