@@ -19,7 +19,8 @@ import           TestSuite.Util
 tests :: TestTree
 tests = testGroup "Hakyll.Web.Pandoc.FileType.Tests" $
     fromAssertions "fileType"
-        [ Markdown                 @=? fileType "index.md"
+        [ Jupyter                  @=? fileType "index.ipynb"
+        , Markdown                 @=? fileType "index.md"
         , Rst                      @=? fileType "about/foo.rst"
         , LiterateHaskell Markdown @=? fileType "posts/bananas.lhs"
         , LiterateHaskell LaTeX    @=? fileType "posts/bananas.tex.lhs"
