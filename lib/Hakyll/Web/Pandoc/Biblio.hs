@@ -6,7 +6,9 @@
 -- respective compilers ('biblioCompiler' and 'cslCompiler'). Then, you can
 -- refer to these files when you use 'readPandocBiblio'. This function also
 -- takes the reader options for completeness -- you can use
--- 'defaultHakyllReaderOptions' if you're unsure.
+-- 'defaultHakyllReaderOptions' if you're unsure. If you already read the
+-- source into a 'Pandoc' type and need to add processing for the bibliography,
+-- you can use 'processPandocBiblio' instead.
 -- 'pandocBiblioCompiler' is a convenience wrapper which works like 'pandocCompiler',
 -- but also takes paths to compiled bibliography and csl files.
 {-# LANGUAGE Arrows                     #-}
@@ -19,6 +21,7 @@ module Hakyll.Web.Pandoc.Biblio
     , Biblio (..)
     , biblioCompiler
     , readPandocBiblio
+    , processPandocBiblio
     , pandocBiblioCompiler
     ) where
 
@@ -84,6 +87,16 @@ readPandocBiblio :: ReaderOptions
                  -> (Item String)
                  -> Compiler (Item Pandoc)
 readPandocBiblio ropt csl biblio item = do
+  pandoc <- readPandocWith ropt item
+  processPandocBiblio csl biblio pandoc
+
+
+--------------------------------------------------------------------------------
+processPandocBiblio :: Item CSL
+                    -> Item Biblio
+                    -> (Item Pandoc)
+                    -> Compiler (Item Pandoc)
+processPandocBiblio csl biblio item = do
     -- It's not straightforward to use the Pandoc API as of 2.11 to deal with
     -- citations, since it doesn't export many things in 'Text.Pandoc.Citeproc'.
     -- The 'citeproc' package is also hard to use.
@@ -93,10 +106,8 @@ readPandocBiblio ropt csl biblio item = do
     --
     -- So we load the CSL and Biblio files and pass them to Pandoc using the
     -- ersatz filesystem.
-    Pandoc.Pandoc (Pandoc.Meta meta) blocks <- itemBody <$>
-        readPandocWith ropt item
-
-    let cslFile = Pandoc.FileInfo zeroTime . unCSL $ itemBody csl
+    let Pandoc.Pandoc (Pandoc.Meta meta) blocks = itemBody item
+        cslFile = Pandoc.FileInfo zeroTime . unCSL $ itemBody csl
         bibFile = Pandoc.FileInfo zeroTime . unBiblio $ itemBody biblio
         addBiblioFiles = \st -> st
             { Pandoc.stFiles =
@@ -120,6 +131,7 @@ readPandocBiblio ropt csl biblio item = do
 
   where
     zeroTime = Time.UTCTime (toEnum 0) 0
+
 
 --------------------------------------------------------------------------------
 -- | Compiles a markdown file via Pandoc. Requires the .csl and .bib files to be known to the compiler via match statements.
