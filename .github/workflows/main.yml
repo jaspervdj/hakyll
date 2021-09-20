@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        cabal: ["3.6.0.0"]
+        cabal: ["3.4"]
         ghc:
           - "8.6.5"
           - "8.8.4"
@@ -28,6 +28,9 @@ jobs:
             ghc: 8.8.4
           - os: windows-latest
             ghc: 8.6.5
+            # Fails a lot with an error mentioning renameFile:renamePath:MoveFileEx
+          - os: windows-latest
+            ghc: 9.0.1
 
     steps:
     - uses: actions/checkout@v2
