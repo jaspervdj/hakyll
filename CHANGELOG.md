@@ -4,6 +4,24 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.15.0.0 (2021-10-01)
+
+- Fix dependency cycles detector (contribution by Laurent P. René de Cotret)
+- Add `--dry-run` to the `build` command (contribution by Fraser Tweedale)
+- Add support for Jupyter notebooks (files with ".ipynb" extension)
+    (contribution by fedeinthemix)
+- Add `Hakyll.Web.Pandoc.Biblio.processPandocBiblio`, which works with `Item
+    Pandoc` and is thus composable with other Pandoc-related compilers and
+    functions (contribution by fedeinthemix)
+- Speed up the runtime by about 9% (multiple contributions by Fraser Tweedale)
+- Tolerate unexpected cache misses by recompiling the item; now there is no need
+    to rebuild the entire site to fix cache corruption (contribution by Fraser
+    Tweedale)
+- Replace `Hakyll.Core.Rules.forceCompile` (introduced in 4.14.1.0) with
+    `Hakyll.Core.Compiler.recompilingUnsafeCompiler`. The new facility is more
+    versatile and composes better (contribution by Fraser Tweedale)
+- Remove dependency on `array` (contribution by Laurent P. René de Cotret)
+
 ## Hakyll 4.14.1.0 (2021-08-30)
 
 - Add `Hakyll.Web.Html.demoteHeaderBy` function, which demotes an HTML header by
