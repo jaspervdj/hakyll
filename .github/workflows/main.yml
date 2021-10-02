@@ -93,3 +93,53 @@ jobs:
     - name: Test
       run: |
         stack test --system-ghc
+
+  sdist:
+    name: Cabal file is up-to-date
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cabal: ["3.4"]
+        ghc: ["9.0.1"]
+
+    steps:
+    - uses: actions/checkout@v2
+      if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
+
+    - uses: haskell/actions/setup@v1
+      id: setup-haskell-cabal
+      name: Setup Haskell
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+
+    - name: Freeze
+      run: |
+        cabal freeze
+
+    - uses: actions/cache@v1
+      name: Cache ~/.cabal/store
+      with:
+        path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+
+    - name: Prepare Cabal package
+      run: |
+        cabal sdist
+
+    - name: Unpack Cabal package
+      run: |
+        cd dist-newstyle/sdist
+        tar xvf *.tar.gz
+        rm -f *.tar.gz
+
+    - name: Build
+      run: |
+        cd dist-newstyle/sdist/hakyll-*
+        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal build all
+
+    - name: Test
+      run: |
+        cd dist-newstyle/sdist/hakyll-*
+        cabal test all
