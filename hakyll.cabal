@@ -79,6 +79,7 @@ Extra-source-files:
   tests/data/russian.md
   tests/data/strip.html
   tests/data/strip.html.out
+  tests/data/template-empty.html
   tests/data/template.html
   tests/data/template.html.out
   data/templates/atom-item.xml
