@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.15.0.1 (2021-10-02)
+
+- Add missing test file to the package (contribution by Alexander Batischev)
+
 ## Hakyll 4.15.0.0 (2021-10-01)
 
 - Fix dependency cycles detector (contribution by Laurent P. René de Cotret)
