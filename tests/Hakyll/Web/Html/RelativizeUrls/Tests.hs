@@ -35,4 +35,6 @@ tests = testGroup "Hakyll.Web.Html.RelativizeUrls.Tests" $
         , "<script src=\"//ajax.googleapis.com/jquery.min.js\"></script>" @=?
             relativizeUrlsWith "../.."
                 "<script src=\"//ajax.googleapis.com/jquery.min.js\"></script>"
+        , "<img srcset=\"./image.png 200w, ./image2.png 400w\" />"  @=?
+            relativizeUrlsWith "." "<img srcset=\"/image.png 200w, /image2.png 400w\" />"
         ]
