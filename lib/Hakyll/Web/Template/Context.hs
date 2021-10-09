@@ -10,7 +10,7 @@
 -- > … <> functionField "concat" (const . concat) <> …
 --
 -- which will allow you to use the @concat@ identifier as a function that takes
--- arbitrarily many stings and concatenates them to a new string:
+-- arbitrarily many strings and concatenates them to a new string:
 --
 -- > $partial(concat("templates/categories/", category))$
 --
