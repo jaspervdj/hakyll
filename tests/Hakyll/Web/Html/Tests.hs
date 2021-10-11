@@ -8,6 +8,7 @@ module Hakyll.Web.Html.Tests
 import           Data.Char        (toUpper)
 import           Test.Tasty       (TestTree, testGroup)
 import           Test.Tasty.HUnit ((@=?))
+import qualified Text.HTML.TagSoup               as TS
 
 
 --------------------------------------------------------------------------------
@@ -34,6 +35,23 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
             demoteHeadersBy 0 "<h4>A h4 title</h4>" -- Assert that a demotion of @N < 1@ is a no-op.
         ]
 
+    , fromAssertions "getUrls"
+        [ ["/image1.png", "/image2.jpeg", "https://example.com", "/game.swf", "/poster.jpeg"] @=?
+            getUrls [
+                TS.TagOpen "img" [("src", "/image1.png")]
+              , TS.TagOpen "img" [("src", "/image2.jpeg")]
+              , TS.TagOpen "a" [("href", "https://example.com")]
+              , TS.TagOpen "object" [("data", "/game.swf")]
+              , TS.TagOpen "video" [("poster", "/poster.jpeg")]
+              ]
+        , ["/image1.png", "/image2.jpeg", "/image3.bmp"] @=?
+            getUrls [ TS.TagOpen "img" [("srcset", "/image1.png 10w, /image2.jpeg, /image3.bmp 1.3x")] ]
+
+        -- Invalid srcset specification means no URLs are extracted
+        , [] @=?
+            getUrls [ TS.TagOpen "img" [("srcset", "/image1.png 10wide, /image2.jpeg, /image3.bmp 1.3px")] ]
+        ]
+
     , fromAssertions "withUrls"
         [ "<a href=\"FOO\">bar</a>" @=?
             withUrls (map toUpper) "<a href=\"foo\">bar</a>"
@@ -51,6 +69,16 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
         -- Test minimizing elements
         , "<meta bar=\"foo\" />" @=?
             withUrls id "<meta bar=\"foo\" />"
+
+        -- Test that URLs are extracted from img's srcset
+        , "<img srcset=\"foo 200w\" />" @=?
+            withUrls (const "foo") "<img srcset=\"/path/to/image.png 200w\" />"
+        , "<img srcset=\"bar 200w, bar 400w\" />" @=?
+            withUrls (const "bar") "<img srcset=\"/small.jpeg 200w, /img/large.jpeg 400w\" />"
+
+        -- Invalid srcsets are left unchanged
+        , "<img srcset=\"/image1.png 200px\" />" @=?
+            withUrls (const "bar") "<img srcset=\"/image1.png 200px\" />"
         ]
 
     , fromAssertions "toUrl"
