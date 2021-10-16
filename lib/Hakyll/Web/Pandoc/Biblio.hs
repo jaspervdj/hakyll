@@ -33,6 +33,7 @@ import qualified Data.ByteString               as B
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.Map                      as Map
 import qualified Data.Time                     as Time
+import qualified Data.Text                     as T (pack)
 import           Data.Typeable                 (Typeable)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
@@ -45,6 +46,7 @@ import           Text.Pandoc                   (Extension (..), Pandoc,
                                                 enableExtension)
 import qualified Text.Pandoc                   as Pandoc
 import qualified Text.Pandoc.Citeproc          as Pandoc (processCitations)
+import           System.FilePath               (takeExtension)
 
 
 --------------------------------------------------------------------------------
@@ -109,15 +111,18 @@ processPandocBiblio csl biblio item = do
     let Pandoc.Pandoc (Pandoc.Meta meta) blocks = itemBody item
         cslFile = Pandoc.FileInfo zeroTime . unCSL $ itemBody csl
         bibFile = Pandoc.FileInfo zeroTime . unBiblio $ itemBody biblio
+        bibFileType = takeExtension $ toFilePath $ itemIdentifier biblio
+        internalBibFileName = "_hakyll/refs." ++ bibFileType
+
         addBiblioFiles = \st -> st
             { Pandoc.stFiles =
                 Pandoc.insertInFileTree "_hakyll/style.csl" cslFile .
-                Pandoc.insertInFileTree "_hakyll/refs.bib" bibFile $
+                Pandoc.insertInFileTree internalBibFileName bibFile $
                 Pandoc.stFiles st
             }
         biblioMeta = Pandoc.Meta .
             Map.insert "csl" (Pandoc.MetaString "_hakyll/style.csl") .
-            Map.insert "bibliography" (Pandoc.MetaString "_hakyll/refs.bib") $
+            Map.insert "bibliography" (Pandoc.MetaString $ T.pack internalBibFileName) $
             meta
         errOrPandoc = Pandoc.runPure $ do
             Pandoc.modifyPureState addBiblioFiles

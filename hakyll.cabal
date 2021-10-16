@@ -59,11 +59,12 @@ Data-files:
 
 Extra-source-files:
   CHANGELOG.md
-  tests/data/biblio/biblio01.golden
   tests/data/biblio/chicago.csl
+  tests/data/biblio/cites-meijer.golden
   tests/data/biblio/default.html
   tests/data/biblio/page.markdown
   tests/data/biblio/refs.bib
+  tests/data/biblio/refs.yaml
   tests/data/embed.html
   tests/data/example.md
   tests/data/example.md.metadata
