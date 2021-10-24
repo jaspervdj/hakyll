@@ -21,7 +21,9 @@ module Hakyll.Web.Pandoc.Biblio
     , Biblio (..)
     , biblioCompiler
     , readPandocBiblio
+    , readPandocBiblios
     , processPandocBiblio
+    , processPandocBiblios
     , pandocBiblioCompiler
     ) where
 
@@ -46,7 +48,7 @@ import           Text.Pandoc                   (Extension (..), Pandoc,
                                                 enableExtension)
 import qualified Text.Pandoc                   as Pandoc
 import qualified Text.Pandoc.Citeproc          as Pandoc (processCitations)
-import           System.FilePath               (takeExtension)
+import           System.FilePath               (addExtension, takeExtension)
 
 
 --------------------------------------------------------------------------------
@@ -88,9 +90,16 @@ readPandocBiblio :: ReaderOptions
                  -> Item Biblio
                  -> (Item String)
                  -> Compiler (Item Pandoc)
-readPandocBiblio ropt csl biblio item = do
+readPandocBiblio ropt csl biblio = readPandocBiblios ropt csl [biblio]
+
+readPandocBiblios :: ReaderOptions
+                  -> Item CSL
+                  -> [Item Biblio]
+                  -> (Item String)
+                  -> Compiler (Item Pandoc)
+readPandocBiblios ropt csl biblios item = do
   pandoc <- readPandocWith ropt item
-  processPandocBiblio csl biblio pandoc
+  processPandocBiblios csl biblios pandoc
 
 
 --------------------------------------------------------------------------------
@@ -98,7 +107,13 @@ processPandocBiblio :: Item CSL
                     -> Item Biblio
                     -> (Item Pandoc)
                     -> Compiler (Item Pandoc)
-processPandocBiblio csl biblio item = do
+processPandocBiblio csl biblio = processPandocBiblios csl [biblio]
+
+processPandocBiblios :: Item CSL
+                     -> [Item Biblio]
+                     -> (Item Pandoc)
+                     -> Compiler (Item Pandoc)
+processPandocBiblios csl biblios item = do
     -- It's not straightforward to use the Pandoc API as of 2.11 to deal with
     -- citations, since it doesn't export many things in 'Text.Pandoc.Citeproc'.
     -- The 'citeproc' package is also hard to use.
@@ -110,19 +125,25 @@ processPandocBiblio csl biblio item = do
     -- ersatz filesystem.
     let Pandoc.Pandoc (Pandoc.Meta meta) blocks = itemBody item
         cslFile = Pandoc.FileInfo zeroTime . unCSL $ itemBody csl
-        bibFile = Pandoc.FileInfo zeroTime . unBiblio $ itemBody biblio
-        bibFileType = takeExtension $ toFilePath $ itemIdentifier biblio
-        internalBibFileName = "_hakyll/refs." ++ bibFileType
+        bibFiles = zipWith (\x y ->
+            ( addExtension ("_hakyll/bibliography-" ++ show x)
+                           (takeExtension $ toFilePath $ itemIdentifier y)
+            , Pandoc.FileInfo zeroTime . unBiblio . itemBody $ y
+            )
+          )
+          [0 ..]
+          biblios
 
-        addBiblioFiles = \st -> st
-            { Pandoc.stFiles =
-                Pandoc.insertInFileTree "_hakyll/style.csl" cslFile .
-                Pandoc.insertInFileTree internalBibFileName bibFile $
-                Pandoc.stFiles st
-            }
+        stFiles = foldr ((.) . uncurry Pandoc.insertInFileTree)
+                    (Pandoc.insertInFileTree "_hakyll/style.csl" cslFile)
+                    bibFiles
+
+        addBiblioFiles = \st -> st { Pandoc.stFiles = stFiles $ Pandoc.stFiles st }
+
         biblioMeta = Pandoc.Meta .
             Map.insert "csl" (Pandoc.MetaString "_hakyll/style.csl") .
-            Map.insert "bibliography" (Pandoc.MetaString $ T.pack internalBibFileName) $
+            Map.insert "bibliography"
+              (Pandoc.MetaList $ map (Pandoc.MetaString . T.pack . fst) bibFiles) $
             meta
         errOrPandoc = Pandoc.runPure $ do
             Pandoc.modifyPureState addBiblioFiles
