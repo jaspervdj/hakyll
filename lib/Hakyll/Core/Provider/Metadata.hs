@@ -144,9 +144,9 @@ instance Show MetadataException where
       where
         hint = case err of
             Yaml.InvalidYaml (Just (Yaml.YamlParseException {..}))
-                | yamlProblem == problem -> "\n" ++
+                | yamlProblem ==  "mapping values are not allowed in this context" -> "\n" ++
                     "Hint: if the metadata value contains characters such\n" ++
                     "as ':' or '-', try enclosing it in quotes."
+            Yaml.AesonException "Error in $: parsing HashMap ~Text failed, expected Object, but encountered String"
+                -> "\nHint: in metadata, keys and values are separated by a colon *and* a space."
             _ -> ""
-
-        problem = "mapping values are not allowed in this context"
