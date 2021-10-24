@@ -1,12 +1,18 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 module Hakyll.Core.Provider.Metadata.Tests
     ( tests
     ) where
 
 
 --------------------------------------------------------------------------------
-import qualified Data.HashMap.Strict           as HMS
+#if MIN_VERSION_aeson(2,0,0)
+import qualified Data.Aeson.KeyMap             as KeyMap
+import qualified Data.Aeson.Key                as AK
+#else
+import qualified Data.HashMap.Strict           as KeyMap
 import qualified Data.Text                     as T
+#endif
 import qualified Data.Yaml                     as Yaml
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider.Metadata
@@ -26,10 +32,7 @@ tests = testGroup "Hakyll.Core.Provider.Metadata.Tests" $
 testPage01 :: Assertion
 testPage01 =
     (meta [("foo", "bar")], "qux\n") `expectRight` parsePage
-    "---\n\
-    \foo: bar\n\
-    \---\n\
-    \qux\n"
+    "---\nfoo: bar\n---\nqux\n"
 
 
 --------------------------------------------------------------------------------
@@ -37,21 +40,22 @@ testPage02 :: Assertion
 testPage02 =
     (meta [("description", descr)], "Hello I am dog\n") `expectRight`
     parsePage
-    "---\n\
-    \description: A long description that would look better if it\n\
-    \             spanned multiple lines and was indented\n\
-    \---\n\
-    \Hello I am dog\n"
+    "---\ndescription: A long description that would look better if it\n             spanned multiple lines and was indented\n---\nHello I am dog\n"
   where
     descr :: String
     descr =
-        "A long description that would look better if it \
-        \spanned multiple lines and was indented"
+        "A long description that would look better if it spanned multiple lines and was indented"
 
 
 --------------------------------------------------------------------------------
 meta :: Yaml.ToJSON a => [(String, a)] -> Metadata
-meta pairs = HMS.fromList [(T.pack k, Yaml.toJSON v) | (k, v) <- pairs]
+meta pairs = KeyMap.fromList [(keyFromString k, Yaml.toJSON v) | (k, v) <- pairs]
+  where
+#if MIN_VERSION_aeson(2,0,0)
+  keyFromString = AK.fromString
+#else
+  keyFromString = T.pack
+#endif
 
 
 --------------------------------------------------------------------------------
