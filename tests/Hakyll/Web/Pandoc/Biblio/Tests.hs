@@ -26,6 +26,7 @@ tests :: TestTree
 tests = testGroup "Hakyll.Web.Pandoc.Biblio.Tests" $
     [ goldenTest01
     , goldenTest02
+    , goldenTest03
     ]
 
 --------------------------------------------------------------------------------
@@ -94,6 +95,41 @@ goldenTest02 =
 
             output <- fmap LBS.fromStrict $ B.readFile $
                     destinationDirectory testConfiguration </> "page.html"
+
+            cleanTestEnv
+
+            return output)
+
+goldenTest03 :: TestTree
+goldenTest03 =
+    goldenVsString
+        "biblio03"
+        (goldenTestsDataDir </> "cites-multiple.golden")
+        (do
+            -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
+            logger <- Logger.new Logger.Error
+            let config = testConfiguration { providerDirectory = goldenTestsDataDir }
+            _ <- run RunModeNormal config logger $ do
+                let myPandocBiblioCompiler = do
+                        csl <- load "chicago.csl"
+                        bib1 <- load "refs.bib"
+                        bib2 <- load "refs2.yaml"
+                        getResourceBody >>=
+                            readPandocBiblios defaultHakyllReaderOptions csl [bib1, bib2] >>=
+                            return . writePandoc
+
+                match "default.html" $ compile templateCompiler
+                match "chicago.csl" $ compile cslCompiler
+                match "refs.bib"    $ compile biblioCompiler
+                match "refs2.yaml"    $ compile biblioCompiler
+                match "cites-multiple.markdown" $ do
+                    route $ setExtension "html"
+                    compile $
+                        myPandocBiblioCompiler >>=
+                        loadAndApplyTemplate "default.html" defaultContext
+
+            output <- fmap LBS.fromStrict $ B.readFile $
+                    destinationDirectory testConfiguration </> "cites-multiple.html"
 
             cleanTestEnv
 

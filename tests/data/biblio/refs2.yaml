@@ -1,0 +1,18 @@
+---
+references:
+- id: lipovaca2012
+  author:
+    - family: Lipovača
+      given: Miran
+  call-number: QA76.73.H37 L69 2012
+  event-place: San Francisco, CA
+  ISBN: 978-1-59327-283-8
+  issued:
+    - year: 2012
+  number-of-pages: '375'
+  publisher: No Starch Press
+  publisher-place: San Francisco, CA
+  source: Library of Congress ISBN
+  title: Learn you a Haskell for great good! a beginner's guide
+  type: book
+...
