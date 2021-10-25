@@ -4,6 +4,23 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.15.1.0 (2021-10-25)
+
+- Add `Hakyll.Web.Pandoc.Biblio` functions `readPandocBiblios` and
+    `processPandocBiblios`, which let one use multiple bibliographies
+    (contribution by Benjamin Eskola)
+- Preserve file extension of bibliography files when passing them to Pandoc.
+    This enables one to use not just BibTex, but also YAML and JSON files
+    (contribution by Benjamin Eskola)
+- Fix URL extraction for `srcset` attribute. This affects
+    `Hakyll.Web.HTML.relativizeUrls` and other such functions (contribution by
+    Alexander Batischev)
+- Bump `bytestring` upper bound to allow 0.11 (contribution by Alexander
+    Batischev)
+- Bump `pandoc` upper bound to allow 2.15 (contribution by Alexander Batischev)
+- Bump `aeson` bounds to allow 2.0 (contribution by Alexander Batischev)
+
+
 ## Hakyll 4.15.0.1 (2021-10-02)
 
 - Add missing test file to the package (contribution by Alexander Batischev)
