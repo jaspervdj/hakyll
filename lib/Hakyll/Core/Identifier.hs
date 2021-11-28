@@ -62,6 +62,7 @@ match "about/*" $ do
     compiledPost <- load (fromFilePath "posts/hakyll.md") -- load with explicit identifier
     ...
 @
+Normally, the identifier is only explicitly created to pass to one the 'Hakyll.Core.Compiler.load' functions.
 
 __Identifiers when using create__.
 Using 'Hakyll.Core.Rules.create' (thereby inventing a file path with no underlying file on disk)
@@ -125,17 +126,40 @@ instance Show Identifier where
 
 
 --------------------------------------------------------------------------------
--- | Parse an identifier from a string
+{- | Parse an identifier from a file path string. For example, 
+
+@
+-- e.g. file on disk: 'posts\/hakyll.md'
+match "posts/*" $ do                                      -- saved with implicit identifier 'posts\/hakyll.md'
+    compile pandocCompiler
+
+match "about/*" $ do
+    compiledPost <- load (fromFilePath "posts/hakyll.md") -- load with explicit identifier
+    ...
+@
+-}
 fromFilePath :: FilePath -> Identifier
 fromFilePath = Identifier Nothing . normalise
 
 
 --------------------------------------------------------------------------------
--- | Convert an identifier to a relative 'FilePath'
+-- | Convert an identifier back to a relative 'FilePath'.
 toFilePath :: Identifier -> FilePath
 toFilePath = normalise . identifierPath
 
 
 --------------------------------------------------------------------------------
+{- | Set or override the version of an identifier in order to specify which version of an 'Hakyll.Core.Item.Item' 
+to 'Hakyll.Core.Compiler.load' from the 'Hakyll.Core.Store.Store'. For example,
+
+@
+match "posts/*" $ version "raw" $ do                  -- saved with implicit identifier ('posts\/hakyll.md', version 'raw')
+    compile getResourceBody
+
+match "about/*" $ do
+    rawPost <- load . setVersion (Just "raw") $ fromFilePath "posts/hakyll.md" -- load version 'raw'
+    ...
+@
+-}
 setVersion :: Maybe String -> Identifier -> Identifier
 setVersion v i = i {identifierVersion = v}
