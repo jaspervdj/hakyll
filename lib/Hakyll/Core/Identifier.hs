@@ -55,26 +55,28 @@ with 'Hakyll.Core.Configuration.providerDirectory'):
 
 @
 -- e.g. file on disk: 'posts\/hakyll.md'
-match "posts/*" $ do                                      -- saved with implicit identifier 'posts\/hakyll.md'
+match "posts/*" $ do                                          -- saved with implicit identifier 'posts\/hakyll.md'
     compile pandocCompiler
 
 match "about/*" $ do
-    compiledPost <- load (fromFilePath "posts/hakyll.md") -- load with explicit identifier
-    ...
+    compile $ do
+        compiledPost <- load (fromFilePath "posts/hakyll.md") -- load with explicit identifier
+        ...
 @
-Normally, the identifier is only explicitly created to pass to one the 'Hakyll.Core.Compiler.load' functions.
+Normally, the identifier is only explicitly created to pass to one of the 'Hakyll.Core.Compiler.load' functions.
 
 __Identifiers when using create__.
 Using 'Hakyll.Core.Rules.create' (thereby inventing a file path with no underlying file on disk)
 builds an implicit identifier that corresponds to the invented file path:
 
 @
-create ["index.html"] $ do                            -- saved with implicit identifier 'index.html'
-    makeItem ("Hello world" :: String)
+create ["index.html"] $ do                                -- saved with implicit identifier 'index.html'
+    compile $ makeItem ("Hello world" :: String)
 
 match "about/*" $ do
-    compiledIndex <- load (fromFilePath "index.html") -- load with an explicit identifier
-    ...
+    compile $ do
+        compiledIndex <- load (fromFilePath "index.html") -- load with an explicit identifier
+        ...
 @
 
 __Identifiers when using versions__.
@@ -83,18 +85,19 @@ A version name is needed to distinguish them:
 
 @
 -- e.g. file on disk: 'posts\/hakyll.md'
-match "posts/*" $ do                                  -- saved with implicit identifier ('posts\/hakyll.md', no-version)
-    compile $ pandocCompiler
+match "posts/*" $ do                              -- saved with implicit identifier ('posts\/hakyll.md', no-version)
+    compile pandocCompiler
 
-match "posts/*" $ version "raw" $ do                  -- saved with implicit identifier ('posts\/hakyll.md', version 'raw')
+match "posts/*" $ version "raw" $ do              -- saved with implicit identifier ('posts\/hakyll.md', version 'raw')
     compile getResourceBody
 
 match "about/*" $ do
-    compiledPost <- load (fromFilePath "posts/hakyll.md")                      -- load no-version version
-    rawPost <- load . setVersion (Just "raw") $ fromFilePath "posts/hakyll.md" -- load version 'raw'
+    compile $ do
+        compiledPost <- load (fromFilePath "posts/hakyll.md")                      -- load no-version version
+        rawPost <- load . setVersion (Just "raw") $ fromFilePath "posts/hakyll.md" -- load version 'raw'
     ...
 @
-Use 'setVersion' to specify or replace the version of an identifier like @fromFilePath "posts/hakyll.md"@.
+Use 'setVersion' to set (or replace) the version of an identifier like @fromFilePath "posts/hakyll.md"@.
 -}
 data Identifier = Identifier
     { identifierVersion :: Maybe String
@@ -108,7 +111,7 @@ instance Binary Identifier where
     get = Identifier <$> get <*> get
 
 
---------------------fromFilePath "posts/hakyll.md"------------------------------------------------------------
+--------------------------------------------------------------------------------
 instance IsString Identifier where
     fromString = fromFilePath
 
@@ -130,12 +133,13 @@ instance Show Identifier where
 
 @
 -- e.g. file on disk: 'posts\/hakyll.md'
-match "posts/*" $ do                                      -- saved with implicit identifier 'posts\/hakyll.md'
+match "posts/*" $ do                                          -- saved with implicit identifier 'posts\/hakyll.md'
     compile pandocCompiler
 
 match "about/*" $ do
-    compiledPost <- load (fromFilePath "posts/hakyll.md") -- load with explicit identifier
-    ...
+    compile $ do
+        compiledPost <- load (fromFilePath "posts/hakyll.md") -- load with explicit identifier
+        ...
 @
 -}
 fromFilePath :: FilePath -> Identifier
@@ -153,12 +157,13 @@ toFilePath = normalise . identifierPath
 to 'Hakyll.Core.Compiler.load' from the 'Hakyll.Core.Store.Store'. For example,
 
 @
-match "posts/*" $ version "raw" $ do                  -- saved with implicit identifier ('posts\/hakyll.md', version 'raw')
+match "posts/*" $ version "raw" $ do              -- saved with implicit identifier ('posts\/hakyll.md', version 'raw')
     compile getResourceBody
 
 match "about/*" $ do
-    rawPost <- load . setVersion (Just "raw") $ fromFilePath "posts/hakyll.md" -- load version 'raw'
-    ...
+    compile $ do
+        rawPost <- load . setVersion (Just "raw") $ fromFilePath "posts/hakyll.md" -- load version 'raw'
+        ...
 @
 -}
 setVersion :: Maybe String -> Identifier -> Identifier
