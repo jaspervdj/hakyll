@@ -112,50 +112,42 @@ runRoutes routes provider identifier =
 
 
 --------------------------------------------------------------------------------
-{- | A route that interprets the identifier (of the item being processed) as the output filepath.
+{- | An "identity" route that interprets the identifier (of the item being processed) as the output filepath.
 This identifier is normally the filepath of the
 source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
 
 === __Examples__
 __Route when using match__
 
-@
--- e.g. file on disk: '<project-folder>\/posts\/hakyll.md'
-match "posts/*" $ do           -- 'hakyll.md' source file implicitly gets filepath as identifier: 'posts\/hakyll.md'
-    route idRoute              -- compilation result is written to '<output-folder>\/posts\/hakyll.md'
-    compile getResourceBody
-@
-
-__Route when using create__
-
-@
-create ["overview/index.html"] $ do  -- this implicitly gets identifier: 'overview\/index.html'
-    route idRoute                    -- compilation result is written to '<output-folder>\/overview\/index.html'
-    compile $ makeItem ("Hello world" :: String)
-@
+> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
+> match "posts/*" $ do           -- 'hakyll.md' source file implicitly gets filepath as identifier: 'posts/hakyll.md'
+>     route idRoute              -- so compilation result is written to '<output-folder>/posts/hakyll.md'
+>     compile getResourceBody
 -}
 idRoute :: Routes
 idRoute = customRoute toFilePath
 
 
 --------------------------------------------------------------------------------
--- | Set (or replace) the extension of a route.
---
--- Example:
---
--- > runRoutes (setExtension "html") "foo/bar"
---
--- Result:
---
--- > Just "foo/bar.html"
---
--- Example:
---
--- > runRoutes (setExtension "html") "posts/the-art-of-trolling.markdown"
---
--- Result:
---
--- > Just "posts/the-art-of-trolling.html"
+{- | A route like 'idRoute' that interprets the identifier (of the item being processed) as the output filepath 
+but also sets (or replaces) the extension suffix of that path.
+This identifier is normally the filepath of the
+source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
+
+=== __Examples__
+__Route with an existing extension__
+
+> -- e.g. file on disk: '<project-folder>/posts/hakyll.md' 
+> match "posts/*" $ do            -- 'hakyll.md' source file implicitly gets filepath as identifier: 'posts/hakyll.md'
+>     route (setExtension "html") -- compilation result is written to '<output-folder>/posts/hakyll.html'
+>     compile pandocCompiler
+
+__Route without an existing extension__
+
+> create ["about"] $ do           -- this implicitly gets identifier: 'about'
+>     route (setExtension "html") -- compilation result is written to '<output-folder>/about.html'
+>     compile $ makeItem ("Hello world" :: String)
+-}
 setExtension :: String -> Routes
 setExtension extension = customRoute $
     (`replaceExtension` extension) . toFilePath
