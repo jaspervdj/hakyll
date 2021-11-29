@@ -1,35 +1,38 @@
 --------------------------------------------------------------------------------
--- | Once a target is compiled, the user usually wants to save it to the disk.
--- This is where the 'Routes' type comes in; it determines where a certain
--- target should be written.
---
--- Suppose we have an item @foo\/bar.markdown@. We can render this to
--- @foo\/bar.html@ using:
---
--- > route "foo/bar.markdown" (setExtension ".html")
---
--- If we do not want to change the extension, we can use 'idRoute', the simplest
--- route available:
---
--- > route "foo/bar.markdown" idRoute
---
--- That will route @foo\/bar.markdown@ to @foo\/bar.markdown@.
---
--- Note that the extension says nothing about the content! If you set the
--- extension to @.html@, it is your own responsibility to ensure that the
--- content is indeed HTML.
---
--- Finally, some special cases:
---
--- * If there is no route for an item, this item will not be routed, so it will
---   not appear in your site directory.
---
--- * If an item matches multiple routes, the first rule will be chosen.
+{- | 'Routes' is part of the 'Hakyll.Core.Rules.Rules' processing pipeline.
+It determines if and where a compiled 'Hakyll.Core.Item.Item' is written out to 
+(relative to the output folder as configured in 'Hakyll.Core.Configuration.destinationDirectory').
+
+* __If there is no route for an item, the compiled item won't be written out to a file__
+and so won't appear in the output site directory.
+
+* If an item matches multiple routes, the first route will be chosen.
+
+__Examples__
+
+Suppose we have a markdown item @foo\/bar.md@. We can route/output this to
+@foo\/bar.html@ using:
+
+> route "foo/bar.md" (setExtension ".html")
+
+If we do not want to change the extension, we can use 'idRoute', the simplest
+route available:
+
+> route "foo/bar.md" idRoute
+
+That will route @foo\/bar.md@ to @foo\/bar.md@.
+
+Note: __The (output) extension says nothing about the content!__ 
+If you set the extension to @.html@, you have to ensure that the compilation result 
+is indeed HTML (for example with the 'Hakyll.Web.Pandoc.pandocCompiler' to transform markdown to HTML).
+
+Take a look at the built-in routes here for detailed usage examples.
+-}
 {-# LANGUAGE CPP        #-}
 {-# LANGUAGE Rank2Types #-}
 module Hakyll.Core.Routes
-    ( UsedMetadata
-    , Routes
+    ( Routes
+    , UsedMetadata
     , runRoutes
     , idRoute
     , setExtension
@@ -109,12 +112,12 @@ runRoutes routes provider identifier =
 
 
 --------------------------------------------------------------------------------
-{- | A route that interprets the identifier (of the item being processed) as the output filepath. 
-This identifier is normally the filepath of the 
-source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details. 
+{- | A route that interprets the identifier (of the item being processed) as the output filepath.
+This identifier is normally the filepath of the
+source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
 
 === __Examples__
-__Route when using match__ 
+__Route when using match__
 
 @
 -- e.g. file on disk: '<project-folder>\/posts\/hakyll.md'
@@ -130,7 +133,7 @@ create ["overview/index.html"] $ do  -- this implicitly gets identifier: 'overvi
     route idRoute                    -- compilation result is written to '<output-folder>\/overview\/index.html'
     compile $ makeItem ("Hello world" :: String)
 @
--} 
+-}
 idRoute :: Routes
 idRoute = customRoute toFilePath
 
