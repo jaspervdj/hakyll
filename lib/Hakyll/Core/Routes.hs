@@ -129,7 +129,7 @@ idRoute = customRoute toFilePath
 
 
 --------------------------------------------------------------------------------
-{- | A route like 'idRoute' that interprets the identifier (of the item being processed) as the output filepath 
+{- | Create a route like 'idRoute' that interprets the identifier (of the item being processed) as the output filepath 
 but also sets (or replaces) the extension suffix of that path.
 This identifier is normally the filepath of the
 source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
@@ -162,8 +162,21 @@ matchRoute pattern (Routes route) = Routes $ \p id' ->
 
 
 --------------------------------------------------------------------------------
--- | Create a custom route. This should almost always be used with
--- 'matchRoute'
+{- | Create a route where you define the output filepath from the given identifier. 
+This identifier is normally the filepath of the
+source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
+This function should almost always be used with 'matchRoute'.
+
+=== __Examples__
+__Route that appends a custom extension__
+
+> -- e.g. file on disk: '<project-folder>/posts/hakyll.md' 
+> match "posts/*" $ do            -- 'hakyll.md' source file implicitly gets filepath as identifier: 'posts/hakyll.md'
+>     route $ customRoute ((<> ".html") . toFilePath) -- result is written to '<output-folder>/posts/hakyll.md.html'
+>     compile pandocCompiler
+Note that that the last part of the output file path is @.md.html@
+
+-}
 customRoute :: (Identifier -> FilePath) -> Routes
 customRoute f = Routes $ const $ \id' -> return (Just (f id'), False)
 
