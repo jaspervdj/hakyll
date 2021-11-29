@@ -162,7 +162,8 @@ matchRoute pattern (Routes route) = Routes $ \p id' ->
 
 
 --------------------------------------------------------------------------------
-{- | Create a route where you define the output filepath from the given identifier.
+{- | Create a route where you completely define the output filepath
+(when the filepath only needs to depend on the identifier). 
 This identifier is normally the filepath of the
 source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
 This function should almost always be used with 'matchRoute'.
