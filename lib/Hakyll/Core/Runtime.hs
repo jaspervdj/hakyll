@@ -334,7 +334,10 @@ chase id' = do
 
             -- Progress has been made if at least one of the 
             -- requirements can move forwards at the next pass
-            let progress | length deps < length reqs = Progressed
-                         | otherwise                 = Idled
+            -- In some cases, dependencies have been processed in parallel in which case `deps` 
+            -- can be empty, and we can progress to the next stage. See issue #907
+            let progress | null deps    = Progressed
+                         | deps == reqs = Idled
+                         | otherwise    = Progressed
 
             return progress
