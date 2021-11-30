@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
--- | An identifier is a type used to uniquely identify an item. An identifier
--- conceptually corresponds to a file path. Examples of identifiers are:
+-- | An identifier is a type used to uniquely name an item. An identifier
+-- is similar to a file path, but can contain additional details (e.g. 
+-- item's version). Examples of identifiers are:
 --
 -- * @posts/foo.markdown@
 --
