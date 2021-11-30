@@ -80,7 +80,7 @@ match "about/*" $ do
 @
 
 __Identifiers when using versions__.
-With 'Hakyll.Core.Rules.version' the same file can compiled into several items on the store.
+With 'Hakyll.Core.Rules.version' the same file can be compiled into several items in the store.
 A version name is needed to distinguish them:
 
 @
