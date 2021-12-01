@@ -166,8 +166,8 @@ matchRoute pattern (Routes route) = Routes $ \p id' ->
 
 
 --------------------------------------------------------------------------------
-{- | Create a route where you completely define the output filepath
-(when the filepath construction only depends on the identifier of the item being processed).
+{- | Create a route where the output filepath is build with the given construction function
+(that construction only gets access to the identifier of the underlying item being processed).
 This identifier is normally the filepath of the
 source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
 This function should almost always be used with 'matchRoute'.
@@ -181,7 +181,8 @@ __Route that appends a custom extension__
 >     compile pandocCompiler
 Note that the last part of the output file path becomes @.md.html@
 -}
-customRoute :: (Identifier -> FilePath) -> Routes
+customRoute :: (Identifier -> FilePath) -- ^ Output filepath construction function
+            -> Routes                   -- ^ Resulting route
 customRoute f = Routes $ const $ \id' -> return (Just (f id'), False)
 
 
@@ -203,7 +204,7 @@ constRoute = customRoute . const
 
 
 --------------------------------------------------------------------------------
-{- | Create a route that searches for substrings (in the underlying identifier) that
+{- | Create a "substituting" route that searches for substrings (in the underlying identifier) that
 match the given pattern and transforms them according to the given replacement function.
 The identifier here is that of the underlying item being processed and is interpreted as an output filepath.
 It's normally the filepath of the source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
@@ -239,8 +240,36 @@ gsubRoute pattern replacement = customRoute $
 
 
 --------------------------------------------------------------------------------
--- | Get access to the metadata in order to determine the route
-metadataRoute :: (Metadata -> Routes) -> Routes
+{- | Wrapper function around other route construction functions to get
+access to the metadata (of the underlying item being processed) and use that for the
+output filepath construction.
+
+=== __Examples__
+__Route that uses a custom slug markdown metadata field__
+
+If we want more control over the url/filepath for search engine optimization (SEO), 
+we can introduce a "slug" (a common name for a unique part of an URL that is well readable by search engines and humans)
+metadata field to our (markdown) files like in the following example: 'posts\/hakyll.md'
+
+> ---
+> title: Hakyll Post
+> slug: awesome-post
+> ...
+> ---
+> In this blog post we learn about Hakyll ...
+
+Then we can construct a route whose output filepath is based on that metadata field:
+
+> match "posts/*" $ do
+>     route $ metadataRoute $ \meta ->         -- compilation result is written to '<output-folder>/awesome-post.html'
+>         constRoute $ fromJust (lookupString "slug" meta) <> ".html"
+>     compile pandocCompiler
+Note how we wrap 'metadataRoute' around the 'constRoute' function and how the slug is looked up from the 
+markdown field to construct the output filepath.
+You can use helper functions like 'Hakyll.Core.Metadata.lookupString' to access a specific metadata field.
+-}
+metadataRoute :: (Metadata -> Routes) -- ^ Wrapped route construction function
+              -> Routes               -- ^ Resulting route
 metadataRoute f = Routes $ \r i -> do
     metadata <- resourceMetadata (routesProvider r) (routesUnderlying r)
     unRoutes (f metadata) r i
