@@ -188,13 +188,12 @@ customRoute f = Routes $ const $ \id' -> return (Just (f id'), False)
 --------------------------------------------------------------------------------
 {- | Create a route that writes the compiled item to the given output filepath
 (ignoring any identifier or other data about the item being processed).
-Warning: you should __use a specific output path only for a single file in a single compilation rule__. 
+Warning: you should __use a specific output path only for a single file in a single compilation rule__.
 Otherwise it's unclear which of the contents should be written to that route.
 
 === __Examples__
 __Route to a specific filepath__
 
-> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
 > create ["main"] $ do                -- implicitly gets identifier: 'main' (ignored on next line)
 >     route $ constRoute "index.html" -- compilation result is written to '<output-folder>/index.html'
 >     compile pandocCompiler
@@ -204,17 +203,32 @@ constRoute = customRoute . const
 
 
 --------------------------------------------------------------------------------
--- | Create a gsub route
---
--- Example:
---
--- > runRoutes (gsubRoute "rss/" (const "")) "tags/rss/bar.xml"
---
--- Result:
---
--- > Just "tags/bar.xml"
-gsubRoute :: String              -- ^ Pattern
-          -> (String -> String)  -- ^ Replacement
+{- | Create a route that searches for substrings (in the underlying identifier) that
+match the given pattern and transforms them according to the given replacement function.
+The identifier here is that of the underlying item being processed and is interpreted as an output filepath.
+It's normally the filepath of the source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
+
+Hint: The name "gsub" comes from a similar function in [R](https://www.r-project.org) and
+can be read as "globally substituting" (globally in the Unix sense of repeated, not just once).
+
+=== __Examples__
+__Route that replaces part of the filepath__
+
+> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
+> match "posts/*" $ do            -- 'hakyll.md' source file implicitly gets filepath as identifier: 'posts/hakyll.md'
+>     route $ gsubRoute "posts/" (const "haskell/") -- result is written to '<output-folder>/haskell/hakyll.md'
+>     compile getResourceBody
+Note that "posts\/" is replaced with "haskell\/" in the output filepath.
+
+__Route that removes part of the filepath__
+
+> create ["tags/rss/bar.xml"] $ do    -- implicitly gets identifier: 'tags/rss/bar.xml'
+>     route $ gsubRoute "rss/" (const "") -- result is written to '<output-folder>/tags/bar.xml'
+>     compile ...
+Note that "rss\/" is removed from the output filepath.
+-}
+gsubRoute :: String              -- ^ Pattern to repeatedly match against in the underlying identifier
+          -> (String -> String)  -- ^ Replacement function to apply to the matched substrings
           -> Routes              -- ^ Resulting route
 gsubRoute pattern replacement = customRoute $
     normalise . replaceAll pattern (replacement . removeWinPathSeparator) . removeWinPathSeparator . toFilePath
