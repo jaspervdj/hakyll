@@ -188,7 +188,8 @@ customRoute f = Routes $ const $ \id' -> return (Just (f id'), False)
 --------------------------------------------------------------------------------
 {- | Create a route that writes the compiled item to the given output filepath
 (ignoring any identifier or other data about the item being processed).
-Obviously, you should use a specific output path only for a single file in a single compilation rule.
+Warning: you should __use a specific output path only for a single file in a single compilation rule__. 
+Otherwise it's unclear which of the contents should be written to that route.
 
 === __Examples__
 __Route to a specific filepath__
