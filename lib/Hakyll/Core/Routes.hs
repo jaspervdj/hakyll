@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 {- | 'Routes' is part of the 'Hakyll.Core.Rules.Rules' processing pipeline.
-It determines if and where a compiled 'Hakyll.Core.Item.Item' is written out to
+It determines if and where the compilation result of the underlying 'Hakyll.Core.Item.Item'
+being processed is written out to
 (relative to the output folder as configured in 'Hakyll.Core.Configuration.destinationDirectory').
 
 * __If there is no route for an item, the compiled item won't be written out to a file__
@@ -10,17 +11,20 @@ and so won't appear in the output site directory.
 
 __Examples__
 
-Suppose we have a markdown item @foo\/bar.md@. We can route/output this to
-@foo\/bar.html@ using:
+Suppose we have a markdown file @posts\/hakyll.md@. We can route/output its compilation result to
+@posts\/hakyll.html@ using 'setExtension':
 
-> route "foo/bar.md" (setExtension ".html")
+> -- file on disk: '<project-folder>/posts/hakyll.md'
+> match "posts/*" $ do
+>     route (setExtension "html") -- compilation result is written to '<output-folder>/posts/hakyll.html'
+>     compile pandocCompiler
+Hint: You can configure the output folder with 'Hakyll.Core.Configuration.providerDirectory'.
 
-If we do not want to change the extension, we can use 'idRoute', the simplest
-route available:
+If we do not want to change the extension, we can replace 'setExtension' with 'idRoute' (the simplest route available):
 
-> route "foo/bar.md" idRoute
+>     route idRoute -- compilation result is written to '<output-folder>/posts/hakyll.md'
 
-That will route @foo\/bar.md@ to @foo\/bar.md@.
+That will route the file @posts\/hakyll.md@ from the project folder to @posts\/hakyll.md@ in the output folder.
 
 Note: __The (output) extension says nothing about the content!__
 If you set the extension to @.html@, you have to ensure that the compilation result
@@ -163,7 +167,7 @@ matchRoute pattern (Routes route) = Routes $ \p id' ->
 
 --------------------------------------------------------------------------------
 {- | Create a route where you completely define the output filepath
-(when the filepath only needs to depend on the identifier). 
+(when the filepath construction only depends on the identifier of the item being processed).
 This identifier is normally the filepath of the
 source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
 This function should almost always be used with 'matchRoute'.
@@ -175,7 +179,7 @@ __Route that appends a custom extension__
 > match "posts/*" $ do            -- 'hakyll.md' source file implicitly gets filepath as identifier: 'posts/hakyll.md'
 >     route $ customRoute ((<> ".html") . toFilePath) -- result is written to '<output-folder>/posts/hakyll.md.html'
 >     compile pandocCompiler
-Note that the last part of the output file path is @.md.html@
+Note that the last part of the output file path becomes @.md.html@
 -}
 customRoute :: (Identifier -> FilePath) -> Routes
 customRoute f = Routes $ const $ \id' -> return (Just (f id'), False)
@@ -190,7 +194,7 @@ Obviously, you should use a specific output path only for a single file in a sin
 __Route to a specific filepath__
 
 > -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
-> create ["main"] $ do                -- implicitly gets identifier: 'main' (ignored)
+> create ["main"] $ do                -- implicitly gets identifier: 'main' (ignored on next line)
 >     route $ constRoute "index.html" -- compilation result is written to '<output-folder>/index.html'
 >     compile pandocCompiler
 -}
