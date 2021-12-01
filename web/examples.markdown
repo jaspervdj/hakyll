@@ -198,6 +198,8 @@ directly with the default Hakyll site.
   [source](https://github.com/jecaro/jeancharles.quillet)
 - <https://nliu.net/>,
   [source](https://github.com/dreamsmasher/site-haskell-source)
+- <https://dukzcry.github.io/>,
+  [source](https://github.com/dukzcry/dukzcry.github.io)
 
 ## Hakyll 3.X
 
