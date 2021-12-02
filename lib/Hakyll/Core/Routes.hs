@@ -248,7 +248,7 @@ Warning: you have to__ensure that the accessed metadata fields actually exists__
 === __Examples__
 __Route that uses a custom slug markdown metadata field__
 
-If we want more control over the url/filepath for search engine optimization (SEO), 
+If we want more control over the url/filepath for search engine optimization (SEO),
 we can introduce a "slug" (a common name for a unique part of an URL that is well readable by search engines and humans)
 metadata field to our (markdown) files like in the following example: 'posts\/hakyll.md'
 
@@ -265,7 +265,7 @@ Then we can construct a route whose output filepath is based on that metadata fi
 >     route $ metadataRoute $ \meta ->         -- compilation result is written to '<output-folder>/awesome-post.html'
 >         constRoute $ fromJust (lookupString "slug" meta) <> ".html"
 >     compile pandocCompiler
-Note how we wrap 'metadataRoute' around the 'constRoute' function and how the slug is looked up from the 
+Note how we wrap 'metadataRoute' around the 'constRoute' function and how the slug is looked up from the
 markdown field to construct the output filepath.
 You can use helper functions like 'Hakyll.Core.Metadata.lookupString' to access a specific metadata field.
 -}
@@ -277,19 +277,25 @@ metadataRoute f = Routes $ \r i -> do
 
 
 --------------------------------------------------------------------------------
--- | Compose routes so that @f \`composeRoutes\` g@ is more or less equivalent
--- with @g . f@.
---
--- Example:
---
--- > let routes = gsubRoute "rss/" (const "") `composeRoutes` setExtension "xml"
--- > in runRoutes routes "tags/rss/bar"
---
--- Result:
---
--- > Just "tags/bar.xml"
---
--- If the first route given fails, Hakyll will not apply the second route.
+{- | Compose two routes where __the first route is applied before the second__.
+So @f \`composeRoutes\` g@ is more or less equivalent with @g . f@.
+
+Warning: If the first route fails (e.g. when using 'matchRoute'), Hakyll will not apply the second route 
+(if you need Hakyll to try the second route, use '<>' on 'Routes' instead).
+
+=== __Examples__
+__Route that applies to two transformations__
+
+> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
+> match "posts/*" $ do            -- 'hakyll.md' source file implicitly gets filepath as identifier: 'posts/hakyll.md'
+>     route $ gsubRoute "posts/" (const "") `composeRoutes` setExtension "html" 
+>     -- compilation result is written to '<output-folder>/hakyll.html'
+>     compile pandocCompiler
+The identifier here is that of the underlying item being processed and is interpreted as an output filepath.
+See 'Hakyll.Core.Identifier.Identifier' for details.
+Note how we first remove the "posts\/" substring from that output filepath with 'gsubRoute' 
+and then replace the extension with 'setExtension'.
+-}
 composeRoutes :: Routes  -- ^ First route to apply
               -> Routes  -- ^ Second route to apply
               -> Routes  -- ^ Resulting route
