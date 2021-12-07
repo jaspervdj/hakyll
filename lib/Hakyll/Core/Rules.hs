@@ -2,18 +2,22 @@
 {- | This module provides a declarative Domain Specific Language (DSL) to generate a static site
 by specifying transformation 'Rules' (although the use case is not limited to static sites).
 __Each rule is a processing pipeline__ which normally consists of three parts:
+
 1. Inputs (like Markdown files) to process (collected with e.g. 'match' or 'create').
 2. Transformation steps (like Markdown to HTML) to compute ("compile") for each input its output content
-(collected within 'Hakyll.Core.Compiler.Compiler').
+(collected with 'compile' and 'Hakyll.Core.Compiler.Compiler').
 3. Routing to determine to which file an output content will be written out. For a static site
 this translates to determine under which URL the output content will be accessible
-(configured within 'Hakyll.Core.Routes.Routes').
+(configured with 'route' and 'Hakyll.Core.Routes.Routes').
 
 A typical usage example looks as follows:
 
+> {-# LANGUAGE OverloadedStrings #-}    -- write 'match "posts/**.md"' instead of 'match $ fromGlob "posts/**.md"'
+> ...
+> 
 > main = hakyll $ do
 >     -- Rule 1
->     match "posts/*.md" $ do           -- Inputs: all Markdown files like 'hakyll.md' in the 'posts' folder
+>     match "posts/**.md" $ do          -- Inputs: all Markdown files like 'hakyll.md' in the 'posts' folder
 >         route $ setExtension "html"   -- Routing: Only replace extension, so '<output-folder>/posts/hakyll.html'.
 >         compile pandocCompiler        -- Transformation step(s): Compile Markdown inputs to HTML outputs.
 >     -- Rule 2
@@ -139,7 +143,26 @@ matchInternal pattern getIDs rules = do
     setMatches ids env = env {rulesMatches = ids}
 
 --------------------------------------------------------------------------------
-match :: Pattern -> Rules () -> Rules ()
+{- | Add a selection of which input files to process using the given
+[glob pattern](https://w.wiki/4Wsx) to the given remaining 'Rules' pipeline.
+
+=== __Examples__
+__Select all markdown files within a folder (including subfolders)__
+
+> match "posts/**.md" $ do           -- Match all Markdown files in the 'posts' folder and subfolders
+>     route $ setExtension "html"
+>     compile pandocCompiler
+
+__Match all markdown files within a folder (but without subfolders)__
+
+> match "posts/*.md" $ do           -- Select all Markdown files in the 'posts' folder
+>     route $ setExtension "html"
+>     compile pandocCompiler
+Take a look at 'Hakyll.Core.Identifier.Pattern.Pattern' or search online for "glob pattern" to get more details.
+-}
+match :: Pattern  -- ^ Glob pattern
+      -> Rules () -- ^ Remaining processing pipeline
+      -> Rules () -- ^ Resulting pipeline
 match pattern = matchInternal pattern $ getMatches pattern
 
 
