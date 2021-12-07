@@ -159,6 +159,7 @@ __Match all markdown files within a folder (but without subfolders)__
 >     route $ setExtension "html"
 >     compile pandocCompiler
 Take a look at 'Hakyll.Core.Identifier.Pattern.Pattern' or search online for "glob pattern" to get more details.
+To control where the compilation result will be written out, use routing functions like 'Hakyll.Core.Routes.setExtension'.
 -}
 match :: Pattern  -- ^ Glob pattern
       -> Rules () -- ^ Remaining processing pipeline
@@ -188,8 +189,9 @@ For example, the following 'posts/hakyll.md' file with @draft: true@ metadata wo
 > ---
 > In this blog post we learn about Hakyll ...
 Note that files that have @draft: false@ or no such draft field at all, would not match.
-You can use helper functions like 'Hakyll.Core.Metadata.lookupString' to access a specific metadata field, and 
+You can use helper functions like 'Hakyll.Core.Metadata.lookupString' to access a specific metadata field, and
 'Data.Maybe.maybe' to work with 'Data.Maybe.Maybe'.
+To control where the compilation result will be written out, use routing functions like 'Hakyll.Core.Routes.setExtension'.
 -}
 matchMetadata :: Pattern             -- ^ Glob pattern
               -> (Metadata -> Bool)  -- ^ Metadata predicate
@@ -200,7 +202,25 @@ matchMetadata pattern metadataPred = matchInternal pattern $
 
 
 --------------------------------------------------------------------------------
-create :: [Identifier] -> Rules () -> Rules ()
+{- | Assign (and thereby create) the given identifier(s) to content that has no single, 
+underlying source file on disk. That content must be created within the given 'Rules' processing pipeline argument.
+Use it for example to create an overview page that doesn't have or need its own content in a file on disk (unlike blog
+posts that normally have a corresponding Markdown source file on disk). 
+
+=== __Examples__
+__Create a webpage without an underlying source file__
+
+> create ["index.html"] $ do                            -- saved with implicit identifier 'index.html' to Store
+>     route idRoute                                     -- compilation result is written to '<output-folder>/index.html'
+>     compile $ makeItem ("<h1>Hello World</h1>" :: String) -- create content that is also the "compilation result"
+Note how you can use 'Hakyll.Core.Compiler.makeItem' to create content inline
+(to be processed as a 'Hakyll.Core.Compiler.Compiler' value) as if that content was loaded from a file (as it's the
+case when using 'match'). 
+To control where the compilation result will be written out, use routing functions like 'Hakyll.Core.Routes.idRoute'.
+-}
+create :: [Identifier] -- ^ Identifiers to assign to created content in next argument
+       -> Rules ()     -- ^ Remaining processing pipeline that must create content 
+       -> Rules ()     -- ^ Resulting pipeline
 create ids rules = do
     flush
     -- TODO Maybe check if the resources exist and call tellResources on that
