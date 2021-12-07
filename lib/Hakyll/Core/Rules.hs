@@ -14,7 +14,7 @@ A typical usage example looks as follows:
 
 > {-# LANGUAGE OverloadedStrings #-}    -- write 'match "posts/**.md"' instead of 'match $ fromGlob "posts/**.md"'
 > ...
-> 
+>
 > main = hakyll $ do
 >     -- Rule 1
 >     match "posts/**.md" $ do          -- Inputs: all Markdown files like 'hakyll.md' in the 'posts' folder
@@ -143,8 +143,8 @@ matchInternal pattern getIDs rules = do
     setMatches ids env = env {rulesMatches = ids}
 
 --------------------------------------------------------------------------------
-{- | Add a selection of which input files to process using the given
-[glob pattern](https://w.wiki/4Wsx) to the given remaining 'Rules' pipeline.
+{- | Add a selection of which input files to process (using the given
+[glob pattern](https://w.wiki/4Wsx)) to the given remaining 'Rules' pipeline.
 
 === __Examples__
 __Select all markdown files within a folder (including subfolders)__
@@ -167,7 +167,34 @@ match pattern = matchInternal pattern $ getMatches pattern
 
 
 --------------------------------------------------------------------------------
-matchMetadata :: Pattern -> (Metadata -> Bool) -> Rules () -> Rules ()
+{- | Add a selection of which input files to process (using the given
+[glob pattern](https://w.wiki/4Wsx) and metadata predicate) to the given remaining 'Rules' pipeline.
+Same as 'match' but allows to filter files further based on their (metadata) content
+(a file is added only when the metadata predicate returns @True@).
+
+=== __Examples__
+__Select all markdown files with enabled draft flag within a folder__
+
+> matchMetadata "posts/*.md" (\meta -> maybe False (=="true") $ lookupString "draft" meta) $ do
+>     route $ setExtension "html"
+>     compile pandocCompiler
+
+For example, the following 'posts/hakyll.md' file with @draft: true@ metadata would match:
+
+> ---
+> draft: true
+> title: Hakyll Post
+> ...
+> ---
+> In this blog post we learn about Hakyll ...
+Note that files that have @draft: false@ or no such draft field at all, would not match.
+You can use helper functions like 'Hakyll.Core.Metadata.lookupString' to access a specific metadata field, and 
+'Data.Maybe.maybe' to work with 'Data.Maybe.Maybe'.
+-}
+matchMetadata :: Pattern             -- ^ Glob pattern
+              -> (Metadata -> Bool)  -- ^ Metadata predicate
+              -> Rules ()            -- ^ Remaining processing pipeline
+              -> Rules ()            -- ^ Resulting pipeline
 matchMetadata pattern metadataPred = matchInternal pattern $
     map fst . filter (metadataPred . snd) <$> getAllMetadata pattern
 
