@@ -252,8 +252,8 @@ See 'Hakyll.Core.Identifier.Identifier' for details.
 
 Use this wrapper function for example when you need to compile the same source file into two or more different outputs,
 each with a different version name.
-The version is needed to distinguish between these different outputs in the store.
-(Otherwise they would get the same conflicting identifier in the store).
+The version is needed to distinguish between these different outputs in the store,
+otherwise they would get the same conflicting identifier in the store.
 
 __If you add a version name with this function, you need to supply the same name__ when you
 'Hakyll.Core.Compiler.load' the content from the store from within another rule.
@@ -292,18 +292,92 @@ version v rules = do
 
 
 --------------------------------------------------------------------------------
--- | Add a compilation rule to the rules.
---
--- This instructs all resources to be compiled using the given compiler.
-compile :: (Binary a, Typeable a, Writable a) => Compiler (Item a) -> Rules ()
+{- | Set or override transformation steps in a processing pipeline rule
+with the given 'Hakyll.Core.Compiler.Compiler' value. So,
+__this functions controls how the content (within a rule) is processed__
+(use one of the 'match' functions to control what content is processed).
+
+The compilation result is saved to the 'Hakyll.Core.Store.Store' under an implicit identifier.
+See 'Hakyll.Core.Identifier.Identifier' for details.
+
+If there's a route attached to the rule where this function is used, the compilation result is also written out
+to a file according to that route.
+See 'route' and 'Hakyll.Core.Routes.Routes' for details.
+
+=== __Examples__
+__Compile plain Markdown to HTML__
+
+> match "posts/**.md" $ do         -- Select all Markdown files in 'posts' folder
+>     route $ setExtension "html"
+>     compile pandocCompiler       -- use pandoc to transform Markdown to HTML in a single step
+Note how we set the content to be processed with 'Hakyll.Web.Pandoc.pandocCompiler'. The content 
+comes implicitly from the matched Markdown files on disk. 
+We don't have to pass that content around manually.
+Every file is processed the same way within this one rule.
+
+To control where the compilation result will be written out, use routing functions like 'Hakyll.Core.Routes.setExtension'.
+Here the compilation result of a file like @posts\/hakyll.md@ is written out to @posts\/hakyll.html@.
+
+__Compile Markdown to HTML within a template__
+
+> match "posts/**.md" $ do           -- Select all Markdown files in 'posts' folder
+>     route $ setExtension "html"
+>     compile $
+>         pandocCompiler >>= loadAndApplyTemplate "templates/post.html" defaultContext
+Note how a Markdown post that is compiled to HTML using 'Hakyll.Web.Pandoc.pandocCompiler' can be embedded
+into a wider HTMl frame called 'Hakyll.Web.Template.Template' (e.g. to control the overall design and layout of the
+page or part of it) in a second step by using 'Hakyll.Web.Template.loadAndApplyTemplate'.
+A template may look as follows:
+
+> <h1>$title$</h1>
+> $body$
+See "Hakyll.Web.Template" to see examples of the templating syntax.
+-}
+compile :: (Binary a, Typeable a, Writable a) => Compiler (Item a) -- ^ How to transform content
+                                              -> Rules ()          -- ^ Resulting processing pipeline
 compile compiler = Rules $ modify $ \s ->
     s {rulesCompiler = Just (fmap SomeItem compiler)}
 
 
 --------------------------------------------------------------------------------
--- | Add a route.
---
--- This adds a route for all items matching the current pattern.
+{- | Create a processing pipeline (rule) by supplying the transformation steps in
+form of the given 'Hakyll.Core.Compiler.Compiler'. So,
+__this functions controls how the content (of this rule) is processed__
+(use one of the 'match' functions to control what content is processed).
+
+The compilation result is saved to the 'Hakyll.Core.Store.Store' under an implicit identifier.
+See 'Hakyll.Core.Identifier.Identifier' for details.
+
+If there's a route attached to the rule where this function is used, the compilation result is also written out
+to a file according to that route.
+See 'route' and 'Hakyll.Core.Routes.Routes' for details.
+
+=== __Examples__
+__Compile plain Markdown to HTML__
+
+> match "posts/**.md" $ do         -- Select all Markdown files in 'posts' folder
+>     route $ setExtension "html"
+>     compile pandocCompiler       -- use pandoc to transform Markdown to HTML in a single step
+Note how the content to process with 'Hakyll.Web.Pandoc.pandocCompiler' comes from the Markdown files under the hood.
+You don't have to pass that content around manually.
+To control where the compilation result will be written out, use routing functions like 'Hakyll.Core.Routes.setExtension'.
+Here the compilation result of a file like @posts\/hakyll.md@ is written out to @posts\/hakyll.html@.
+
+__Compile Markdown to HTML within a template__
+
+> match "posts/**.md" $ do           -- Select all Markdown files in 'posts' folder
+>     route $ setExtension "html"
+>     compile $
+>         pandocCompiler >>= loadAndApplyTemplate "templates/post.html" defaultContext
+Note how a Markdown post that is compiled to HTML using 'Hakyll.Web.Pandoc.pandocCompiler' can be embedded
+into a wider HTMl frame called 'Hakyll.Web.Template.Template' (e.g. to control the overall design and layout of the
+page or part of it) in a second step by using 'Hakyll.Web.Template.loadAndApplyTemplate'.
+A template may look as follows:
+
+> <h1>$title$</h1>
+> $body$
+See "Hakyll.Web.Template" to see examples of the templating syntax.
+-}
 route :: Routes -> Rules ()
 route route' = Rules $ modify $ \s -> s {rulesRoute = Just route'}
 
