@@ -217,7 +217,7 @@ matchMetadata pattern metadataPred = matchInternal pattern $
 {- | Assign (and thereby create) the given identifier(s) to content that has no single,
 underlying source file on disk. That content must be created within the given 'Rules' processing pipeline argument.
 The given identifier is the id under which that content is saved to the 'Hakyll.Core.Store.Store'
-(in case you want to 'Hakyll.Core.Compiler.load' it within another rule). 
+(in case you want to 'Hakyll.Core.Compiler.load' it within another rule).
 See 'Hakyll.Core.Identifier.Identifier' for details.
 
 Use this function for example to create an overview page that doesn't have or need its content prepared in a file
@@ -246,7 +246,44 @@ create ids rules = do
 
 
 --------------------------------------------------------------------------------
-version :: String -> Rules () -> Rules ()
+{- | Add the given version name to the implicit identifier(s)
+under which the compilation result of the given 'Rules' processing pipeline is saved to the 'Hakyll.Core.Store.Store'.
+See 'Hakyll.Core.Identifier.Identifier' for details.
+
+Use this wrapper function for example when you need to compile the same source file into two or more different outputs,
+each with a different version name.
+The version is needed to distinguish between these different outputs in the store.
+(Otherwise they would get the same conflicting identifier in the store).
+
+__If you add a version name with this function, you need to supply the same name__ when you
+'Hakyll.Core.Compiler.load' the content from the store from within another rule.
+
+=== __Examples__
+__Compile source file into differently versioned outputs and load both__
+
+> -- e.g. file on disk: 'posts/hakyll.md'
+> match "posts/*" $ do                              -- saved with implicit identifier ('posts/hakyll.md', no-version)
+>     route $ setExtension "html"
+>     compile pandocCompiler
+>
+> match "posts/*" $ version "raw" $ do              -- saved with implicit identifier ('posts/hakyll.md', version 'raw')
+>     route idRoute
+>     compile getResourceBody
+>
+> create ["index.html"] $ do
+>     route idRoute
+>     compile $ do
+>         compiledPost <- load (fromFilePath "posts/hakyll.md")                      -- load no-version version
+>         rawPost <- load . setVersion (Just "raw") $ fromFilePath "posts/hakyll.md" -- load version 'raw'
+>    ...
+Note how a version name is needed to distinguish the normal and the "raw" version when loading the Hakyll post
+for the @index.html@ page.
+To control where the compilation result will be written out, use routing functions like 'Hakyll.Core.Routes.idRoute'.
+and 'Hakyll.Core.Routes.setExtension'.
+-}
+version :: String   -- ^ Version name to add
+        -> Rules () -- ^ Remaining processing pipeline
+        -> Rules () -- ^ Resulting pipeline
 version v rules = do
     flush
     Rules $ local setVersion' $ unRules $ rules >> flush
