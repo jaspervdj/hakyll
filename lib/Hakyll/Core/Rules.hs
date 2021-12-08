@@ -146,6 +146,12 @@ matchInternal pattern getIDs rules = do
 {- | Add a selection of which input files to process (using the given
 [glob pattern](https://w.wiki/4Wsx)) to the given remaining 'Rules' pipeline.
 
+The expanded, relative path of the matched source file on disk
+(relative to the project directory configured with 'Hakyll.Core.Configuration.providerDirectory') becomes
+the identifier under which the compilation result is saved to the 'Hakyll.Core.Store.Store'
+(in case you want to 'Hakyll.Core.Compiler.load' it within another rule).
+See 'Hakyll.Core.Identifier.Identifier' for details.
+
 === __Examples__
 __Select all markdown files within a folder (including subfolders)__
 
@@ -158,7 +164,7 @@ __Match all markdown files within a folder (but without subfolders)__
 > match "posts/*.md" $ do           -- Select all Markdown files in the 'posts' folder
 >     route $ setExtension "html"
 >     compile pandocCompiler
-Take a look at 'Hakyll.Core.Identifier.Pattern.Pattern' or search online for "glob pattern" to get more details.
+See 'Hakyll.Core.Identifier.Pattern.Pattern' or search online for "glob pattern" to get more details.
 To control where the compilation result will be written out, use routing functions like 'Hakyll.Core.Routes.setExtension'.
 -}
 match :: Pattern  -- ^ Glob pattern
@@ -172,6 +178,12 @@ match pattern = matchInternal pattern $ getMatches pattern
 [glob pattern](https://w.wiki/4Wsx) and metadata predicate) to the given remaining 'Rules' pipeline.
 Same as 'match' but allows to filter files further based on their (metadata) content
 (a file is added only when the metadata predicate returns @True@).
+
+The expanded, relative path of the matched source file on disk
+(relative to the project directory configured with 'Hakyll.Core.Configuration.providerDirectory') becomes
+the identifier under which the compilation result is saved to the 'Hakyll.Core.Store.Store'
+(in case you want to 'Hakyll.Core.Compiler.load' it within another rule).
+See 'Hakyll.Core.Identifier.Identifier' for details.
 
 === __Examples__
 __Select all markdown files with enabled draft flag within a folder__
@@ -202,10 +214,14 @@ matchMetadata pattern metadataPred = matchInternal pattern $
 
 
 --------------------------------------------------------------------------------
-{- | Assign (and thereby create) the given identifier(s) to content that has no single, 
+{- | Assign (and thereby create) the given identifier(s) to content that has no single,
 underlying source file on disk. That content must be created within the given 'Rules' processing pipeline argument.
-Use it for example to create an overview page that doesn't have or need its own content in a file on disk (unlike blog
-posts that normally have a corresponding Markdown source file on disk). 
+The given identifier is the id under which that content is saved to the 'Hakyll.Core.Store.Store'
+(in case you want to 'Hakyll.Core.Compiler.load' it within another rule). 
+See 'Hakyll.Core.Identifier.Identifier' for details.
+
+Use this function for example to create an overview page that doesn't have or need its content prepared in a file
+(unlike blog posts which normally have a corresponding Markdown source file on disk).
 
 === __Examples__
 __Create a webpage without an underlying source file__
@@ -215,11 +231,11 @@ __Create a webpage without an underlying source file__
 >     compile $ makeItem ("<h1>Hello World</h1>" :: String) -- create content that is also the "compilation result"
 Note how you can use 'Hakyll.Core.Compiler.makeItem' to create content inline
 (to be processed as a 'Hakyll.Core.Compiler.Compiler' value) as if that content was loaded from a file (as it's the
-case when using 'match'). 
+case when using 'match').
 To control where the compilation result will be written out, use routing functions like 'Hakyll.Core.Routes.idRoute'.
 -}
 create :: [Identifier] -- ^ Identifiers to assign to created content in next argument
-       -> Rules ()     -- ^ Remaining processing pipeline that must create content 
+       -> Rules ()     -- ^ Remaining processing pipeline that must create content
        -> Rules ()     -- ^ Resulting pipeline
 create ids rules = do
     flush
