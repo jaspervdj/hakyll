@@ -142,8 +142,8 @@ matchInternal pattern getIDs rules = do
     setMatches ids env = env {rulesMatches = ids}
 
 --------------------------------------------------------------------------------
-{- | Add a selection of which input files to process (using the given
-[glob pattern](https://w.wiki/4Wsx)) to the given remaining 'Rules' pipeline.
+{- | Add a selection of which input files to process (using the 
+given [glob pattern](https://en.wikipedia.org/wiki/Glob_(programming\))) to the given remaining 'Rules' pipeline.
 
 The expanded, relative path of the matched source file on disk
 (relative to the project directory configured with 'Hakyll.Core.Configuration.providerDirectory') becomes
@@ -173,8 +173,8 @@ match pattern = matchInternal pattern $ getMatches pattern
 
 
 --------------------------------------------------------------------------------
-{- | Add a selection of which input files to process (using the given
-[glob pattern](https://w.wiki/4Wsx) and metadata predicate) to the given remaining 'Rules' pipeline.
+{- | Add a selection of which input files to process (using the 
+given [glob pattern](https://en.wikipedia.org/wiki/Glob_(programming\)) and metadata predicate) to the given remaining 'Rules' pipeline.
 Same as 'match' but allows to filter files further based on their (metadata) content
 (a file is added only when the metadata predicate returns @True@).
 
