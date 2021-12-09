@@ -214,7 +214,7 @@ matchMetadata pattern metadataPred = matchInternal pattern $
 
 --------------------------------------------------------------------------------
 {- | Assign (and thereby create) the given identifier(s) to content that has no single,
-underlying source file on disk. That content must be created within the given 'Rules' processing pipeline argument.
+underlying source file on disk. That content must be created within the given remaining 'Rules' pipeline.
 The given identifier is the id under which that content is saved to the 'Hakyll.Core.Store.Store'
 (in case you want to 'Hakyll.Core.Compiler.load' it within another rule).
 See 'Hakyll.Core.Identifier.Identifier' for details.
@@ -246,7 +246,7 @@ create ids rules = do
 
 --------------------------------------------------------------------------------
 {- | Add the given version name to the implicit identifier(s)
-under which the compilation result of the given 'Rules' processing pipeline is saved to the 'Hakyll.Core.Store.Store'.
+under which the compilation result of the given remaining 'Rules' pipeline is saved to the 'Hakyll.Core.Store.Store'.
 See 'Hakyll.Core.Identifier.Identifier' for details.
 
 Use this wrapper function for example when you need to compile the same source file into two or more different outputs,
@@ -291,7 +291,7 @@ version v rules = do
 
 
 --------------------------------------------------------------------------------
-{- | Set (or replace) the transformation steps in a processing pipeline rule
+{- | Set (or replace) the transformation steps in a 'Rules' processing pipeline.
 with the given 'Hakyll.Core.Compiler.Compiler' value. So,
 __this functions controls how the content (within a rule) is processed__
 (use one of the 'match' functions to control what content is processed).
@@ -339,7 +339,7 @@ compile compiler = Rules $ modify $ \s ->
 
 
 --------------------------------------------------------------------------------
-{- | Set (or replace) routing in a processing pipeline rule
+{- | Set (or replace) routing in a 'Rules' processing pipeline
 with the given 'Hakyll.Core.Routes.Routes' value. So,
 __this functions controls if and where the compiled results (output content) are written out__
 (use one of the 'match' functions to control what content is processed and 'compile' to control how).
