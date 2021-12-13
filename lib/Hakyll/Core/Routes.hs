@@ -243,7 +243,7 @@ gsubRoute pattern replacement = customRoute $
 {- | Wrapper function around other route construction functions to get
 access to the metadata (of the underlying item being processed) and use that for the
 output filepath construction.
-Warning: you have to__ensure that the accessed metadata fields actually exists__.
+Warning: you have to __ensure that the accessed metadata fields actually exists__.
 
 === __Examples__
 __Route that uses a custom slug markdown metadata field__
