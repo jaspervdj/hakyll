@@ -248,9 +248,9 @@ Warning: you have to __ensure that the accessed metadata fields actually exists_
 === __Examples__
 __Route that uses a custom slug markdown metadata field__
 
-If we want more control over the url/filepath for search engine optimization (SEO),
-we can introduce a "slug" (a common name for a unique part of an URL that is well readable by search engines and humans)
-metadata field to our (markdown) files like in the following example: 'posts\/hakyll.md'
+To create a search engine optimized yet human-readable url, we can
+introduce a [slug](https://en.wikipedia.org/wiki/Clean_URL#Slug) metadata field to
+our files, e.g. like in the following Markdown file: 'posts\/hakyll.md'
 
 > ---
 > title: Hakyll Post
@@ -259,7 +259,7 @@ metadata field to our (markdown) files like in the following example: 'posts\/ha
 > ---
 > In this blog post we learn about Hakyll ...
 
-Then we can construct a route whose output filepath is based on that metadata field:
+Then we can construct a route whose output filepath is based on that field:
 
 > match "posts/*" $ do
 >     route $ metadataRoute $ \meta ->         -- compilation result is written to '<output-folder>/awesome-post.html'
