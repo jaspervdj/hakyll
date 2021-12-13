@@ -18,7 +18,7 @@ Suppose we have a markdown file @posts\/hakyll.md@. We can route/output its comp
 > match "posts/*" $ do
 >     route (setExtension "html") -- compilation result is written to '<output-folder>/posts/hakyll.html'
 >     compile pandocCompiler
-Hint: You can configure the output folder with 'Hakyll.Core.Configuration.providerDirectory'.
+Hint: You can configure the output folder with 'Hakyll.Core.Configuration.destinationDirectory'.
 
 If we do not want to change the extension, we can replace 'setExtension' with 'idRoute' (the simplest route available):
 
