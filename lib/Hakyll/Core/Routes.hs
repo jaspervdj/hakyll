@@ -284,7 +284,7 @@ Warning: If the first route fails (e.g. when using 'matchRoute'), Hakyll will no
 (if you need Hakyll to try the second route, use '<>' on 'Routes' instead).
 
 === __Examples__
-__Route that applies to two transformations__
+__Route that applies two transformations__
 
 > -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
 > match "posts/*" $ do            -- 'hakyll.md' source file implicitly gets filepath as identifier: 'posts/hakyll.md'
