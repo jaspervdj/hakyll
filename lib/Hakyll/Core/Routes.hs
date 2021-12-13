@@ -197,7 +197,7 @@ __Route to a specific filepath__
 
 > create ["main"] $ do                -- implicitly gets identifier: 'main' (ignored on next line)
 >     route $ constRoute "index.html" -- compilation result is written to '<output-folder>/index.html'
->     compile pandocCompiler
+>     compile $ makeItem ("<h1>Hello World</h1>" :: String)
 -}
 constRoute :: FilePath -> Routes
 constRoute = customRoute . const
