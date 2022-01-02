@@ -1,41 +1,41 @@
 --------------------------------------------------------------------------------
 {- | 'Routes' is part of the 'Hakyll.Core.Rules.Rules' processing pipeline.
-It determines if and where the compilation result of the underlying 
-'Hakyll.Core.Item.Item' being processed is written out to 
-(relative to the destination folder as configured in 
+It determines if and where the compilation result of the underlying
+'Hakyll.Core.Item.Item' being processed is written out to
+(relative to the destination directory as configured in
 'Hakyll.Core.Configuration.destinationDirectory').
 
-* __If there is no route for an item, the compiled item won't be written 
-out to a file__ and so won't appear in the destination site directory.
+* __If there is no route for an item, the compiled item won't be written
+out to a file__ and so won't appear in the destination (site) directory.
 
 * If an item matches multiple routes, the first route will be chosen.
 
 __Examples__
 
-Suppose we have a markdown file @posts\/hakyll.md@. We can route its 
+Suppose we have a markdown file @posts\/hakyll.md@. We can route its
 compilation result to @posts\/hakyll.html@ using 'setExtension':
 
-> -- file on disk: '<project-folder>/posts/hakyll.md'
+> -- file on disk: '<project-directory>/posts/hakyll.md'
 > match "posts/*" $ do
->     -- compilation result is written to '<output-folder>/posts/hakyll.html'
->     route (setExtension "html") 
+>     -- compilation result is written to '<destination-directory>/posts/hakyll.html'
+>     route (setExtension "html")
 >     compile pandocCompiler
-Hint: You can configure the output folder with 
+Hint: You can configure the destination directory with
 'Hakyll.Core.Configuration.destinationDirectory'.
 
-If we do not want to change the extension, we can replace 'setExtension' with 
+If we do not want to change the extension, we can replace 'setExtension' with
 'idRoute' (the simplest route available):
 
->     -- compilation result is written to '<output-folder>/posts/hakyll.md'
->     route idRoute 
+>     -- compilation result is written to '<destination-directory>/posts/hakyll.md'
+>     route idRoute
 
-That will route the file @posts\/hakyll.md@ from the project folder to 
-@posts\/hakyll.md@ in the output folder.
+That will route the file @posts\/hakyll.md@ from the project directory to
+@posts\/hakyll.md@ in the destination directory.
 
-Note: __The (output) extension says nothing about the content!__
-If you set the extension to @.html@, you have to ensure that the compilation 
-result is indeed HTML (for example with the 'Hakyll.Web.Pandoc.pandocCompiler'
-to transform markdown to HTML).
+Note: __The extension of the destination filepath says nothing about the
+content!__ If you set the extension to @.html@, you have to ensure that the
+compilation result is indeed HTML (for example with the
+'Hakyll.Web.Pandoc.pandocCompiler' to transform Markdown to HTML).
 
 Take a look at the built-in routes here for detailed usage examples.
 -}
@@ -124,20 +124,20 @@ runRoutes routes provider identifier =
 
 --------------------------------------------------------------------------------
 {- | An "identity" route that interprets the identifier (of the item being
-processed) as the output filepath. This identifier is normally the filepath of
-the source file being processed.
+processed) as the destination filepath. This identifier is normally the
+filepath of the source file being processed.
 See 'Hakyll.Core.Identifier.Identifier' for details.
 
 === __Examples__
 __Route when using match__
 
-> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
+> -- e.g. file on disk: '<project-directory>/posts/hakyll.md'
 >
 > -- 'hakyll.md' source file implicitly gets filepath as identifier:
 > -- 'posts/hakyll.md'
 > match "posts/*" $ do
 >
->     -- compilation result is written to '<output-folder>/posts/hakyll.md'
+>     -- compilation result is written to '<destination-directory>/posts/hakyll.md'
 >     route idRoute
 >
 >     compile getResourceBody
@@ -148,7 +148,7 @@ idRoute = customRoute toFilePath
 
 --------------------------------------------------------------------------------
 {- | Create a route like 'idRoute' that interprets the identifier (of the item
-being processed) as the output filepath but also sets (or replaces) the
+being processed) as the destination filepath but also sets (or replaces) the
 extension suffix of that path. This identifier is normally the filepath of the
 source file being processed.
 See 'Hakyll.Core.Identifier.Identifier' for details.
@@ -156,13 +156,13 @@ See 'Hakyll.Core.Identifier.Identifier' for details.
 === __Examples__
 __Route with an existing extension__
 
-> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
+> -- e.g. file on disk: '<project-directory>/posts/hakyll.md'
 >
 > -- 'hakyll.md' source file implicitly gets filepath as identifier:
 > -- 'posts/hakyll.md'
 > match "posts/*" $ do
 >
->     -- compilation result is written to '<output-folder>/posts/hakyll.html'
+>     -- compilation result is written to '<destination-directory>/posts/hakyll.html'
 >     route (setExtension "html")
 >
 >     compile pandocCompiler
@@ -172,7 +172,7 @@ __Route without an existing extension__
 > -- implicitly gets identifier: 'about'
 > create ["about"] $ do
 >
->     -- compilation result is written to '<output-folder>/about.html'
+>     -- compilation result is written to '<destination-directory>/about.html'
 >     route (setExtension "html")
 >
 >     compile $ makeItem ("Hello world" :: String)
@@ -191,7 +191,7 @@ matchRoute pattern (Routes route) = Routes $ \p id' ->
 
 
 --------------------------------------------------------------------------------
-{- | Create a route where the output filepath is built with the given
+{- | Create a route where the destination filepath is built with the given
 construction function. The provided identifier for that function is normally the
 filepath of the source file being processed.
 See 'Hakyll.Core.Identifier.Identifier' for details.
@@ -199,28 +199,28 @@ See 'Hakyll.Core.Identifier.Identifier' for details.
 === __Examples__
 __Route that appends a custom extension__
 
-> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
+> -- e.g. file on disk: '<project-directory>/posts/hakyll.md'
 >
 > -- 'hakyll.md' source file implicitly gets filepath as identifier:
 > -- 'posts/hakyll.md'
 > match "posts/*" $ do
 >
->     -- compilation result is written to '<output-folder>/posts/hakyll.md.html'
+>     -- compilation result is written to '<destination-directory>/posts/hakyll.md.html'
 >     route $ customRoute ((<> ".html") . toFilePath)
 >
 >     compile pandocCompiler
-Note that the last part of the output file path becomes @.md.html@
+Note that the last part of the destination filepath becomes @.md.html@
 -}
-customRoute :: (Identifier -> FilePath) -- ^ Output filepath construction function
+customRoute :: (Identifier -> FilePath) -- ^ Destination filepath construction function
             -> Routes                   -- ^ Resulting route
 customRoute f = Routes $ const $ \id' -> return (Just (f id'), False)
 
 
 --------------------------------------------------------------------------------
-{- | Create a route that writes the compiled item to the given output filepath
-(ignoring any identifier or other data about the item being processed).
-Warning: you should __use a specific output path only for a single file in a
-single compilation rule__. Otherwise it's unclear which of the contents should
+{- | Create a route that writes the compiled item to the given destination
+filepath (ignoring any identifier or other data about the item being processed).
+Warning: you should __use a specific destination path only for a single file in
+a single compilation rule__. Otherwise it's unclear which of the contents should
 be written to that route.
 
 === __Examples__
@@ -229,7 +229,7 @@ __Route to a specific filepath__
 > -- implicitly gets identifier: 'main' (ignored on next line)
 > create ["main"] $ do
 >
->     -- compilation result is written to '<output-folder>/index.html'
+>     -- compilation result is written to '<destination-directory>/index.html'
 >     route $ constRoute "index.html"
 >
 >     compile $ makeItem ("<h1>Hello World</h1>" :: String)
@@ -243,38 +243,39 @@ constRoute = customRoute . const
 underlying identifier) that match the given pattern and transforms them
 according to the given replacement function.
 The identifier here is that of the underlying item being processed and is
-interpreted as an output filepath. It's normally the filepath of the
+interpreted as an destination filepath. It's normally the filepath of the
 source file being processed.
 See 'Hakyll.Core.Identifier.Identifier' for details.
 
-Hint: The name "gsub" comes from a similar function in [R](https://www.r-project.org) and
-can be read as "globally substituting" (globally in the Unix sense of repeated, not just once).
+Hint: The name "gsub" comes from a similar function in 
+[R](https://www.r-project.org) and can be read as "globally substituting" 
+(globally in the Unix sense of repeated, not just once).
 
 === __Examples__
 __Route that replaces part of the filepath__
 
-> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
+> -- e.g. file on disk: '<project-directory>/posts/hakyll.md'
 >
 > -- 'hakyll.md' source file implicitly gets filepath as identifier:
 > -- 'posts/hakyll.md'
 > match "posts/*" $ do
 >
->     -- compilation result is written to '<output-folder>/haskell/hakyll.md'
+>     -- compilation result is written to '<destination-directory>/haskell/hakyll.md'
 >     route $ gsubRoute "posts/" (const "haskell/")
 >
 >     compile getResourceBody
-Note that "posts\/" is replaced with "haskell\/" in the output filepath.
+Note that "posts\/" is replaced with "haskell\/" in the destination filepath.
 
 __Route that removes part of the filepath__
 
 > -- implicitly gets identifier: 'tags/rss/bar.xml'
 > create ["tags/rss/bar.xml"] $ do
 >
->     -- compilation result is written to '<output-folder>/tags/bar.xml'
+>     -- compilation result is written to '<destination-directory>/tags/bar.xml'
 >     route $ gsubRoute "rss/" (const "")
 >
 >     compile ...
-Note that "rss\/" is removed from the output filepath.
+Note that "rss\/" is removed from the destination filepath.
 -}
 gsubRoute :: String              -- ^ Pattern to repeatedly match against in the underlying identifier
           -> (String -> String)  -- ^ Replacement function to apply to the matched substrings
@@ -290,7 +291,7 @@ gsubRoute pattern replacement = customRoute $
 --------------------------------------------------------------------------------
 {- | Wrapper function around other route construction functions to get
 access to the metadata (of the underlying item being processed) and use that for
-the output filepath construction.
+the destination filepath construction.
 Warning: you have to __ensure that the accessed metadata fields actually
 exists__.
 
@@ -308,17 +309,17 @@ files, e.g. like in the following Markdown file: 'posts\/hakyll.md'
 > ---
 > In this blog post we learn about Hakyll ...
 
-Then we can construct a route whose output filepath is based on that field:
+Then we can construct a route whose destination filepath is based on that field:
 
 > match "posts/*" $ do
 >
->     -- compilation result is written to '<output-folder>/awesome-post.html'
+>     -- compilation result is written to '<destination-directory>/awesome-post.html'
 >     route $ metadataRoute $ \meta ->
 >         constRoute $ fromJust (lookupString "slug" meta) <> ".html"
 >
 >     compile pandocCompiler
 Note how we wrap 'metadataRoute' around the 'constRoute' function and how the
-slug is looked up from the markdown field to construct the output filepath.
+slug is looked up from the markdown field to construct the destination filepath.
 You can use helper functions like 'Hakyll.Core.Metadata.lookupString' to access
 a specific metadata field.
 -}
@@ -340,21 +341,21 @@ use '<>' on 'Routes' instead).
 === __Examples__
 __Route that applies two transformations__
 
-> -- e.g. file on disk: '<project-folder>/posts/hakyll.md'
+> -- e.g. file on disk: '<project-directory>/posts/hakyll.md'
 >
 > -- 'hakyll.md' source file implicitly gets filepath as identifier:
 > -- 'posts/hakyll.md'
 > match "posts/*" $ do
 >
->     -- compilation result is written to '<output-folder>/hakyll.html'
+>     -- compilation result is written to '<destination-directory>/hakyll.html'
 >     route $ gsubRoute "posts/" (const "") `composeRoutes` setExtension "html"
 >
 >     compile pandocCompiler
 The identifier here is that of the underlying item being processed and is
-interpreted as an output filepath.
+interpreted as an destination filepath.
 See 'Hakyll.Core.Identifier.Identifier' for details.
-Note how we first remove the "posts\/" substring from that output filepath with
-'gsubRoute' and then replace the extension with 'setExtension'.
+Note how we first remove the "posts\/" substring from that destination filepath
+ with 'gsubRoute' and then replace the extension with 'setExtension'.
 -}
 composeRoutes :: Routes  -- ^ First route to apply
               -> Routes  -- ^ Second route to apply
