@@ -169,7 +169,6 @@ matchRoute pattern (Routes route) = Routes $ \p id' ->
 {- | Create a route where the output filepath is built with the given construction function.
 The provided identifier for that function is normally the filepath of the
 source file being processed. See 'Hakyll.Core.Identifier.Identifier' for details.
-This function should almost always be used with 'matchRoute'.
 
 === __Examples__
 __Route that appends a custom extension__
