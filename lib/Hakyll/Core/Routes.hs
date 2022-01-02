@@ -1,34 +1,41 @@
 --------------------------------------------------------------------------------
 {- | 'Routes' is part of the 'Hakyll.Core.Rules.Rules' processing pipeline.
-It determines if and where the compilation result of the underlying 'Hakyll.Core.Item.Item'
-being processed is written out to
-(relative to the output folder as configured in 'Hakyll.Core.Configuration.destinationDirectory').
+It determines if and where the compilation result of the underlying 
+'Hakyll.Core.Item.Item' being processed is written out to 
+(relative to the destination folder as configured in 
+'Hakyll.Core.Configuration.destinationDirectory').
 
-* __If there is no route for an item, the compiled item won't be written out to a file__
-and so won't appear in the output site directory.
+* __If there is no route for an item, the compiled item won't be written 
+out to a file__ and so won't appear in the destination site directory.
 
 * If an item matches multiple routes, the first route will be chosen.
 
 __Examples__
 
-Suppose we have a markdown file @posts\/hakyll.md@. We can route/output its compilation result to
-@posts\/hakyll.html@ using 'setExtension':
+Suppose we have a markdown file @posts\/hakyll.md@. We can route its 
+compilation result to @posts\/hakyll.html@ using 'setExtension':
 
 > -- file on disk: '<project-folder>/posts/hakyll.md'
 > match "posts/*" $ do
->     route (setExtension "html") -- compilation result is written to '<output-folder>/posts/hakyll.html'
+>     -- compilation result is written to '<output-folder>/posts/hakyll.html'
+>     route (setExtension "html") 
 >     compile pandocCompiler
-Hint: You can configure the output folder with 'Hakyll.Core.Configuration.destinationDirectory'.
+Hint: You can configure the output folder with 
+'Hakyll.Core.Configuration.destinationDirectory'.
 
-If we do not want to change the extension, we can replace 'setExtension' with 'idRoute' (the simplest route available):
+If we do not want to change the extension, we can replace 'setExtension' with 
+'idRoute' (the simplest route available):
 
->     route idRoute -- compilation result is written to '<output-folder>/posts/hakyll.md'
+>     -- compilation result is written to '<output-folder>/posts/hakyll.md'
+>     route idRoute 
 
-That will route the file @posts\/hakyll.md@ from the project folder to @posts\/hakyll.md@ in the output folder.
+That will route the file @posts\/hakyll.md@ from the project folder to 
+@posts\/hakyll.md@ in the output folder.
 
 Note: __The (output) extension says nothing about the content!__
-If you set the extension to @.html@, you have to ensure that the compilation result
-is indeed HTML (for example with the 'Hakyll.Web.Pandoc.pandocCompiler' to transform markdown to HTML).
+If you set the extension to @.html@, you have to ensure that the compilation 
+result is indeed HTML (for example with the 'Hakyll.Web.Pandoc.pandocCompiler'
+to transform markdown to HTML).
 
 Take a look at the built-in routes here for detailed usage examples.
 -}
