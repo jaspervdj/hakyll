@@ -34,7 +34,10 @@
 -- >         route idRoute
 -- >         compile compressCssCompiler
 -- >     ...
--- __The order of the rules doesn't matter.__
+-- __The order of rules doesn't matter.__ 
+-- 
+-- See official [Hakyll Rules tutorial](https://jaspervdj.be/hakyll/tutorials/03-rules-routes-compilers.html)
+-- for other examples.
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 module Hakyll.Core.Rules
@@ -151,7 +154,7 @@ matchInternal pattern getIDs rules = do
     setMatches ids env = env {rulesMatches = ids}
 
 --------------------------------------------------------------------------------
-{- | Add a selection of which source files to process (using the 
+{- | Add a selection of which source files to process (using the
 given [glob pattern](https://en.wikipedia.org/wiki/Glob_(programming\))) to the
 given remaining 'Rules' value.
 
@@ -169,7 +172,7 @@ __Select all markdown files within a directory (but without subdirectories)__
 > -- Match all Markdown files in the immediate 'posts' directory
 > -- e.g. '<project-directory>/posts/hakyll.md'
 > -- but NOT  '<project-directory>/posts/haskell/monad.md'
-> match "posts/*.md" $ do           
+> match "posts/*.md" $ do
 >     route $ setExtension "html"
 >     compile pandocCompiler
 
@@ -178,7 +181,7 @@ __Select all markdown files within a directory (including subdirectories recursi
 > -- Match all Markdown files in the 'posts' directory and any subdirectory
 > -- e.g. '<project-directory>/posts/hakyll.md'
 > -- and  '<project-directory>/posts/haskell/monad.md'
-> match "posts/**.md" $ do           
+> match "posts/**.md" $ do
 >     route $ setExtension "html"
 >     compile pandocCompiler
 See 'Hakyll.Core.Identifier.Pattern.Pattern' or search "glob patterns" online
@@ -192,16 +195,16 @@ match pattern = matchInternal pattern $ getMatches pattern
 
 
 --------------------------------------------------------------------------------
-{- | Add a selection of which source files to process (using the 
-given [glob pattern](https://en.wikipedia.org/wiki/Glob_(programming\)) and 
+{- | Add a selection of which source files to process (using the
+given [glob pattern](https://en.wikipedia.org/wiki/Glob_(programming\)) and
 metadata predicate) to the given remaining 'Rules' values. Same as 'match' but
-allows to filter files further based on their (metadata) content (a file is 
+allows to filter files further based on their (metadata) content (a file is
 added only when the metadata predicate returns @True@).
 
 The expanded, relative path of the matched source file on disk (relative to the
 project directory configured with 'Hakyll.Core.Configuration.providerDirectory')
-becomes the identifier under which the compilation result is saved to 
-the 'Hakyll.Core.Store.Store' (in case you want to 'Hakyll.Core.Compiler.load' 
+becomes the identifier under which the compilation result is saved to
+the 'Hakyll.Core.Store.Store' (in case you want to 'Hakyll.Core.Compiler.load'
 it within another rule).
 See 'Hakyll.Core.Identifier.Identifier' for details.
 
@@ -223,7 +226,7 @@ would match:
 > In this blog post we learn about Hakyll ...
 Note that files that have @draft: false@ or no such draft field at all, would
 not match. You can use helper functions like 'Hakyll.Core.Metadata.lookupString'
-to access a specific metadata field, and 'Data.Maybe.maybe' to work with 
+to access a specific metadata field, and 'Data.Maybe.maybe' to work with
 'Data.Maybe.Maybe'. To control where the compilation result will be written out,
 use routing functions like 'Hakyll.Core.Routes.setExtension'.
 -}
@@ -237,9 +240,9 @@ matchMetadata pattern metadataPred = matchInternal pattern $
 
 --------------------------------------------------------------------------------
 {- | Assign (and thereby create) the given identifier(s) to content that has no
-underlying source file on disk. That content must be created within the 
+underlying source file on disk. That content must be created within the
 'compile' part of the given remaining 'Rules' value. The given identifier is the
-id under which the compilation is saved to the 'Hakyll.Core.Store.Store' (in 
+id under which the compilation is saved to the 'Hakyll.Core.Store.Store' (in
 case you want to 'Hakyll.Core.Compiler.load' it within another rule).
 See 'Hakyll.Core.Identifier.Identifier' for details.
 
@@ -251,16 +254,16 @@ corresponding Markdown source file on disk).
 __Create a webpage without an underlying source file__
 
 > -- saved with implicit identifier 'index.html' to Store
-> create ["index.html"] $ do                            
+> create ["index.html"] $ do
 >
 >     -- compilation result is written to '<destination-directory>/index.html'
->     route idRoute                                     
+>     route idRoute
 >
 >     -- create content without a source file from disk
->     compile $ makeItem ("<h1>Hello World</h1>" :: String) 
+>     compile $ makeItem ("<h1>Hello World</h1>" :: String)
 Note how you can use 'Hakyll.Core.Compiler.makeItem' to create content inline
 (to be processed as a 'Hakyll.Core.Compiler.Compiler' value) as if that content
-was loaded from a file (as it's the case when using 'match'). 
+was loaded from a file (as it's the case when using 'match').
 To control where the compilation result will be written out, use routing
 functions like 'Hakyll.Core.Routes.idRoute'.
 -}
@@ -287,8 +290,8 @@ The version is needed to distinguish between these different compilation results
 in the store, otherwise they would get the same conflicting identifier in the
 store.
 
-Warning: 
-__If you add a version name with this function, you need to supply the same name__ 
+Warning:
+__If you add a version name with this function, you need to supply the same name__
 when you 'Hakyll.Core.Compiler.load' the content from the store from
 within another rule.
 
@@ -298,12 +301,12 @@ __Compile source file into differently versioned outputs and load both__
 > -- e.g. file on disk: 'posts/hakyll.md'
 >
 > -- saved with implicit identifier ('posts/hakyll.md', no-version)
-> match "posts/*" $ do                              
+> match "posts/*" $ do
 >     route $ setExtension "html"
 >     compile pandocCompiler
 >
 > -- saved with implicit identifier ('posts/hakyll.md', version 'raw')
-> match "posts/*" $ version "raw" $ do              
+> match "posts/*" $ version "raw" $ do
 >     route idRoute
 >     compile getResourceBody
 >
@@ -312,9 +315,9 @@ __Compile source file into differently versioned outputs and load both__
 >     route idRoute
 >     compile $ do
 >         -- load no-version version
->         compiledPost <- load (fromFilePath "posts/hakyll.md")                      
+>         compiledPost <- load (fromFilePath "posts/hakyll.md")
 >         -- load version 'raw'
->         rawPost <- load . setVersion (Just "raw") $ fromFilePath "posts/hakyll.md" 
+>         rawPost <- load . setVersion (Just "raw") $ fromFilePath "posts/hakyll.md"
 >         ...
 Note how a version name is needed to distinguish the unversioned and the "raw"
 version when loading the Hakyll post for the @index.html@ page.
@@ -332,7 +335,7 @@ version v rules = do
 
 
 --------------------------------------------------------------------------------
-{- | Add (or replace) the given compilation steps within the given 
+{- | Add (or replace) the given compilation steps within the given
 'Hakyll.Core.Compiler.Compiler' value to the current 'Rules' value.
 __This functions controls HOW the content within a rule is processed__ (use one
 of the 'match' functions to control WHAT content is processed).
@@ -349,13 +352,13 @@ See 'route' and 'Hakyll.Core.Routes.Routes' for details.
 __Compile Markdown to HTML__
 
 > -- Select all Markdown files in 'posts' directory
-> match "posts/**.md" $ do         
+> match "posts/**.md" $ do
 >
 >     route $ setExtension "html"
 >
 >     -- use pandoc to transform Markdown to HTML in a single step
->     compile pandocCompiler       
-Note how we set the content to be processed with 
+>     compile pandocCompiler
+Note how we set the content to be processed with
 'Hakyll.Web.Pandoc.pandocCompiler'. The content comes implicitly from the
 matched Markdown files on disk. We don't have to pass that content around
 manually. Every file is processed the same way within this one rule.
@@ -368,19 +371,19 @@ to @posts\/hakyll.html@.
 __Compile Markdown to HTML and embed it in a template__
 
 > -- Select all Markdown files in 'posts' directory
-> match "posts/**.md" $ do           
+> match "posts/**.md" $ do
 >     route $ setExtension "html"
 >     compile $
->         pandocCompiler >>= 
+>         pandocCompiler >>=
 >           loadAndApplyTemplate "templates/post.html" defaultContext
 >
-> -- To Hakyll templates are just plain files that have to be processed 
+> -- To Hakyll templates are just plain files that have to be processed
 > -- and placed into the store like any other file (but without routing).
 > -- e.g. file on disk: 'templates/post.html'
 > match "templates/*" $ compile templateBodyCompiler
 Note how a Markdown post that is compiled to HTML using
 'Hakyll.Web.Pandoc.pandocCompiler' in a first step and then embedded into
-a HTMl 'Hakyll.Web.Template.Template' in a second step by using 
+a HTMl 'Hakyll.Web.Template.Template' in a second step by using
 'Hakyll.Web.Template.loadAndApplyTemplate'.
 We can use templates to to control the design and layout of a webpage.
 A template may look as follows:
@@ -398,15 +401,15 @@ compile compiler = Rules $ modify $ \s ->
 --------------------------------------------------------------------------------
 {- | Add (or replace) routing in the current 'Rules' value.
 __This functions controls if and where the compiled results are written out__
-(use one of the 'match' functions to control what content is processed and 
+(use one of the 'match' functions to control what content is processed and
 'compile' to control how).
 See 'Hakyll.Core.Routes.Routes' and 'Hakyll.Core.Identifier.Identifier' for
 details on how output filepaths are computed.
 
-Hint: 
+Hint:
 __If there's no route attached to a rule, the compilation result is not written out__.
 However, the compilation result saved to the 'Hakyll.Core.Store.Store'
-and can be loaded and used within another rule. This behavior is needed, 
+and can be loaded and used within another rule. This behavior is needed,
 for example, for templates.
 
 === __Examples__
@@ -415,21 +418,21 @@ __Rules with and without routing__
 > -- e.g. file on disk: 'templates/post.html'
 >
 > -- Rule 1 (without routing)
-> match "templates/*" $ do     
+> match "templates/*" $ do
 >     -- compilation result saved to store with implicit identifier, e.g. 'templates/post.html'
->     compile templateCompiler 
+>     compile templateCompiler
 >
 > -- Rule 2 (with routing)
 > match "posts/**.md" $ do
 >     route $ setExtension "html"
 >     compile $ do
 >        -- load compiled result of other rule with explicit identifier.
->        postTemplate <- loadBody "templates/post.html" 
+>        postTemplate <- loadBody "templates/post.html"
 >        pandocCompiler >>= applyTemplate postTemplate defaultContext
 Note that we don't set a route in the first rule to avoid writing out our
 compiled templates (a webpage containing raw
 'Hakyll.Web.Template.templateCompiler' templates makes rarely sense after all).
-However, we can still 'Hakyll.Core.Compiler.load' (or 
+However, we can still 'Hakyll.Core.Compiler.load' (or
 'Hakyll.Core.Compiler.loadBody') the compiled templates to apply them in a
 second rule.
 The content for 'Hakyll.Web.Template.templateCompiler' comes implicitly from the
