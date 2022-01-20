@@ -4,6 +4,16 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.15.1.1 (2022-01-20)
+
+- Extend the documentation for `Hakyll.Core.Identifier` (contribution by
+    malteneuss)
+- Fix yet another regression caused by new dependency checking code
+    (contribution by Laurent P. René de Cotret)
+- Bump `pandoc` upper bound to allow 2.17 (contribution by Alexander Batischev)
+- Website now points to Hackage rather than its own (often outdated) version of
+    the docs (contribution by Jasper Van der Jeugt)
+
 ## Hakyll 4.15.1.0 (2021-10-25)
 
 - Add `Hakyll.Web.Pandoc.Biblio` functions `readPandocBiblios` and
@@ -19,7 +29,6 @@ title: Releases
     Batischev)
 - Bump `pandoc` upper bound to allow 2.15 (contribution by Alexander Batischev)
 - Bump `aeson` bounds to allow 2.0 (contribution by Alexander Batischev)
-
 
 ## Hakyll 4.15.0.1 (2021-10-02)
 
