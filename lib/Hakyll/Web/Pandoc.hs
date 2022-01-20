@@ -190,4 +190,10 @@ defaultHakyllWriterOptions = def
     , -- We want to have hightlighting by default, to be compatible with earlier
       -- Hakyll releases
       writerHighlightStyle = Just pygments
+    , -- Do not word-wrap produced HTML, and do not undo any word-wrapping
+      -- that's already present in the markup. This is how Pandoc operated
+      -- prior to 2.17, but the behaviour was changed for consistency with
+      -- other Pandoc writers. We retain the old behaviour because it spares us
+      -- the trouble of updating our golden tests.
+      writerWrapText = WrapPreserve
     }
