@@ -194,7 +194,7 @@ Library
     lrucache             >= 1.1.1    && < 1.3,
     mtl                  >= 1        && < 2.3,
     network-uri          >= 2.6      && < 2.7,
-    optparse-applicative >= 0.12     && < 0.17,
+    optparse-applicative >= 0.12     && < 0.18,
     parsec               >= 3.0      && < 3.2,
     process              >= 1.6      && < 1.7,
     random               >= 1.0      && < 1.3,
