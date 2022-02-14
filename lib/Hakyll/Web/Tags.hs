@@ -283,7 +283,7 @@ renderTagList :: Tags -> Compiler (String)
 renderTagList = renderTags makeLink (intercalate ", ")
   where
     makeLink tag url count _ _ = renderHtml $
-        H.a ! A.href (toValue url) $ toHtml (tag ++ " (" ++ show count ++ ")")
+        H.a ! A.href (toValue url) ! A.rel "tag" $ toHtml (tag ++ " (" ++ show count ++ ")")
 
 
 --------------------------------------------------------------------------------
@@ -335,6 +335,7 @@ simpleRenderLink _   Nothing         = Nothing
 simpleRenderLink tag (Just filePath) = Just $
     H.a ! A.title (H.stringValue ("All pages tagged '"++tag++"'."))
         ! A.href (toValue $ toUrl filePath)
+        ! (A.rel "tag")
         $ toHtml tag
 
 
