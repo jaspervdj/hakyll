@@ -1,4 +1,4 @@
-resolver: lts-17.5
+resolver: lts-18.16
 save-hackage-creds: false
 system-ghc: true
 skip-ghc-check: true
@@ -15,8 +15,9 @@ packages:
   - '.'
 
 nix:
-  enable: false
   packages:
+    - openssh  # for deployment
+    - rsync    # for deployment
     - zlib
 
 build:
