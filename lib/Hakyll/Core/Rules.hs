@@ -6,7 +6,7 @@
 -- 
 -- 1. Source files (like Markdown files) to process (collected with e.g.
 -- 'match' or 'create').
--- 2. Compilation steps (like Markdown to HTML) to transform a files' content
+-- 2. Compilation steps (like Markdown to HTML) to transform files' content
 -- to some output content (steps are collected within 
 -- 'Hakyll.Core.Compiler.Compiler' and executed with 'compile').
 -- 3. Routing to determine if and where an output content will be written out. 
