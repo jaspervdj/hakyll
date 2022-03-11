@@ -430,8 +430,7 @@ __Rules with and without routing__
 >        postTemplate <- loadBody "templates/post.html"
 >        pandocCompiler >>= applyTemplate postTemplate defaultContext
 Note that we don't set a route in the first rule to avoid writing out our
-compiled templates (a webpage containing raw
-'Hakyll.Web.Template.templateCompiler' templates makes rarely sense after all).
+compiled templates.
 However, we can still 'Hakyll.Core.Compiler.load' (or
 'Hakyll.Core.Compiler.loadBody') the compiled templates to apply them in a
 second rule.
