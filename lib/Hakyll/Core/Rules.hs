@@ -385,7 +385,7 @@ Note how a Markdown post that is compiled to HTML using
 'Hakyll.Web.Pandoc.pandocCompiler' in a first step and then embedded into
 a HTMl 'Hakyll.Web.Template.Template' in a second step by using
 'Hakyll.Web.Template.loadAndApplyTemplate'.
-We can use templates to to control the design and layout of a webpage.
+We can use templates to control the design and layout of a webpage.
 A template may look as follows:
 
 > <h1>$title$</h1>
