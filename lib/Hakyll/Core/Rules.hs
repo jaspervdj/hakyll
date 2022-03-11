@@ -408,7 +408,7 @@ details on how output filepaths are computed.
 
 Hint:
 __If there's no route attached to a rule, the compilation result is not written out__.
-However, the compilation result saved to the 'Hakyll.Core.Store.Store'
+However, the compilation result is saved to the 'Hakyll.Core.Store.Store'
 and can be loaded and used within another rule. This behavior is needed,
 for example, for templates.
 
