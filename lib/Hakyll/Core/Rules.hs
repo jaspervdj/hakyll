@@ -400,9 +400,9 @@ compile compiler = Rules $ modify $ \s ->
 
 --------------------------------------------------------------------------------
 {- | Add (or replace) routing in the current 'Rules' value.
-__This functions controls if and where the compiled results are written out__
-(use one of the 'match' functions to control what content is processed and
-'compile' to control how).
+__This functions controls IF and WHERE the compiled results are written out__
+(use one of the 'match' functions to control WHAT content is processed and
+'compile' to control HOW).
 See 'Hakyll.Core.Routes.Routes' and 'Hakyll.Core.Identifier.Identifier' for
 details on how output filepaths are computed.
 
