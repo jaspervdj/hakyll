@@ -43,6 +43,7 @@ jobs:
 
     - name: Freeze
       run: |
+        cabal update
         cabal freeze
 
     - uses: actions/cache@v1
