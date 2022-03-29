@@ -200,6 +200,8 @@ directly with the default Hakyll site.
   [source](https://github.com/dreamsmasher/site-haskell-source)
 - <https://dukzcry.github.io/>,
   [source](https://github.com/dukzcry/dukzcry.github.io)
+- <https://mista.me>,
+  [source](https://github.com/agustinmista/website/tree/master)
 
 ## Hakyll 3.X
 
