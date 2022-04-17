@@ -58,6 +58,7 @@ module Hakyll.Web.Tags
     , tagsField
     , tagsFieldWith
     , categoryField
+    , simpleRenderLink
     , sortTagsBy
     , caseInsensitiveTags
     ) where
