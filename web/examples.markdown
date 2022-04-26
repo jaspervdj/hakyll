@@ -202,6 +202,8 @@ directly with the default Hakyll site.
   [source](https://github.com/dukzcry/dukzcry.github.io)
 - <https://mista.me>,
   [source](https://github.com/agustinmista/website/tree/master)
+- <https://blog.marbu.eu/>,
+  [source](https://github.com/marbu/blog-marbu-eu)
 
 ## Hakyll 3.X
 
