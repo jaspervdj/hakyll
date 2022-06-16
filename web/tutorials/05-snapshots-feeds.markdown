@@ -87,6 +87,7 @@ match "posts/*" $ do
         >>= loadAndApplyTemplate "templates/post.html"    postCtx
         >>= loadAndApplyTemplate "templates/default.html" postCtx
         >>= relativizeUrls
+    makeFeed -- using the new rule defined
 ```
 
 now becomes:
@@ -96,9 +97,10 @@ match "posts/*" $ do
     route $ setExtension "html"
     compile $ pandocCompiler
         >>= loadAndApplyTemplate "templates/post.html"    postCtx
-        >>= saveSnapshot "content"
+        >>= saveSnapshot "content" -- new
         >>= loadAndApplyTemplate "templates/default.html" postCtx
         >>= relativizeUrls
+    makeFeed
 ```
 
 The `saveSnapshot` function is really simple: it takes an item and returns the
@@ -129,20 +131,6 @@ create ["atom.xml"] $ do
         posts <- fmap (take 10) . recentFirst =<<
             loadAllSnapshots "posts/*" "content"
         renderAtom myFeedConfiguration feedCtx posts
-```
-
-We're almost done; we just need to register our newly defined rules against the `hakyll`
-combinator:
-
-```haskell
-match "posts/*" $ do
-    route $ setExtension "html"
-    compile $ pandocCompiler
-        >>= loadAndApplyTemplate "templates/post.html"    postCtx
-        >>= saveSnapshot "content"
-        >>= loadAndApplyTemplate "templates/default.html" postCtx
-        >>= relativizeUrls
-    makeFeed
 ```
 
 Now whenever we (re)build our site, a corresponding `rss.xml` or `atom.xml` file is generated.
