@@ -43,10 +43,13 @@ renderRss :: FeedConfiguration
 ```
 
 As you can see, they have exactly the same signature: we're going to use
-`renderAtom` in this tutorial, but it's trivial to change this to an RSS feed.
+`renderAtom` in this tutorial, but it's trivial to change this to an RSS feed. 
+We are going to consume this function from the context of the `create` combinator,
+which lets us define our own rules to register against the `hakyll` combinator: 
 
 ```haskell
-create ["atom.xml"] $ do
+makeFeed :: Rules () 
+makeFeed = create ["atom.xml"] $ do
     route idRoute
     compile $ do
         let feedCtx = postCtx `mappend`
@@ -116,7 +119,7 @@ Including the post body
 With this modification, we can update our Atom code. Instead of loading the
 compiled posts, we just load their content (i.e. the snapshot we just took).
 
-We update the `Context` to map `$description$` to the post body, and we're done!
+We update the `Context` to map `$description$` to the post body:
 
 ```haskell
 create ["atom.xml"] $ do
@@ -127,3 +130,19 @@ create ["atom.xml"] $ do
             loadAllSnapshots "posts/*" "content"
         renderAtom myFeedConfiguration feedCtx posts
 ```
+
+We're almost done; we just need to register our newly defined rules against the `hakyll`
+combinator:
+
+```haskell
+match "posts/*" $ do
+    route $ setExtension "html"
+    compile $ pandocCompiler
+        >>= loadAndApplyTemplate "templates/post.html"    postCtx
+        >>= saveSnapshot "content"
+        >>= loadAndApplyTemplate "templates/default.html" postCtx
+        >>= relativizeUrls
+    makeFeed
+```
+
+Now whenever we (re)build our site, a corresponding `rss.xml` or `atom.xml` file is generated.
