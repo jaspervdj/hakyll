@@ -10,7 +10,8 @@
 -- source into a 'Pandoc' type and need to add processing for the bibliography,
 -- you can use 'processPandocBiblio' instead.
 -- 'pandocBiblioCompiler' is a convenience wrapper which works like 'pandocCompiler',
--- but also takes paths to compiled bibliography and csl files.
+-- but also takes paths to compiled bibliography and csl files;
+-- 'pandocBibliosCompiler' is similar but instead takes a glob pattern for bib files.
 {-# LANGUAGE Arrows                     #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -25,6 +26,7 @@ module Hakyll.Web.Pandoc.Biblio
     , processPandocBiblio
     , processPandocBiblios
     , pandocBiblioCompiler
+    , pandocBibliosCompiler
     ) where
 
 
@@ -40,6 +42,7 @@ import           Data.Typeable                 (Typeable)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Identifier.Pattern (fromGlob)
 import           Hakyll.Core.Item
 import           Hakyll.Core.Writable
 import           Hakyll.Web.Pandoc
@@ -167,6 +170,19 @@ pandocBiblioCompiler cslFileName bibFileName = do
     bib <- load $ fromFilePath bibFileName
     liftM writePandoc
         (getResourceBody >>= readPandocBiblio ropt csl bib)
+    where ropt = defaultHakyllReaderOptions
+            { -- The following option enables citation rendering
+              readerExtensions = enableExtension Ext_citations $ readerExtensions defaultHakyllReaderOptions
+            }
+
+--------------------------------------------------------------------------------
+-- | Compiles a markdown file via Pandoc. Requires the .csl and .bib files to be known to the compiler via match statements.
+pandocBibliosCompiler :: String -> String -> Compiler (Item String)
+pandocBibliosCompiler cslFileName bibFileName = do
+    csl  <- load    $ fromFilePath cslFileName
+    bibs <- loadAll $ fromGlob bibFileName
+    liftM writePandoc
+        (getResourceBody >>= readPandocBiblios ropt csl bibs)
     where ropt = defaultHakyllReaderOptions
             { -- The following option enables citation rendering
               readerExtensions = enableExtension Ext_citations $ readerExtensions defaultHakyllReaderOptions
