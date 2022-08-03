@@ -255,7 +255,9 @@ schedulerBlock
     -> Scheduler
     -> (Scheduler, Block)
 schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
-    | all done deps1 = (scheduler, BlockContinue)
+    | null deps1 =
+        trace ("done for identifier " <> show identifier <> ", " <> show deps1 <> ", " <> show deps0) $
+        (scheduler, BlockContinue)
     | otherwise      =
         ( scheduler
              { schedulerQueue    =
@@ -273,7 +275,6 @@ schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
                      Map.insertWith Set.union depId (Set.singleton identifier) acc)
                  schedulerTriggers
                  deps1
-
              }
         , BlockBlocked
         )
@@ -313,7 +314,7 @@ schedulerSnapshot identifier snapshot compiler scheduler@Scheduler {..} =
         , schedulerWorking   = Set.delete identifier schedulerWorking
         , schedulerSnapshots = Set.insert (identifier, snapshot) schedulerSnapshots
         , schedulerTodo      =
-            trace ("insert for identifier " <> show identifier) $
+            trace ("snapshot for identifier " <> show identifier <> " " <> snapshot) $
             Map.insert identifier compiler schedulerTodo
         }
 
@@ -328,7 +329,9 @@ schedulerWrite identifier depFacts scheduler@Scheduler {..} =
     schedulerUnblock identifier $ scheduler
         { schedulerWorking = Set.delete identifier schedulerWorking
         , schedulerFacts   = Map.insert identifier depFacts schedulerFacts
-        , schedulerDone    = Set.insert identifier schedulerDone
+        , schedulerDone    =
+            trace ("write for identifier " <> show identifier) $
+            Set.insert identifier schedulerDone
         , schedulerTodo    =
             trace ("delete for identifier " <> show identifier) $
             Map.delete identifier schedulerTodo
@@ -529,6 +532,7 @@ chase2 = do
                             liftIO $ write path item
                             Logger.debug logger $ "Routed to " ++ path
 
+                    Logger.message logger $ "Saved _final for " <> show id'
                     liftIO $ save store item
                     threads <- liftIO . IORef.atomicModifyIORef' scheduler $
                         schedulerWrite id' facts
@@ -536,7 +540,8 @@ chase2 = do
 
                 CompilerRequire reqs c -> do
                     block <- liftIO . IORef.atomicModifyIORef' scheduler $
-                        schedulerBlock id' reqs c
+                        schedulerBlock id' reqs $ Compiler $
+                        \_ -> pure $ CompilerRequire reqs c
                     case block of
                         BlockContinue -> pure (True, 0)
                         BlockBlocked -> pure (True, 0)
