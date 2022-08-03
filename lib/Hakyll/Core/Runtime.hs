@@ -14,6 +14,7 @@ import           Control.Monad.Except            (ExceptT, runExceptT, throwErro
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
 import           Data.Foldable                   (traverse_)
+import           Data.List                       (foldl')
 import           Data.IORef                      (IORef)
 import qualified Data.IORef                      as IORef
 import           Data.List                       (intercalate)
@@ -203,6 +204,49 @@ schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
                     }
                 , PopOk x c
                 )
+
+
+--------------------------------------------------------------------------------
+data Block
+    = BlockContinue
+    | BlockBlocked
+
+
+--------------------------------------------------------------------------------
+schedulerBlock
+    :: Identifier
+    -> [(Identifier, Snapshot)]
+    -> Compiler SomeItem
+    -> Scheduler
+    -> (Scheduler, Block)
+schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
+    | all done deps1 = (scheduler, BlockContinue)
+    | otherwise      =
+        ( scheduler
+             { schedulerQueue   =
+                 -- Optimization: move deps to the front and item to the back
+                 Seq.fromList depIds <>
+                 schedulerQueue <>
+                 Seq.singleton identifier
+             , schedulerTodo    = Map.insert identifier compiler schedulerTodo
+             , schedulerWorking = Set.delete identifier schedulerWorking
+             , schedulerBlocked = foldl'
+                 (\acc (depId, _) ->
+                     Map.insertWith Set.union depId (Set.singleton identifier) acc)
+                 schedulerBlocked
+                 deps1
+             }
+        , BlockBlocked
+        )
+  where
+    deps1  = filter (not . done) deps0
+    depIds = map fst deps1
+
+    -- Done if we either completed the entire item (runtimeDone) or
+    -- if we previously saved the snapshot (runtimeSnapshots).
+    done (depId, depSnapshot) =
+        depId `Set.member` schedulerDone ||
+        (depId, depSnapshot) `Set.member` schedulerSnapshots
 
 
 --------------------------------------------------------------------------------
