@@ -1,4 +1,4 @@
-resolver: lts-18.16
+resolver: 'lts-19.17'
 save-hackage-creds: false
 system-ghc: true
 skip-ghc-check: true
@@ -19,10 +19,5 @@ nix:
     - openssh  # for deployment
     - rsync    # for deployment
     - zlib
-
-build:
-  haddock: true
-  haddock-hyperlink-source: true
-  haddock-deps: false
 
 extra-deps:

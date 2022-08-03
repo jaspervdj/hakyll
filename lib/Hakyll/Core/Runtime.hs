@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE RecordWildCards #-}
 module Hakyll.Core.Runtime
     ( run
     , RunMode(..)
@@ -13,11 +14,15 @@ import           Control.Monad.Except            (ExceptT, runExceptT, throwErro
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
 import           Data.Foldable                   (traverse_)
+import           Data.IORef                      (IORef)
+import qualified Data.IORef                      as IORef
 import           Data.List                       (intercalate)
 import           Data.Map                        (Map)
-import qualified Data.Map                        as M
+import qualified Data.Map                        as Map
+import           Data.Sequence                   (Seq)
+import qualified Data.Sequence                   as Seq
 import           Data.Set                        (Set)
-import qualified Data.Set                        as S
+import qualified Data.Set                        as Set
 import           Data.Traversable                (for)
 import           System.Exit                     (ExitCode (..))
 import           System.FilePath                 ((</>))
@@ -71,14 +76,15 @@ run mode config logger rules = do
                                        _             -> mempty
 
     state <- newMVar $ RuntimeState
-            { runtimeDone         = S.empty
-            , runtimeSnapshots    = S.empty
-            , runtimeTodo         = M.empty
+            { runtimeDone         = Set.empty
+            , runtimeSnapshots    = Set.empty
+            , runtimeTodo         = Map.empty
             , runtimeFacts        = oldFacts
-            , runtimeDependencies = M.empty
+            , runtimeDependencies = Map.empty
             }
 
     -- Build runtime read/state
+    scheduler <- IORef.newIORef $ makeScheduler oldFacts Set.empty Map.empty
     let compilers = rulesCompilers ruleSet
         read'     = RuntimeRead
             { runtimeConfiguration = config
@@ -87,7 +93,7 @@ run mode config logger rules = do
             , runtimeState         = state
             , runtimeStore         = store
             , runtimeRoutes        = rulesRoutes ruleSet
-            , runtimeUniverse      = M.fromList compilers
+            , runtimeUniverse      = Map.fromList compilers
             }
 
     -- Run the program and fetch the resulting state
@@ -115,6 +121,7 @@ data RuntimeRead = RuntimeRead
     , runtimeStore         :: Store
     , runtimeRoutes        :: Routes
     , runtimeUniverse      :: Map Identifier (Compiler SomeItem)
+    , runtimeScheduler     :: IORef Scheduler
     }
 
 
@@ -126,6 +133,76 @@ data RuntimeState = RuntimeState
     , runtimeFacts        :: DependencyFacts
     , runtimeDependencies :: Map Identifier (Set (Identifier, Snapshot))
     }
+
+
+--------------------------------------------------------------------------------
+data Scheduler = Scheduler
+    { -- | Items to work on next.  Identifiers may appear multiple times.
+      schedulerQueue     :: !(Seq Identifier)
+    , -- | Items that we haven't started yet.
+      schedulerTodo      :: !(Map Identifier (Compiler SomeItem))
+    , -- | Currently processing
+      schedulerWorking   :: !(Set Identifier)
+    , -- | Finished
+      schedulerDone      :: !(Set Identifier)
+    , -- | Any snapshots stored.
+      schedulerSnapshots :: !(Set (Identifier, Snapshot))
+    , -- | Currently blocked compilers.
+      schedulerBlocked   :: !(Map Identifier (Set Identifier))
+    , -- | Number of starved pops; tracking this allows us to start a new
+      -- number of threads again later.
+      schedulerStarved   :: !Int
+    , -- | Dynamic dependency info.
+      schedulerFacts     :: !DependencyFacts
+    , -- | Errors encountered.
+      schedulerErrors    :: !(Map Identifier String)
+    }
+
+
+--------------------------------------------------------------------------------
+makeScheduler
+    :: DependencyFacts
+    -> Set Identifier
+    -> Map Identifier (Compiler SomeItem)
+    -> Scheduler
+makeScheduler schedulerFacts schedulerDone schedulerTodo = Scheduler {..}
+  where
+    schedulerQueue     = Seq.fromList $ Map.keys schedulerTodo
+    schedulerWorking   = Set.empty
+    schedulerSnapshots = Set.empty
+    schedulerBlocked   = Map.empty
+    schedulerStarved   = 0
+    schedulerFacts     = Map.empty
+    schedulerErrors    = Map.empty
+
+
+--------------------------------------------------------------------------------
+data Pop
+    = PopOk Identifier (Compiler SomeItem)
+    | PopError String
+    | PopFinished
+    | PopStarve
+
+
+--------------------------------------------------------------------------------
+schedulerPop :: Scheduler -> (Scheduler, Pop)
+schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
+    Seq.EmptyL
+        | Set.null schedulerWorking -> (scheduler, PopFinished)
+        | otherwise ->
+            (scheduler {schedulerStarved = schedulerStarved + 1}, PopStarve)
+    x Seq.:< xs
+        | x `Set.member` schedulerWorking ->
+            schedulerPop scheduler {schedulerQueue = xs}
+        | otherwise -> case Map.lookup x schedulerTodo of
+            Nothing -> (scheduler, PopError $ "Compiler not found: " ++ show x)
+            Just c  ->
+                ( scheduler
+                    { schedulerQueue   = xs
+                    , schedulerWorking = Set.insert x schedulerWorking
+                    }
+                , PopOk x c
+                )
 
 
 --------------------------------------------------------------------------------
@@ -161,7 +238,7 @@ build mode = do
         RunModePrintOutOfDate -> do
             Logger.header logger "Out of date items:"
             todo <- runtimeTodo <$> getRuntimeState
-            traverse_ (Logger.message logger . show) (M.keys todo)
+            traverse_ (Logger.message logger . show) (Map.keys todo)
 
 
 --------------------------------------------------------------------------------
@@ -171,8 +248,8 @@ scheduleOutOfDate = do
     provider <- runtimeProvider <$> ask
     universe <- runtimeUniverse <$> ask
 
-    let identifiers = M.keys universe
-        modified    = S.filter (resourceModified provider) (M.keysSet universe)
+    let identifiers = Map.keys universe
+        modified    = Set.filter (resourceModified provider) (Map.keysSet universe)
 
     state <- getRuntimeState
     let facts = runtimeFacts state
@@ -180,8 +257,8 @@ scheduleOutOfDate = do
         done  = runtimeDone state
 
     let (ood, facts', msgs) = outOfDate identifiers modified facts
-        todo'               = M.filterWithKey (\id' _ -> id' `S.member` ood) universe
-        done'               = done `S.union` (M.keysSet universe `S.difference` ood)
+        todo'               = Map.filterWithKey (\id' _ -> id' `Set.member` ood) universe
+        done'               = done `Set.union` (Map.keysSet universe `Set.difference` ood)
 
     -- Print messages
     mapM_ (Logger.debug logger) msgs
@@ -189,7 +266,7 @@ scheduleOutOfDate = do
     -- Update facts and todo items
     modifyRuntimeState $ \s -> s
         { runtimeDone  = done'
-        , runtimeTodo  = todo `M.union` todo'
+        , runtimeTodo  = todo `Map.union` todo'
         , runtimeFacts = facts'
         }
 
@@ -199,13 +276,13 @@ pickAndChase :: Runtime ()
 pickAndChase = do
     todo <- runtimeTodo <$> getRuntimeState
     unless (null todo) $ do
-        acted <- mconcat <$> forConcurrently (M.keys todo) chase
+        acted <- mconcat <$> forConcurrently (Map.keys todo) chase
         when (acted == Idled) $ do
             -- This clause happens when chasing *every item* in `todo` resulted in 
             -- idling because tasks are all waiting on something: a dependency cycle  
             deps <- runtimeDependencies <$> getRuntimeState
             throwError $ "Hakyll.Core.Runtime.pickAndChase: Dependency cycle detected: " ++ 
-                intercalate ", " [show k ++ " depends on " ++ show (S.toList v) | (k, v) <- M.toList deps]
+                intercalate ", " [show k ++ " depends on " ++ show (Set.toList v) | (k, v) <- Map.toList deps]
         pickAndChase
 
 
@@ -237,12 +314,12 @@ chase id' = do
 
     Logger.debug logger $ "Processing " ++ show id'
 
-    let compiler = (runtimeTodo state) M.! id'
+    let compiler = (runtimeTodo state) Map.! id'
         read' = CompilerRead
             { compilerConfig     = config
             , compilerUnderlying = id'
             , compilerProvider   = provider
-            , compilerUniverse   = M.keysSet universe
+            , compilerUniverse   = Map.keysSet universe
             , compilerRoutes     = routes
             , compilerStore      = store
             , compilerLogger     = logger
@@ -260,8 +337,8 @@ chase id' = do
             -- Update info. The next 'chase' will pick us again at some
             -- point so we can continue then.
             modifyRuntimeState $ \s -> s
-                { runtimeSnapshots = S.insert (id', snapshot) (runtimeSnapshots s)
-                , runtimeTodo      = M.insert id' c (runtimeTodo s)
+                { runtimeSnapshots = Set.insert (id', snapshot) (runtimeSnapshots s)
+                , runtimeTodo      = Map.insert id' c (runtimeTodo s)
                 }
 
             return Progressed
@@ -297,10 +374,10 @@ chase id' = do
             liftIO $ save store item
 
             modifyRuntimeState $ \s -> s
-                { runtimeDone         = S.insert id' (runtimeDone s)
-                , runtimeTodo         = M.delete id' (runtimeTodo s)
-                , runtimeFacts        = M.insert id' facts (runtimeFacts s)
-                , runtimeDependencies = M.delete id' (runtimeDependencies s)
+                { runtimeDone         = Set.insert id' (runtimeDone s)
+                , runtimeTodo         = Map.delete id' (runtimeTodo s)
+                , runtimeFacts        = Map.insert id' facts (runtimeFacts s)
+                , runtimeDependencies = Map.delete id' (runtimeDependencies s)
                 }
             
             return Progressed
@@ -318,18 +395,18 @@ chase id' = do
                 -- Done if we either completed the entire item (runtimeDone) or
                 -- if we previously saved the snapshot (runtimeSnapshots).
                 let depDone =
-                        depId `S.member` done ||
-                        (depId, depSnapshot) `S.member` snapshots
+                        depId `Set.member` done ||
+                        (depId, depSnapshot) `Set.member` snapshots
                     actualDep = [(depId, depSnapshot) | not depDone]
 
                 return actualDep  
 
             modifyRuntimeState $ \s -> s
-                { runtimeTodo         = M.insert id'
+                { runtimeTodo         = Map.insert id'
                     (if null deps then c else compilerResult result)
                     (runtimeTodo s)
                  -- We track dependencies only to inform users when an infinite loop is detected
-                , runtimeDependencies = M.insertWith S.union id' (S.fromList deps) (runtimeDependencies s)
+                , runtimeDependencies = Map.insertWith Set.union id' (Set.fromList deps) (runtimeDependencies s)
                 }
 
             -- Progress has been made if at least one of the 
