@@ -20,11 +20,13 @@ import qualified Data.IORef                      as IORef
 import           Data.List                       (intercalate)
 import           Data.Map                        (Map)
 import qualified Data.Map                        as Map
+import           Data.Maybe                      (fromMaybe)
 import           Data.Sequence                   (Seq)
 import qualified Data.Sequence                   as Seq
 import           Data.Set                        (Set)
 import qualified Data.Set                        as Set
 import           Data.Traversable                (for)
+import           Debug.Trace                     (trace)
 import           System.Exit                     (ExitCode (..))
 import           System.FilePath                 ((</>))
 
@@ -151,7 +153,9 @@ data Scheduler = Scheduler
     , -- | Any snapshots stored.
       schedulerSnapshots :: !(Set (Identifier, Snapshot))
     , -- | Currently blocked compilers.
-      schedulerBlocked   :: !(Map Identifier (Set Identifier))
+      schedulerBlocked   :: !(Set Identifier)
+    , -- | Compilers that may resume on triggers
+      schedulerTriggers  :: !(Map Identifier (Set Identifier))
     , -- | Number of starved pops; tracking this allows us to start a new
       -- number of threads again later.
       schedulerStarved   :: !Int
@@ -171,7 +175,8 @@ emptyScheduler = Scheduler {..}
     schedulerQueue     = Seq.empty
     schedulerWorking   = Set.empty
     schedulerSnapshots = Set.empty
-    schedulerBlocked   = Map.empty
+    schedulerBlocked   = Set.empty
+    schedulerTriggers  = Map.empty
     schedulerStarved   = 0
     schedulerFacts     = Map.empty
     schedulerErrors    = []
@@ -214,7 +219,11 @@ schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
         | otherwise ->
             (scheduler {schedulerStarved = schedulerStarved + 1}, PopStarve)
     x Seq.:< xs
+        | x `Set.member` schedulerDone ->
+            schedulerPop scheduler {schedulerQueue = xs}
         | x `Set.member` schedulerWorking ->
+            schedulerPop scheduler {schedulerQueue = xs}
+        | x `Set.member` schedulerBlocked ->
             schedulerPop scheduler {schedulerQueue = xs}
         | otherwise -> case Map.lookup x schedulerTodo of
             Nothing ->
@@ -249,18 +258,22 @@ schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
     | all done deps1 = (scheduler, BlockContinue)
     | otherwise      =
         ( scheduler
-             { schedulerQueue   =
+             { schedulerQueue    =
                  -- Optimization: move deps to the front and item to the back
                  Seq.fromList depIds <>
                  schedulerQueue <>
                  Seq.singleton identifier
-             , schedulerTodo    = Map.insert identifier compiler schedulerTodo
-             , schedulerWorking = Set.delete identifier schedulerWorking
-             , schedulerBlocked = foldl'
+             , schedulerTodo     =
+                 trace ("insert for identifier " <> show identifier) $
+                 Map.insert identifier compiler schedulerTodo
+             , schedulerWorking  = Set.delete identifier schedulerWorking
+             , schedulerBlocked  = Set.insert identifier schedulerBlocked
+             , schedulerTriggers = foldl'
                  (\acc (depId, _) ->
                      Map.insertWith Set.union depId (Set.singleton identifier) acc)
-                 schedulerBlocked
+                 schedulerTriggers
                  deps1
+
              }
         , BlockBlocked
         )
@@ -279,20 +292,29 @@ schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
 schedulerUnblock :: Identifier -> Scheduler -> (Scheduler, Int)
 schedulerUnblock identifier scheduler@Scheduler {..} =
     ( scheduler
-        { schedulerQueue   = schedulerQueue <> Seq.fromList blocked
-        , schedulerStarved = 0
+        { schedulerQueue    = schedulerQueue <>
+            Seq.fromList (Set.toList triggered)
+        , schedulerStarved  = 0
+        , schedulerBlocked  = schedulerBlocked `Set.difference` triggered
+        , schedulerTriggers = Map.delete identifier schedulerTriggers
         }
     , schedulerStarved
     )
   where
-    blocked = maybe [] Set.toList $ Map.lookup identifier schedulerBlocked
+    triggered = fromMaybe Set.empty $ Map.lookup identifier schedulerTriggers
 
 
 --------------------------------------------------------------------------------
-schedulerSnapshot :: Identifier -> Snapshot -> Scheduler -> (Scheduler, Int)
-schedulerSnapshot identifier snapshot scheduler@Scheduler {..} =
+schedulerSnapshot
+    :: Identifier -> Snapshot -> Compiler SomeItem -> Scheduler -> (Scheduler, Int)
+schedulerSnapshot identifier snapshot compiler scheduler@Scheduler {..} =
     schedulerUnblock identifier $ scheduler
-        { schedulerSnapshots = Set.insert (identifier, snapshot) schedulerSnapshots
+        { schedulerQueue     = Seq.singleton identifier <> schedulerQueue
+        , schedulerWorking   = Set.delete identifier schedulerWorking
+        , schedulerSnapshots = Set.insert (identifier, snapshot) schedulerSnapshots
+        , schedulerTodo      =
+            trace ("insert for identifier " <> show identifier) $
+            Map.insert identifier compiler schedulerTodo
         }
 
 
@@ -307,6 +329,9 @@ schedulerWrite identifier depFacts scheduler@Scheduler {..} =
         { schedulerWorking = Set.delete identifier schedulerWorking
         , schedulerFacts   = Map.insert identifier depFacts schedulerFacts
         , schedulerDone    = Set.insert identifier schedulerDone
+        , schedulerTodo    =
+            trace ("delete for identifier " <> show identifier) $
+            Map.delete identifier schedulerTodo
         }
 
 
@@ -356,7 +381,7 @@ build2 mode = do
     case mode of
         RunModeNormal -> do
             Logger.header logger "Compiling"
-            undefined pickAndChase
+            pickAndChase2
             Logger.header logger "Success"
             facts <- liftIO $ schedulerFacts <$> IORef.readIORef schedulerRef
             store <- runtimeStore <$> ask
@@ -425,6 +450,96 @@ pickAndChase = do
             throwError $ "Hakyll.Core.Runtime.pickAndChase: Dependency cycle detected: " ++ 
                 intercalate ", " [show k ++ " depends on " ++ show (Set.toList v) | (k, v) <- Map.toList deps]
         pickAndChase
+
+
+--------------------------------------------------------------------------------
+pickAndChase2 :: ReaderT RuntimeRead IO ()
+pickAndChase2 = do
+    (continue, _) <- chase2
+    when continue pickAndChase2
+
+
+--------------------------------------------------------------------------------
+chase2 :: ReaderT RuntimeRead IO (Bool, Int)
+chase2 = do
+    logger    <- runtimeLogger        <$> ask
+    provider  <- runtimeProvider      <$> ask
+    universe  <- runtimeUniverse      <$> ask
+    routes    <- runtimeRoutes        <$> ask
+    store     <- runtimeStore         <$> ask
+    config    <- runtimeConfiguration <$> ask
+    scheduler <- runtimeScheduler <$> ask
+
+    let addError mbId err = liftIO . IORef.atomicModifyIORef' scheduler $ \s ->
+            ( s {schedulerErrors = (mbId, err) : schedulerErrors s}
+            , ()
+            )
+
+    pop <- liftIO . IORef.atomicModifyIORef' scheduler $ schedulerPop
+    case pop of
+        PopError -> pure (False, 0)
+        PopFinished -> pure (False, 0)
+        PopStarve -> pure (False, 0)
+        PopOk id' compiler -> do
+            let cread = CompilerRead
+                    { compilerConfig     = config
+                    , compilerUnderlying = id'
+                    , compilerProvider   = provider
+                    , compilerUniverse   = Map.keysSet universe
+                    , compilerRoutes     = routes
+                    , compilerStore      = store
+                    , compilerLogger     = logger
+                    }
+            result <- liftIO $ runCompiler compiler cread
+            case result of
+                CompilerError e -> do
+                    let msgs = case compilerErrorMessages e of
+                            [] -> ["Compiler failed but no info given, try running with -v?"]
+                            es -> es
+                    for_ msgs . addError $ Just id'
+                    return (False, 0)
+
+                CompilerSnapshot snapshot c -> do
+                    threads <- liftIO . IORef.atomicModifyIORef' scheduler $
+                        schedulerSnapshot id' snapshot c
+                    pure (True, threads)
+
+                CompilerDone (SomeItem item) cwrite -> do
+                    -- Print some info
+                    let facts = compilerDependencies cwrite
+                        cacheHits
+                            | compilerCacheHits cwrite <= 0 = "updated"
+                            | otherwise                     = "cached "
+                    Logger.message logger $ cacheHits ++ " " ++ show id'
+
+                    -- Sanity check
+                    unless (itemIdentifier item == id') $ addError (Just id') $
+                        "The compiler yielded an Item with Identifier " ++
+                        show (itemIdentifier item) ++ ", but we were expecting " ++
+                        "an Item with Identifier " ++ show id' ++ " " ++
+                        "(you probably want to call makeItem to solve this problem)"
+
+                    -- Write if necessary
+                    (mroute, _) <- liftIO $ runRoutes routes provider id'
+                    case mroute of
+                        Nothing    -> return ()
+                        Just route -> do
+                            let path = destinationDirectory config </> route
+                            liftIO $ makeDirectories path
+                            liftIO $ write path item
+                            Logger.debug logger $ "Routed to " ++ path
+
+                    liftIO $ save store item
+                    threads <- liftIO . IORef.atomicModifyIORef' scheduler $
+                        schedulerWrite id' facts
+                    pure (True, threads)
+
+                CompilerRequire reqs c -> do
+                    block <- liftIO . IORef.atomicModifyIORef' scheduler $
+                        schedulerBlock id' reqs c
+                    case block of
+                        BlockContinue -> pure (True, 0)
+                        BlockBlocked -> pure (True, 0)
 
 
 --------------------------------------------------------------------------------
@@ -520,7 +635,7 @@ chase id' = do
                 , runtimeFacts        = Map.insert id' facts (runtimeFacts s)
                 , runtimeDependencies = Map.delete id' (runtimeDependencies s)
                 }
-            
+
             return Progressed
 
         -- Try something else first
