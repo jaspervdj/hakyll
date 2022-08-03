@@ -13,7 +13,7 @@ import           Control.Monad                   (join, unless, when)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
-import           Data.Foldable                   (traverse_)
+import           Data.Foldable                   (for_, traverse_)
 import           Data.List                       (foldl')
 import           Data.IORef                      (IORef)
 import qualified Data.IORef                      as IORef
@@ -85,7 +85,7 @@ run mode config logger rules = do
             }
 
     -- Build runtime read/state
-    scheduler <- IORef.newIORef $ makeScheduler oldFacts Set.empty Map.empty
+    scheduler <- IORef.newIORef $ emptyScheduler {schedulerFacts = oldFacts}
     let compilers = rulesCompilers ruleSet
         read'     = RuntimeRead
             { runtimeConfiguration = config
@@ -95,22 +95,24 @@ run mode config logger rules = do
             , runtimeStore         = store
             , runtimeRoutes        = rulesRoutes ruleSet
             , runtimeUniverse      = Map.fromList compilers
+            , runtimeScheduler     = scheduler
             }
 
     -- Run the program and fetch the resulting state
-    result <- runExceptT $ runReaderT (build mode) read'
-    case result of
-        Left e          -> do
-            Logger.error logger e
-            Logger.flush logger
-            return (ExitFailure 1, ruleSet)
+    result <- runReaderT (build2 mode) read'
+    errors <- schedulerErrors <$> IORef.readIORef scheduler
+    if null errors then do
+        Logger.debug logger "Removing tmp directory..."
+        removeDirectory $ tmpDirectory config
 
-        Right _ -> do
-            Logger.debug logger "Removing tmp directory..."
-            removeDirectory $ tmpDirectory config
-
-            Logger.flush logger
-            return (ExitSuccess, ruleSet)
+        Logger.flush logger
+        return (ExitSuccess, ruleSet)
+    else do
+        for_ errors $ \(mbId, err) -> Logger.error logger $ case mbId of
+            Just identifier -> show identifier <> ": " <> err
+            Nothing         -> err
+        Logger.flush logger
+        return (ExitFailure 1, ruleSet)
 
 
 --------------------------------------------------------------------------------
@@ -161,14 +163,12 @@ data Scheduler = Scheduler
 
 
 --------------------------------------------------------------------------------
-makeScheduler
-    :: DependencyFacts
-    -> Set Identifier
-    -> Map Identifier (Compiler SomeItem)
-    -> Scheduler
-makeScheduler schedulerFacts schedulerDone schedulerTodo = Scheduler {..}
+emptyScheduler :: Scheduler
+emptyScheduler = Scheduler {..}
   where
-    schedulerQueue     = Seq.fromList $ Map.keys schedulerTodo
+    schedulerTodo      = Map.empty
+    schedulerDone      = Set.empty
+    schedulerQueue     = Seq.empty
     schedulerWorking   = Set.empty
     schedulerSnapshots = Set.empty
     schedulerBlocked   = Map.empty
@@ -185,17 +185,17 @@ schedulerOutOfDate
     -> (Scheduler, [String])
 schedulerOutOfDate universe modified scheduler@Scheduler {..} =
     ( scheduler
-        { schedulerQueue = schedulerQueue
+        { schedulerQueue = schedulerQueue <> Seq.fromList (Map.keys todo)
         , schedulerDone  = schedulerDone <>
             (Map.keysSet universe `Set.difference` ood)
-        , schedulerTodo  = schedulerTodo <>
-            Map.filterWithKey (\id' _ -> id' `Set.member` ood) universe
+        , schedulerTodo  = schedulerTodo <> todo
         , schedulerFacts = facts'
         }
     , msgs
     )
   where
     (ood, facts', msgs) = outOfDate (Map.keys universe) modified schedulerFacts
+    todo = Map.filterWithKey (\id' _ -> id' `Set.member` ood) universe
 
 
 --------------------------------------------------------------------------------
@@ -368,7 +368,7 @@ build2 mode = do
 
 
 --------------------------------------------------------------------------------
-scheduleOutOfDate :: Runtime Scheduler
+scheduleOutOfDate :: Runtime ()
 scheduleOutOfDate = do
     logger   <- runtimeLogger   <$> ask
     provider <- runtimeProvider <$> ask
@@ -395,8 +395,6 @@ scheduleOutOfDate = do
         , runtimeTodo  = todo `Map.union` todo'
         , runtimeFacts = facts'
         }
-
-    pure $ makeScheduler facts' done' (todo `Map.union` todo')
 
 
 --------------------------------------------------------------------------------
