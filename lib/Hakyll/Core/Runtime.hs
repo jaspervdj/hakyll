@@ -156,7 +156,7 @@ data Scheduler = Scheduler
     , -- | Dynamic dependency info.
       schedulerFacts     :: !DependencyFacts
     , -- | Errors encountered.
-      schedulerErrors    :: !(Map Identifier String)
+      schedulerErrors    :: ![(Maybe Identifier, String)]
     }
 
 
@@ -174,13 +174,34 @@ makeScheduler schedulerFacts schedulerDone schedulerTodo = Scheduler {..}
     schedulerBlocked   = Map.empty
     schedulerStarved   = 0
     schedulerFacts     = Map.empty
-    schedulerErrors    = Map.empty
+    schedulerErrors    = []
+
+
+--------------------------------------------------------------------------------
+schedulerOutOfDate
+    :: Map Identifier (Compiler SomeItem)
+    -> Set Identifier
+    -> Scheduler
+    -> (Scheduler, [String])
+schedulerOutOfDate universe modified scheduler@Scheduler {..} =
+    ( scheduler
+        { schedulerQueue = schedulerQueue
+        , schedulerDone  = schedulerDone <>
+            (Map.keysSet universe `Set.difference` ood)
+        , schedulerTodo  = schedulerTodo <>
+            Map.filterWithKey (\id' _ -> id' `Set.member` ood) universe
+        , schedulerFacts = facts'
+        }
+    , msgs
+    )
+  where
+    (ood, facts', msgs) = outOfDate (Map.keys universe) modified schedulerFacts
 
 
 --------------------------------------------------------------------------------
 data Pop
     = PopOk Identifier (Compiler SomeItem)
-    | PopError String
+    | PopError
     | PopFinished
     | PopStarve
 
@@ -196,7 +217,12 @@ schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
         | x `Set.member` schedulerWorking ->
             schedulerPop scheduler {schedulerQueue = xs}
         | otherwise -> case Map.lookup x schedulerTodo of
-            Nothing -> (scheduler, PopError $ "Compiler not found: " ++ show x)
+            Nothing ->
+                ( scheduler
+                    { schedulerErrors = (Just x, "Compiler not found") : schedulerErrors
+                    }
+                , PopError
+                )
             Just c  ->
                 ( scheduler
                     { schedulerQueue   = xs
@@ -250,6 +276,41 @@ schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
 
 
 --------------------------------------------------------------------------------
+schedulerUnblock :: Identifier -> Scheduler -> (Scheduler, Int)
+schedulerUnblock identifier scheduler@Scheduler {..} =
+    ( scheduler
+        { schedulerQueue   = schedulerQueue <> Seq.fromList blocked
+        , schedulerStarved = 0
+        }
+    , schedulerStarved
+    )
+  where
+    blocked = maybe [] Set.toList $ Map.lookup identifier schedulerBlocked
+
+
+--------------------------------------------------------------------------------
+schedulerSnapshot :: Identifier -> Snapshot -> Scheduler -> (Scheduler, Int)
+schedulerSnapshot identifier snapshot scheduler@Scheduler {..} =
+    schedulerUnblock identifier $ scheduler
+        { schedulerSnapshots = Set.insert (identifier, snapshot) schedulerSnapshots
+        }
+
+
+--------------------------------------------------------------------------------
+schedulerWrite
+    :: Identifier
+    -> [Dependency]
+    -> Scheduler
+    -> (Scheduler, Int)
+schedulerWrite identifier depFacts scheduler@Scheduler {..} =
+    schedulerUnblock identifier $ scheduler
+        { schedulerWorking = Set.delete identifier schedulerWorking
+        , schedulerFacts   = Map.insert identifier depFacts schedulerFacts
+        , schedulerDone    = Set.insert identifier schedulerDone
+        }
+
+
+--------------------------------------------------------------------------------
 type Runtime a = ReaderT RuntimeRead (ExceptT String IO) a
 
 
@@ -286,7 +347,28 @@ build mode = do
 
 
 --------------------------------------------------------------------------------
-scheduleOutOfDate :: Runtime ()
+build2 :: RunMode -> ReaderT RuntimeRead IO ()
+build2 mode = do
+    logger <- runtimeLogger <$> ask
+    Logger.header logger "Checking for out-of-date items"
+    schedulerRef <- runtimeScheduler <$> ask
+    scheduleOutOfDate2
+    case mode of
+        RunModeNormal -> do
+            Logger.header logger "Compiling"
+            undefined pickAndChase
+            Logger.header logger "Success"
+            facts <- liftIO $ schedulerFacts <$> IORef.readIORef schedulerRef
+            store <- runtimeStore <$> ask
+            liftIO $ Store.set store factsKey facts
+        RunModePrintOutOfDate -> do
+            Logger.header logger "Out of date items:"
+            todo <- liftIO $ schedulerTodo <$> IORef.readIORef schedulerRef
+            traverse_ (Logger.message logger . show) (Map.keys todo)
+
+
+--------------------------------------------------------------------------------
+scheduleOutOfDate :: Runtime Scheduler
 scheduleOutOfDate = do
     logger   <- runtimeLogger   <$> ask
     provider <- runtimeProvider <$> ask
@@ -313,6 +395,23 @@ scheduleOutOfDate = do
         , runtimeTodo  = todo `Map.union` todo'
         , runtimeFacts = facts'
         }
+
+    pure $ makeScheduler facts' done' (todo `Map.union` todo')
+
+
+--------------------------------------------------------------------------------
+scheduleOutOfDate2 :: ReaderT RuntimeRead IO ()
+scheduleOutOfDate2 = do
+    logger       <- runtimeLogger   <$> ask
+    provider     <- runtimeProvider <$> ask
+    universe     <- runtimeUniverse <$> ask
+    schedulerRef <- runtimeScheduler <$> ask
+    let modified  = Set.filter (resourceModified provider) (Map.keysSet universe)
+    msgs <- liftIO . IORef.atomicModifyIORef' schedulerRef $
+        schedulerOutOfDate universe modified
+
+    -- Print messages
+    mapM_ (Logger.debug logger) msgs
 
 
 --------------------------------------------------------------------------------
