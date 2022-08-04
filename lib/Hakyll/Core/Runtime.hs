@@ -7,19 +7,22 @@ module Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
-import           Control.Concurrent              (getNumCapabilities, forkIO)
+import           Control.Concurrent              (forkIO, getNumCapabilities,
+                                                  rtsSupportsBoundThreads)
 import           Control.Concurrent.Async.Lifted (forConcurrently)
-import           Control.Concurrent.MVar         (modifyMVar_, readMVar, newMVar, MVar)
+import           Control.Concurrent.MVar         (MVar, modifyMVar_, newMVar,
+                                                  readMVar)
 import qualified Control.Concurrent.MVar         as MVar
-import           Control.Monad                   (join, replicateM_, unless, void, when)
-import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
+import           Control.Monad                   (join, replicateM_, unless,
+                                                  void, when)
+import           Control.Monad.Except            (ExceptT, runExceptT,
+                                                  throwError)
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
 import           Data.Foldable                   (for_, traverse_)
-import           Data.List                       (foldl')
 import           Data.IORef                      (IORef)
 import qualified Data.IORef                      as IORef
-import           Data.List                       (intercalate)
+import           Data.List                       (foldl', intercalate)
 import           Data.Map                        (Map)
 import qualified Data.Map                        as Map
 import           Data.Maybe                      (fromMaybe)
@@ -40,13 +43,13 @@ import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Item.SomeItem
-import           Hakyll.Core.Logger            (Logger)
-import qualified Hakyll.Core.Logger            as Logger
+import           Hakyll.Core.Logger              (Logger)
+import qualified Hakyll.Core.Logger              as Logger
 import           Hakyll.Core.Provider
 import           Hakyll.Core.Routes
 import           Hakyll.Core.Rules.Internal
-import           Hakyll.Core.Store             (Store)
-import qualified Hakyll.Core.Store             as Store
+import           Hakyll.Core.Store               (Store)
+import qualified Hakyll.Core.Store               as Store
 import           Hakyll.Core.Util.File
 import           Hakyll.Core.Writable
 
@@ -391,7 +394,7 @@ build2 mode = do
     case mode of
         RunModeNormal -> do
             Logger.header logger "Compiling"
-            pickAndChaseAsync
+            if rtsSupportsBoundThreads then pickAndChaseAsync else pickAndChase2
             Logger.header logger "Success"
             facts <- liftIO $ schedulerFacts <$> IORef.readIORef schedulerRef
             store <- runtimeStore <$> ask
@@ -454,10 +457,10 @@ pickAndChase = do
     unless (null todo) $ do
         acted <- mconcat <$> forConcurrently (Map.keys todo) chase
         when (acted == Idled) $ do
-            -- This clause happens when chasing *every item* in `todo` resulted in 
-            -- idling because tasks are all waiting on something: a dependency cycle  
+            -- This clause happens when chasing *every item* in `todo` resulted in
+            -- idling because tasks are all waiting on something: a dependency cycle
             deps <- runtimeDependencies <$> getRuntimeState
-            throwError $ "Hakyll.Core.Runtime.pickAndChase: Dependency cycle detected: " ++ 
+            throwError $ "Hakyll.Core.Runtime.pickAndChase: Dependency cycle detected: " ++
                 intercalate ", " [show k ++ " depends on " ++ show (Set.toList v) | (k, v) <- Map.toList deps]
         pickAndChase
 
@@ -690,7 +693,7 @@ chase id' = do
                         (depId, depSnapshot) `Set.member` snapshots
                     actualDep = [(depId, depSnapshot) | not depDone]
 
-                return actualDep  
+                return actualDep
 
             modifyRuntimeState $ \s -> s
                 { runtimeTodo         = Map.insert id'
@@ -700,9 +703,9 @@ chase id' = do
                 , runtimeDependencies = Map.insertWith Set.union id' (Set.fromList deps) (runtimeDependencies s)
                 }
 
-            -- Progress has been made if at least one of the 
+            -- Progress has been made if at least one of the
             -- requirements can move forwards at the next pass
-            -- In some cases, dependencies have been processed in parallel in which case `deps` 
+            -- In some cases, dependencies have been processed in parallel in which case `deps`
             -- can be empty, and we can progress to the next stage. See issue #907
             let progress | null deps    = Progressed
                          | deps == reqs = Idled
