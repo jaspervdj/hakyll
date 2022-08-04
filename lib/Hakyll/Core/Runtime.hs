@@ -368,10 +368,12 @@ pickAndChase = do
 pickAndChaseAsync :: ReaderT RuntimeRead IO ()
 pickAndChaseAsync = do
     runtimeRead <- ask
+    numThreads  <- liftIO getNumCapabilities
     let scheduler = runtimeScheduler runtimeRead
+    Logger.message (runtimeLogger runtimeRead) $
+        "Using async runtime with " <> show numThreads <> " threads..."
     liftIO $ do
         signal     <- MVar.newEmptyMVar
-        numThreads <- getNumCapabilities
 
         let spawnN :: Int -> IO ()
             spawnN n = replicateM_ n $ forkIO $ do
