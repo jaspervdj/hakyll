@@ -39,7 +39,7 @@ fromAssertions :: String       -- ^ Name
                -> [Assertion]  -- ^ Cases
                -> [TestTree]   -- ^ Result tests
 fromAssertions name =
-    zipWith testCase [printf "[%2d] %s" n name | n <- [1 :: Int ..]]
+    zipWith testCase [printf "%02d_%s" n name | n <- [1 :: Int ..]]
 
 
 --------------------------------------------------------------------------------

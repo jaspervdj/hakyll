@@ -16,7 +16,7 @@ import           Control.Monad.Trans           (liftIO)
 import           Data.Foldable                 (for_, traverse_)
 import           Data.IORef                    (IORef)
 import qualified Data.IORef                    as IORef
-import           Data.List                     (foldl')
+import           Data.List                     (foldl', intercalate)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.Maybe                    (fromMaybe)
@@ -211,11 +211,15 @@ data SchedulerStep
 schedulerPop :: Scheduler -> (Scheduler, SchedulerStep)
 schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
     Seq.EmptyL
-        | Set.null schedulerWorking -> (scheduler, SchedulerFinish)
-        | otherwise ->
+        | not $ Set.null schedulerWorking ->
             ( scheduler {schedulerStarved = schedulerStarved + 1}
             , SchedulerStarve
             )
+        | not $ Set.null schedulerBlocked ->
+            let msg = "Possible dependency cycle in: " <>
+                    intercalate ", " (show <$> Set.toList schedulerBlocked) in
+            SchedulerError <$ schedulerError Nothing msg scheduler
+        | otherwise -> (scheduler, SchedulerFinish)
     x Seq.:< xs
         | x `Set.member` schedulerDone ->
             schedulerPop scheduler {schedulerQueue = xs}
@@ -224,12 +228,8 @@ schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
         | x `Set.member` schedulerBlocked ->
             schedulerPop scheduler {schedulerQueue = xs}
         | otherwise -> case Map.lookup x schedulerTodo of
-            Nothing ->
-                ( scheduler
-                    { schedulerErrors = (Just x, "Compiler not found") : schedulerErrors
-                    }
-                , SchedulerError
-                )
+            Nothing -> SchedulerError <$
+                schedulerError (Just x) "Compiler not found" scheduler
             Just c  ->
                 ( scheduler
                     { schedulerQueue   = xs
@@ -333,7 +333,7 @@ build mode = do
     logger <- runtimeLogger <$> ask
     Logger.header logger "Checking for out-of-date items"
     schedulerRef <- runtimeScheduler <$> ask
-    scheduleOutOfDate2
+    scheduleOutOfDate
     case mode of
         RunModeNormal -> do
             Logger.header logger "Compiling"
@@ -349,11 +349,11 @@ build mode = do
 
 
 --------------------------------------------------------------------------------
-scheduleOutOfDate2 :: ReaderT RuntimeRead IO ()
-scheduleOutOfDate2 = do
-    logger       <- runtimeLogger   <$> ask
-    provider     <- runtimeProvider <$> ask
-    universe     <- runtimeUniverse <$> ask
+scheduleOutOfDate :: ReaderT RuntimeRead IO ()
+scheduleOutOfDate = do
+    logger       <- runtimeLogger    <$> ask
+    provider     <- runtimeProvider  <$> ask
+    universe     <- runtimeUniverse  <$> ask
     schedulerRef <- runtimeScheduler <$> ask
     let modified  = Set.filter (resourceModified provider) (Map.keysSet universe)
     msgs <- liftIO . IORef.atomicModifyIORef' schedulerRef $
@@ -367,13 +367,14 @@ scheduleOutOfDate2 = do
 pickAndChase :: ReaderT RuntimeRead IO ()
 pickAndChase = do
     scheduler <- runtimeScheduler <$> ask
-    pop       <- liftIO . IORef.atomicModifyIORef' scheduler $ schedulerPop
+    let go SchedulerFinish       = pure ()
+        go SchedulerError        = pure ()
+        go (SchedulerWork i c _) = work i c >>= go
+        go SchedulerStarve       =
+            liftIO . IORef.atomicModifyIORef' scheduler $
+            schedulerError Nothing "Starved, possible dependency cycle?"
+    pop <- liftIO . IORef.atomicModifyIORef' scheduler $ schedulerPop
     go pop
-  where
-    go SchedulerFinish       = pure ()
-    go SchedulerStarve       = pure ()
-    go SchedulerError        = pure ()
-    go (SchedulerWork i c _) = work i c >>= go
 
 
 --------------------------------------------------------------------------------
@@ -388,9 +389,8 @@ pickAndChaseAsync = do
         signal     <- MVar.newEmptyMVar
 
         let spawnN :: Int -> IO ()
-            spawnN n = replicateM_ n $ forkIO $ do
-                pop <- IORef.atomicModifyIORef' scheduler $ schedulerPop
-                go pop
+            spawnN n = replicateM_ n $ forkIO $
+                IORef.atomicModifyIORef' scheduler schedulerPop >>= go
 
             go :: SchedulerStep -> IO ()
             go step = case step of
