@@ -7,9 +7,11 @@ module Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
+import           Control.Concurrent              (getNumCapabilities, forkIO)
 import           Control.Concurrent.Async.Lifted (forConcurrently)
 import           Control.Concurrent.MVar         (modifyMVar_, readMVar, newMVar, MVar)
-import           Control.Monad                   (join, unless, when)
+import qualified Control.Concurrent.MVar         as MVar
+import           Control.Monad                   (join, replicateM_, unless, void, when)
 import           Control.Monad.Except            (ExceptT, runExceptT, throwError)
 import           Control.Monad.Reader            (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans             (liftIO)
@@ -26,7 +28,6 @@ import qualified Data.Sequence                   as Seq
 import           Data.Set                        (Set)
 import qualified Data.Set                        as Set
 import           Data.Traversable                (for)
-import           Debug.Trace                     (trace)
 import           System.Exit                     (ExitCode (..))
 import           System.FilePath                 ((</>))
 
@@ -229,13 +230,10 @@ schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
             )
     x Seq.:< xs
         | x `Set.member` schedulerDone ->
-            trace ("ignoring identifier " <> show x <> " (done)") $
             schedulerPop scheduler {schedulerQueue = xs}
         | x `Set.member` schedulerWorking ->
-            trace ("ignoring identifier " <> show x <> " (working)") $
             schedulerPop scheduler {schedulerQueue = xs}
         | x `Set.member` schedulerBlocked ->
-            trace ("ignoring identifier " <> show x <> " (blocked)") $
             schedulerPop scheduler {schedulerQueue = xs}
         | otherwise -> case Map.lookup x schedulerTodo of
             Nothing ->
@@ -267,19 +265,14 @@ schedulerBlock
     -> Scheduler
     -> (Scheduler, SchedulerStep)
 schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
-    | null deps1 =
-        trace ("done for identifier " <> show identifier <> ", " <> show deps1 <> ", " <> show deps0) $
-        ( scheduler
-        , SchedulerWork identifier compiler 0
-        )
-    | otherwise      = schedulerPop $ scheduler
+    | null deps1 = (scheduler, SchedulerWork identifier compiler 0)
+    | otherwise  = schedulerPop $ scheduler
          { schedulerQueue    =
              -- Optimization: move deps to the front and item to the back
              Seq.fromList depIds <>
              schedulerQueue <>
              Seq.singleton identifier
          , schedulerTodo     =
-             trace ("insert for identifier " <> show identifier) $
              Map.insert identifier
                  (Compiler $ \_ -> pure $ CompilerRequire deps0 compiler)
                  schedulerTodo
@@ -287,7 +280,6 @@ schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
          , schedulerBlocked  = Set.insert identifier schedulerBlocked
          , schedulerTriggers = foldl'
              (\acc (depId, _) ->
-                 trace ("identifier " <> show identifier <> " blocked on " <> show depId) $
                  Map.insertWith Set.union depId (Set.singleton identifier) acc)
              schedulerTriggers
              deps1
@@ -308,7 +300,6 @@ schedulerUnblock :: Identifier -> Scheduler -> (Scheduler, Int)
 schedulerUnblock identifier scheduler@Scheduler {..} =
     ( scheduler
         { schedulerQueue    =
-            trace ("identifier " <> show identifier <> " triggered " <> show triggered) $
             schedulerQueue <> Seq.fromList (Set.toList triggered)
         , schedulerStarved  = 0
         , schedulerBlocked  = Set.delete identifier $
@@ -344,10 +335,8 @@ schedulerWrite identifier depFacts scheduler0@Scheduler {..} =
             { schedulerWorking = Set.delete identifier schedulerWorking
             , schedulerFacts   = Map.insert identifier depFacts schedulerFacts
             , schedulerDone    =
-                trace ("write for identifier " <> show identifier) $
                 Set.insert identifier schedulerDone
             , schedulerTodo    =
-                trace ("delete for identifier " <> show identifier) $
                 Map.delete identifier schedulerTodo
             }
         (scheduler2, step) = schedulerPop scheduler1 in
@@ -402,7 +391,7 @@ build2 mode = do
     case mode of
         RunModeNormal -> do
             Logger.header logger "Compiling"
-            pickAndChase2
+            pickAndChaseAsync
             Logger.header logger "Success"
             facts <- liftIO $ schedulerFacts <$> IORef.readIORef schedulerRef
             store <- runtimeStore <$> ask
@@ -487,6 +476,35 @@ pickAndChase2 = do
 
 
 --------------------------------------------------------------------------------
+pickAndChaseAsync :: ReaderT RuntimeRead IO ()
+pickAndChaseAsync = do
+    runtimeRead <- ask
+    let scheduler = runtimeScheduler runtimeRead
+    liftIO $ do
+        signal     <- MVar.newEmptyMVar
+        numThreads <- getNumCapabilities
+        putStrLn $ "Running in " <> show numThreads <> " threads..."
+
+        let spawnN :: Int -> IO ()
+            spawnN n = replicateM_ n $ forkIO $ do
+                pop <- IORef.atomicModifyIORef' scheduler $ schedulerPop
+                go pop
+
+            go :: SchedulerStep -> IO ()
+            go step = case step of
+                SchedulerFinish       -> void $ MVar.tryPutMVar signal ()
+                SchedulerStarve       -> pure ()
+                SchedulerError        -> void $ MVar.tryPutMVar signal ()
+                (SchedulerWork i c n) -> do
+                    spawnN n
+                    step' <- runReaderT (work i c) runtimeRead
+                    go step'
+
+        spawnN numThreads
+        MVar.readMVar signal
+
+
+--------------------------------------------------------------------------------
 work :: Identifier -> Compiler SomeItem -> ReaderT RuntimeRead IO SchedulerStep
 work id' compiler = do
     logger    <- runtimeLogger        <$> ask
@@ -523,7 +541,6 @@ work id' compiler = do
         CompilerSnapshot snapshot c -> do
             liftIO . IORef.atomicModifyIORef' scheduler $
                 schedulerSnapshot id' snapshot c
-            -- TODO: continue with threads
 
         CompilerDone (SomeItem item) cwrite -> do
             -- Print some info
