@@ -436,9 +436,9 @@ work id' compiler = do
                 schedulerError (Just id') msg
             return SchedulerError
 
-        CompilerSnapshot snapshot c -> do
+        CompilerSnapshot snapshot c ->
             liftIO . IORef.atomicModifyIORef' scheduler $
-                schedulerSnapshot id' snapshot c
+            schedulerSnapshot id' snapshot c
 
         CompilerDone (SomeItem item) cwrite -> do
             -- Print some info
@@ -471,6 +471,6 @@ work id' compiler = do
             liftIO . IORef.atomicModifyIORef' scheduler $
                 schedulerWrite id' facts
 
-        CompilerRequire reqs c -> do
+        CompilerRequire reqs c ->
             liftIO . IORef.atomicModifyIORef' scheduler $
-                schedulerBlock id' reqs c
+            schedulerBlock id' reqs c
