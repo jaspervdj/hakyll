@@ -220,10 +220,13 @@ schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
             (scheduler {schedulerStarved = schedulerStarved + 1}, PopStarve)
     x Seq.:< xs
         | x `Set.member` schedulerDone ->
+            trace ("ignoring identifier " <> show x <> " (done)") $
             schedulerPop scheduler {schedulerQueue = xs}
         | x `Set.member` schedulerWorking ->
+            trace ("ignoring identifier " <> show x <> " (working)") $
             schedulerPop scheduler {schedulerQueue = xs}
         | x `Set.member` schedulerBlocked ->
+            trace ("ignoring identifier " <> show x <> " (blocked)") $
             schedulerPop scheduler {schedulerQueue = xs}
         | otherwise -> case Map.lookup x schedulerTodo of
             Nothing ->
@@ -257,7 +260,15 @@ schedulerBlock
 schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
     | null deps1 =
         trace ("done for identifier " <> show identifier <> ", " <> show deps1 <> ", " <> show deps0) $
-        (scheduler, BlockContinue)
+        ( scheduler
+            -- TODO: Not needed?  Should we just continue directly?
+            { schedulerBlocked = Set.delete identifier schedulerBlocked
+            , schedulerQueue   = Seq.singleton identifier <> schedulerQueue
+            , schedulerWorking = Set.delete identifier schedulerWorking
+            , schedulerTodo    = Map.insert identifier compiler schedulerTodo
+            }
+        , BlockContinue
+        )
     | otherwise      =
         ( scheduler
              { schedulerQueue    =
@@ -267,11 +278,14 @@ schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
                  Seq.singleton identifier
              , schedulerTodo     =
                  trace ("insert for identifier " <> show identifier) $
-                 Map.insert identifier compiler schedulerTodo
+                 Map.insert identifier
+                     (Compiler $ \_ -> pure $ CompilerRequire deps0 compiler)
+                     schedulerTodo
              , schedulerWorking  = Set.delete identifier schedulerWorking
              , schedulerBlocked  = Set.insert identifier schedulerBlocked
              , schedulerTriggers = foldl'
                  (\acc (depId, _) ->
+                     trace ("identifier " <> show identifier <> " blocked on " <> show depId) $
                      Map.insertWith Set.union depId (Set.singleton identifier) acc)
                  schedulerTriggers
                  deps1
@@ -293,10 +307,12 @@ schedulerBlock identifier deps0 compiler scheduler@Scheduler {..}
 schedulerUnblock :: Identifier -> Scheduler -> (Scheduler, Int)
 schedulerUnblock identifier scheduler@Scheduler {..} =
     ( scheduler
-        { schedulerQueue    = schedulerQueue <>
-            Seq.fromList (Set.toList triggered)
+        { schedulerQueue    =
+            trace ("identifier " <> show identifier <> " triggered " <> show triggered) $
+            schedulerQueue <> Seq.fromList (Set.toList triggered)
         , schedulerStarved  = 0
-        , schedulerBlocked  = schedulerBlocked `Set.difference` triggered
+        , schedulerBlocked  = Set.delete identifier $
+            schedulerBlocked `Set.difference` triggered
         , schedulerTriggers = Map.delete identifier schedulerTriggers
         }
     , schedulerStarved
@@ -540,8 +556,11 @@ chase2 = do
 
                 CompilerRequire reqs c -> do
                     block <- liftIO . IORef.atomicModifyIORef' scheduler $
+                        schedulerBlock id' reqs c
+                        {-
                         schedulerBlock id' reqs $ Compiler $
                         \_ -> pure $ CompilerRequire reqs c
+                        -}
                     case block of
                         BlockContinue -> pure (True, 0)
                         BlockBlocked -> pure (True, 0)
