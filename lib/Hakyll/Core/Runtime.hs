@@ -118,6 +118,13 @@ data RuntimeRead = RuntimeRead
 
 
 --------------------------------------------------------------------------------
+-- | A Scheduler is a pure representation of work going on, works that needs
+-- to be done, and work already done.  Workers can obtain things to do
+-- by interacting with the Scheduler, and execute them synchronously or
+-- asynchronously.
+--
+-- All operations on Scheduler look like 'Scheduler -> (Scheduler, a)' and
+-- should be used with atomicModifyIORef'.
 data Scheduler = Scheduler
     { -- | Items to work on next.  Identifiers may appear multiple times.
       schedulerQueue     :: !(Seq Identifier)
@@ -157,6 +164,11 @@ emptyScheduler = Scheduler {..}
     schedulerStarved   = 0
     schedulerFacts     = Map.empty
     schedulerErrors    = []
+
+
+--------------------------------------------------------------------------------
+schedulerError :: Maybe Identifier -> String -> Scheduler -> (Scheduler, ())
+schedulerError i e s = (s {schedulerErrors = (i, e) : schedulerErrors s}, ())
 
 
 --------------------------------------------------------------------------------
@@ -403,12 +415,7 @@ work id' compiler = do
     routes    <- runtimeRoutes        <$> ask
     store     <- runtimeStore         <$> ask
     config    <- runtimeConfiguration <$> ask
-    scheduler <- runtimeScheduler <$> ask
-
-    let addError mbId err = liftIO . IORef.atomicModifyIORef' scheduler $ \s ->
-            ( s {schedulerErrors = (mbId, err) : schedulerErrors s}
-            , ()
-            )
+    scheduler <- runtimeScheduler     <$> ask
 
     let cread = CompilerRead
             { compilerConfig     = config
@@ -425,7 +432,8 @@ work id' compiler = do
             let msgs = case compilerErrorMessages e of
                     [] -> ["Compiler failed but no info given, try running with -v?"]
                     es -> es
-            for_ msgs . addError $ Just id'
+            for_ msgs $ \msg -> liftIO . IORef.atomicModifyIORef' scheduler $
+                schedulerError (Just id') msg
             return SchedulerError
 
         CompilerSnapshot snapshot c -> do
@@ -441,11 +449,13 @@ work id' compiler = do
             Logger.message logger $ cacheHits ++ " " ++ show id'
 
             -- Sanity check
-            unless (itemIdentifier item == id') $ addError (Just id') $
-                "The compiler yielded an Item with Identifier " ++
-                show (itemIdentifier item) ++ ", but we were expecting " ++
-                "an Item with Identifier " ++ show id' ++ " " ++
-                "(you probably want to call makeItem to solve this problem)"
+            liftIO . unless (itemIdentifier item == id') $
+                IORef.atomicModifyIORef' scheduler $ schedulerError
+                    (Just id') $
+                    "The compiler yielded an Item with Identifier " ++
+                    show (itemIdentifier item) ++ ", but we were expecting " ++
+                    "an Item with Identifier " ++ show id' ++ " " ++
+                    "(you probably want to call makeItem to solve this problem)"
 
             -- Write if necessary
             (mroute, _) <- liftIO $ runRoutes routes provider id'
