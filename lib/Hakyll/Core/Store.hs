@@ -150,10 +150,14 @@ set store identifier value = withStore store "set" (\key path -> do
     -- still happens outside of the locking.
     first <- IORef.atomicModifyIORef' (storeDirectoryWriting store) $ \writing ->
         (Set.insert key writing, Set.notMember key writing)
+    -- Note that this code is still wrong!  We rely on this 'cacheInserts' to
+    -- make 'get' work, when called from a non-first thread immediately after
+    -- 'set', while the first thread is still writing.  Ideally, we would not
+    -- want to rely on this.
+    cacheInsert store key value
     when first $ encodeFile path value
     IORef.atomicModifyIORef' (storeDirectoryWriting store) $ \writing ->
         (if first then Set.delete key writing else writing, ())
-    cacheInsert store key value
   ) identifier
 
 
