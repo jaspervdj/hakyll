@@ -16,15 +16,16 @@ module Hakyll.Core.Store
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad        (when)
+import           Control.Concurrent   (forkIO, threadDelay)
+import           Control.Monad        (void, when)
 import           Data.Binary          (Binary, decode, encodeFile)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cache.LRU.IO    as Lru
 import qualified Data.Hashable        as DH
 import qualified Data.IORef           as IORef
 import           Data.List            (intercalate)
+import qualified Data.Map             as Map
 import           Data.Maybe           (isJust)
-import qualified Data.Set             as Set
 import           Data.Typeable        (TypeRep, Typeable, cast, typeOf)
 import           System.Directory     (createDirectoryIfMissing, doesFileExist,
                                        removeFile)
@@ -42,11 +43,11 @@ data Box = forall a. Typeable a => Box a
 --------------------------------------------------------------------------------
 data Store = Store
     { -- | All items are stored on the filesystem
-      storeDirectory        :: FilePath
+      storeDirectory  :: FilePath
     , -- | See 'set'
-      storeDirectoryWriting :: IORef.IORef (Set.Set String)
+      storeWriteAhead :: IORef.IORef (Map.Map String Box)
       -- | Optionally, items are also kept in-memory
-    , storeMap              :: Maybe (Lru.AtomicLRU FilePath Box)
+    , storeMap        :: Maybe (Lru.AtomicLRU FilePath Box)
     }
 
 
@@ -78,12 +79,12 @@ new :: Bool      -- ^ Use in-memory caching
     -> IO Store  -- ^ Store
 new inMemory directory = do
     createDirectoryIfMissing True directory
-    writeLock <- IORef.newIORef Set.empty
+    writeAhead <- IORef.newIORef Map.empty
     ref <- if inMemory then Just <$> Lru.newAtomicLRU csize else return Nothing
     return Store
-        { storeDirectory        = directory
-        , storeDirectoryWriting = writeLock
-        , storeMap              = ref
+        { storeDirectory  = directory
+        , storeWriteAhead = writeAhead
+        , storeMap        = ref
         }
   where
     csize = Just 500
@@ -145,42 +146,53 @@ set store identifier value = withStore store "set" (\key path -> do
     --  *  This metadata is missing; we fetch it and then store it.
     --
     -- To solve this, we skip duplicate writes by tracking their status
-    -- in 'storeDirectoryWriting'.  Since this set will usually be small, the
+    -- in 'storeWriteAhead'.  Since this set will usually be small, the
     -- required locking should be fast.  Additionally the actual IO operation
     -- still happens outside of the locking.
-    first <- IORef.atomicModifyIORef' (storeDirectoryWriting store) $ \writing ->
-        (Set.insert key writing, Set.notMember key writing)
-    -- Note that this code is still wrong!  We rely on this 'cacheInserts' to
-    -- make 'get' work, when called from a non-first thread immediately after
-    -- 'set', while the first thread is still writing.  Ideally, we would not
-    -- want to rely on this.
+    first <- IORef.atomicModifyIORef' (storeWriteAhead store) $
+        \wa -> case Map.lookup key wa of
+            Nothing -> (Map.insert key (Box value) wa, True)
+            Just _  -> (wa, False)
+
     cacheInsert store key value
-    when first $ encodeFile path value
-    IORef.atomicModifyIORef' (storeDirectoryWriting store) $ \writing ->
-        (if first then Set.delete key writing else writing, ())
+
+    -- Only the thread that stored the writeAhead should actually write this
+    -- file.  That way, only one thread at a time will try to write this.
+    -- Release the writeAhead value once we're done.
+    when first $ do
+        encodeFile path value
+        IORef.atomicModifyIORef' (storeWriteAhead store) $
+            \wa -> (Map.delete key wa, ())
   ) identifier
 
 
 --------------------------------------------------------------------------------
 -- | Load an item
-get :: (Binary a, Typeable a) => Store -> [String] -> IO (Result a)
+get :: forall a. (Binary a, Typeable a) => Store -> [String] -> IO (Result a)
 get store = withStore store "get" $ \key path -> do
-    -- First check the in-memory map
-    ref <- cacheLookup store key
-    case ref of
-        -- Not found in the map, try the filesystem
-        NotFound -> do
-            exists <- doesFileExist path
-            if not exists
-                -- Not found in the filesystem either
-                then return NotFound
-                -- Found in the filesystem
-                else do
-                    v <- decodeClose path
-                    cacheInsert store key v
-                    return $ Found v
-        -- Found in the in-memory map (or wrong type), just return
-        s -> return s
+    -- Check the writeAhead value
+    writeAhead <- IORef.readIORef $ storeWriteAhead store
+    case Map.lookup key writeAhead of
+        Just (Box x) -> case cast x of
+            Just x' -> pure $ Found x'
+            Nothing -> pure $ WrongType (typeOf (undefined :: a)) (typeOf x)
+        Nothing -> do
+            -- Check the in-memory map
+            ref <- cacheLookup store key
+            case ref of
+                -- Not found in the map, try the filesystem
+                NotFound -> do
+                    exists <- doesFileExist path
+                    if not exists
+                        -- Not found in the filesystem either
+                        then return NotFound
+                        -- Found in the filesystem
+                        else do
+                            v <- decodeClose path
+                            cacheInsert store key v
+                            return $ Found v
+                -- Found in the in-memory map (or wrong type), just return
+                s -> return s
   where
     -- 'decodeFile' from Data.Binary which closes the file ASAP
     decodeClose path = do
