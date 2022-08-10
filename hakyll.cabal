@@ -207,7 +207,7 @@ Library
     time                 >= 1.8      && < 1.12,
     time-locale-compat   >= 0.1      && < 0.2,
     unordered-containers >= 0.2      && < 0.3,
-    vector               >= 0.11     && < 0.13,
+    vector               >= 0.11     && < 0.14,
     yaml                 >= 0.8.11   && < 0.12
 
   If flag(previewServer)
