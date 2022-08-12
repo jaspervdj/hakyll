@@ -206,8 +206,12 @@ get store = withStore store "get" $ \key path -> do
 -- | Strict function
 isMember :: Store -> [String] -> IO Bool
 isMember store = withStore store "isMember" $ \key path -> do
-    inCache <- cacheIsMember store key
-    if inCache then return True else doesFileExist path
+    writeAhead <- IORef.readIORef $ storeWriteAhead store
+    if Map.member key writeAhead
+        then pure True
+        else do
+            inCache <- cacheIsMember store key
+            if inCache then return True else doesFileExist path
 
 
 --------------------------------------------------------------------------------
