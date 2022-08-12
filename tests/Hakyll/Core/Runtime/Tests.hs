@@ -102,7 +102,7 @@ case02 = do
 -- Test that dependency cycles are correctly identified
 case03 :: Assertion
 case03 = do
-    logger  <- Logger.new Logger.Error
+    (logger, inMemLog) <- Logger.newInMem
     (ec, _) <- run RunModeNormal testConfiguration logger $ do
 
         create ["partial.html.out1"] $ do
@@ -119,8 +119,8 @@ case03 = do
                 makeItem example
                     >>= loadAndApplyTemplate "partial.html" defaultContext
 
-
     ec @?= ExitFailure 1
+    inMemLog >>= print
 
     cleanTestEnv
 
