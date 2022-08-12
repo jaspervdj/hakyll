@@ -14,6 +14,7 @@ import           Control.Monad                 (replicateM_, unless, void)
 import           Control.Monad.Reader          (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans           (liftIO)
 import           Data.Foldable                 (for_, traverse_)
+import qualified Data.Graph                    as Graph
 import           Data.IORef                    (IORef)
 import qualified Data.IORef                    as IORef
 import           Data.List                     (foldl', intercalate)
@@ -216,8 +217,12 @@ schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
             , SchedulerStarve
             )
         | not $ Set.null schedulerBlocked ->
-            let msg = "Possible dependency cycle in: " <>
-                    intercalate ", " (show <$> Set.toList schedulerBlocked) in
+            let cycles = schedulerCycles scheduler
+                msg | null cycles = "Possible dependency cycle in: " <>
+                        intercalate ", " (show <$> Set.toList schedulerBlocked)
+                    | otherwise = "Dependency cycles: " <>
+                        intercalate "; "
+                            (map (intercalate " -> " . map show) cycles) in
             SchedulerError <$ schedulerError Nothing msg scheduler
         | otherwise -> (scheduler, SchedulerFinish)
     x Seq.:< xs
@@ -237,6 +242,18 @@ schedulerPop scheduler@Scheduler {..} = case Seq.viewl schedulerQueue of
                     }
                 , SchedulerWork x c 0
                 )
+
+
+--------------------------------------------------------------------------------
+schedulerCycles :: Scheduler -> [[Identifier]]
+schedulerCycles Scheduler {..} =
+    [c | Graph.CyclicSCC c <- Graph.stronglyConnComp graph]
+  where
+    graph = [(x, x, Set.toList ys) | (x, ys) <- Map.toList edges]
+    edges = Map.fromListWith Set.union $ do
+        (dep, xs) <- Map.toList $ schedulerTriggers
+        x <- Set.toList xs
+        pure (x, Set.singleton dep)
 
 
 --------------------------------------------------------------------------------
