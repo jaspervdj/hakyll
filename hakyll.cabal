@@ -216,7 +216,7 @@ Library
       warp            >= 3.2   && < 3.4,
       wai-app-static  >= 3.1   && < 3.2,
       http-types      >= 0.9   && < 0.13,
-      fsnotify        >= 0.2   && < 0.4
+      fsnotify        >= 0.2   && < 0.5
     Cpp-options:
       -DPREVIEW_SERVER
     Other-modules:
@@ -225,7 +225,7 @@ Library
 
   If flag(watchServer)
     Build-depends:
-      fsnotify        >= 0.2   && < 0.4
+      fsnotify        >= 0.2   && < 0.5
     Cpp-options:
       -DWATCH_SERVER
     Other-modules:
