@@ -151,7 +151,7 @@ instance Functor Compiler where
 
 --------------------------------------------------------------------------------
 instance Monad Compiler where
-    return x = compilerResult $ CompilerDone x mempty
+    return = pure
     {-# INLINE return #-}
 
     Compiler c >>= f = Compiler $ \r -> do
@@ -185,7 +185,7 @@ instance Fail.MonadFail Compiler where
 
 --------------------------------------------------------------------------------
 instance Applicative Compiler where
-    pure x = return x
+    pure x = compilerResult $ CompilerDone x mempty
     {-# INLINE pure #-}
 
     f <*> x = f >>= \f' -> fmap f' x
