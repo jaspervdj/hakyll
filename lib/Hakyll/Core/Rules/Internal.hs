@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Rank2Types                 #-}
 module Hakyll.Core.Rules.Internal
@@ -12,12 +13,13 @@ module Hakyll.Core.Rules.Internal
 
 
 --------------------------------------------------------------------------------
+#if !MIN_VERSION_base(4,13,0)
 import           Control.Monad.Fail             (MonadFail)
+#endif
 import           Control.Monad.Reader           (ask)
 import           Control.Monad.RWS              (RWST, runRWST)
 import           Control.Monad.Trans            (liftIO)
 import qualified Data.Map                       as M
-import           Data.Semigroup                 (Semigroup (..))
 import           Data.Set                       (Set)
 
 

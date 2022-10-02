@@ -15,7 +15,6 @@ module TestSuite.Util
 
 --------------------------------------------------------------------------------
 import           Data.List                     (intercalate, isInfixOf)
-import           Data.Monoid                   (mempty)
 import qualified Data.Set                      as S
 import           Test.Tasty
 import           Test.Tasty.HUnit

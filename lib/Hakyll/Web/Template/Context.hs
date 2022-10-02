@@ -54,9 +54,10 @@ module Hakyll.Web.Template.Context
 --------------------------------------------------------------------------------
 import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
+#if !MIN_VERSION_base(4,13,0)
 import           Control.Monad.Fail            (MonadFail)
+#endif
 import           Data.List                     (intercalate, tails)
-import           Data.Semigroup                (Semigroup (..))
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime, parseTimeM)
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)

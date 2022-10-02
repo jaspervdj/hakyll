@@ -10,13 +10,18 @@ module Hakyll.Core.Util.File
 
 
 --------------------------------------------------------------------------------
+import           Control.Monad       (filterM, forM)
+import           System.Directory    (createDirectoryIfMissing,
+                                      doesDirectoryExist, getDirectoryContents)
+import           System.FilePath     (takeDirectory, (</>))
+#ifndef mingw32_HOST_OS
+import           Control.Monad       (when)
+import           System.Directory    (removeDirectoryRecursive)
+#else
 import           Control.Concurrent  (threadDelay)
 import           Control.Exception   (SomeException, catch)
-import           Control.Monad       (filterM, forM, when)
-import           System.Directory    (createDirectoryIfMissing,
-                                      doesDirectoryExist, getDirectoryContents,
-                                      removeDirectoryRecursive, removePathForcibly)
-import           System.FilePath     (takeDirectory, (</>))
+import           System.Directory    (removePathForcibly)
+#endif
 
 
 --------------------------------------------------------------------------------

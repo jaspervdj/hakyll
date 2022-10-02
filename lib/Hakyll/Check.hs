@@ -19,7 +19,6 @@ import           Control.Monad.Trans          (liftIO)
 import           Control.Monad.Trans.Resource (runResourceT)
 import           Data.List                    (isPrefixOf)
 import qualified Data.Map.Lazy                as Map
-import           Data.Semigroup               (Semigroup (..))
 import           Network.URI                  (unEscapeString)
 import           System.Directory             (doesDirectoryExist,
                                                doesFileExist)

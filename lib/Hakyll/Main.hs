@@ -27,7 +27,6 @@ import           System.IO.Unsafe          (unsafePerformIO)
 
 
 --------------------------------------------------------------------------------
-import           Data.Monoid               ((<>))
 import qualified Options.Applicative       as OA
 
 

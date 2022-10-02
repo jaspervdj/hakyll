@@ -6,7 +6,6 @@ module Hakyll.Web.Redirect
     , createRedirects
     ) where
 
-import           Control.Applicative    ((<$>))
 import           Control.Monad          (forM_, when)
 import           Data.Binary            (Binary (..))
 import           Data.List              (sort, group)

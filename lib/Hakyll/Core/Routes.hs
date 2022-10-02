@@ -56,7 +56,6 @@ module Hakyll.Core.Routes
 
 
 --------------------------------------------------------------------------------
-import           Data.Semigroup                 (Semigroup (..))
 import           System.FilePath                (replaceExtension, normalise)
 
 
