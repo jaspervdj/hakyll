@@ -32,6 +32,12 @@ jobs:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: ${{ matrix.cabal }}
 
+    - name: Enable -Werror
+      shell: bash
+      run: |
+        [ -e cabal.project ] && exit 1
+        echo -e 'packages: *.cabal\npackage hakyll\n  ghc-options: -Werror' > cabal.project
+
     - name: Freeze
       run: |
         cabal update
@@ -78,7 +84,7 @@ jobs:
 
     - name: Build
       run: |
-        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --pedantic
 
     - name: Test
       run: |
