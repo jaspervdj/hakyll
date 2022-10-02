@@ -66,19 +66,17 @@ removeDirectory fp = do
 --      https://github.com/haskell/directory/issues/96
 --      https://github.com/haskell/win32/pull/129
 --
--- The hacky solution is to retry deleting directories a few times, 
+-- The hacky solution is to retry deleting directories a few times,
 -- with a delay, on Windows only.
 removeDirectory = retryWithDelay 10 . removePathForcibly
-#endif
-
 
 --------------------------------------------------------------------------------
 -- | Retry an operation at most /n/ times (/n/ must be positive).
 --   If the operation fails the /n/th time it will throw that final exception.
 --   A delay of 100ms is introduced between every retry.
 retryWithDelay :: Int -> IO a -> IO a
-retryWithDelay i x 
+retryWithDelay i x
     | i <= 0    = error "Hakyll.Core.Util.File.retry: retry count must be 1 or more"
     | i == 1    = x
     | otherwise = catch x $ \(_::SomeException) -> threadDelay 100 >> retryWithDelay (i-1) x
-
+#endif
