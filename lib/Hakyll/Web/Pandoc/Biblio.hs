@@ -134,7 +134,7 @@ processPandocBiblios csl biblios item = do
             , Pandoc.FileInfo zeroTime . unBiblio . itemBody $ y
             )
           )
-          [0 ..]
+          [0 :: Integer ..]
           biblios
 
         stFiles = foldr ((.) . uncurry Pandoc.insertInFileTree)
