@@ -1,7 +1,5 @@
 --------------------------------------------------------------------------------
 -- | Module providing the main hakyll function and command-line argument parsing
-{-# LANGUAGE CPP #-}
-
 module Hakyll.Main
     ( -- * Entry points
       hakyll
