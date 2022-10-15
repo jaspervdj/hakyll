@@ -150,6 +150,7 @@ Library
     Hakyll.Web.CompressCss
     Hakyll.Web.Feed
     Hakyll.Web.Html
+    Hakyll.Web.Html.Compress
     Hakyll.Web.Html.RelativizeUrls
     Hakyll.Web.Meta.JSONLD
     Hakyll.Web.Meta.OpenGraph

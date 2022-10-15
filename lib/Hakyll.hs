@@ -19,6 +19,7 @@ module Hakyll
     , module Hakyll.Web.CompressCss
     , module Hakyll.Web.Feed
     , module Hakyll.Web.Html
+    , module Hakyll.Web.Html.Compress
     , module Hakyll.Web.Html.RelativizeUrls
     , module Hakyll.Web.Meta.JSONLD
     , module Hakyll.Web.Meta.OpenGraph
@@ -55,6 +56,7 @@ import           Hakyll.Main
 import           Hakyll.Web.CompressCss
 import           Hakyll.Web.Feed
 import           Hakyll.Web.Html
+import           Hakyll.Web.Html.Compress
 import           Hakyll.Web.Html.RelativizeUrls
 import           Hakyll.Web.Meta.JSONLD
 import           Hakyll.Web.Meta.OpenGraph
