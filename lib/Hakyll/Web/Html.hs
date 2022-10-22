@@ -4,6 +4,7 @@ module Hakyll.Web.Html
     ( -- * Generic
       withTags
     , withTagList
+    , withTagListM
 
       -- * Headers
     , demoteHeaders
@@ -23,13 +24,13 @@ module Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------
+import           Control.Monad.Identity          (void, Identity(runIdentity))
 import           Data.Char                       (digitToInt, intToDigit,
                                                   isDigit, toLower)
 import           Data.Either                     (fromRight)
 import           Data.List                       (isPrefixOf, intercalate)
 import           Data.Maybe                      (fromMaybe)
 import qualified Data.Set                        as S
-import           Control.Monad                   (void)
 import           System.FilePath                 (joinPath, splitPath,
                                                   takeDirectory)
 import           Text.Blaze.Html                 (toHtml)
@@ -51,7 +52,12 @@ withTags = withTagList . map
 
 -- | Map over all tags (as list) in the document
 withTagList :: ([TS.Tag String] -> [TS.Tag String]) -> String -> String
-withTagList f = renderTags' . f . parseTags'
+withTagList f = runIdentity . withTagListM (pure . f)
+
+-- | Map over all tags (as list) in the document, in a monad
+withTagListM :: Monad m => ([TS.Tag String] -> m [TS.Tag String]) -> String -> m String
+withTagListM f = fmap renderTags' . f . parseTags'
+{-# INLINE withTagListM #-}
 
 --------------------------------------------------------------------------------
 -- | Map every @h1@ to an @h2@, @h2@ to @h3@, etc.
