@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-20.04, macOS-11, windows-2022]
         cabal: ["3.6"]
         ghc:
           - "8.6.5"
@@ -60,7 +60,7 @@ jobs:
 
   stack:
     name: stack / ghc ${{ matrix.ghc }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         stack: ["2.9.1"]
@@ -92,7 +92,7 @@ jobs:
 
   sdist:
     name: Cabal file is up-to-date
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         cabal: ["3.6"]
