@@ -1,12 +1,10 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import           Control.Arrow    (second)
 import           Control.Monad    (filterM, forM_)
-import           Data.List        (isPrefixOf, sortBy)
+import           Data.List        (sortBy)
 import           Data.Ord         (comparing)
 import           Hakyll
 import           System.Directory (copyFile)
-import           System.FilePath  (dropTrailingPathSeparator, splitPath)
 import qualified Text.Pandoc      as Pandoc
 
 

@@ -10,13 +10,18 @@ module Hakyll.Core.Util.File
 
 
 --------------------------------------------------------------------------------
+import           Control.Monad       (filterM, forM)
+import           System.Directory    (createDirectoryIfMissing,
+                                      doesDirectoryExist, getDirectoryContents)
+import           System.FilePath     (takeDirectory, (</>))
+#ifndef mingw32_HOST_OS
+import           Control.Monad       (when)
+import           System.Directory    (removeDirectoryRecursive)
+#else
 import           Control.Concurrent  (threadDelay)
 import           Control.Exception   (SomeException, catch)
-import           Control.Monad       (filterM, forM, when)
-import           System.Directory    (createDirectoryIfMissing,
-                                      doesDirectoryExist, getDirectoryContents,
-                                      removeDirectoryRecursive, removePathForcibly)
-import           System.FilePath     (takeDirectory, (</>))
+import           System.Directory    (removePathForcibly)
+#endif
 
 
 --------------------------------------------------------------------------------
@@ -66,19 +71,17 @@ removeDirectory fp = do
 --      https://github.com/haskell/directory/issues/96
 --      https://github.com/haskell/win32/pull/129
 --
--- The hacky solution is to retry deleting directories a few times, 
+-- The hacky solution is to retry deleting directories a few times,
 -- with a delay, on Windows only.
 removeDirectory = retryWithDelay 10 . removePathForcibly
-#endif
-
 
 --------------------------------------------------------------------------------
 -- | Retry an operation at most /n/ times (/n/ must be positive).
 --   If the operation fails the /n/th time it will throw that final exception.
 --   A delay of 100ms is introduced between every retry.
 retryWithDelay :: Int -> IO a -> IO a
-retryWithDelay i x 
+retryWithDelay i x
     | i <= 0    = error "Hakyll.Core.Util.File.retry: retry count must be 1 or more"
     | i == 1    = x
     | otherwise = catch x $ \(_::SomeException) -> threadDelay 100 >> retryWithDelay (i-1) x
-
+#endif

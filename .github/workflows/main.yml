@@ -12,23 +12,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-20.04, macOS-11, windows-2022]
         cabal: ["3.6"]
         ghc:
           - "8.6.5"
           - "8.8.4"
           - "8.10.7"
           - "9.0.2"
-          - "9.2.1"
+          - "9.2.4"
         exclude:
-          - os: macOS-latest
-            ghc: 8.8.4
-          - os: macOS-latest
+          # fails to build: "can't load framework: Cocoa (not found)"
+          - os: macOS-11
             ghc: 8.6.5
-          - os: windows-latest
+          # fails to build: "can't load framework: Cocoa (not found)"
+          - os: macOS-11
             ghc: 8.8.4
-          - os: windows-latest
-            ghc: 8.6.5
 
     steps:
     - uses: actions/checkout@v2
@@ -40,6 +38,12 @@ jobs:
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: ${{ matrix.cabal }}
+
+    - name: Enable -Werror
+      shell: bash
+      run: |
+        [ -e cabal.project ] && exit 1
+        echo -e 'packages: *.cabal\npackage hakyll\n  ghc-options: -Werror' > cabal.project
 
     - name: Freeze
       run: |
@@ -63,11 +67,11 @@ jobs:
 
   stack:
     name: stack / ghc ${{ matrix.ghc }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        stack: ["2.7.3"]
-        ghc: ["8.10.7"]
+        stack: ["2.9.1"]
+        ghc: ["9.0.2"]
 
     steps:
     - uses: actions/checkout@v2
@@ -87,7 +91,7 @@ jobs:
 
     - name: Build
       run: |
-        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --pedantic
 
     - name: Test
       run: |
@@ -95,11 +99,11 @@ jobs:
 
   sdist:
     name: Cabal file is up-to-date
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        cabal: ["3.4"]
-        ghc: ["9.0.2"]
+        cabal: ["3.6"]
+        ghc: ["9.2.4"]
 
     steps:
     - uses: actions/checkout@v2

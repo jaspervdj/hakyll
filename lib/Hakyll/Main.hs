@@ -1,7 +1,5 @@
 --------------------------------------------------------------------------------
 -- | Module providing the main hakyll function and command-line argument parsing
-{-# LANGUAGE CPP #-}
-
 module Hakyll.Main
     ( -- * Entry points
       hakyll
@@ -29,7 +27,6 @@ import           System.IO.Unsafe          (unsafePerformIO)
 
 
 --------------------------------------------------------------------------------
-import           Data.Monoid               ((<>))
 import qualified Options.Applicative       as OA
 
 

@@ -16,8 +16,7 @@ module Hakyll.Core.Store
 
 
 --------------------------------------------------------------------------------
-import           Control.Concurrent   (forkIO, threadDelay)
-import           Control.Monad        (void, when)
+import           Control.Monad        (when)
 import           Data.Binary          (Binary, decode, encodeFile)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Cache.LRU.IO    as Lru

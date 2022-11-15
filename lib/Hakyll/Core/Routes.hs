@@ -39,7 +39,6 @@ compilation result is indeed HTML (for example with the
 
 Take a look at the built-in routes here for detailed usage examples.
 -}
-{-# LANGUAGE CPP        #-}
 {-# LANGUAGE Rank2Types #-}
 module Hakyll.Core.Routes
     ( Routes
@@ -57,9 +56,6 @@ module Hakyll.Core.Routes
 
 
 --------------------------------------------------------------------------------
-#if MIN_VERSION_base(4,9,0)
-import           Data.Semigroup                 (Semigroup (..))
-#endif
 import           System.FilePath                (replaceExtension, normalise)
 
 
@@ -92,7 +88,6 @@ newtype Routes = Routes
 
 
 --------------------------------------------------------------------------------
-#if MIN_VERSION_base(4,9,0)
 instance Semigroup Routes where
     (<>) (Routes f) (Routes g) = Routes $ \p id' -> do
         (mfp, um) <- f p id'
@@ -103,15 +98,6 @@ instance Semigroup Routes where
 instance Monoid Routes where
     mempty  = Routes $ \_ _ -> return (Nothing, False)
     mappend = (<>)
-#else
-instance Monoid Routes where
-    mempty = Routes $ \_ _ -> return (Nothing, False)
-    mappend (Routes f) (Routes g) = Routes $ \p id' -> do
-        (mfp, um) <- f p id'
-        case mfp of
-            Nothing -> g p id'
-            Just _  -> return (mfp, um)
-#endif
 
 
 --------------------------------------------------------------------------------
@@ -247,8 +233,8 @@ interpreted as an destination filepath. It's normally the filepath of the
 source file being processed.
 See 'Hakyll.Core.Identifier.Identifier' for details.
 
-Hint: The name "gsub" comes from a similar function in 
-[R](https://www.r-project.org) and can be read as "globally substituting" 
+Hint: The name "gsub" comes from a similar function in
+[R](https://www.r-project.org) and can be read as "globally substituting"
 (globally in the Unix sense of repeated, not just once).
 
 === __Examples__

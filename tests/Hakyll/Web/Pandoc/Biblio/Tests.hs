@@ -16,7 +16,6 @@ import qualified Data.ByteString.Lazy       as LBS
 --------------------------------------------------------------------------------
 import           Hakyll
 import           Hakyll.Core.Runtime
-import           Hakyll.Web.Pandoc.Biblio
 import qualified Hakyll.Core.Logger         as Logger
 import           TestSuite.Util
 
