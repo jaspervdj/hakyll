@@ -13,6 +13,7 @@ module Hakyll.Main
     , Command(..)
     , optionParser
     , commandParser
+    , defaultCommands
     , defaultParser
     , defaultParserPure
     , defaultParserPrefs
@@ -150,47 +151,49 @@ optionParser conf = Options <$> verboseParser <*> commandParser conf
 
 
 commandParser :: Config.Configuration -> OA.Parser Command
-commandParser conf = OA.subparser $ foldr ((<>) . produceCommand) mempty commands
+commandParser conf =  OA.subparser $ foldr ((<>) . produceCommand) mempty (defaultCommands conf)
+    where
+    produceCommand (c,a,b) = OA.command c (OA.info (OA.helper <*> a) (b))
+
+
+defaultCommands :: Config.Configuration -> [(String, OA.Parser Command, OA.InfoMod a)]
+defaultCommands conf =
+    [ ( "build"
+      , pure Build <*> OA.flag RunModeNormal RunModePrintOutOfDate (OA.long "dry-run" <> OA.help "Don't build, only print out-of-date items")
+      , OA.fullDesc <> OA.progDesc "Generate the site"
+      )
+    , ( "check"
+      , pure Check <*> OA.switch (OA.long "internal-links" <> OA.help "Check internal links only")
+      , OA.fullDesc <> OA.progDesc "Validate the site output"
+      )
+    , ( "clean"
+      , pure Clean
+      , OA.fullDesc <> OA.progDesc "Clean up and remove cache"
+      )
+    , ( "deploy"
+      , pure Deploy
+      , OA.fullDesc <> OA.progDesc "Upload/deploy your site"
+       )
+    , ( "preview"
+      , pure Preview <*> portParser
+      , OA.fullDesc <> OA.progDesc "[DEPRECATED] Please use the watch command"
+      )
+    , ( "rebuild"
+      , pure Rebuild
+      , OA.fullDesc <> OA.progDesc "Clean and build again"
+      )
+    , ( "server"
+      , pure Server <*> hostParser <*> portParser
+      , OA.fullDesc <> OA.progDesc "Start a preview server"
+      )
+    , ( "watch"
+      , pure Watch <*> hostParser <*> portParser <*> OA.switch (OA.long "no-server" <> OA.help "Disable the built-in web server")
+      , OA.fullDesc <> OA.progDesc "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server."
+      )
+    ]
     where
     portParser = OA.option OA.auto (OA.long "port" <> OA.help "Port to listen on" <> OA.value (Config.previewPort conf))
     hostParser = OA.strOption (OA.long "host" <> OA.help "Host to bind on" <> OA.value (Config.previewHost conf))
-
-    produceCommand (c,a,b) = OA.command c (OA.info (OA.helper <*> a) (b))
-
-    commands =
-        [ ( "build"
-          , pure Build <*> OA.flag RunModeNormal RunModePrintOutOfDate (OA.long "dry-run" <> OA.help "Don't build, only print out-of-date items")
-          , OA.fullDesc <> OA.progDesc "Generate the site"
-          )
-        , ( "check"
-          , pure Check <*> OA.switch (OA.long "internal-links" <> OA.help "Check internal links only")
-          , OA.fullDesc <> OA.progDesc "Validate the site output"
-          )
-        , ( "clean"
-          , pure Clean
-          , OA.fullDesc <> OA.progDesc "Clean up and remove cache"
-          )
-        , ( "deploy"
-          , pure Deploy
-          , OA.fullDesc <> OA.progDesc "Upload/deploy your site"
-           )
-        , ( "preview"
-          , pure Preview <*> portParser
-          , OA.fullDesc <> OA.progDesc "[DEPRECATED] Please use the watch command"
-          )
-        , ( "rebuild"
-          , pure Rebuild
-          , OA.fullDesc <> OA.progDesc "Clean and build again"
-          )
-        , ( "server"
-          , pure Server <*> hostParser <*> portParser
-          , OA.fullDesc <> OA.progDesc "Start a preview server"
-          )
-        , ( "watch"
-          , pure Watch <*> hostParser <*> portParser <*> OA.switch (OA.long "no-server" <> OA.help "Disable the built-in web server")
-          , OA.fullDesc <> OA.progDesc "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server."
-          )
-        ]
 
 
 --------------------------------------------------------------------------------
