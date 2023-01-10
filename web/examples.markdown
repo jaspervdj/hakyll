@@ -206,6 +206,8 @@ directly with the default Hakyll site.
   [source](https://github.com/marbu/blog-marbu-eu)
 - <https://aerphanas.github.io/>,
   [source](https://github.com/aerphanas/aerphanas.github.io)
+- <https://blog.galowicz.de>,
+  [source](https://github.com/tfc/tfc.github.io)
 
 
 ## Hakyll 3.X
