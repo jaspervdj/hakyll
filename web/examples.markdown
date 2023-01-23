@@ -58,8 +58,6 @@ directly with the default Hakyll site.
   [source](https://github.com/xinitrc/xinitrc.de)
 - <http://nickcharlton.net/>,
   [source](https://github.com/nickcharlton/nickcharlton.net)
-- <http://scr.stunts.hu/>,
-  [literate source](http://scr.stunts.hu/hakyll.html)
 - <http://www.eanalytica.com/>,
   [literate source](http://www.eanalytica.com/site/)
 - <http://cse.iitk.ac.in/users/ppk>,
