@@ -11,6 +11,8 @@ import           Test.Tasty                 (TestTree, testGroup)
 import           Test.Tasty.Golden          (goldenVsString)
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Lazy       as LBS
+import qualified Data.Version               as Version
+import           Text.Pandoc                ( pandocVersion )
 
 
 --------------------------------------------------------------------------------
@@ -37,7 +39,7 @@ goldenTest01 :: TestTree
 goldenTest01 =
     goldenVsString
         "biblio01"
-        (goldenTestsDataDir </> "cites-meijer.golden")
+        (goldenTestsDataDir </> goldenTest)
         (do
             -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
             logger <- Logger.new Logger.Error
@@ -65,12 +67,19 @@ goldenTest01 =
             cleanTestEnv
 
             return output)
+    
+    where 
+        goldenTest = 
+            if pandocVersion > Version.makeVersion [2,19] 
+                then "cites-meijer-pandoc3.golden" 
+                else "cites-meijer-pandoc2.golden"
+
 
 goldenTest02 :: TestTree
 goldenTest02 =
     goldenVsString
         "biblio02"
-        (goldenTestsDataDir </> "cites-meijer.golden")
+        (goldenTestsDataDir </> goldenTest)
         (do
             -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
             logger <- Logger.new Logger.Error
@@ -98,12 +107,17 @@ goldenTest02 =
             cleanTestEnv
 
             return output)
+    where
+        goldenTest = 
+            if pandocVersion > Version.makeVersion [2,19] 
+                then "cites-meijer-pandoc3.golden" 
+                else "cites-meijer-pandoc2.golden"
 
 goldenTest03 :: TestTree
 goldenTest03 =
     goldenVsString
         "biblio03"
-        (goldenTestsDataDir </> "cites-multiple.golden")
+        (goldenTestsDataDir </> goldenTest)
         (do
             -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
             logger <- Logger.new Logger.Error
@@ -133,3 +147,8 @@ goldenTest03 =
             cleanTestEnv
 
             return output)
+    where
+        goldenTest = 
+            if pandocVersion > Version.makeVersion [2,19] 
+                then "cites-multiple-pandoc3.golden" 
+                else "cites-multiple-pandoc2.golden"
