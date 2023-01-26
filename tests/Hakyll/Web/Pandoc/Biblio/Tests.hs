@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP               #-}
 module Hakyll.Web.Pandoc.Biblio.Tests
     ( tests
     ) where
@@ -11,8 +12,6 @@ import           Test.Tasty                 (TestTree, testGroup)
 import           Test.Tasty.Golden          (goldenVsString)
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Lazy       as LBS
-import qualified Data.Version               as Version
-import           Text.Pandoc                ( pandocVersion )
 
 
 --------------------------------------------------------------------------------
@@ -70,9 +69,9 @@ goldenTest01 =
     
     where 
         goldenTest = 
-            if pandocVersion > Version.makeVersion [2,19] 
-                then "cites-meijer-pandoc3.golden" 
-                else "cites-meijer-pandoc2.golden"
+            if pandocMajorVersion == 2
+                then "cites-meijer-pandoc2.golden" 
+                else "cites-meijer-pandoc3.golden"
 
 
 goldenTest02 :: TestTree
@@ -109,9 +108,9 @@ goldenTest02 =
             return output)
     where
         goldenTest = 
-            if pandocVersion > Version.makeVersion [2,19] 
-                then "cites-meijer-pandoc3.golden" 
-                else "cites-meijer-pandoc2.golden"
+            if pandocMajorVersion == 2
+                then "cites-meijer-pandoc2.golden" 
+                else "cites-meijer-pandoc3.golden"
 
 goldenTest03 :: TestTree
 goldenTest03 =
@@ -149,6 +148,14 @@ goldenTest03 =
             return output)
     where
         goldenTest = 
-            if pandocVersion > Version.makeVersion [2,19] 
-                then "cites-multiple-pandoc3.golden" 
-                else "cites-multiple-pandoc2.golden"
+            if pandocMajorVersion == 2 
+                then "cites-multiple-pandoc2.golden" 
+                else "cites-multiple-pandoc3.golden"
+
+--------------------------------------------------------------------------------
+pandocMajorVersion :: Int
+#if MIN_VERSION_pandoc(3,0,0)
+pandocMajorVersion = 3
+#else
+pandocMajorVersion = 2   
+#endif
