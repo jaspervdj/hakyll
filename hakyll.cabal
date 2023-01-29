@@ -194,7 +194,7 @@ Library
     hashable             >= 1.0      && < 2,
     lifted-async         >= 0.10     && < 1,
     lrucache             >= 1.1.1    && < 1.3,
-    mtl                  >= 1        && < 2.3,
+    mtl                  >= 1        && < 2.4,
     network-uri          >= 2.6      && < 2.7,
     optparse-applicative >= 0.12     && < 0.18,
     parsec               >= 3.0      && < 3.2,

@@ -24,7 +24,8 @@ module Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad.Identity          (void, Identity(runIdentity))
+import           Control.Monad                   (void)
+import           Control.Monad.Identity          (Identity(runIdentity))
 import           Data.Char                       (digitToInt, intToDigit,
                                                   isDigit, toLower)
 import           Data.Either                     (fromRight)
