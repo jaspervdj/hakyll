@@ -4,6 +4,12 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.15.2.0 (2022-01-20)
+
+- Added support for pandoc 3 (#965). Note that the behavior of Hakyll's 
+    `readPandocBiblios` and `readPandocBiblio` is different whether pandoc 
+    2 or 3 is installed. 
+
 ## Hakyll 4.15.1.1 (2022-01-20)
 
 - Extend the documentation for `Hakyll.Core.Identifier` (contribution by
