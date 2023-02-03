@@ -23,6 +23,7 @@ module Hakyll.Web.Feed
     ( FeedConfiguration (..)
     , renderRss
     , renderAtom
+    , renderJsonFeed
     , renderRssWithTemplates
     , renderAtomWithTemplates
     ) where
@@ -61,6 +62,16 @@ atomTemplate =
 atomItemTemplate :: Template
 atomItemTemplate =
     $(makeRelativeToProject ("data" </> "templates" </> "atom-item.xml")
+        >>= embedTemplate)
+
+jsonFeedTemplate :: Template
+jsonFeedTemplate =
+    $(makeRelativeToProject ("data" </> "templates" </> "feed.json")
+        >>= embedTemplate)
+
+jsonFeedItemTemplate :: Template
+jsonFeedItemTemplate =
+    $(makeRelativeToProject ("data" </> "templates" </> "feed-item.json")
         >>= embedTemplate)
 
 
@@ -174,6 +185,47 @@ renderAtom :: FeedConfiguration       -- ^ Feed configuration
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
 renderAtom = renderAtomWithTemplates atomTemplate atomItemTemplate
+
+
+--------------------------------------------------------------------------------
+-- | Render a JSON feed with a number of items.
+renderJsonFeed :: FeedConfiguration       -- ^ Feed configuration
+           -> Context String          -- ^ Item context
+           -> [Item String]           -- ^ Feed items
+           -> Compiler (Item String)  -- ^ Resulting feed
+renderJsonFeed config itemContext items = do
+    body <- makeItem =<< applyJoinTemplateList ", " itemTpl itemContext' items
+    applyTemplate feedTpl feedContext body
+  where
+    itemTpl = jsonFeedItemTemplate
+    feedTpl = jsonFeedTemplate
+
+    itemContext' = makeItemContext "%Y-%m-%dT%H:%M:%SZ" $ mconcat
+        [ itemContext
+        , constField "root" (feedRoot config)
+        , constField "authorName"  (feedAuthorName config)
+        , constField "authorEmail" (feedAuthorEmail config)
+        ]
+
+    feedContext = mconcat
+         [ bodyField  "body"
+         , constField "title"       (feedTitle config)
+         , constField "description" (feedDescription config)
+         , constField "authorName"  (feedAuthorName config)
+         , constField "authorEmail" (feedAuthorEmail config)
+         , constField "root"        (feedRoot config)
+         , urlField   "url"
+         , updatedField
+         , missingField
+         ]
+
+    -- Take the first "updated" field from all items -- this should be the most
+    -- recent.
+    updatedField = field "updated" $ \_ -> case items of
+        []      -> return "Unknown"
+        (x : _) -> unContext itemContext' "updated" [] x >>= \cf -> case cf of
+            StringField s -> return s
+            _             -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
 
 
 --------------------------------------------------------------------------------
