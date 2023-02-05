@@ -1,7 +1,7 @@
 {
     "id": "$root$$url$",
     "url": "$root$$url$",
-    "content_html": "$descriptionJson$",
+    "content_html": "$description$",
     "date_published": "$published$",
     "date_modified": "$updated$"
 }

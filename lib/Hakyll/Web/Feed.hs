@@ -41,6 +41,7 @@ import           Hakyll.Web.Template.List
 --------------------------------------------------------------------------------
 import           Data.FileEmbed              (makeRelativeToProject)
 import           System.FilePath             ((</>))
+import Data.Char (showLitChar)
 
 
 --------------------------------------------------------------------------------
@@ -201,7 +202,7 @@ renderJsonFeed config itemContext items = do
     feedTpl = jsonFeedTemplate
 
     itemContext' = makeItemContext "%Y-%m-%dT%H:%M:%SZ" $ mconcat
-        [ itemContext
+        [ mapContextField "description" escapeString itemContext
         , constField "root" (feedRoot config)
         , constField "authorName"  (feedAuthorName config)
         , constField "authorEmail" (feedAuthorEmail config)
@@ -225,11 +226,33 @@ renderJsonFeed config itemContext items = do
         []      -> return "Unknown"
         (x : _) -> unContext itemContext' "updated" [] x >>= \cf -> case cf of
             StringField s -> return s
-            _             -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
+            _             -> fail "Hakyll.Web.Feed.renderJsonFeed: Internal error"
 
+mapContextField :: String -> (String -> String) -> Context a -> Context a
+mapContextField fld f (Context c) = Context $ \k a i -> do
+    fld' <- c k a i
+    case fld' of
+        EmptyField      -> wrongType "boolField"
+        StringField str -> return $ StringField $
+                             if k == fld then f str else str
+        _               -> wrongType "ListField"
+  where
+    wrongType typ = fail $ "Hakyll.Web.Template.Context.mapContextField: " ++
+        "can't map over a " ++ typ ++ "!"
 
 --------------------------------------------------------------------------------
 -- | Copies @$updated$@ from @$published$@ if it is not already set.
 makeItemContext :: String -> Context a -> Context a
 makeItemContext fmt context = mconcat
     [context, dateField "published" fmt, dateField "updated" fmt]
+
+escapeString :: String -> String
+escapeString = flip escapeString' ""
+  where
+    escapeString' :: String -> ShowS
+    escapeString' [] s = s
+    escapeString' ('"' : cs) s = showString "\\\"" (escapeString' cs s)
+    escapeString' (c : cs) s = escapeChar c (escapeString' cs s)
+
+    escapeChar :: Char -> ShowS
+    escapeChar c s = if c > '\DEL' then showChar c s else showLitChar c s
