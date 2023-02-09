@@ -129,7 +129,7 @@ checkDestination = do
     let htmls =
             [ destinationDirectory config </> file
             | file <- files
-            , takeExtension file == ".html"
+            , takeExtension file `elem` [".html", ".xhtml"]
             ]
 
     forM_ htmls checkFile
