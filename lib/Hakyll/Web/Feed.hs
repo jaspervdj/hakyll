@@ -73,8 +73,9 @@ data FeedConfiguration = FeedConfiguration
       feedDescription :: String
     , -- | Name of the feed author.
       feedAuthorName  :: String
-    , -- | Email of the feed author.
-      feedAuthorEmail :: Maybe String
+    , -- | Email of the feed author.  Set this to the empty String to leave out
+      -- the email address.
+      feedAuthorEmail :: String
     , -- | Absolute root URL of the feed site (e.g. @http://jaspervdj.be@)
       feedRoot        :: String
     } deriving (Show, Eq)
@@ -126,8 +127,8 @@ renderFeed feedTpl itemTpl config itemContext items = do
             _             -> fail "Hakyll.Web.Feed.renderFeed: Internal error"
 
     emailField = case feedAuthorEmail config of
-        Nothing    -> missingField
-        Just email -> constField "authorEmail" email
+        ""    -> missingField
+        email -> constField "authorEmail" email
 
 --------------------------------------------------------------------------------
 -- | Render an RSS feed using given templates with a number of items.
