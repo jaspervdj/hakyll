@@ -6,49 +6,58 @@
 -- respective compilers ('biblioCompiler' and 'cslCompiler'). Then, you can
 -- refer to these files when you use 'readPandocBiblio'. This function also
 -- takes the reader options for completeness -- you can use
--- 'defaultHakyllReaderOptions' if you're unsure.
+-- 'defaultHakyllReaderOptions' if you're unsure. If you already read the
+-- source into a 'Pandoc' type and need to add processing for the bibliography,
+-- you can use 'processPandocBiblio' instead.
 -- 'pandocBiblioCompiler' is a convenience wrapper which works like 'pandocCompiler',
--- but also takes paths to compiled bibliography and csl files.
+-- but also takes paths to compiled bibliography and csl files;
+-- 'pandocBibliosCompiler' is similar but instead takes a glob pattern for bib files.
 {-# LANGUAGE Arrows                     #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
 module Hakyll.Web.Pandoc.Biblio
-    ( CSL
+    ( CSL (..)
     , cslCompiler
     , Biblio (..)
     , biblioCompiler
     , readPandocBiblio
+    , readPandocBiblios
+    , processPandocBiblio
+    , processPandocBiblios
     , pandocBiblioCompiler
+    , pandocBibliosCompiler
     ) where
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad            (liftM, replicateM)
-import           Data.Binary              (Binary (..))
-import           Data.Typeable            (Typeable)
+import           Control.Monad                 (liftM)
+import           Data.Binary                   (Binary (..))
+import qualified Data.ByteString               as B
+import qualified Data.ByteString.Lazy          as BL
+import qualified Data.Map                      as Map
+import qualified Data.Time                     as Time
+import qualified Data.Text                     as T (pack)
+import           Data.Typeable                 (Typeable)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
+import           Hakyll.Core.Identifier.Pattern (fromGlob)
 import           Hakyll.Core.Item
-import           Hakyll.Core.Provider
 import           Hakyll.Core.Writable
 import           Hakyll.Web.Pandoc
-import           Hakyll.Web.Pandoc.Binary ()
-import qualified Text.CSL                 as CSL
-import           Text.CSL.Pandoc          (processCites)
-import           Text.Pandoc              (Pandoc, ReaderOptions (..),
-                                           enableExtension, Extension (..))
+import           Text.Pandoc                   (Extension (..), Pandoc,
+                                                ReaderOptions (..),
+                                                enableExtension)
+import qualified Text.Pandoc                   as Pandoc
+import qualified Text.Pandoc.Citeproc          as Pandoc (processCitations)
+import           System.FilePath               (addExtension, takeExtension)
 
 
 --------------------------------------------------------------------------------
-data CSL = CSL
-    deriving (Show, Typeable)
+newtype CSL = CSL {unCSL :: B.ByteString}
+    deriving (Binary, Show, Typeable)
 
-
---------------------------------------------------------------------------------
-instance Binary CSL where
-    put CSL = return ()
-    get     = return CSL
 
 
 --------------------------------------------------------------------------------
@@ -59,21 +68,12 @@ instance Writable CSL where
 
 --------------------------------------------------------------------------------
 cslCompiler :: Compiler (Item CSL)
-cslCompiler = makeItem CSL
+cslCompiler = fmap (CSL . BL.toStrict) <$> getResourceLBS
 
 
 --------------------------------------------------------------------------------
-newtype Biblio = Biblio [CSL.Reference]
-    deriving (Show, Typeable)
-
-
---------------------------------------------------------------------------------
-instance Binary Biblio where
-    -- Ugly.
-    get             = do
-        len <- get
-        Biblio <$> replicateM len get
-    put (Biblio rs) = put (length rs) >> mapM_ put rs
+newtype Biblio = Biblio {unBiblio :: B.ByteString}
+    deriving (Binary, Show, Typeable)
 
 
 --------------------------------------------------------------------------------
@@ -84,12 +84,7 @@ instance Writable Biblio where
 
 --------------------------------------------------------------------------------
 biblioCompiler :: Compiler (Item Biblio)
-biblioCompiler = do
-    filePath <- getResourceFilePath
-    makeItem =<< unsafeCompiler (Biblio <$> CSL.readBiblioFile idpred filePath)
-  where
-    -- This is a filter on citations.  We include all citations.
-    idpred = const True
+biblioCompiler = fmap (Biblio . BL.toStrict) <$> getResourceLBS
 
 
 --------------------------------------------------------------------------------
@@ -98,28 +93,96 @@ readPandocBiblio :: ReaderOptions
                  -> Item Biblio
                  -> (Item String)
                  -> Compiler (Item Pandoc)
-readPandocBiblio ropt csl biblio item = do
-    -- Parse CSL file, if given
-    provider <- compilerProvider <$> compilerAsk
-    style <- unsafeCompiler $
-             CSL.readCSLFile Nothing . (resourceFilePath provider) . itemIdentifier $ csl
+readPandocBiblio ropt csl biblio = readPandocBiblios ropt csl [biblio]
 
-    -- We need to know the citation keys, add then *before* actually parsing the
-    -- actual page. If we don't do this, pandoc won't even consider them
-    -- citations!
-    let Biblio refs = itemBody biblio
-    pandoc <- itemBody <$> readPandocWith ropt item
-    let pandoc' = processCites style refs pandoc
+readPandocBiblios :: ReaderOptions
+                  -> Item CSL
+                  -> [Item Biblio]
+                  -> (Item String)
+                  -> Compiler (Item Pandoc)
+readPandocBiblios ropt csl biblios item = do
+  pandoc <- readPandocWith ropt item
+  processPandocBiblios csl biblios pandoc
 
-    return $ fmap (const pandoc') item
 
 --------------------------------------------------------------------------------
+processPandocBiblio :: Item CSL
+                    -> Item Biblio
+                    -> (Item Pandoc)
+                    -> Compiler (Item Pandoc)
+processPandocBiblio csl biblio = processPandocBiblios csl [biblio]
+
+processPandocBiblios :: Item CSL
+                     -> [Item Biblio]
+                     -> (Item Pandoc)
+                     -> Compiler (Item Pandoc)
+processPandocBiblios csl biblios item = do
+    -- It's not straightforward to use the Pandoc API as of 2.11 to deal with
+    -- citations, since it doesn't export many things in 'Text.Pandoc.Citeproc'.
+    -- The 'citeproc' package is also hard to use.
+    --
+    -- So instead, we try treating Pandoc as a black box.  Pandoc can read
+    -- specific csl and bilbio files based on metadata keys.
+    --
+    -- So we load the CSL and Biblio files and pass them to Pandoc using the
+    -- ersatz filesystem.
+    let Pandoc.Pandoc (Pandoc.Meta meta) blocks = itemBody item
+        cslFile = Pandoc.FileInfo zeroTime . unCSL $ itemBody csl
+        bibFiles = zipWith (\x y ->
+            ( addExtension ("_hakyll/bibliography-" ++ show x)
+                           (takeExtension $ toFilePath $ itemIdentifier y)
+            , Pandoc.FileInfo zeroTime . unBiblio . itemBody $ y
+            )
+          )
+          [0 :: Integer ..]
+          biblios
+
+        stFiles = foldr ((.) . uncurry Pandoc.insertInFileTree)
+                    (Pandoc.insertInFileTree "_hakyll/style.csl" cslFile)
+                    bibFiles
+
+        addBiblioFiles = \st -> st { Pandoc.stFiles = stFiles $ Pandoc.stFiles st }
+
+        biblioMeta = Pandoc.Meta .
+            Map.insert "csl" (Pandoc.MetaString "_hakyll/style.csl") .
+            Map.insert "bibliography"
+              (Pandoc.MetaList $ map (Pandoc.MetaString . T.pack . fst) bibFiles) $
+            meta
+        errOrPandoc = Pandoc.runPure $ do
+            Pandoc.modifyPureState addBiblioFiles
+            Pandoc.processCitations $ Pandoc.Pandoc biblioMeta blocks
+
+    pandoc <- case errOrPandoc of
+        Left  e -> compilerThrow ["Error during processCitations: " ++ show e]
+        Right x -> return x
+
+    return $ fmap (const pandoc) item
+
+  where
+    zeroTime = Time.UTCTime (toEnum 0) 0
+
+
+--------------------------------------------------------------------------------
+-- | Compiles a markdown file via Pandoc. Requires the .csl and .bib files to be known to the compiler via match statements.
 pandocBiblioCompiler :: String -> String -> Compiler (Item String)
 pandocBiblioCompiler cslFileName bibFileName = do
     csl <- load $ fromFilePath cslFileName
     bib <- load $ fromFilePath bibFileName
     liftM writePandoc
         (getResourceBody >>= readPandocBiblio ropt csl bib)
+    where ropt = defaultHakyllReaderOptions
+            { -- The following option enables citation rendering
+              readerExtensions = enableExtension Ext_citations $ readerExtensions defaultHakyllReaderOptions
+            }
+
+--------------------------------------------------------------------------------
+-- | Compiles a markdown file via Pandoc. Requires the .csl and .bib files to be known to the compiler via match statements.
+pandocBibliosCompiler :: String -> String -> Compiler (Item String)
+pandocBibliosCompiler cslFileName bibFileName = do
+    csl  <- load    $ fromFilePath cslFileName
+    bibs <- loadAll $ fromGlob bibFileName
+    liftM writePandoc
+        (getResourceBody >>= readPandocBiblios ropt csl bibs)
     where ropt = defaultHakyllReaderOptions
             { -- The following option enables citation rendering
               readerExtensions = enableExtension Ext_citations $ readerExtensions defaultHakyllReaderOptions

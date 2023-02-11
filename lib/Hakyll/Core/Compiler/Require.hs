@@ -15,6 +15,8 @@ module Hakyll.Core.Compiler.Require
 --------------------------------------------------------------------------------
 import           Control.Monad                  (when)
 import           Data.Binary                    (Binary)
+import           Data.Foldable                  (toList, traverse_)
+import           Data.Functor.Identity          (Identity(Identity, runIdentity))
 import qualified Data.Set                       as S
 import           Data.Typeable
 
@@ -55,31 +57,8 @@ load id' = loadSnapshot id' final
 -- | Require a specific snapshot of an item.
 loadSnapshot :: (Binary a, Typeable a)
              => Identifier -> Snapshot -> Compiler (Item a)
-loadSnapshot id' snapshot = do
-    store    <- compilerStore <$> compilerAsk
-    universe <- compilerUniverse <$> compilerAsk
-
-    -- Quick check for better error messages
-    when (id' `S.notMember` universe) $ fail notFound
-
-    compilerTellDependencies [IdentifierDependency id']
-    compilerResult $ CompilerRequire (id', snapshot) $ do
-        result <- compilerUnsafeIO $ Store.get store (key id' snapshot)
-        case result of
-            Store.NotFound      -> fail notFound
-            Store.WrongType e r -> fail $ wrongType e r
-            Store.Found x       -> return $ Item id' x
-  where
-    notFound =
-        "Hakyll.Core.Compiler.Require.load: " ++ show id' ++
-        " (snapshot " ++ snapshot ++ ") was not found in the cache, " ++
-        "the cache might be corrupted or " ++
-        "the item you are referring to might not exist"
-    wrongType e r =
-        "Hakyll.Core.Compiler.Require.load: " ++ show id' ++
-        " (snapshot " ++ snapshot ++ ") was found in the cache, " ++
-        "but does not have the right type: expected " ++ show e ++
-        " but got " ++ show r
+loadSnapshot id' snapshot =
+    fmap runIdentity $ loadSnapshotCollection (Identity (id', snapshot))
 
 
 --------------------------------------------------------------------------------
@@ -108,8 +87,43 @@ loadAll pattern = loadAllSnapshots pattern final
 loadAllSnapshots :: (Binary a, Typeable a)
                  => Pattern -> Snapshot -> Compiler [Item a]
 loadAllSnapshots pattern snapshot = do
-    matching <- getMatches pattern
-    mapM (\i -> loadSnapshot i snapshot) matching
+    ids <- fmap (\id' -> (id', snapshot)) <$> getMatches pattern
+    loadSnapshotCollection ids
+
+
+--------------------------------------------------------------------------------
+-- | Load a collection of snapshots.
+-- Only the first NotFound or WrongType error will be reported.
+loadSnapshotCollection :: (Binary a, Typeable a, Traversable t)
+              => t (Identifier, Snapshot) -> Compiler (t (Item a))
+loadSnapshotCollection ids = do
+    store    <- compilerStore <$> compilerAsk
+    universe <- compilerUniverse <$> compilerAsk
+
+    -- Quick check for better error messages
+    let checkMember (id', snap) =
+            when (id' `S.notMember` universe) (fail $ notFound id' snap)
+    traverse_ checkMember ids
+
+    compilerTellDependencies $ IdentifierDependency . fst <$> toList ids
+    let go (id', snap) = do
+            result <- compilerUnsafeIO $ Store.get store (key id' snap)
+            case result of
+                Store.NotFound      -> fail $ notFound id' snap
+                Store.WrongType e r -> fail $ wrongType id' snap e r
+                Store.Found x       -> return $ Item id' x
+    compilerResult $ CompilerRequire (toList ids) $ traverse go ids
+  where
+    notFound id' snapshot =
+        "Hakyll.Core.Compiler.Require.load: " ++ show id' ++
+        " (snapshot " ++ snapshot ++ ") was not found in the cache, " ++
+        "the cache might be corrupted or " ++
+        "the item you are referring to might not exist"
+    wrongType id' snapshot e r =
+        "Hakyll.Core.Compiler.Require.load: " ++ show id' ++
+        " (snapshot " ++ snapshot ++ ") was found in the cache, " ++
+        "but does not have the right type: expected " ++ show e ++
+        " but got " ++ show r
 
 
 --------------------------------------------------------------------------------

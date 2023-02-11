@@ -8,6 +8,8 @@ module Hakyll.Web.Pandoc
     , writePandocWith
     , renderPandoc
     , renderPandocWith
+    , renderPandocWithTransform
+    , renderPandocWithTransformM
 
       -- * Derived compilers
     , pandocCompiler
@@ -56,6 +58,7 @@ readPandocWith ropt item =
     reader ro t = case t of
         DocBook            -> readDocBook ro
         Html               -> readHtml ro
+        Jupyter            -> readIpynb ro
         LaTeX              -> readLaTeX ro
         LiterateHaskell t' -> reader (addExt ro Ext_literate_haskell) t'
         Markdown           -> readMarkdown ro
@@ -104,6 +107,32 @@ renderPandocWith ropt wopt item =
 
 
 --------------------------------------------------------------------------------
+-- | An extension of `renderPandocWith`, which allows you to specify a custom
+-- Pandoc transformation on the input `Item`.
+-- Useful if you want to do your own transformations before running
+-- custom Pandoc transformations, e.g. using a `funcField` to transform raw content.
+renderPandocWithTransform :: ReaderOptions -> WriterOptions
+                    -> (Pandoc -> Pandoc)
+                    -> Item String
+                    -> Compiler (Item String)
+renderPandocWithTransform ropt wopt f =
+    renderPandocWithTransformM ropt wopt (return . f)
+
+
+--------------------------------------------------------------------------------
+-- | Similar to `renderPandocWithTransform`, but the Pandoc transformation is
+-- monadic. This is useful when you want the pandoc
+-- transformation to use the `Compiler` information such as routes,
+-- metadata, etc. along with your own transformations beforehand.
+renderPandocWithTransformM :: ReaderOptions -> WriterOptions
+                    -> (Pandoc -> Compiler Pandoc)
+                    -> Item String
+                    -> Compiler (Item String)
+renderPandocWithTransformM ropt wopt f i =
+    writePandocWith wopt <$> (traverse f =<< readPandocWith ropt i)
+
+
+--------------------------------------------------------------------------------
 -- | Read a page render using pandoc
 pandocCompiler :: Compiler (Item String)
 pandocCompiler =
@@ -138,8 +167,7 @@ pandocCompilerWithTransformM :: ReaderOptions -> WriterOptions
                     -> (Pandoc -> Compiler Pandoc)
                     -> Compiler (Item String)
 pandocCompilerWithTransformM ropt wopt f =
-    writePandocWith wopt <$>
-        (traverse f =<< readPandocWith ropt =<< getResourceBody)
+    getResourceBody >>= renderPandocWithTransformM ropt wopt f
 
 
 --------------------------------------------------------------------------------
@@ -162,4 +190,10 @@ defaultHakyllWriterOptions = def
     , -- We want to have hightlighting by default, to be compatible with earlier
       -- Hakyll releases
       writerHighlightStyle = Just pygments
+    , -- Do not word-wrap produced HTML, and do not undo any word-wrapping
+      -- that's already present in the markup. This is how Pandoc operated
+      -- prior to 2.17, but the behaviour was changed for consistency with
+      -- other Pandoc writers. We retain the old behaviour because it spares us
+      -- the trouble of updating our golden tests.
+      writerWrapText = WrapPreserve
     }

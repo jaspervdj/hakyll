@@ -48,8 +48,8 @@ import           System.IO.Error            (catchIOError)
 
 --------------------------------------------------------------------------------
 -- | Build the site
-build :: Configuration -> Logger -> Rules a -> IO ExitCode
-build conf logger rules = fst <$> run conf logger rules
+build :: RunMode -> Configuration -> Logger -> Rules a -> IO ExitCode
+build mode conf logger rules = fst <$> run mode conf logger rules
 
 
 --------------------------------------------------------------------------------
@@ -98,14 +98,14 @@ watch conf logger host port runServer rules = do
 #else
     -- Force windows users to compile with -threaded flag, as otherwise
     -- thread is blocked indefinitely.
-    catchIOError (void $ forkOS $ watchUpdates conf update) $ do
+    catchIOError (void $ forkOS $ watchUpdates conf update) $ \_ -> do
         fail $ "Hakyll.Commands.watch: Could not start update watching " ++
                "thread. Did you compile with -threaded flag?"
 #endif
     server'
   where
     update = do
-        (_, ruleSet) <- run conf logger rules
+        (_, ruleSet) <- run RunModeNormal conf logger rules
         return $ rulesPattern ruleSet
     loop = threadDelay 100000 >> loop
     server' = if runServer then server conf logger host port else loop
@@ -117,15 +117,15 @@ watch _ _ _ _ _ _ = watchServerDisabled
 -- | Rebuild the site
 rebuild :: Configuration -> Logger -> Rules a -> IO ExitCode
 rebuild conf logger rules =
-    clean conf logger >> build conf logger rules
+    clean conf logger *> build RunModeNormal conf logger rules
 
 --------------------------------------------------------------------------------
 -- | Start a server
 server :: Configuration -> Logger -> String -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 server conf logger host port = do
-    let destination = destinationDirectory conf
-    staticServer logger destination host port
+    let settings = previewSettings conf $ destinationDirectory conf
+    staticServer logger settings host port
 #else
 server _ _ _ _ = previewServerDisabled
 #endif

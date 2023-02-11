@@ -10,7 +10,7 @@
 -- > … <> functionField "concat" (const . concat) <> …
 --
 -- which will allow you to use the @concat@ identifier as a function that takes
--- arbitrarily many stings and concatenates them to a new string:
+-- arbitrarily many strings and concatenates them to a new string:
 --
 -- > $partial(concat("templates/categories/", category))$
 --
@@ -54,13 +54,12 @@ module Hakyll.Web.Template.Context
 --------------------------------------------------------------------------------
 import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
-import           Data.List                     (intercalate, tails)
-#if MIN_VERSION_base(4,9,0)
-import           Data.Semigroup                (Semigroup (..))
+#if !MIN_VERSION_base(4,13,0)
+import           Control.Monad.Fail            (MonadFail)
 #endif
+import           Data.List                     (intercalate, tails)
 import           Data.Time.Clock               (UTCTime (..))
-import           Data.Time.Format              (formatTime)
-import qualified Data.Time.Format              as TF
+import           Data.Time.Format              (formatTime, parseTimeM)
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
@@ -106,18 +105,12 @@ newtype Context a = Context
 --------------------------------------------------------------------------------
 -- | Tries to find a key in the left context,
 -- or when that fails in the right context.
-#if MIN_VERSION_base(4,9,0)
 instance Semigroup (Context a) where
     (<>) (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
 
 instance Monoid (Context a) where
     mempty  = missingField
     mappend = (<>)
-#else
-instance Monoid (Context a) where
-    mempty                          = missingField
-    mappend (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
-#endif
 
 
 --------------------------------------------------------------------------------
@@ -326,6 +319,8 @@ titleField = mapContext takeBaseName . pathField
 --
 --   * @2010-09-06@
 --
+--   * @06.09.2010@
+--
 --   * @September 06, 2010@
 --
 -- Alternatively, when the metadata has a field called @path@ in a
@@ -365,7 +360,7 @@ dateFieldWith locale key format = field key $ \i -> do
 -- | Parser to try to extract and parse the time from the @published@
 -- field or from the filename. See 'dateField' for more information.
 -- Exported for user convenience.
-getItemUTC :: MonadMetadata m
+getItemUTC :: (MonadMetadata m, MonadFail m)
            => TimeLocale        -- ^ Output time locale
            -> Identifier        -- ^ Input page
            -> m UTCTime         -- ^ Parsed UTCTime
@@ -385,9 +380,13 @@ getItemUTC locale id' = do
     parseTime' = parseTimeM True locale
     formats    =
         [ "%a, %d %b %Y %H:%M:%S %Z"
+        , "%a, %d %b %Y %H:%M:%S"
         , "%Y-%m-%dT%H:%M:%S%Z"
+        , "%Y-%m-%dT%H:%M:%S"
         , "%Y-%m-%d %H:%M:%S%Z"
+        , "%Y-%m-%d %H:%M:%S"
         , "%Y-%m-%d"
+        , "%d.%m.%Y"
         , "%B %e, %Y %l:%M %p"
         , "%B %e, %Y"
         , "%b %d, %Y"
@@ -459,10 +458,3 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
 missingField :: Context a
 missingField = Context $ \k _ _ -> noResult $
     "Missing field '" ++ k ++ "' in context"
-
-parseTimeM :: Bool -> TimeLocale -> String -> String -> Maybe UTCTime
-#if MIN_VERSION_time(1,5,0)
-parseTimeM = TF.parseTimeM
-#else
-parseTimeM _ = TF.parseTime
-#endif

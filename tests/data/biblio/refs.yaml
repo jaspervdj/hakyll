@@ -1,0 +1,18 @@
+---
+references:
+- id: meijer1991functional
+  author:
+    - family: Meijer
+      given: Erik
+    - family: Fokkinga
+      given: Maarten
+    - family: Paterson
+      given: Ross
+  container-title: Conference on functional programming languages and computer architecture
+  issued:
+    - year: 1991
+  page: 124–144
+  publisher: Springer
+  title: Functional programming with bananas, lenses, envelopes and barbed wire
+  type: paper-conference
+...

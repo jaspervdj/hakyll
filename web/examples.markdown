@@ -58,8 +58,6 @@ directly with the default Hakyll site.
   [source](https://github.com/xinitrc/xinitrc.de)
 - <http://nickcharlton.net/>,
   [source](https://github.com/nickcharlton/nickcharlton.net)
-- <http://scr.stunts.hu/>,
-  [literate source](http://scr.stunts.hu/hakyll.html)
 - <http://www.eanalytica.com/>,
   [literate source](http://www.eanalytica.com/site/)
 - <http://cse.iitk.ac.in/users/ppk>,
@@ -184,6 +182,31 @@ directly with the default Hakyll site.
   [source](https://github.com/abhin4v/abhin4v.github.io)
 - <https://dailyreadingnotes.com/>,
   [source](https://github.com/hackeryarn/daily-reading-notes)
+- <https://benedikt-mayer.github.io/>,
+  [source](https://github.com/benedikt-mayer/benedikt-mayer.github.io)
+- <https://svejcar.dev/>,
+  [source](https://github.com/vaclavsvejcar/svejcar-dev)
+- <https://robertwpearce.com/>,
+  [source](https://github.com/rpearce/robertwpearce.com)
+- <https://blog.thjread.com/>,
+  [source](https://github.com/thjread/thjread-blog)
+- <https://xvw.github.io/>,
+  [source](https://github.com/xvw/planet)
+- <https://jeancharles.quillet.org/>,
+  [source](https://github.com/jecaro/jeancharles.quillet)
+- <https://nliu.net/>,
+  [source](https://github.com/dreamsmasher/site-haskell-source)
+- <https://dukzcry.github.io/>,
+  [source](https://github.com/dukzcry/dukzcry.github.io)
+- <https://mista.me>,
+  [source](https://github.com/agustinmista/website/tree/master)
+- <https://blog.marbu.eu/>,
+  [source](https://github.com/marbu/blog-marbu-eu)
+- <https://aerphanas.github.io/>,
+  [source](https://github.com/aerphanas/aerphanas.github.io)
+- <https://blog.galowicz.de>,
+  [source](https://github.com/tfc/tfc.github.io)
+
 
 ## Hakyll 3.X
 

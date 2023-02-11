@@ -22,6 +22,7 @@ module Hakyll.Core.Compiler
     , Internal.loadAllSnapshots
 
     , cached
+    , recompilingUnsafeCompiler
     , unsafeCompiler
     , debugCompiler
     , noResult
@@ -162,17 +163,17 @@ cached name compiler = do
     unless (resourceExists provider id') $ fail $ itDoesntEvenExist id'
 
     let modified = resourceModified provider id'
+        k = [name, show id']
+        go = compiler >>= \v -> v <$ compilerUnsafeIO (Store.set store k v)
     if modified
-        then do
-            x <- compiler
-            compilerUnsafeIO $ Store.set store [name, show id'] x
-            return x
-        else do
-            compilerTellCacheHits 1
-            x        <- compilerUnsafeIO $ Store.get store [name, show id']
-            progName <- compilerUnsafeIO getProgName
-            case x of Store.Found x' -> return x'
-                      _              -> fail $ error' progName
+        then go
+        else compilerUnsafeIO (Store.get store k) >>= \r -> case r of
+            -- found: report cache hit and return value
+            Store.Found v   -> v <$ compilerTellCacheHits 1
+            -- not found: unexpected, but recoverable
+            Store.NotFound  -> go
+            -- other results: unrecoverable error
+            _               -> fail . error' =<< compilerUnsafeIO getProgName
   where
     error' progName =
         "Hakyll.Core.Compiler.cached: Cache corrupt! " ++
@@ -185,9 +186,18 @@ cached name compiler = do
 
 
 --------------------------------------------------------------------------------
--- | Run an IO computation without dependencies in a Compiler
+-- | Run an IO computation without dependencies in a Compiler.
+-- You probably want 'recompilingUnsafeCompiler' instead.
 unsafeCompiler :: IO a -> Compiler a
 unsafeCompiler = compilerUnsafeIO
+
+--------------------------------------------------------------------------------
+-- | Run an IO computation in a Compiler.  Unlike 'unsafeCompiler',
+-- this function will cause the item to be recompiled every time.
+recompilingUnsafeCompiler :: IO a -> Compiler a
+recompilingUnsafeCompiler io = Compiler $ \_ -> do
+  a <- io
+  pure $ CompilerDone a mempty { compilerDependencies = [AlwaysOutOfDate] }
 
 
 --------------------------------------------------------------------------------

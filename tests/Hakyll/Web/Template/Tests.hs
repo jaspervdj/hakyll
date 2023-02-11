@@ -12,6 +12,7 @@ import           Test.Tasty.HUnit             (Assertion, assertBool, testCase,
                                                (@=?), (@?=))
 
 import           Data.Either                  (isLeft)
+import           System.IO                    (nativeNewline, Newline(..))
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
@@ -149,8 +150,11 @@ testEmbeddedTemplate = do
     str      <- testCompilerDone store provider "item3" $
         applyTemplate embeddedTemplate defaultContext item
 
-    itemBody str @?= "<p>Hello, world</p>\n"
+    itemBody str @?= ("<p>Hello, world</p>" ++ (newline nativeNewline))
     cleanTestEnv
   where
     item = Item "item1" "Hello, world"
+    
+    newline LF   = "\n"
+    newline CRLF = "\r\n"
 

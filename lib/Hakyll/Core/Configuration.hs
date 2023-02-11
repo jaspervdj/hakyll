@@ -3,6 +3,7 @@
 module Hakyll.Core.Configuration
     ( Configuration (..)
     , shouldIgnoreFile
+    , shouldWatchIgnore
     , defaultConfiguration
     ) where
 
@@ -10,9 +11,10 @@ module Hakyll.Core.Configuration
 --------------------------------------------------------------------------------
 import           Data.Default     (Default (..))
 import           Data.List        (isPrefixOf, isSuffixOf)
+import qualified Network.Wai.Application.Static as Static
 import           System.Directory (canonicalizePath)
 import           System.Exit      (ExitCode)
-import           System.FilePath  (isAbsolute, normalise, takeFileName)
+import           System.FilePath  (isAbsolute, normalise, takeFileName, makeRelative)
 import           System.IO.Error  (catchIOError)
 import           System.Process   (system)
 
@@ -45,6 +47,14 @@ data Configuration = Configuration
       -- want to use the test, you should use 'shouldIgnoreFile'.
       --
       ignoreFile           :: FilePath -> Bool
+    , -- | Function to determine files and directories that should not trigger
+      -- a rebuild when touched in watch mode.
+      --
+      -- Paths are passed in relative to the providerDirectory.
+      --
+      -- All files that are ignored by 'ignoreFile' are also always ignored by
+      -- 'watchIgnore'.
+      watchIgnore          :: FilePath -> Bool
     , -- | Here, you can plug in a system command to upload/deploy your site.
       --
       -- Example:
@@ -78,6 +88,9 @@ data Configuration = Configuration
       -- One can also override the port as a command line argument:
       -- ./site preview -p 1234
       previewPort          :: Int
+      -- | Override other settings used by the preview server. Default is
+      -- 'Static.defaultFileServerSettings'.
+    , previewSettings      :: FilePath -> Static.StaticSettings
     }
 
 --------------------------------------------------------------------------------
@@ -93,11 +106,13 @@ defaultConfiguration = Configuration
     , tmpDirectory         = "_cache/tmp"
     , providerDirectory    = "."
     , ignoreFile           = ignoreFile'
+    , watchIgnore          = const False
     , deployCommand        = "echo 'No deploy command specified' && exit 1"
     , deploySite           = system . deployCommand
     , inMemoryCache        = True
     , previewHost          = "127.0.0.1"
     , previewPort          = 8000
+    , previewSettings      = Static.defaultFileServerSettings
     }
   where
     ignoreFile' path
@@ -132,3 +147,11 @@ shouldIgnoreFile conf path = orM
     orM :: [IO Bool] -> IO Bool
     orM []       = return False
     orM (x : xs) = x >>= \b -> if b then return True else orM xs
+
+-- | Returns a function to check if a file should be ignored in watch mode
+shouldWatchIgnore :: Configuration -> IO (FilePath -> IO Bool)
+shouldWatchIgnore conf = do
+    fullProviderDir <- canonicalizePath $ providerDirectory conf
+    return (\path ->
+              let path' = makeRelative fullProviderDir path
+              in (|| watchIgnore conf path') <$> shouldIgnoreFile conf path)

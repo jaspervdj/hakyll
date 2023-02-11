@@ -40,12 +40,10 @@ module Hakyll.Core.Compiler.Internal
 import           Control.Applicative            (Alternative (..))
 import           Control.Exception              (SomeException, handle)
 import           Control.Monad                  (forM_)
+import qualified Control.Monad.Fail             as Fail
 import           Control.Monad.Except           (MonadError (..))
 import           Data.List.NonEmpty             (NonEmpty (..))
 import qualified Data.List.NonEmpty             as NonEmpty
-#if MIN_VERSION_base(4,9,0)
-import           Data.Semigroup                 (Semigroup (..))
-#endif
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
 
@@ -96,7 +94,6 @@ data CompilerWrite = CompilerWrite
 
 
 --------------------------------------------------------------------------------
-#if MIN_VERSION_base(4,9,0)
 instance Semigroup CompilerWrite where
     (<>) (CompilerWrite d1 h1) (CompilerWrite d2 h2) =
         CompilerWrite (d1 ++ d2) (h1 + h2)
@@ -104,12 +101,6 @@ instance Semigroup CompilerWrite where
 instance Monoid CompilerWrite where
     mempty  = CompilerWrite [] 0
     mappend = (<>)
-#else
-instance Monoid CompilerWrite where
-    mempty = CompilerWrite [] 0
-    mappend (CompilerWrite d1 h1) (CompilerWrite d2 h2) =
-        CompilerWrite (d1 ++ d2) (h1 + h2)
-#endif
 
 
 --------------------------------------------------------------------------------
@@ -134,7 +125,7 @@ compilerErrorMessages (CompilationNoResult x) = x
 data CompilerResult a
     = CompilerDone a CompilerWrite
     | CompilerSnapshot Snapshot (Compiler a)
-    | CompilerRequire (Identifier, Snapshot) (Compiler a)
+    | CompilerRequire [(Identifier, Snapshot)] (Compiler a)
     | CompilerError (CompilerErrors String)
 
 
@@ -160,7 +151,7 @@ instance Functor Compiler where
 
 --------------------------------------------------------------------------------
 instance Monad Compiler where
-    return x = compilerResult $ CompilerDone x mempty
+    return = pure
     {-# INLINE return #-}
 
     Compiler c >>= f = Compiler $ \r -> do
@@ -183,13 +174,18 @@ instance Monad Compiler where
             CompilerError e       -> return $ CompilerError e
     {-# INLINE (>>=) #-}
 
+#if !(MIN_VERSION_base(4,13,0))
+    fail = Fail.fail
+    {-# INLINE fail #-}
+#endif
+
+instance Fail.MonadFail Compiler where
     fail = compilerThrow . return
     {-# INLINE fail #-}
 
-
 --------------------------------------------------------------------------------
 instance Applicative Compiler where
-    pure x = return x
+    pure x = compilerResult $ CompilerDone x mempty
     {-# INLINE pure #-}
 
     f <*> x = f >>= \f' -> fmap f' x
@@ -358,7 +354,6 @@ compilerGetMetadata identifier = do
 compilerGetMatches :: Pattern -> Compiler [Identifier]
 compilerGetMatches pattern = do
     universe <- compilerUniverse <$> compilerAsk
-    let matching = filterMatches pattern $ S.toList universe
-        set'     = S.fromList matching
-    compilerTellDependencies [PatternDependency pattern set']
-    return matching
+    let matching = S.filter (matches pattern) universe
+    compilerTellDependencies [PatternDependency pattern matching]
+    pure $ S.toList matching

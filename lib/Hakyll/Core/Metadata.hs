@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 module Hakyll.Core.Metadata
     ( Metadata
     , lookupString
@@ -14,11 +15,18 @@ module Hakyll.Core.Metadata
 
 
 --------------------------------------------------------------------------------
-import           Control.Arrow                  (second)
 import           Control.Monad                  (forM)
+#if !MIN_VERSION_base(4,13,0)
+import           Control.Monad.Fail             (MonadFail)
+#endif
 import           Data.Binary                    (Binary (..), getWord8,
                                                  putWord8, Get)
-import qualified Data.HashMap.Strict            as HMS
+#if MIN_VERSION_aeson(2,0,0)
+import qualified Data.Aeson.KeyMap              as KeyMap
+import qualified Data.Aeson.Key                 as AK
+#else
+import qualified Data.HashMap.Strict            as KeyMap
+#endif
 import qualified Data.Set                       as S
 import qualified Data.Text                      as T
 import qualified Data.Vector                    as V
@@ -34,13 +42,13 @@ type Metadata = Yaml.Object
 
 --------------------------------------------------------------------------------
 lookupString :: String -> Metadata -> Maybe String
-lookupString key meta = HMS.lookup (T.pack key) meta >>= Yaml.toString
+lookupString key meta = KeyMap.lookup (keyFromString key) meta >>= Yaml.toString
 
 
 --------------------------------------------------------------------------------
 lookupStringList :: String -> Metadata -> Maybe [String]
 lookupStringList key meta =
-    HMS.lookup (T.pack key) meta >>= Yaml.toList >>= mapM Yaml.toString
+    KeyMap.lookup (keyFromString key) meta >>= Yaml.toList >>= mapM Yaml.toString
 
 
 --------------------------------------------------------------------------------
@@ -66,7 +74,7 @@ getMetadataField identifier key = do
 --------------------------------------------------------------------------------
 -- | Version of 'getMetadataField' which throws an error if the field does not
 -- exist.
-getMetadataField' :: MonadMetadata m => Identifier -> String -> m String
+getMetadataField' :: (MonadFail m, MonadMetadata m) => Identifier -> String -> m String
 getMetadataField' identifier key = do
     field <- getMetadataField identifier key
     case field of
@@ -105,7 +113,7 @@ instance Binary BinaryYaml where
         Yaml.Object obj -> do
             putWord8 0
             let list :: [(T.Text, BinaryYaml)]
-                list = map (second BinaryYaml) $ HMS.toList obj
+                list = map (\(k, v) -> (keyToText k, BinaryYaml v)) $ KeyMap.toList obj
             put list
 
         Yaml.Array arr -> do
@@ -124,7 +132,7 @@ instance Binary BinaryYaml where
             0 -> do
                 list <- get :: Get [(T.Text, BinaryYaml)]
                 return $ BinaryYaml $ Yaml.Object $
-                    HMS.fromList $ map (second unBinaryYaml) list
+                    KeyMap.fromList $ map (\(k, v) -> (keyFromText k, unBinaryYaml v)) list
 
             1 -> do
                 list <- get :: Get [BinaryYaml]
@@ -136,3 +144,25 @@ instance Binary BinaryYaml where
             4 -> BinaryYaml . Yaml.Bool   <$> get
             5 -> return $ BinaryYaml Yaml.Null
             _ -> fail "Data.Binary.get: Invalid Binary Metadata"
+
+
+--------------------------------------------------------------------------------
+#if MIN_VERSION_aeson(2,0,0)
+keyFromString :: String -> AK.Key
+keyFromString = AK.fromString
+
+keyToText :: AK.Key -> T.Text
+keyToText = AK.toText
+
+keyFromText :: T.Text -> AK.Key
+keyFromText = AK.fromText
+#else
+keyFromString :: String -> T.Text
+keyFromString = T.pack
+
+keyToText :: T.Text -> T.Text
+keyToText = id
+
+keyFromText :: T.Text -> T.Text
+keyFromText = id
+#endif

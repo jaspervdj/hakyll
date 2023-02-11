@@ -12,7 +12,7 @@ module Hakyll.Web.Template.Internal.Element
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative     ((<|>), (<*))
+import           Control.Applicative     ((<|>))
 import           Control.Monad           (void)
 import           Control.Arrow           (left)
 import           Data.Binary             (Binary, get, getWord8, put, putWord8)

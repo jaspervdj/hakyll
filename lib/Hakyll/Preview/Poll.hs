@@ -18,7 +18,7 @@ import qualified System.FSNotify                as FSNotify
 
 #ifdef mingw32_HOST_OS
 import           Control.Concurrent             (threadDelay)
-import           Control.Exception              (IOException, throw, try)
+import           Control.Exception              (IOException, try)
 import           System.Directory               (doesFileExist)
 import           System.Exit                    (exitFailure)
 import           System.FilePath                ((</>))
@@ -42,8 +42,9 @@ watchUpdates conf update = do
     let providerDir = providerDirectory conf
     shouldBuild     <- newEmptyMVar
     pattern         <- update
-    fullProviderDir <- canonicalizePath $ providerDirectory conf
+    fullProviderDir <- canonicalizePath providerDir
     manager         <- FSNotify.startManager
+    checkIgnore     <- shouldWatchIgnore conf
 
     let allowed event = do
             -- Absolute path of the changed file. This must be inside provider
@@ -52,8 +53,7 @@ watchUpdates conf update = do
                 relative   = dropWhile (`elem` pathSeparators) $
                     drop (length fullProviderDir) path
                 identifier = fromFilePath relative
-
-            shouldIgnore <- shouldIgnoreFile conf path
+            shouldIgnore <- checkIgnore path
             return $ not shouldIgnore && matches pattern identifier
 
     -- This thread continually watches the `shouldBuild` MVar and builds

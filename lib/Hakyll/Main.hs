@@ -1,15 +1,23 @@
 --------------------------------------------------------------------------------
 -- | Module providing the main hakyll function and command-line argument parsing
-{-# LANGUAGE CPP #-}
-
 module Hakyll.Main
-    ( hakyll
+    ( -- * Entry points
+      hakyll
     , hakyllWith
     , hakyllWithArgs
     , hakyllWithExitCode
     , hakyllWithExitCodeAndArgs
+
+      -- * Command line argument parsers
     , Options(..)
     , Command(..)
+    , optionParser
+    , commandParser
+    , defaultCommands
+    , defaultParser
+    , defaultParserPure
+    , defaultParserPrefs
+    , defaultParserInfo
     ) where
 
 
@@ -20,7 +28,6 @@ import           System.IO.Unsafe          (unsafePerformIO)
 
 
 --------------------------------------------------------------------------------
-import           Data.Monoid               ((<>))
 import qualified Options.Applicative       as OA
 
 
@@ -30,6 +37,7 @@ import qualified Hakyll.Commands           as Commands
 import qualified Hakyll.Core.Configuration as Config
 import qualified Hakyll.Core.Logger        as Logger
 import           Hakyll.Core.Rules
+import           Hakyll.Core.Runtime
 
 
 --------------------------------------------------------------------------------
@@ -72,18 +80,31 @@ hakyllWithExitCodeAndArgs conf args rules = do
 --------------------------------------------------------------------------------
 defaultParser :: Config.Configuration -> IO Options
 defaultParser conf =
-    OA.customExecParser (OA.prefs OA.showHelpOnError)
-        (OA.info (OA.helper <*> optionParser conf)
-        (OA.fullDesc <> OA.progDesc
-        (progName ++ " - Static site compiler created with Hakyll")))
+    OA.customExecParser defaultParserPrefs (defaultParserInfo conf)
 
+
+--------------------------------------------------------------------------------
+defaultParserPure :: Config.Configuration -> [String] -> OA.ParserResult Options
+defaultParserPure conf =
+  OA.execParserPure defaultParserPrefs (defaultParserInfo conf)
+
+
+--------------------------------------------------------------------------------
+defaultParserPrefs :: OA.ParserPrefs
+defaultParserPrefs = OA.prefs OA.showHelpOnError
+
+--------------------------------------------------------------------------------
+defaultParserInfo :: Config.Configuration -> OA.ParserInfo Options
+defaultParserInfo conf =
+  OA.info (OA.helper <*> optionParser conf) (OA.fullDesc <> OA.progDesc (
+                                                progName ++ " - Static site compiler created with Hakyll"))
 
 --------------------------------------------------------------------------------
 invokeCommands :: Command -> Config.Configuration ->
                   Check.Check -> Logger.Logger -> Rules a -> IO ExitCode
 invokeCommands args conf check logger rules =
     case args of
-        Build          -> Commands.build conf logger rules
+        Build   mode   -> Commands.build mode conf logger rules
         Check   _      -> Commands.check conf logger check
         Clean          -> Commands.clean conf logger >> ok
         Deploy         -> Commands.deploy conf
@@ -103,7 +124,7 @@ data Options = Options {verbosity :: Bool, optCommand :: Command}
 
 -- | The command to run.
 data Command
-    = Build
+    = Build RunMode
     -- ^ Generate the site.
     | Check   {internal_links :: Bool}
     -- ^ Validate the site output.
@@ -130,47 +151,49 @@ optionParser conf = Options <$> verboseParser <*> commandParser conf
 
 
 commandParser :: Config.Configuration -> OA.Parser Command
-commandParser conf = OA.subparser $ foldr ((<>) . produceCommand) mempty commands
+commandParser conf =  OA.subparser $ foldr ((<>) . produceCommand) mempty (defaultCommands conf)
+    where
+    produceCommand (c,a,b) = OA.command c (OA.info (OA.helper <*> a) (b))
+
+
+defaultCommands :: Config.Configuration -> [(String, OA.Parser Command, OA.InfoMod a)]
+defaultCommands conf =
+    [ ( "build"
+      , pure Build <*> OA.flag RunModeNormal RunModePrintOutOfDate (OA.long "dry-run" <> OA.help "Don't build, only print out-of-date items")
+      , OA.fullDesc <> OA.progDesc "Generate the site"
+      )
+    , ( "check"
+      , pure Check <*> OA.switch (OA.long "internal-links" <> OA.help "Check internal links only")
+      , OA.fullDesc <> OA.progDesc "Validate the site output"
+      )
+    , ( "clean"
+      , pure Clean
+      , OA.fullDesc <> OA.progDesc "Clean up and remove cache"
+      )
+    , ( "deploy"
+      , pure Deploy
+      , OA.fullDesc <> OA.progDesc "Upload/deploy your site"
+       )
+    , ( "preview"
+      , pure Preview <*> portParser
+      , OA.fullDesc <> OA.progDesc "[DEPRECATED] Please use the watch command"
+      )
+    , ( "rebuild"
+      , pure Rebuild
+      , OA.fullDesc <> OA.progDesc "Clean and build again"
+      )
+    , ( "server"
+      , pure Server <*> hostParser <*> portParser
+      , OA.fullDesc <> OA.progDesc "Start a preview server"
+      )
+    , ( "watch"
+      , pure Watch <*> hostParser <*> portParser <*> OA.switch (OA.long "no-server" <> OA.help "Disable the built-in web server")
+      , OA.fullDesc <> OA.progDesc "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server."
+      )
+    ]
     where
     portParser = OA.option OA.auto (OA.long "port" <> OA.help "Port to listen on" <> OA.value (Config.previewPort conf))
     hostParser = OA.strOption (OA.long "host" <> OA.help "Host to bind on" <> OA.value (Config.previewHost conf))
-
-    produceCommand (c,a,b) = OA.command c (OA.info (OA.helper <*> a) (b))
-
-    commands =
-        [ ( "build"
-          , pure Build
-          , OA.fullDesc <> OA.progDesc "Generate the site"
-          )
-        , ( "check"
-          , pure Check <*> OA.switch (OA.long "internal-links" <> OA.help "Check internal links only")
-          , OA.fullDesc <> OA.progDesc "Validate the site output"
-          )
-        , ( "clean"
-          , pure Clean
-          , OA.fullDesc <> OA.progDesc "Clean up and remove cache"
-          )
-        , ( "deploy"
-          , pure Deploy
-          , OA.fullDesc <> OA.progDesc "Upload/deploy your site"
-           )
-        , ( "preview"
-          , pure Preview <*> portParser
-          , OA.fullDesc <> OA.progDesc "[DEPRECATED] Please use the watch command"
-          )
-        , ( "rebuild"
-          , pure Rebuild
-          , OA.fullDesc <> OA.progDesc "Clean and build again"
-          )
-        , ( "server"
-          , pure Server <*> hostParser <*> portParser
-          , OA.fullDesc <> OA.progDesc "Start a preview server"
-          )
-        , ( "watch"
-          , pure Watch <*> hostParser <*> portParser <*> OA.switch (OA.long "no-server" <> OA.help "Disable the built-in web server")
-          , OA.fullDesc <> OA.progDesc "Autocompile on changes and start a preview server.  You can watch and recompile without running a server with --no-server."
-          )
-        ]
 
 
 --------------------------------------------------------------------------------

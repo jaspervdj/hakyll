@@ -24,6 +24,7 @@ data FileType
     | Css
     | DocBook
     | Html
+    | Jupyter
     | LaTeX
     | LiterateHaskell FileType
     | Markdown
@@ -42,6 +43,7 @@ fileType = uncurry fileType' . splitExtension
   where
     fileType' _ ".css"       = Css
     fileType' _ ".dbk"       = DocBook
+    fileType' _ ".ipynb"     = Jupyter
     fileType' _ ".htm"       = Html
     fileType' _ ".html"      = Html
     fileType' f ".lhs"       = LiterateHaskell $ case fileType f of

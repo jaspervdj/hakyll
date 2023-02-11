@@ -4,6 +4,145 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.15.?.? (unreleased)
+
+- Added support for pandoc 3 (#965). Note that the behavior of Hakyll's 
+    `readPandocBiblios` and `readPandocBiblio` is different whether pandoc 
+    2 or 3 is installed. 
+
+## Hakyll 4.15.1.1 (2022-01-20)
+
+- Extend the documentation for `Hakyll.Core.Identifier` (contribution by
+    malteneuss)
+- Fix yet another regression caused by new dependency checking code
+    (contribution by Laurent P. René de Cotret)
+- Bump `pandoc` upper bound to allow 2.17 (contribution by Alexander Batischev)
+- Website now points to Hackage rather than its own (often outdated) version of
+    the docs (contribution by Jasper Van der Jeugt)
+
+## Hakyll 4.15.1.0 (2021-10-25)
+
+- Add `Hakyll.Web.Pandoc.Biblio` functions `readPandocBiblios` and
+    `processPandocBiblios`, which let one use multiple bibliographies
+    (contribution by Benjamin Eskola)
+- Preserve file extension of bibliography files when passing them to Pandoc.
+    This enables one to use not just BibTex, but also YAML and JSON files
+    (contribution by Benjamin Eskola)
+- Fix URL extraction for `srcset` attribute. This affects
+    `Hakyll.Web.HTML.relativizeUrls` and other such functions (contribution by
+    Alexander Batischev)
+- Bump `bytestring` upper bound to allow 0.11 (contribution by Alexander
+    Batischev)
+- Bump `pandoc` upper bound to allow 2.15 (contribution by Alexander Batischev)
+- Bump `aeson` bounds to allow 2.0 (contribution by Alexander Batischev)
+
+## Hakyll 4.15.0.1 (2021-10-02)
+
+- Add missing test file to the package (contribution by Alexander Batischev)
+
+## Hakyll 4.15.0.0 (2021-10-01)
+
+- Fix dependency cycles detector (contribution by Laurent P. René de Cotret)
+- Add `--dry-run` to the `build` command (contribution by Fraser Tweedale)
+- Add support for Jupyter notebooks (files with ".ipynb" extension)
+    (contribution by fedeinthemix)
+- Add `Hakyll.Web.Pandoc.Biblio.processPandocBiblio`, which works with `Item
+    Pandoc` and is thus composable with other Pandoc-related compilers and
+    functions (contribution by fedeinthemix)
+- Speed up the runtime by about 9% (multiple contributions by Fraser Tweedale)
+- Tolerate unexpected cache misses by recompiling the item; now there is no need
+    to rebuild the entire site to fix cache corruption (contribution by Fraser
+    Tweedale)
+- Replace `Hakyll.Core.Rules.forceCompile` (introduced in 4.14.1.0) with
+    `Hakyll.Core.Compiler.recompilingUnsafeCompiler`. The new facility is more
+    versatile and composes better (contribution by Fraser Tweedale)
+- Remove dependency on `array` (contribution by Laurent P. René de Cotret)
+
+## Hakyll 4.14.1.0 (2021-08-30)
+
+- Add `Hakyll.Web.Html.demoteHeaderBy` function, which demotes an HTML header by
+    a given amount (contribution by Logan McGrath)
+- Add `Hakyll.Core.Rules.forceCompile` modifier which forces re-compilation of
+    an item even if its file wasn't modified. This is useful for data sources
+    which aren't local files (contribution by Fraser Tweedale)
+- Add `Hakyll.Web.Tags.getTagsByField` which extracts tags from a given field
+    instead of the default "tags" field (contribution by Jim McStanton and
+    Alexander Batischev)
+- Add `Hakyll.Core.Configuration.shouldWatchIgnore` function and the
+    corresponding `watchIgnore` field for `Configuration`. These are used to
+    ignore files in watch mode, which is useful when certain files are
+    pre-processed and the results are saved into the provider directory
+    (contribution by Aron Erben)
+- Add `Hakyll.Web.Meta` modules `JSONLD`, `OpenGraph`, and `TwitterCard`. These
+    help with semantic web metadata in pages. This adds dependency on `aeson`
+    (contribution by Fraser Tweedale)
+- Export `Hakyll.Web.Pandoc.Biblio.unCSL` function (contribution by Benjamin
+    Bray)
+- Make the runtime concurrent, which brings 30% speedups on real-world sites.
+    This adds dependencies on `array` and `lifted-async`. Please note that it
+    doesn't scale past the number of physical cores; ideas are welcome in
+    https://github.com/jaspervdj/hakyll/issues/850 (contribution by
+    Laurent P. René de Cotret and Vaibhav Sagar)
+- Fix binary's name in the first tutorial (contribution by Alexander Batischev)
+- Fix "Empty 'do' block" error in GitHub tutorial (contribution by
+    alexandroid000)
+- Move #hakyll IRC channel from Freenode to Libera.Chat (by Alexander Batischev
+    and henk)
+- Replace dependency on `cryptonite` and `memory` with dependency on `hashable`
+    (contribution by Laurent P. René de Cotret)
+- Bump `file-embed` upper bound to 0.0.15 (contribution by Alexander Batischev)
+- Bump `optparse-applicative` upper bound to 0.16 (contribution by Felix Yan)
+- Bump `pandoc` upper bound to 2.14 (contribution by Laurent P. René de Cotret)
+- Bump `tasty` upper bound to 1.4 (contribution by Felix Yan)
+- Bump `template-haskell` upper bound to 2.17, which is shipped with GHC 9
+    (contribution by Alexander Batischev)
+- Bump `time` upper bound to 1.11 (contribution by Alexander Batischev)
+
+## Hakyll 4.14.0.0 (2021-03-14)
+
+- Add `renderPandocWithTransform` and `renderPandocWithTransformM` (by Norman
+  Liu)
+- Make sure the initial project is writable (by Tobias Bora)
+- Bump `pandoc` to 2.11.*
+- Bump `file-embed` upper bound to 0.0.14
+- Bump `random` upper bound to 1.2
+
+## Hakyll 4.13.4.1 (2020-09-30)
+
+- Bump `pandoc` to 2.10.*
+- Bump upper bound for `template-haskell` to 2.17
+- Bump `QuickCheck` upper bound to 2.15
+
+## Hakyll 4.13.4.0 (2020-06-20)
+
+- Miscellaneous Windows-specific fixes and CI (by Laurent P. René de Cotret)
+- Bump upper bound for `cryptonite` to 0.28
+- Bump upper bound for `tasty` to 1.4
+
+## Hakyll 4.13.3.0 (2020-04-12)
+
+- Fix compilation issue related to `MonadFail` on Windows (by Martín Emanuel)
+- Bump upper bound for `warp` to 3.4
+- Bump upper bound for `pandoc-citeproc` to 0.18
+
+## Hakyll 4.13.2.0 (2020-03-07)
+
+- Fix compatibility with GHC-8.6 (by Nikolay Yakimov).
+
+## Hakyll 4.13.1.0 (2020-02-26)
+
+- Fix timezone parsing bug with time-1.9
+- Remove constant field for homepage title in example site (by Liang-Ting Chen)
+- Clean up `stack.yaml` (by Hexirp)
+- Use crytonite instead of cryptohash (by Hexirp)
+- Expose CLI argument parser internals (by Jim McStanton)
+- Support GHC-8.8. Add `MonadFail` instances and constraints (by Veronika
+  Romashkina)
+- Fix file path compatibility with Windows (by Hexirp)
+- Fix logging output flushing in `site server` (by robx)
+- Fix spacing of command line usage in `hakyll-init` (by robx)
+- Add titles to tag fields by default
+
 ## Hakyll 4.13.0.1 (2019-09-18)
 
 - Add missing test files (contribution by Justin Humm)

@@ -39,24 +39,29 @@ import           Hakyll.Web.Template.List
 
 --------------------------------------------------------------------------------
 import           Data.FileEmbed              (makeRelativeToProject)
+import           System.FilePath             ((</>))
 
 
 --------------------------------------------------------------------------------
 rssTemplate :: Template
 rssTemplate =
-    $(makeRelativeToProject "data/templates/rss.xml" >>= embedTemplate)
+    $(makeRelativeToProject ("data" </> "templates" </> "rss.xml")
+        >>= embedTemplate)
 
 rssItemTemplate :: Template
 rssItemTemplate =
-    $(makeRelativeToProject "data/templates/rss-item.xml" >>= embedTemplate)
+    $(makeRelativeToProject ("data" </> "templates" </> "rss-item.xml")
+        >>= embedTemplate)
 
 atomTemplate :: Template
 atomTemplate =
-    $(makeRelativeToProject "data/templates/atom.xml" >>= embedTemplate)
+    $(makeRelativeToProject ("data" </> "templates" </> "atom.xml")
+        >>= embedTemplate)
 
 atomItemTemplate :: Template
 atomItemTemplate =
-    $(makeRelativeToProject "data/templates/atom-item.xml" >>= embedTemplate)
+    $(makeRelativeToProject ("data" </> "templates" </> "atom-item.xml")
+        >>= embedTemplate)
 
 
 --------------------------------------------------------------------------------

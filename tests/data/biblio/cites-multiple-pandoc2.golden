@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>This page cites a paper and a book.</title>
+    </head>
+    <body>
+        <h1>This page cites a paper and a book.</h1>
+        <p>I would like to cite one of my favourite papers <span class="citation" data-cites="meijer1991functional">(Meijer, Fokkinga, and Paterson 1991)</span> here.</p>
+<p>And also a book <span class="citation" data-cites="lipovaca2012">(Lipovača 2012)</span>.</p>
+<div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
+<div id="ref-lipovaca2012" class="csl-entry" role="doc-biblioentry">
+Lipovača, Miran. 2012. <em>Learn You a Haskell for Great Good! A Beginner’s Guide</em>. San Francisco, CA: No Starch Press.
+</div>
+<div id="ref-meijer1991functional" class="csl-entry" role="doc-biblioentry">
+Meijer, Erik, Maarten Fokkinga, and Ross Paterson. 1991. <span>“Functional Programming with Bananas, Lenses, Envelopes and Barbed Wire.”</span> In <em>Conference on Functional Programming Languages and Computer Architecture</em>, 124–44. Springer.
+</div>
+</div>
+    </body>
+</html>
