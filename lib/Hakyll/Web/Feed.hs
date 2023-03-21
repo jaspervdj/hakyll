@@ -94,16 +94,30 @@ data FeedConfiguration = FeedConfiguration
 
 
 --------------------------------------------------------------------------------
+-- | Different types a feed can have.
+data FeedType = XmlFeed | JsonFeed
+  deriving (Show, Eq)
+
+
+--------------------------------------------------------------------------------
 -- | Abstract function to render any feed.
-renderFeed :: Template                -- ^ Default feed template
+renderFeed :: FeedType                -- ^ Feed type
+           -> Template                -- ^ Default feed template
            -> Template                -- ^ Default item template
            -> FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Context for the items
            -> [Item String]           -- ^ Input items
            -> Compiler (Item String)  -- ^ Resulting item
-renderFeed feedTpl itemTpl config itemContext items = do
-    protectedItems <- mapM (applyFilter protectCDATA) items
-    body <- makeItem =<< applyTemplateList itemTpl itemContext' protectedItems
+renderFeed feedType feedTpl itemTpl config itemContext items = do
+    protectedItems <-
+      case feedType of
+        XmlFeed -> mapM (applyFilter protectCDATA) items
+        JsonFeed -> pure items
+    let itemDelim = case feedType of
+          XmlFeed -> ""
+          JsonFeed -> ", "
+
+    body <- makeItem =<< applyJoinTemplateList itemDelim itemTpl itemContext' protectedItems
     applyTemplate feedTpl feedContext body
   where
     applyFilter :: (Monad m,Functor f) => (String -> String) -> f String -> m (f String)
@@ -112,7 +126,7 @@ renderFeed feedTpl itemTpl config itemContext items = do
     protectCDATA = replaceAll "]]>" (const "]]&gt;")
 
     itemContext' = mconcat
-        [ itemContext
+        [ escapeDescription itemContext
         , constField "root" (feedRoot config)
         , constField "authorName"  (feedAuthorName config)
         , emailField
@@ -141,6 +155,10 @@ renderFeed feedTpl itemTpl config itemContext items = do
     emailField = case feedAuthorEmail config of
         ""    -> missingField
         email -> constField "authorEmail" email
+    
+    escapeDescription = case feedType of
+        XmlFeed -> id
+        JsonFeed -> mapContextBy (== "description") escapeString
 
 --------------------------------------------------------------------------------
 -- | Render an RSS feed using given templates with a number of items.
@@ -152,7 +170,7 @@ renderRssWithTemplates ::
     -> [Item String]           -- ^ Feed items
     -> Compiler (Item String)  -- ^ Resulting feed
 renderRssWithTemplates feedTemplate itemTemplate config context = renderFeed
-    feedTemplate itemTemplate config
+    XmlFeed feedTemplate itemTemplate config
     (makeItemContext "%a, %d %b %Y %H:%M:%S UT" context)
 
 
@@ -166,7 +184,21 @@ renderAtomWithTemplates ::
     -> [Item String]           -- ^ Feed items
     -> Compiler (Item String)  -- ^ Resulting feed
 renderAtomWithTemplates feedTemplate itemTemplate config context = renderFeed
-    feedTemplate itemTemplate config
+    XmlFeed feedTemplate itemTemplate config
+    (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
+
+
+--------------------------------------------------------------------------------
+-- | Render a JSON feed using given templates with a number of items.
+renderJsonFeedWithTemplates ::
+       Template                -- ^ Feed template
+    -> Template                -- ^ Item template
+    -> FeedConfiguration       -- ^ Feed configuration
+    -> Context String          -- ^ Item context
+    -> [Item String]           -- ^ Feed items
+    -> Compiler (Item String)  -- ^ Resulting feed
+renderJsonFeedWithTemplates feedTemplate itemTemplate config context = renderFeed
+    JsonFeed feedTemplate itemTemplate config
     (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
 
 
@@ -194,51 +226,8 @@ renderJsonFeed :: FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Item context
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
-renderJsonFeed config itemContext items = do
-    body <- makeItem =<< applyJoinTemplateList ", " itemTpl itemContext' items
-    applyTemplate feedTpl feedContext body
-  where
-    itemTpl = jsonFeedItemTemplate
-    feedTpl = jsonFeedTemplate
+renderJsonFeed = renderJsonFeedWithTemplates jsonFeedTemplate jsonFeedItemTemplate
 
-    itemContext' = makeItemContext "%Y-%m-%dT%H:%M:%SZ" $ mconcat
-        [ mapContextField "description" escapeString itemContext
-        , constField "root" (feedRoot config)
-        , constField "authorName"  (feedAuthorName config)
-        , constField "authorEmail" (feedAuthorEmail config)
-        ]
-
-    feedContext = mconcat
-         [ bodyField  "body"
-         , constField "title"       (feedTitle config)
-         , constField "description" (feedDescription config)
-         , constField "authorName"  (feedAuthorName config)
-         , constField "authorEmail" (feedAuthorEmail config)
-         , constField "root"        (feedRoot config)
-         , urlField   "url"
-         , updatedField
-         , missingField
-         ]
-
-    -- Take the first "updated" field from all items -- this should be the most
-    -- recent.
-    updatedField = field "updated" $ \_ -> case items of
-        []      -> return "Unknown"
-        (x : _) -> unContext itemContext' "updated" [] x >>= \cf -> case cf of
-            StringField s -> return s
-            _             -> fail "Hakyll.Web.Feed.renderJsonFeed: Internal error"
-
-mapContextField :: String -> (String -> String) -> Context a -> Context a
-mapContextField fld f (Context c) = Context $ \k a i -> do
-    fld' <- c k a i
-    case fld' of
-        EmptyField      -> wrongType "boolField"
-        StringField str -> return $ StringField $
-                             if k == fld then f str else str
-        _               -> wrongType "ListField"
-  where
-    wrongType typ = fail $ "Hakyll.Web.Template.Context.mapContextField: " ++
-        "can't map over a " ++ typ ++ "!"
 
 --------------------------------------------------------------------------------
 -- | Copies @$updated$@ from @$published$@ if it is not already set.

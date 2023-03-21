@@ -31,6 +31,7 @@ module Hakyll.Web.Template.Context
     , listFieldWith
     , functionField
     , mapContext
+    , mapContextBy
 
     , defaultContext
     , bodyField
@@ -201,11 +202,26 @@ functionField name value = Context $ \k args i ->
 -- > constField "x" "ac" <> constField "y" "bc"
 --
 mapContext :: (String -> String) -> Context a -> Context a
-mapContext f (Context c) = Context $ \k a i -> do
+mapContext = mapContextBy (const True)
+
+
+--------------------------------------------------------------------------------
+-- | Transform the respective string results of all fields in a context
+-- satisfying a predicate. For example,
+--
+-- > mapContextBy (=="y") (++"c") (constField "x" "a" <> constField "y" "b")
+--
+-- is equivalent to
+--
+-- > constField "x" "a" <> constField "y" "bc"
+--
+mapContextBy :: (String -> Bool) -> (String -> String) -> Context a -> Context a
+mapContextBy p f (Context c) = Context $ \k a i -> do
     fld <- c k a i
     case fld of
         EmptyField      -> wrongType "boolField"
-        StringField str -> return $ StringField (f str)
+        StringField str -> return $ StringField $
+                             if p k then f str else str
         _               -> wrongType "ListField"
   where
     wrongType typ = fail $ "Hakyll.Web.Template.Context.mapContext: " ++
