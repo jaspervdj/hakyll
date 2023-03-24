@@ -235,6 +235,10 @@ makeItemContext :: String -> Context a -> Context a
 makeItemContext fmt context = mconcat
     [context, dateField "published" fmt, dateField "updated" fmt]
 
+
+--------------------------------------------------------------------------------
+-- | Escape the string with the usual Haskell escape conventions while leaving
+-- the non-ASCII characters intact.
 escapeString :: String -> String
 escapeString = flip escapeString' ""
   where
