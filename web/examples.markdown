@@ -18,6 +18,8 @@ directly with the default Hakyll site.
 
 - <http://jaspervdj.be/>,
   [source](https://github.com/jaspervdj/jaspervdj)
+- <https://www.haskell.org/>,
+  [source](https://github.com/haskell-infra/www.haskell.org/)
 - <http://www.imagination-land.org/>,
   [source](https://github.com/Keruspe/blog/)
 - <https://bananasandlenses.net/>,
