@@ -31,9 +31,12 @@ jobs:
           - os: windows-2022
             ghc: 9.2.5
         include:
-          # use a GHC version that only exists in chocolatey, to fix https://github.com/haskell/actions/issues/129 mentioned above
+          # https://github.com/haskell/actions/issues/129 advises to use
+          # 9.2.5.1, but it's broken somehow too: GHC gets installed, but then
+          # chocolatey claims that "all install methods for ghc 9.2.5.1
+          # failed". So let's use the next big thing
           - os: windows-2022
-            ghc: 9.2.5.1
+            ghc: 9.2.6
 
     steps:
     - uses: actions/checkout@v2
