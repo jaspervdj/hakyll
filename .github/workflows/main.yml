@@ -27,6 +27,13 @@ jobs:
           # fails to build: "can't load framework: Cocoa (not found)"
           - os: macOS-11
             ghc: 8.8.4
+          # haskell/actions/setup fails to install this version because of chocolatey: https://github.com/haskell/actions/issues/129
+          - os: windows-2022
+            ghc: 9.2.5
+        include:
+          # use a GHC version that only exists in chocolatey, to fix https://github.com/haskell/actions/issues/129 mentioned above
+          - os: windows-2022
+            ghc: 9.2.5.1
 
     steps:
     - uses: actions/checkout@v2
