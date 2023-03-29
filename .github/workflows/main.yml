@@ -19,7 +19,7 @@ jobs:
           - "8.8.4"
           - "8.10.7"
           - "9.0.2"
-          - "9.2.4"
+          - "9.2.5"
         exclude:
           # fails to build: "can't load framework: Cocoa (not found)"
           - os: macOS-11
@@ -27,6 +27,16 @@ jobs:
           # fails to build: "can't load framework: Cocoa (not found)"
           - os: macOS-11
             ghc: 8.8.4
+          # haskell/actions/setup fails to install this version because of chocolatey: https://github.com/haskell/actions/issues/129
+          - os: windows-2022
+            ghc: 9.2.5
+        include:
+          # https://github.com/haskell/actions/issues/129 advises to use
+          # 9.2.5.1, but it's broken somehow too: GHC gets installed, but then
+          # chocolatey claims that "all install methods for ghc 9.2.5.1
+          # failed". So let's use the next big thing
+          - os: windows-2022
+            ghc: 9.2.6
 
     steps:
     - uses: actions/checkout@v2
@@ -70,8 +80,8 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        stack: ["2.9.1"]
-        ghc: ["9.0.2"]
+        stack: ["2.9.3"]
+        ghc: ["9.2.5"]
 
     steps:
     - uses: actions/checkout@v2
@@ -103,7 +113,7 @@ jobs:
     strategy:
       matrix:
         cabal: ["3.6"]
-        ghc: ["9.2.4"]
+        ghc: ["9.2.5"]
 
     steps:
     - uses: actions/checkout@v2
