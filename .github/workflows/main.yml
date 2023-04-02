@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macOS-11, windows-2022]
+        os: [ubuntu-22.04, macOS-12, windows-2022]
         cabal: ["3.6"]
         ghc:
           - "8.6.5"
@@ -22,10 +22,10 @@ jobs:
           - "9.2.5"
         exclude:
           # fails to build: "can't load framework: Cocoa (not found)"
-          - os: macOS-11
+          - os: macOS-12
             ghc: 8.6.5
           # fails to build: "can't load framework: Cocoa (not found)"
-          - os: macOS-11
+          - os: macOS-12
             ghc: 8.8.4
           # haskell/actions/setup fails to install this version because of chocolatey: https://github.com/haskell/actions/issues/129
           - os: windows-2022
@@ -77,7 +77,7 @@ jobs:
 
   stack:
     name: stack / ghc ${{ matrix.ghc }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         stack: ["2.9.3"]
@@ -109,7 +109,7 @@ jobs:
 
   sdist:
     name: Cabal file is up-to-date
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         cabal: ["3.6"]
