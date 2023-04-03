@@ -111,7 +111,7 @@ defaultConfiguration = Configuration
     , tmpDirectory         = "_cache/tmp"
     , providerDirectory    = "."
     , ignoreFile           = ignoreFile'
-    , checkHtmlFile        = (==) ".html" . takeExtension
+    , checkHtmlFile        = flip elem [".html", ".xhtml"] . takeExtension
     , watchIgnore          = const False
     , deployCommand        = "echo 'No deploy command specified' && exit 1"
     , deploySite           = system . deployCommand
