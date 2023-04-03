@@ -12,21 +12,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macOS-11, windows-2022]
-        cabal: ["3.6"]
+        os: [ubuntu-22.04, macOS-12, windows-2022]
+        cabal: ["3.8.1.0"]
         ghc:
           - "8.6.5"
           - "8.8.4"
           - "8.10.7"
           - "9.0.2"
-          - "9.2.4"
+          - "9.2.7"
+          - "9.4.4"
         exclude:
           # fails to build: "can't load framework: Cocoa (not found)"
-          - os: macOS-11
-            ghc: 8.6.5
+          - os: macOS-12
+            ghc: "8.6.5"
           # fails to build: "can't load framework: Cocoa (not found)"
-          - os: macOS-11
-            ghc: 8.8.4
+          - os: macOS-12
+            ghc: "8.8.4"
 
     steps:
     - uses: actions/checkout@v2
@@ -67,11 +68,11 @@ jobs:
 
   stack:
     name: stack / ghc ${{ matrix.ghc }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        stack: ["2.9.1"]
-        ghc: ["9.0.2"]
+        stack: ["2.9.3"]
+        ghc: ["9.2.5"] # We want this to match the Stackage snapshot in stack.yaml
 
     steps:
     - uses: actions/checkout@v2
@@ -99,11 +100,11 @@ jobs:
 
   sdist:
     name: Cabal file is up-to-date
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         cabal: ["3.6"]
-        ghc: ["9.2.4"]
+        ghc: ["9.2.7"]
 
     steps:
     - uses: actions/checkout@v2
