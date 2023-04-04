@@ -23,8 +23,7 @@ import           Network.URI                  (unEscapeString)
 import           System.Directory             (doesDirectoryExist,
                                                doesFileExist)
 import           System.Exit                  (ExitCode (..))
-import           System.FilePath              (takeDirectory, takeExtension,
-                                               (</>))
+import           System.FilePath              (takeDirectory, (</>))
 import qualified Text.HTML.TagSoup            as TS
 
 
@@ -129,7 +128,7 @@ checkDestination = do
     let htmls =
             [ destinationDirectory config </> file
             | file <- files
-            , takeExtension file `elem` [".html", ".xhtml"]
+            , checkHtmlFile config file
             ]
 
     forM_ htmls checkFile
