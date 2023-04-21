@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 module Hakyll.Core.Runtime
     ( run
     , RunMode(..)
@@ -21,6 +22,13 @@ import qualified Data.Set                        as S
 import           Data.Traversable                (for)
 import           System.Exit                     (ExitCode (..))
 import           System.FilePath                 ((</>))
+
+#ifdef DEPENDENCY_VISUALIZATION
+import           Data.GraphViz
+import           Data.GraphViz.Printing          (printIt, unqtText)
+import qualified Data.Text.Lazy                  as LT
+import qualified Data.Text.Lazy.IO               as LT
+#endif
 
 
 --------------------------------------------------------------------------------
@@ -76,6 +84,7 @@ run mode config logger rules = do
             , runtimeTodo         = M.empty
             , runtimeFacts        = oldFacts
             , runtimeDependencies = M.empty
+            , runtimeFullDependencies = M.empty
             }
 
     -- Build runtime read/state
@@ -125,6 +134,7 @@ data RuntimeState = RuntimeState
     , runtimeTodo         :: Map Identifier (Compiler SomeItem)
     , runtimeFacts        :: DependencyFacts
     , runtimeDependencies :: Map Identifier (Set (Identifier, Snapshot))
+    , runtimeFullDependencies :: Map Identifier (Set (Identifier, Snapshot))
     }
 
 
@@ -154,6 +164,13 @@ build mode = do
         RunModeNormal -> do
             Logger.header logger "Compiling"
             pickAndChase
+
+#ifdef DEPENDENCY_VISUALIZATION
+            fullDeps <- runtimeFullDependencies <$> getRuntimeState
+            done <- runtimeDone <$> getRuntimeState
+            liftIO . LT.putStrLn . printIt $ dependencyGraph fullDeps done
+#endif
+
             Logger.header logger "Success"
             facts <- runtimeFacts <$> getRuntimeState
             store <- runtimeStore <$> ask
@@ -204,10 +221,35 @@ pickAndChase = do
             -- This clause happens when chasing *every item* in `todo` resulted in 
             -- idling because tasks are all waiting on something: a dependency cycle  
             deps <- runtimeDependencies <$> getRuntimeState
+#ifdef DEPENDENCY_VISUALIZATION
+            fullDeps <- runtimeFullDependencies <$> getRuntimeState
+            done <- runtimeDone <$> getRuntimeState
+            liftIO . LT.putStrLn . printIt $ dependencyGraph fullDeps done
+#endif
             throwError $ "Hakyll.Core.Runtime.pickAndChase: Dependency cycle detected: " ++ 
                 intercalate ", " [show k ++ " depends on " ++ show (S.toList v) | (k, v) <- M.toList deps]
         pickAndChase
 
+--------------------------------------------------------------------------------
+#ifdef DEPENDENCY_VISUALIZATION
+instance PrintDot Identifier where
+    unqtDot = unqtText . LT.pack . show
+    toDot = toDot . LT.pack . show
+
+-- | Produces a GraphViz representation of the runtimeDependencies graph.
+dependencyGraph :: Map Identifier (Set (Identifier, Snapshot)) -> Set Identifier -> DotGraph Identifier
+dependencyGraph fullDeps done = graphElemsToDot graphParams (map labelNodes nodes) edges
+    where
+        nodes = S.toList (M.keysSet fullDeps `S.union` foldMap (S.map fst) fullDeps)
+        edges = S.toList (M.foldMapWithKey (\ident -> S.map (\(dep, snap) -> (ident, dep, snap))) fullDeps)
+        graphParams = defaultParams
+            { clusterBy = \(n, nl) -> C (toFilePath n) (N (n, nl))
+            , clusterID = Str . LT.pack
+            , fmtEdge = \(_, _, el) -> if null el then [] else [textLabel (LT.pack el)]
+            , fmtNode = \(n, l) -> [styles [if n `S.member` done then bold else dashed]]
+            }
+        labelNodes ident = (ident, show ident)
+#endif
 
 --------------------------------------------------------------------------------
 -- | Tracks whether a set of tasks has progressed overall (at least one task progressed)
@@ -330,6 +372,7 @@ chase id' = do
                     (runtimeTodo s)
                  -- We track dependencies only to inform users when an infinite loop is detected
                 , runtimeDependencies = M.insertWith S.union id' (S.fromList deps) (runtimeDependencies s)
+                , runtimeFullDependencies = M.insertWith S.union id' (S.fromList reqs) (runtimeFullDependencies s)
                 }
 
             -- Progress has been made if at least one of the 
