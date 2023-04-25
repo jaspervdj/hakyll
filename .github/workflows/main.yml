@@ -21,6 +21,7 @@ jobs:
           - "9.0.2"
           - "9.2.7"
           - "9.4.4"
+          - "9.6.1"
         exclude:
           # fails to build: "can't load framework: Cocoa (not found)"
           - os: macOS-12
@@ -28,6 +29,9 @@ jobs:
           # fails to build: "can't load framework: Cocoa (not found)"
           - os: macOS-12
             ghc: "8.8.4"
+          # fails to link: https://github.com/jaspervdj/hakyll/issues/986
+          - os: windows-2022
+            ghc: "9.6.1"
 
     steps:
     - uses: actions/checkout@v2
