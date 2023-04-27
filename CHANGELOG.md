@@ -4,11 +4,58 @@ title: Releases
 
 # Releases
 
-## Hakyll 4.15.?.? (unreleased)
+## Hakyll 4.16.0.0 (2023-04-27)
 
-- Added support for pandoc 3 (#965). Note that the behavior of Hakyll's 
-    `readPandocBiblios` and `readPandocBiblio` is different whether pandoc 
-    2 or 3 is installed. 
+- Bump `base` *lower* bound to 4.12 (GHC >= 8.6). Hakyll already failed to build
+    on earlier versions due to the template-haskell requirement, and nobody
+    complained about that, so I assume nobody cares if the support is properly
+    dropped (contribution by Alexander Batischev)
+- Export `Hakyll.Tags.simpleRenderLink` (contribution by Alexander Batischev)
+- Add `Hakyll.Web.Pandoc.Biblio.pandocBibliosCompiler` to load multiple bib
+    files by glob (contribution by Liang-Ting Chen)
+- Fix "Store.set: resource busy" error (contribution by Jasper Van der Jeugt)
+- Teach `Hakyll.Web.Template.Context.getItemUTC` about another date format,
+    "%d.%m.%Y" (contribution by dukzcry)
+- Add `Hakyll.Web.Html.withTagListM`, a monadic version of `withTagList`
+    (contribution by 0xd34df00d)
+- Fix all the warnings and enable `-Werror` in CI (contribution by Alexander
+    Batischev)
+- Miscellaneous updates and fixes to the docs (contributions by Tony Zorman,
+    Alexander Batischev, malteneuss, Agustín Mista, Martin Bukatovič, Muhammad
+    Aviv Burhanudin, Jacek Galowicz, Daniel Mlot, Yoo Chung, Robert Pearce)
+- Export `Hakyll.defaultCommands`, i.e. Hakyll's set of commands (`build`,
+    `check`, `clean` etc.) (contribution by Alexander Batischev)
+- Add a `Hakyll.Core.Configuration.Configuration.previewSettings` field which
+    lets the user override the settings used by the preview server (contribution
+    by Christopher League and Brian McKenna)
+- Make email address in RSS/Atom feeds optional (just set it to an empty string)
+    (contribution by Robert)
+- `Hakyll.Web.Meta.TwitterCard`: use `name` instead of `property` for better
+    spec compliance (contribution by ncaq)
+- Add a `Hakyll.Core.Configuration.Configuration.checkHtmlFile` predicate which
+    dictates what files will get link-checked by the `check` command. Default
+    predicate accepts files with .html and .xhtml extensions (contribution by
+    Yoo Chung, with earlier contribution from Michael Orlitzky)
+- Add support for GHC 9.2 (contribution by Laurent P. René de Cotret)
+- Bump `optparse-applicative` upper bound to allow 0.17 (contribution by
+    Alexander Batischev)
+- Bump `pandoc` upper bound to allow 2.19 (contribution by Alexander Batischev)
+- Allow `text` 2.0 (contribution by Alexander Batischev)
+- Bump `vector` upper bound to allow 0.13 (contribution by Alexander Batischev)
+- Allow `aeson` 2.1 (contribution by Alexander Batischev)
+- Bump `fsnotify` upper bound to allow 0.4 (contribution by Alexander Batischev)
+- Bump `resourcet` upper bound to allow 1.3 (contribution by Alexander
+    Batischev)
+- Bump `template-haskell` upper bound to 2.20 (GHC 9.4.3) (contribution by
+    Alexander Batischev)
+- Allow `pandoc` 3.0. Note that the behavior of Hakyll's `readPandocBiblios` and
+    `readPandocBiblio` is different whether pandoc 2 or 3 is installed
+    (contribution by Laurent P. René de Cotret) 
+- Bump `mtl` upper bound to allow 2.3 (contribution by Alexander Batischev)
+- Bump `pandoc` upper bound to allow 3.1 (contribution by Laurent P. René de
+    Cotret)
+- Bump `template-haskell` upper bound to 2.21 and `time` to 1.12 (GHC 9.6.1)
+    (contribution by Laurent P. René de Cotret)
 
 ## Hakyll 4.15.1.1 (2022-01-20)
 
