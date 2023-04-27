@@ -4,7 +4,7 @@ title: Releases
 
 # Releases
 
-## Hakyll 4.16.0.0 (2023-04-26)
+## Hakyll 4.16.0.0 (2023-04-27)
 
 - Bump `base` *lower* bound to 4.12 (GHC >= 8.6). Hakyll already failed to build
     on earlier versions due to the template-haskell requirement, and nobody
