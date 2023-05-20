@@ -23,9 +23,10 @@ module Hakyll.Web.Feed
     ( FeedConfiguration (..)
     , renderRss
     , renderAtom
-    , renderJsonFeed
+    , renderJson
     , renderRssWithTemplates
     , renderAtomWithTemplates
+    , renderJsonWithTemplates
     ) where
 
 
@@ -41,7 +42,8 @@ import           Hakyll.Web.Template.List
 --------------------------------------------------------------------------------
 import           Data.FileEmbed              (makeRelativeToProject)
 import           System.FilePath             ((</>))
-import Data.Char (showLitChar)
+import Data.Char (ord)
+import Numeric (showHex)
 
 
 --------------------------------------------------------------------------------
@@ -155,7 +157,7 @@ renderFeed feedType feedTpl itemTpl config itemContext items = do
     emailField = case feedAuthorEmail config of
         ""    -> missingField
         email -> constField "authorEmail" email
-    
+
     escapeDescription = case feedType of
         XmlFeed -> id
         JsonFeed -> mapContextBy (== "description") escapeString
@@ -190,14 +192,14 @@ renderAtomWithTemplates feedTemplate itemTemplate config context = renderFeed
 
 --------------------------------------------------------------------------------
 -- | Render a JSON feed using given templates with a number of items.
-renderJsonFeedWithTemplates ::
+renderJsonWithTemplates ::
        Template                -- ^ Feed template
     -> Template                -- ^ Item template
     -> FeedConfiguration       -- ^ Feed configuration
     -> Context String          -- ^ Item context
     -> [Item String]           -- ^ Feed items
     -> Compiler (Item String)  -- ^ Resulting feed
-renderJsonFeedWithTemplates feedTemplate itemTemplate config context = renderFeed
+renderJsonWithTemplates feedTemplate itemTemplate config context = renderFeed
     JsonFeed feedTemplate itemTemplate config
     (makeItemContext "%Y-%m-%dT%H:%M:%SZ" context)
 
@@ -222,11 +224,11 @@ renderAtom = renderAtomWithTemplates atomTemplate atomItemTemplate
 
 --------------------------------------------------------------------------------
 -- | Render a JSON feed with a number of items.
-renderJsonFeed :: FeedConfiguration       -- ^ Feed configuration
+renderJson :: FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Item context
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
-renderJsonFeed = renderJsonFeedWithTemplates jsonFeedTemplate jsonFeedItemTemplate
+renderJson = renderJsonWithTemplates jsonFeedTemplate jsonFeedItemTemplate
 
 
 --------------------------------------------------------------------------------
@@ -237,15 +239,24 @@ makeItemContext fmt context = mconcat
 
 
 --------------------------------------------------------------------------------
--- | Escape the string with the usual Haskell escape conventions while leaving
--- the non-ASCII characters intact.
+-- | Escape the string according to [RFC8259 §7](https://www.rfc-editor.org/rfc/rfc8259#section-7). In other words,
+--   * quotation marks and backslashes are prefixed with a backslash
+--   * control characters (i.e. 0x00 - 0x1F) are escaped s.t. their
+--   hex representation are prefixed with "\u00" (e.g. 0x15 -> \u0015)
+--   * the rest of the characters are untouched.
 escapeString :: String -> String
 escapeString = flip escapeString' ""
   where
     escapeString' :: String -> ShowS
     escapeString' [] s = s
     escapeString' ('"' : cs) s = showString "\\\"" (escapeString' cs s)
-    escapeString' (c : cs) s = escapeChar c (escapeString' cs s)
+    escapeString' ('\\' : cs) s = showString "\\\\" (escapeString' cs s)
+    escapeString' (c : cs) s
+      | c < ' ' = escapeChar c (escapeString' cs s)
+      | otherwise = showChar c (escapeString' cs s)
 
     escapeChar :: Char -> ShowS
-    escapeChar c s = if c > '\DEL' then showChar c s else showLitChar c s
+    -- We can pad with fixed number of zeros, because
+    -- `escapeChar` will only be called for characters
+    -- 0x00 - 0x1F
+    escapeChar c' = showString "\\u00" . showHex (ord c')
