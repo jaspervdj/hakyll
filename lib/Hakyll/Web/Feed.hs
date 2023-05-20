@@ -67,13 +67,13 @@ atomItemTemplate =
     $(makeRelativeToProject ("data" </> "templates" </> "atom-item.xml")
         >>= embedTemplate)
 
-jsonFeedTemplate :: Template
-jsonFeedTemplate =
+jsonTemplate :: Template
+jsonTemplate =
     $(makeRelativeToProject ("data" </> "templates" </> "feed.json")
         >>= embedTemplate)
 
-jsonFeedItemTemplate :: Template
-jsonFeedItemTemplate =
+jsonItemTemplate :: Template
+jsonItemTemplate =
     $(makeRelativeToProject ("data" </> "templates" </> "feed-item.json")
         >>= embedTemplate)
 
@@ -228,7 +228,7 @@ renderJson :: FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Item context
            -> [Item String]           -- ^ Feed items
            -> Compiler (Item String)  -- ^ Resulting feed
-renderJson = renderJsonWithTemplates jsonFeedTemplate jsonFeedItemTemplate
+renderJson = renderJsonWithTemplates jsonTemplate jsonItemTemplate
 
 
 --------------------------------------------------------------------------------
