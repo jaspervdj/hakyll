@@ -40,10 +40,10 @@ import           Hakyll.Web.Template.List
 
 
 --------------------------------------------------------------------------------
+import           Data.Char                   (ord)
 import           Data.FileEmbed              (makeRelativeToProject)
+import           Numeric                     (showHex)
 import           System.FilePath             ((</>))
-import Data.Char (ord)
-import Numeric (showHex)
 
 
 --------------------------------------------------------------------------------
@@ -113,10 +113,10 @@ renderFeed :: FeedType                -- ^ Feed type
 renderFeed feedType feedTpl itemTpl config itemContext items = do
     protectedItems <-
       case feedType of
-        XmlFeed -> mapM (applyFilter protectCDATA) items
+        XmlFeed  -> mapM (applyFilter protectCDATA) items
         JsonFeed -> pure items
     let itemDelim = case feedType of
-          XmlFeed -> ""
+          XmlFeed  -> ""
           JsonFeed -> ", "
 
     body <- makeItem =<< applyJoinTemplateList itemDelim itemTpl itemContext' protectedItems
@@ -159,7 +159,7 @@ renderFeed feedType feedTpl itemTpl config itemContext items = do
         email -> constField "authorEmail" email
 
     escapeDescription = case feedType of
-        XmlFeed -> id
+        XmlFeed  -> id
         JsonFeed -> mapContextBy (== "description") escapeString
 
 --------------------------------------------------------------------------------
