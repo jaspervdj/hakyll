@@ -40,10 +40,9 @@ import           Hakyll.Web.Template.List
 
 
 --------------------------------------------------------------------------------
-import           Data.Char                   (ord)
 import           Data.FileEmbed              (makeRelativeToProject)
-import           Numeric                     (showHex)
 import           System.FilePath             ((</>))
+import Text.Printf (printf)
 
 
 --------------------------------------------------------------------------------
@@ -256,7 +255,4 @@ escapeString = flip escapeString' ""
       | otherwise = showChar c (escapeString' cs s)
 
     escapeChar :: Char -> ShowS
-    -- We can pad with fixed number of zeros, because
-    -- `escapeChar` will only be called for characters
-    -- 0x00 - 0x1F
-    escapeChar c' = showString "\\u00" . showHex (ord c')
+    escapeChar = showString . printf "\\u%04X"
