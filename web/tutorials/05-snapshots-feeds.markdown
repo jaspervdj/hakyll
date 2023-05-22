@@ -1,5 +1,5 @@
 ---
-title: Snapshots, and how to produce an RSS/Atom feed
+title: Snapshots, and how to produce an RSS/Atom/JSON feed
 author: Jasper Van der Jeugt
 type: main
 ---
