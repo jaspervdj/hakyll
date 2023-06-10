@@ -46,17 +46,6 @@ jobs:
         [ -e cabal.project ] && exit 1
         echo -e 'packages: *.cabal\npackage hakyll\n  ghc-options: -Werror' > cabal.project
 
-    - name: Freeze
-      run: |
-        cabal update
-        cabal freeze
-
-    - uses: actions/cache@v1
-      name: Cache ~/.cabal/store
-      with:
-        path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
-
     - name: Build
       run: |
         cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
@@ -116,16 +105,6 @@ jobs:
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: ${{ matrix.cabal }}
-
-    - name: Freeze
-      run: |
-        cabal freeze
-
-    - uses: actions/cache@v1
-      name: Cache ~/.cabal/store
-      with:
-        path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
 
     - name: Prepare Cabal package
       run: |
