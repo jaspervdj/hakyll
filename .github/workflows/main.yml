@@ -11,6 +11,7 @@ jobs:
     name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, macOS-12, windows-2022]
         cabal: ["3.8.1.0"]
@@ -74,6 +75,7 @@ jobs:
     name: stack / ghc ${{ matrix.ghc }}
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
         stack: ["2.9.3"]
         ghc: ["9.2.5"] # We want this to match the Stackage snapshot in stack.yaml
@@ -106,6 +108,7 @@ jobs:
     name: Cabal file is up-to-date
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
         cabal: ["3.6"]
         ghc: ["9.2.7"]
