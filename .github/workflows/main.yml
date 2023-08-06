@@ -76,7 +76,7 @@ jobs:
     strategy:
       matrix:
         stack: ["2.9.3"]
-        ghc: ["9.2.5"] # We want this to match the Stackage snapshot in stack.yaml
+        ghc: ["9.4.5"] # We want this to match the Stackage snapshot in stack.yaml
 
     steps:
     - uses: actions/checkout@v3
