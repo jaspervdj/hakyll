@@ -223,6 +223,9 @@ renderAtom = renderAtomWithTemplates atomTemplate atomItemTemplate
 
 --------------------------------------------------------------------------------
 -- | Render a JSON feed with a number of items.
+--
+-- Items' bodies will be put into @content_html@ field of the resulting JSON;
+-- the @content@ field will not be set.
 renderJson :: FeedConfiguration       -- ^ Feed configuration
            -> Context String          -- ^ Item context
            -> [Item String]           -- ^ Feed items
