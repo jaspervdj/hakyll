@@ -92,6 +92,8 @@ Extra-source-files:
   data/templates/atom.xml
   data/templates/rss-item.xml
   data/templates/rss.xml
+  data/templates/feed.json
+  data/templates/feed-item.json
 
 Source-Repository head
   Type:     git
