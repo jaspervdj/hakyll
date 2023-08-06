@@ -142,3 +142,5 @@ directly with the default Hakyll site.
   [source](https://github.com/adinapoli/alfredodinapoli.com)
 - <https://michaelxavier.net>,
   [source](https://github.com/michaelxavier/michaelxavier.net)
+- <https://tony-zorman.com/>,
+  [source](https://github.com/slotThe/slotThe.github.io)
