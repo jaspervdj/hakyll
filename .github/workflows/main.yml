@@ -54,12 +54,15 @@ jobs:
       run: |
         cabal update
         cabal freeze
+        # Exclude the timestamp of Hackage index update from our cache key, to
+        # avoid invalidating cache too often.
+        sed '/^index-state: /d' cabal.project.freeze > dependencies-versions
 
     - uses: actions/cache@v3
       name: Cache ~/.cabal/store
       with:
         path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('dependencies-versions') }}
 
     - name: Build
       run: |
@@ -124,12 +127,15 @@ jobs:
     - name: Freeze
       run: |
         cabal freeze
+        # Exclude the timestamp of Hackage index update from our cache key, to
+        # avoid invalidating cache too often.
+        sed '/^index-state: /d' cabal.project.freeze > dependencies-versions
 
     - uses: actions/cache@v3
       name: Cache ~/.cabal/store
       with:
         path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('dependencies-versions') }}
 
     - name: Prepare Cabal package
       run: |
