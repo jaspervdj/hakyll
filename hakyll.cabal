@@ -181,7 +181,7 @@ Library
     Paths_hakyll
 
   Build-Depends:
-    aeson                >= 1.0      && < 1.6 || >= 2.0 && < 2.2,
+    aeson                >= 1.0      && < 1.6 || >= 2.0 && < 2.3,
     base                 >= 4.12     && < 5,
     binary               >= 0.5      && < 0.10,
     blaze-html           >= 0.5      && < 0.10,
@@ -288,7 +288,7 @@ Test-suite hakyll-tests
     tasty-hunit                >= 0.9  && < 0.11,
     tasty-quickcheck           >= 0.8  && < 0.11,
     -- Copy pasted from hakyll dependencies:
-    aeson                >= 1.0      && < 1.6 || >= 2.0 && < 2.2,
+    aeson                >= 1.0      && < 1.6 || >= 2.0 && < 2.3,
     base                 >= 4.12     && < 5,
     bytestring           >= 0.9      && < 0.12,
     containers           >= 0.3      && < 0.7,
