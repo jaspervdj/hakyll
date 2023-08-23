@@ -4,6 +4,14 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.16.1.0 (2023-08-23)
+
+- Rewrite async scheduler; improves scaling and resource usage
+- Add JSON Feed support (contribution by Berk Özkütük)
+- Bump `aeson` upper bound to aeson 2.3 (contribution by Alexander Batischev)
+- Bump `optparse-applicative` upper bound to aeson 0.19 (contribution by
+    Alexander Batischev)
+
 ## Hakyll 4.16.0.0 (2023-04-27)
 
 - Bump `base` *lower* bound to 4.12 (GHC >= 8.6). Hakyll already failed to build
