@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 -- | An identifier is a type used to uniquely name an item. An identifier
--- is similar to a file path, but can contain additional details (e.g. 
+-- is similar to a file path, but can contain additional details (e.g.
 -- item's version). Examples of identifiers are:
 --
 -- * @posts/foo.markdown@
@@ -24,9 +24,7 @@ module Hakyll.Core.Identifier
 
 --------------------------------------------------------------------------------
 import           Control.DeepSeq     (NFData (..))
-import           Data.List           (intercalate)
-import           System.FilePath     (dropTrailingPathSeparator, splitPath,
-                                      pathSeparator, normalise)
+import           System.FilePath     (normalise)
 
 
 --------------------------------------------------------------------------------
@@ -130,7 +128,7 @@ instance Show Identifier where
 
 
 --------------------------------------------------------------------------------
-{- | Parse an identifier from a file path string. For example, 
+{- | Parse an identifier from a file path string. For example,
 
 @
 -- e.g. file on disk: 'posts\/hakyll.md'
@@ -154,7 +152,7 @@ toFilePath = normalise . identifierPath
 
 
 --------------------------------------------------------------------------------
-{- | Set or override the version of an identifier in order to specify which version of an 'Hakyll.Core.Item.Item' 
+{- | Set or override the version of an identifier in order to specify which version of an 'Hakyll.Core.Item.Item'
 to 'Hakyll.Core.Compiler.load' from the 'Hakyll.Core.Store.Store'. For example,
 
 @

@@ -1,5 +1,5 @@
 ---
-title: Snapshots, and how to produce an RSS/Atom feed
+title: Snapshots, and how to produce an RSS/Atom/JSON feed
 author: Jasper Van der Jeugt
 type: main
 ---
@@ -7,7 +7,7 @@ type: main
 Basic feed configuration
 ------------------------
 
-Hakyll has built-in support for two types of feeds: RSS and Atom. This tutorial
+Hakyll has built-in support for three types of feeds: RSS, Atom and JSON. This tutorial
 explains how you can add these to your blog or website. The first step is to
 define a `FeedConfiguration` to set some basic options. For example, a cooking
 blog may have the following declaration:
@@ -26,7 +26,7 @@ myFeedConfiguration = FeedConfiguration
 Simple feed rendering
 ---------------------
 
-Now, let's look at how we actually create a feed. Two functions are available:
+Now, let's look at how we actually create a feed. Three functions are available:
 
 ```haskell
 renderAtom :: FeedConfiguration
@@ -42,8 +42,15 @@ renderRss :: FeedConfiguration
           -> Compiler (Item String)
 ```
 
+```haskell
+renderJson :: FeedConfiguration
+           -> Context String
+           -> [Item String]
+           -> Compiler (Item String)
+```
+
 As you can see, they have exactly the same signature: we're going to use
-`renderAtom` in this tutorial, but it's trivial to change this to an RSS feed.
+`renderAtom` in this tutorial, but it's trivial to change this to an RSS or JSON feed.
 
 ```haskell
 create ["atom.xml"] $ do
@@ -60,7 +67,7 @@ There we go! We simply take the 10 last posts and pass them to `renderAtom`,
 with our configuration and a `Context`.
 
 It's a bit of a problem that we don't have a description for our posts, and the
-Atom/RSS feed renderer requires this. One option is to add a `description: Foo`
+Atom/RSS/JSON feed renderer requires this. One option is to add a `description: Foo`
 header to our all posts. However, the description is the body text as it appears
 in most RSS readers, so we would prefer to include the entire content of the
 posts here.

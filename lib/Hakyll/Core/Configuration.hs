@@ -11,9 +11,11 @@ module Hakyll.Core.Configuration
 --------------------------------------------------------------------------------
 import           Data.Default     (Default (..))
 import           Data.List        (isPrefixOf, isSuffixOf)
+import qualified Network.Wai.Application.Static as Static
 import           System.Directory (canonicalizePath)
 import           System.Exit      (ExitCode)
-import           System.FilePath  (isAbsolute, normalise, takeFileName, makeRelative)
+import           System.FilePath  (isAbsolute, makeRelative, normalise,
+                                   takeExtension, takeFileName)
 import           System.IO.Error  (catchIOError)
 import           System.Process   (system)
 
@@ -46,6 +48,10 @@ data Configuration = Configuration
       -- want to use the test, you should use 'shouldIgnoreFile'.
       --
       ignoreFile           :: FilePath -> Bool
+    , -- | Function to determine HTML files whose links are to be checked.
+      --
+      -- In 'defaultConfiguration', files with the @.html@ extension are checked.
+      checkHtmlFile        :: FilePath -> Bool
     , -- | Function to determine files and directories that should not trigger
       -- a rebuild when touched in watch mode.
       --
@@ -87,6 +93,9 @@ data Configuration = Configuration
       -- One can also override the port as a command line argument:
       -- ./site preview -p 1234
       previewPort          :: Int
+    , -- | Override other settings used by the preview server. Default is
+      -- 'Static.defaultFileServerSettings'.
+      previewSettings      :: FilePath -> Static.StaticSettings
     }
 
 --------------------------------------------------------------------------------
@@ -102,12 +111,14 @@ defaultConfiguration = Configuration
     , tmpDirectory         = "_cache/tmp"
     , providerDirectory    = "."
     , ignoreFile           = ignoreFile'
+    , checkHtmlFile        = flip elem [".html", ".xhtml"] . takeExtension
     , watchIgnore          = const False
     , deployCommand        = "echo 'No deploy command specified' && exit 1"
     , deploySite           = system . deployCommand
     , inMemoryCache        = True
     , previewHost          = "127.0.0.1"
     , previewPort          = 8000
+    , previewSettings      = Static.defaultFileServerSettings
     }
   where
     ignoreFile' path

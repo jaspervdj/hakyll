@@ -124,8 +124,8 @@ rebuild conf logger rules =
 server :: Configuration -> Logger -> String -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 server conf logger host port = do
-    let destination = destinationDirectory conf
-    staticServer logger destination host port
+    let settings = previewSettings conf $ destinationDirectory conf
+    staticServer logger settings host port
 #else
 server _ _ _ _ = previewServerDisabled
 #endif

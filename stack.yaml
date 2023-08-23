@@ -1,4 +1,4 @@
-resolver: 'lts-19.17'
+resolver: 'lts-21.6' # If you change this, please update GHC version "stack / ghc" job in .github/workflows/main.yaml
 save-hackage-creds: false
 system-ghc: true
 skip-ghc-check: true
@@ -19,5 +19,6 @@ nix:
     - openssh  # for deployment
     - rsync    # for deployment
     - zlib
+    - pkgconfig
 
 extra-deps:

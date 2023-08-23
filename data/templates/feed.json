@@ -1,0 +1,17 @@
+{
+    "version": "https://www.jsonfeed.org/version/1.1",
+    "title": "$title$",
+    "home_page_url": "$root$",
+    "feed_url": "$root$$url$",
+    $if(authorName)$
+    "authors": [
+        {
+            "name": "$authorName$"
+            $if(authorEmail)$
+            , "url": "mailto:$authorEmail$"
+            $endif$
+        }
+    ],
+    $endif$
+    "items": [ $body$ ]
+}

@@ -18,7 +18,7 @@ import qualified System.FSNotify                as FSNotify
 
 #ifdef mingw32_HOST_OS
 import           Control.Concurrent             (threadDelay)
-import           Control.Exception              (IOException, throw, try)
+import           Control.Exception              (IOException, try)
 import           System.Directory               (doesFileExist)
 import           System.Exit                    (exitFailure)
 import           System.FilePath                ((</>))

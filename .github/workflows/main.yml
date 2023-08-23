@@ -12,45 +12,54 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        cabal: ["3.6"]
+        os: [ubuntu-22.04, macOS-12, windows-2022]
+        cabal: ["3.8.1.0"]
         ghc:
           - "8.6.5"
           - "8.8.4"
           - "8.10.7"
           - "9.0.2"
-          - "9.2.1"
+          - "9.2.8"
+          - "9.4.5"
+          - "9.6.2"
         exclude:
-          - os: macOS-latest
-            ghc: 8.8.4
-          - os: macOS-latest
-            ghc: 8.6.5
-          - os: windows-latest
-            ghc: 8.8.4
-          - os: windows-latest
-            ghc: 8.6.5
+          # fails to build: "can't load framework: Cocoa (not found)"
+          - os: macOS-12
+            ghc: "8.6.5"
+          # fails to build: "can't load framework: Cocoa (not found)"
+          - os: macOS-12
+            ghc: "8.8.4"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
 
-    - uses: haskell/actions/setup@v1
+    - uses: haskell/actions/setup@v2
       id: setup-haskell-cabal
       name: Setup Haskell
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: ${{ matrix.cabal }}
 
+    - name: Enable -Werror
+      shell: bash
+      run: |
+        [ -e cabal.project ] && exit 1
+        echo -e 'packages: *.cabal\npackage hakyll\n  ghc-options: -Werror' > cabal.project
+
     - name: Freeze
       run: |
         cabal update
         cabal freeze
+        # Exclude the timestamp of Hackage index update from our cache key, to
+        # avoid invalidating cache too often.
+        sed '/^index-state: /d' cabal.project.freeze > dependencies-versions
 
-    - uses: actions/cache@v1
+    - uses: actions/cache@v3
       name: Cache ~/.cabal/store
       with:
         path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('dependencies-versions') }}
 
     - name: Build
       run: |
@@ -63,23 +72,23 @@ jobs:
 
   stack:
     name: stack / ghc ${{ matrix.ghc }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        stack: ["2.7.3"]
-        ghc: ["8.10.7"]
+        stack: ["2.9.3"]
+        ghc: ["9.4.5"] # We want this to match the Stackage snapshot in stack.yaml
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
 
-    - uses: haskell/actions/setup@v1
+    - uses: haskell/actions/setup@v2
       name: Setup Haskell Stack
       with:
         ghc-version: ${{ matrix.ghc }}
         stack-version: ${{ matrix.stack }}
 
-    - uses: actions/cache@v1
+    - uses: actions/cache@v3
       name: Cache ~/.stack
       with:
         path: ~/.stack
@@ -87,7 +96,7 @@ jobs:
 
     - name: Build
       run: |
-        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --pedantic
 
     - name: Test
       run: |
@@ -95,17 +104,17 @@ jobs:
 
   sdist:
     name: Cabal file is up-to-date
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        cabal: ["3.4"]
-        ghc: ["9.0.2"]
+        cabal: ["3.6"]
+        ghc: ["9.2.8"]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/master'
 
-    - uses: haskell/actions/setup@v1
+    - uses: haskell/actions/setup@v2
       id: setup-haskell-cabal
       name: Setup Haskell
       with:
@@ -115,12 +124,15 @@ jobs:
     - name: Freeze
       run: |
         cabal freeze
+        # Exclude the timestamp of Hackage index update from our cache key, to
+        # avoid invalidating cache too often.
+        sed '/^index-state: /d' cabal.project.freeze > dependencies-versions
 
-    - uses: actions/cache@v1
+    - uses: actions/cache@v3
       name: Cache ~/.cabal/store
       with:
         path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('dependencies-versions') }}
 
     - name: Prepare Cabal package
       run: |

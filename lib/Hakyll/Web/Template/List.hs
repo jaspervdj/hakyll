@@ -7,6 +7,7 @@
 -- * An image list in a gallery
 --
 -- * A sitemap
+{-# LANGUAGE CPP           #-}
 {-# LANGUAGE TupleSections #-}
 module Hakyll.Web.Template.List
     ( applyTemplateList
@@ -20,7 +21,9 @@ module Hakyll.Web.Template.List
 
 --------------------------------------------------------------------------------
 import           Control.Monad               (liftM)
+#if !MIN_VERSION_base(4,13,0)
 import           Control.Monad.Fail          (MonadFail)
+#endif
 import           Data.List                   (intersperse, sortBy)
 import           Data.Ord                    (comparing)
 import           Data.Time.Locale.Compat     (defaultTimeLocale)
