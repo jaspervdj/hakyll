@@ -12,7 +12,7 @@ import           Data.List           (isInfixOf)
 import           System.Exit         (ExitCode (..))
 import           System.FilePath     ((</>))
 import           Test.Tasty          (TestTree, testGroup)
-import           Test.Tasty.HUnit    (Assertion, (@?=))
+import           Test.Tasty.HUnit    (Assertion, assertBool, (@?=))
 
 
 --------------------------------------------------------------------------------
@@ -24,8 +24,15 @@ import           TestSuite.Util
 
 --------------------------------------------------------------------------------
 tests :: TestTree
-tests = testGroup "Hakyll.Core.Runtime.Tests" $
-    fromAssertions "run" [case01, case02, case03, case04, case05, case06]
+tests = testGroup "Hakyll.Core.Runtime.Tests" $ fromAssertions "run"
+    [ case01
+    , case02
+    , case03
+    , case04
+    , case05
+    , case06
+    , issue1000
+    ]
 
 
 --------------------------------------------------------------------------------
@@ -230,5 +237,27 @@ case06 = do
                 makeItem (text :: String)
 
     ec @?= ExitSuccess
+
+    cleanTestEnv
+
+
+--------------------------------------------------------------------------------
+issue1000 :: Assertion
+issue1000 = do
+    (logger, inMemLog) <- Logger.newInMem
+    (ec, _)            <- run RunModeNormal testConfiguration logger $ do
+        match "*.md" $ do
+            route $ setExtension "html"
+            compile getResourceBody
+        match "*.md" $ version "nav" $ do
+            route $ setExtension "html"
+            compile $ getResourceBody >>= traverse (pure . reverse)
+
+    ec @?= ExitFailure 1
+    msgs <- inMemLog
+    assertBool "missing 'multiple writes' errors" $ not $ null $
+        [ msg
+        | (Logger.Error, msg) <- msgs, "multiple writes" `isInfixOf` msg
+        ]
 
     cleanTestEnv

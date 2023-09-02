@@ -137,6 +137,9 @@ data Scheduler = Scheduler
       schedulerDone      :: !(Set Identifier)
     , -- | Any snapshots stored.
       schedulerSnapshots :: !(Set (Identifier, Snapshot))
+    , -- | Any routed files and who wrote them.  This is used to detect multiple
+      -- writes to the same file, which can yield inconsistent results.
+      schedulerRoutes    :: !(Map FilePath Identifier)
     , -- | Currently blocked compilers.
       schedulerBlocked   :: !(Set Identifier)
     , -- | Compilers that may resume on triggers
@@ -160,6 +163,7 @@ emptyScheduler = Scheduler {..}
     schedulerQueue     = Seq.empty
     schedulerWorking   = Set.empty
     schedulerSnapshots = Set.empty
+    schedulerRoutes    = Map.empty
     schedulerBlocked   = Set.empty
     schedulerTriggers  = Map.empty
     schedulerStarved   = 0
@@ -345,6 +349,24 @@ schedulerWrite identifier depFacts scheduler0@Scheduler {..} =
 
 
 --------------------------------------------------------------------------------
+-- | Record that a specific identifier was routed to a specific filepath.
+-- This is used to detect multiple (inconsistent) writes to the same file.
+schedulerRoute
+    :: Identifier
+    -> FilePath
+    -> Scheduler
+    -> (Scheduler, ())
+schedulerRoute id0 path scheduler0@Scheduler {..}
+    | Just id1 <- Map.lookup path schedulerRoutes, id0 /= id1 =
+        let msg = "multiple writes for route " ++ path ++ ": " ++
+                show id0 ++ " and " ++ show id1 in
+        schedulerError (Just id0) msg scheduler0
+    | otherwise =
+        let routes = Map.insert path id0 schedulerRoutes in
+        (scheduler0 {schedulerRoutes = routes}, ())
+
+
+--------------------------------------------------------------------------------
 build :: RunMode -> ReaderT RuntimeRead IO ()
 build mode = do
     logger <- runtimeLogger <$> ask
@@ -479,6 +501,8 @@ work id' compiler = do
             case mroute of
                 Nothing    -> return ()
                 Just route -> do
+                    liftIO . IORef.atomicModifyIORef' scheduler $
+                        schedulerRoute id' route
                     let path = destinationDirectory config </> route
                     liftIO $ makeDirectories path
                     liftIO $ write path item
