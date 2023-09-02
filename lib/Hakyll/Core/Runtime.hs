@@ -137,8 +137,8 @@ data Scheduler = Scheduler
       schedulerDone      :: !(Set Identifier)
     , -- | Any snapshots stored.
       schedulerSnapshots :: !(Set (Identifier, Snapshot))
-    , -- | Any files and who wrote them.  This is used to detect multiple writes
-      -- to the same file, which can yield inconsistent results.
+    , -- | Any routed files and who wrote them.  This is used to detect multiple
+      -- writes to the same file, which can yield inconsistent results.
       schedulerRoutes    :: !(Map FilePath Identifier)
     , -- | Currently blocked compilers.
       schedulerBlocked   :: !(Set Identifier)
@@ -356,15 +356,14 @@ schedulerRoute
     -> FilePath
     -> Scheduler
     -> (Scheduler, ())
-schedulerRoute identifier path scheduler0@Scheduler {..} =
-    case Map.lookup path schedulerRoutes of
-        Nothing ->
-            let routes = Map.insert path identifier schedulerRoutes in
-            (scheduler0 {schedulerRoutes = routes}, ())
-        Just otherIdentifier ->
-            let msg = "multiple writes for route " ++ path ++ ": " ++
-                    show identifier ++ " and " ++ show otherIdentifier in
-                schedulerError (Just identifier) msg scheduler0
+schedulerRoute id0 path scheduler0@Scheduler {..}
+    | Just id1 <- Map.lookup path schedulerRoutes, id0 /= id1 =
+        let msg = "multiple writes for route " ++ path ++ ": " ++
+                show id0 ++ " and " ++ show id1 in
+        schedulerError (Just id0) msg scheduler0
+    | otherwise =
+        let routes = Map.insert path id0 schedulerRoutes in
+        (scheduler0 {schedulerRoutes = routes}, ())
 
 
 --------------------------------------------------------------------------------
