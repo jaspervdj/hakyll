@@ -66,13 +66,16 @@ goldenTest01 =
             cleanTestEnv
 
             return output)
-    
-    where 
-        goldenTest = 
-            if pandocMajorVersion == 2
-                then "cites-meijer-pandoc2.golden" 
-                else "cites-meijer-pandoc3.golden"
 
+    where
+        goldenTest =
+#if MIN_VERSION_pandoc(3,1,8)
+          "cites-meijer-pandoc-3.1.8plus.golden"
+#elif MIN_VERSION_pandoc(3,0,0)
+          "cites-meijer-pandoc-3.0.0plus.golden"
+#else
+          "cites-meijer-pandoc-2.0.0plus.golden"
+#endif
 
 goldenTest02 :: TestTree
 goldenTest02 =
@@ -107,10 +110,14 @@ goldenTest02 =
 
             return output)
     where
-        goldenTest = 
-            if pandocMajorVersion == 2
-                then "cites-meijer-pandoc2.golden" 
-                else "cites-meijer-pandoc3.golden"
+        goldenTest =
+#if MIN_VERSION_pandoc(3,1,8)
+          "cites-meijer-pandoc-3.1.8plus.golden"
+#elif MIN_VERSION_pandoc(3,0,0)
+          "cites-meijer-pandoc-3.0.0plus.golden"
+#else
+          "cites-meijer-pandoc-2.0.0plus.golden"
+#endif
 
 goldenTest03 :: TestTree
 goldenTest03 =
@@ -147,15 +154,11 @@ goldenTest03 =
 
             return output)
     where
-        goldenTest = 
-            if pandocMajorVersion == 2 
-                then "cites-multiple-pandoc2.golden" 
-                else "cites-multiple-pandoc3.golden"
-
---------------------------------------------------------------------------------
-pandocMajorVersion :: Int
-#if MIN_VERSION_pandoc(3,0,0)
-pandocMajorVersion = 3
+        goldenTest =
+#if MIN_VERSION_pandoc(3,1,8)
+          "cites-multiple-pandoc-3.1.8plus.golden"
+#elif MIN_VERSION_pandoc(3,0,0)
+          "cites-multiple-pandoc-3.0.0plus.golden"
 #else
-pandocMajorVersion = 2   
+          "cites-multiple-pandoc-2.0.0plus.golden"
 #endif
