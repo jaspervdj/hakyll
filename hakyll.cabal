@@ -60,10 +60,12 @@ Data-files:
 Extra-source-files:
   CHANGELOG.md
   tests/data/biblio/chicago.csl
-  tests/data/biblio/cites-meijer-pandoc2.golden
-  tests/data/biblio/cites-meijer-pandoc3.golden
-  tests/data/biblio/cites-multiple-pandoc2.golden
-  tests/data/biblio/cites-multiple-pandoc3.golden
+  tests/data/biblio/cites-meijer-pandoc-2.0.0plus.golden
+  tests/data/biblio/cites-meijer-pandoc-3.0.0plus.golden
+  tests/data/biblio/cites-meijer-pandoc-3.1.8plus.golden
+  tests/data/biblio/cites-multiple-pandoc-2.0.0plus.golden
+  tests/data/biblio/cites-multiple-pandoc-3.0.0plus.golden
+  tests/data/biblio/cites-multiple-pandoc-3.1.8plus.golden
   tests/data/biblio/cites-multiple.markdown
   tests/data/biblio/default.html
   tests/data/biblio/page.markdown
