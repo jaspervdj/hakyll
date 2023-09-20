@@ -4,6 +4,14 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.16.2.0 (2023-09-20)
+
+- Add errors for multiple `match`es that are routed to the same file
+    (contribution by Jasper van der Jeugt)
+- Fix Hakyll.Web.Pandoc.Biblio tests failing with Pandoc 3.1.8 (contribution by
+    Alexander Batischev)
+- Bump `tasty` upper bound to 1.6 (contribution by Alexander Batischev)
+
 ## Hakyll 4.16.1.0 (2023-08-23)
 
 - Rewrite async scheduler; improves scaling and resource usage
