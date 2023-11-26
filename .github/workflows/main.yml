@@ -20,8 +20,9 @@ jobs:
           - "8.10.7"
           - "9.0.2"
           - "9.2.8"
-          - "9.4.5"
-          - "9.6.2"
+          - "9.4.8"
+          - "9.6.3"
+          - "9.8.1"
         exclude:
           # fails to build: "can't load framework: Cocoa (not found)"
           - os: macOS-12
@@ -107,8 +108,8 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        cabal: ["3.6"]
-        ghc: ["9.2.8"]
+        cabal: ["3.10"]
+        ghc: ["9.8.1"]
 
     steps:
     - uses: actions/checkout@v3
