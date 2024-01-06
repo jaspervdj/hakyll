@@ -32,6 +32,7 @@ tests = testGroup "Hakyll.Core.Runtime.Tests" $ fromAssertions "run"
     , case05
     , case06
     , issue1000
+    , issue1014
     ]
 
 
@@ -260,4 +261,26 @@ issue1000 = do
         | (Logger.Error, msg) <- msgs, "multiple writes" `isInfixOf` msg
         ]
 
+    cleanTestEnv
+
+
+--------------------------------------------------------------------------------
+issue1014 :: Assertion
+issue1014 = do
+    (logger, inMemLog) <- Logger.newInMem
+    (ec, _)            <- run RunModeNormal testConfiguration logger $ do
+        match "*.md" $ do
+            route $ setExtension "html"
+            -- This compiler will succeed due to laziness, but writing the
+            -- result will throw an exception.
+            compile $ makeItem ("hello" ++ error "lazyworld")
+
+    ec @?= ExitFailure 1
+    msgs <- inMemLog
+    assertBool "missing 'lazyworld' error" $ not $ null $
+        [ msg
+        | (Logger.Error, msg) <- msgs, "lazyworld" `isInfixOf` msg
+        ]
+    assertBool "unwanted 'Success' message" $ not $
+        (Logger.Message, "Success") `elem` msgs
     cleanTestEnv

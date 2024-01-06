@@ -10,7 +10,8 @@ module Hakyll.Core.Runtime
 import           Control.Concurrent            (forkIO, getNumCapabilities,
                                                 rtsSupportsBoundThreads)
 import qualified Control.Concurrent.MVar       as MVar
-import           Control.Monad                 (replicateM_, unless, void)
+import           Control.Exception             (SomeException, try)
+import           Control.Monad                 (replicateM_, unless, void, when)
 import           Control.Monad.Reader          (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans           (liftIO)
 import           Data.Foldable                 (for_, traverse_)
@@ -377,7 +378,8 @@ build mode = do
         RunModeNormal -> do
             Logger.header logger "Compiling"
             if rtsSupportsBoundThreads then pickAndChaseAsync else pickAndChase
-            Logger.header logger "Success"
+            errs <- liftIO $ schedulerErrors <$> IORef.readIORef schedulerRef
+            when (null errs) $ Logger.header logger "Success"
             facts <- liftIO $ schedulerFacts <$> IORef.readIORef schedulerRef
             store <- runtimeStore <$> ask
             liftIO $ Store.set store factsKey facts
@@ -496,21 +498,33 @@ work id' compiler = do
                     "an Item with Identifier " ++ show id' ++ " " ++
                     "(you probably want to call makeItem to solve this problem)"
 
-            -- Write if necessary
-            (mroute, _) <- liftIO $ runRoutes routes provider id'
-            case mroute of
-                Nothing    -> return ()
-                Just route -> do
-                    liftIO . IORef.atomicModifyIORef' scheduler $
+            -- Write if necessary.  Note that we want another exception handler
+            -- around this: some compilers may successfully produce a
+            -- 'CompilerResult', but the thing they are supposed to 'write' can
+            -- have an un-evaluated 'error' them.
+            routeOrErr <- liftIO $ try $ do
+                (mroute, _) <- runRoutes routes provider id'
+                for_ mroute $ \route -> do
+                    IORef.atomicModifyIORef' scheduler $
                         schedulerRoute id' route
                     let path = destinationDirectory config </> route
-                    liftIO $ makeDirectories path
-                    liftIO $ write path item
-                    Logger.debug logger $ "Routed to " ++ path
+                    makeDirectories path
+                    write path item
+                save store item
+                pure mroute
 
-            liftIO $ save store item
-            liftIO . IORef.atomicModifyIORef' scheduler $
-                schedulerWrite id' facts
+            case routeOrErr of
+                Left e -> do
+                    liftIO $ IORef.atomicModifyIORef' scheduler $
+                        schedulerError (Just id') $
+                        "An exception was thrown when persisting " ++
+                        "the compiler result: " ++ show (e :: SomeException)
+                    pure SchedulerError
+                Right mroute -> do
+                    for_ mroute $ \route ->
+                        Logger.debug logger $ "Routed to " ++ show route
+                    liftIO . IORef.atomicModifyIORef' scheduler $
+                        schedulerWrite id' facts
 
         CompilerRequire reqs c ->
             liftIO . IORef.atomicModifyIORef' scheduler $
