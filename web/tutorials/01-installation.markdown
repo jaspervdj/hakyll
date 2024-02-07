@@ -82,13 +82,8 @@ and have a look at your site at
 [http://localhost:8000/](http://localhost:8000/).
 
 ### NixOS
-Even though stack's integration with Nix on NixOS is mostly reliable, you might have to add the following lines to your `stack.yaml` file:
 
-    nix:
-      enable: true
-      packages: [zlib.dev, zlib.out]
-
-Also make sure that stack knows how to access to your system's locale:
+Make sure stack knows how to access your system's locale (or you might run into errors when building):
 
     stack --nix exec -- locale
 
@@ -100,3 +95,9 @@ shellHook = ''
   export LANG=en_US.UTF-8
 '';
 ```
+
+Furthermore, even though stack's integration with Nix on NixOS is mostly reliable you might have to add the following lines to your `stack.yaml` file:
+
+    nix:
+      enable: true
+      packages: [zlib.dev, zlib.out]
