@@ -4,7 +4,7 @@ author: Jasper Van der Jeugt
 type: article
 ---
 
-[Clay](http://sebastiaanvisser.github.com/clay/) is a nice CSS preprocesser
+[Clay](https://github.com/sebastiaanvisser/clay) is a nice CSS preprocesser
 written in Haskell. There are multiple options to use this together with Hakyll,
 but in this short tutorial I focus on what I think is the best way.
 

@@ -15,7 +15,6 @@ module TestSuite.Util
 
 --------------------------------------------------------------------------------
 import           Data.List                     (intercalate, isInfixOf)
-import           Data.Monoid                   (mempty)
 import qualified Data.Set                      as S
 import           Test.Tasty
 import           Test.Tasty.HUnit
@@ -39,7 +38,7 @@ fromAssertions :: String       -- ^ Name
                -> [Assertion]  -- ^ Cases
                -> [TestTree]   -- ^ Result tests
 fromAssertions name =
-    zipWith testCase [printf "[%2d] %s" n name | n <- [1 :: Int ..]]
+    zipWith testCase [printf "%02d_%s" n name | n <- [1 :: Int ..]]
 
 
 --------------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP               #-}
 module Hakyll.Web.Pandoc.Biblio.Tests
     ( tests
     ) where
@@ -16,7 +17,6 @@ import qualified Data.ByteString.Lazy       as LBS
 --------------------------------------------------------------------------------
 import           Hakyll
 import           Hakyll.Core.Runtime
-import           Hakyll.Web.Pandoc.Biblio
 import qualified Hakyll.Core.Logger         as Logger
 import           TestSuite.Util
 
@@ -38,7 +38,7 @@ goldenTest01 :: TestTree
 goldenTest01 =
     goldenVsString
         "biblio01"
-        (goldenTestsDataDir </> "cites-meijer.golden")
+        (goldenTestsDataDir </> goldenTest)
         (do
             -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
             logger <- Logger.new Logger.Error
@@ -67,11 +67,21 @@ goldenTest01 =
 
             return output)
 
+    where
+        goldenTest =
+#if MIN_VERSION_pandoc(3,1,8)
+          "cites-meijer-pandoc-3.1.8plus.golden"
+#elif MIN_VERSION_pandoc(3,0,0)
+          "cites-meijer-pandoc-3.0.0plus.golden"
+#else
+          "cites-meijer-pandoc-2.0.0plus.golden"
+#endif
+
 goldenTest02 :: TestTree
 goldenTest02 =
     goldenVsString
         "biblio02"
-        (goldenTestsDataDir </> "cites-meijer.golden")
+        (goldenTestsDataDir </> goldenTest)
         (do
             -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
             logger <- Logger.new Logger.Error
@@ -99,12 +109,21 @@ goldenTest02 =
             cleanTestEnv
 
             return output)
+    where
+        goldenTest =
+#if MIN_VERSION_pandoc(3,1,8)
+          "cites-meijer-pandoc-3.1.8plus.golden"
+#elif MIN_VERSION_pandoc(3,0,0)
+          "cites-meijer-pandoc-3.0.0plus.golden"
+#else
+          "cites-meijer-pandoc-2.0.0plus.golden"
+#endif
 
 goldenTest03 :: TestTree
 goldenTest03 =
     goldenVsString
         "biblio03"
-        (goldenTestsDataDir </> "cites-multiple.golden")
+        (goldenTestsDataDir </> goldenTest)
         (do
             -- Code lifted from https://github.com/jaspervdj/hakyll-citeproc-example.
             logger <- Logger.new Logger.Error
@@ -134,3 +153,12 @@ goldenTest03 =
             cleanTestEnv
 
             return output)
+    where
+        goldenTest =
+#if MIN_VERSION_pandoc(3,1,8)
+          "cites-multiple-pandoc-3.1.8plus.golden"
+#elif MIN_VERSION_pandoc(3,0,0)
+          "cites-multiple-pandoc-3.0.0plus.golden"
+#else
+          "cites-multiple-pandoc-2.0.0plus.golden"
+#endif

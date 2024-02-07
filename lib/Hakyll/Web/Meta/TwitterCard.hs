@@ -59,5 +59,5 @@ twitterCardTemplate = do
 twitterCardTemplateString :: String
 twitterCardTemplateString =
   "<meta name=\"twitter:card\" content=\"summary\" />\
-  \$if(twitter-creator)$<meta property=\"twitter:creator\" content=\"$twitter-creator$\" />$endif$\
-  \$if(twitter-site)$<meta property=\"twitter:site\" content=\"$twitter-site$\" />$endif$"
+  \$if(twitter-creator)$<meta name=\"twitter:creator\" content=\"$twitter-creator$\" />$endif$\
+  \$if(twitter-site)$<meta name=\"twitter:site\" content=\"$twitter-site$\" />$endif$"

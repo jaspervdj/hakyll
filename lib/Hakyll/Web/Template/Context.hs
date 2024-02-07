@@ -31,6 +31,7 @@ module Hakyll.Web.Template.Context
     , listFieldWith
     , functionField
     , mapContext
+    , mapContextBy
 
     , defaultContext
     , bodyField
@@ -54,11 +55,10 @@ module Hakyll.Web.Template.Context
 --------------------------------------------------------------------------------
 import           Control.Applicative           (Alternative (..))
 import           Control.Monad                 (msum)
+#if !MIN_VERSION_base(4,13,0)
 import           Control.Monad.Fail            (MonadFail)
-import           Data.List                     (intercalate, tails)
-#if MIN_VERSION_base(4,9,0)
-import           Data.Semigroup                (Semigroup (..))
 #endif
+import           Data.List                     (intercalate, tails)
 import           Data.Time.Clock               (UTCTime (..))
 import           Data.Time.Format              (formatTime, parseTimeM)
 import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
@@ -106,18 +106,12 @@ newtype Context a = Context
 --------------------------------------------------------------------------------
 -- | Tries to find a key in the left context,
 -- or when that fails in the right context.
-#if MIN_VERSION_base(4,9,0)
 instance Semigroup (Context a) where
     (<>) (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
 
 instance Monoid (Context a) where
     mempty  = missingField
     mappend = (<>)
-#else
-instance Monoid (Context a) where
-    mempty                          = missingField
-    mappend (Context f) (Context g) = Context $ \k a i -> f k a i <|> g k a i
-#endif
 
 
 --------------------------------------------------------------------------------
@@ -208,11 +202,26 @@ functionField name value = Context $ \k args i ->
 -- > constField "x" "ac" <> constField "y" "bc"
 --
 mapContext :: (String -> String) -> Context a -> Context a
-mapContext f (Context c) = Context $ \k a i -> do
+mapContext = mapContextBy (const True)
+
+
+--------------------------------------------------------------------------------
+-- | Transform the respective string results of all fields in a context
+-- satisfying a predicate. For example,
+--
+-- > mapContextBy (=="y") (++"c") (constField "x" "a" <> constField "y" "b")
+--
+-- is equivalent to
+--
+-- > constField "x" "a" <> constField "y" "bc"
+--
+mapContextBy :: (String -> Bool) -> (String -> String) -> Context a -> Context a
+mapContextBy p f (Context c) = Context $ \k a i -> do
     fld <- c k a i
     case fld of
         EmptyField      -> wrongType "boolField"
-        StringField str -> return $ StringField (f str)
+        StringField str -> return $ StringField $
+                             if p k then f str else str
         _               -> wrongType "ListField"
   where
     wrongType typ = fail $ "Hakyll.Web.Template.Context.mapContext: " ++
@@ -326,6 +335,8 @@ titleField = mapContext takeBaseName . pathField
 --
 --   * @2010-09-06@
 --
+--   * @06.09.2010@
+--
 --   * @September 06, 2010@
 --
 -- Alternatively, when the metadata has a field called @path@ in a
@@ -391,6 +402,7 @@ getItemUTC locale id' = do
         , "%Y-%m-%d %H:%M:%S%Z"
         , "%Y-%m-%d %H:%M:%S"
         , "%Y-%m-%d"
+        , "%d.%m.%Y"
         , "%B %e, %Y %l:%M %p"
         , "%B %e, %Y"
         , "%b %d, %Y"

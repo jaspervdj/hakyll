@@ -1,0 +1,8 @@
+{
+    "id": "$root$$url$",
+    "url": "$root$$url$",
+    "content_html": "$description$",
+    "title": "$title$",
+    "date_published": "$published$",
+    "date_modified": "$updated$"
+}

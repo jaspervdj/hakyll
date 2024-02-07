@@ -6,7 +6,9 @@
     <id>$root$$url$</id>
     <author>
         <name>$authorName$</name>
+        $if(authorEmail)$
         <email>$authorEmail$</email>
+        $endif$
     </author>
     <updated>$updated$</updated>
     $body$

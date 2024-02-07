@@ -8,10 +8,11 @@ module Hakyll.Core.Runtime.Tests
 --------------------------------------------------------------------------------
 import           Control.Monad       (void)
 import qualified Data.ByteString     as B
-import           System.FilePath     ((</>))
+import           Data.List           (isInfixOf)
 import           System.Exit         (ExitCode (..))
+import           System.FilePath     ((</>))
 import           Test.Tasty          (TestTree, testGroup)
-import           Test.Tasty.HUnit    (Assertion, (@?=))
+import           Test.Tasty.HUnit    (Assertion, assertBool, (@?=))
 
 
 --------------------------------------------------------------------------------
@@ -23,8 +24,16 @@ import           TestSuite.Util
 
 --------------------------------------------------------------------------------
 tests :: TestTree
-tests = testGroup "Hakyll.Core.Runtime.Tests" $
-    fromAssertions "run" [case01, case02, case03, case04, case05, case06]
+tests = testGroup "Hakyll.Core.Runtime.Tests" $ fromAssertions "run"
+    [ case01
+    , case02
+    , case03
+    , case04
+    , case05
+    , case06
+    , issue1000
+    , issue1014
+    ]
 
 
 --------------------------------------------------------------------------------
@@ -102,7 +111,7 @@ case02 = do
 -- Test that dependency cycles are correctly identified
 case03 :: Assertion
 case03 = do
-    logger  <- Logger.new Logger.Error
+    (logger, inMemLog) <- Logger.newInMem
     (ec, _) <- run RunModeNormal testConfiguration logger $ do
 
         create ["partial.html.out1"] $ do
@@ -119,19 +128,23 @@ case03 = do
                 makeItem example
                     >>= loadAndApplyTemplate "partial.html" defaultContext
 
-
     ec @?= ExitFailure 1
+    msgs <- inMemLog
+    length
+        [ msg
+        | (Logger.Error, msg) <- msgs, "Dependency cycles:" `isInfixOf` msg
+        ] @?= 1
 
     cleanTestEnv
 
 
 --------------------------------------------------------------------------------
--- Test that dependency cycles are correctly identified when snapshots 
+-- Test that dependency cycles are correctly identified when snapshots
 -- are also involved. See issue #878.
 case04 :: Assertion
 case04 = do
-    logger  <- Logger.new Logger.Error
-    (ec, _) <- run RunModeNormal testConfiguration logger $ do
+    (logger, inMemLog) <- Logger.newInMem
+    (ec, _)            <- run RunModeNormal testConfiguration logger $ do
 
         create ["partial.html.out1"] $ do
             route idRoute
@@ -148,16 +161,21 @@ case04 = do
                     >>= loadAndApplyTemplate "partial.html" defaultContext
 
     ec @?= ExitFailure 1
+    msgs <- inMemLog
+    length
+        [ msg
+        | (Logger.Error, msg) <- msgs, "Dependency cycles:" `isInfixOf` msg
+        ] @?= 1
 
     cleanTestEnv
 
 
 --------------------------------------------------------------------------------
--- Test that dependency cycles are correctly identified in the presence of 
+-- Test that dependency cycles are correctly identified in the presence of
 -- snapshots. See issue #878.
-case05 :: Assertion 
+case05 :: Assertion
 case05 = do
-    logger  <- Logger.new Logger.Error 
+    logger  <- Logger.new Logger.Error
     (ec, _) <- run RunModeNormal testConfiguration logger $ do
 
         match "posts/*" $ do
@@ -185,18 +203,18 @@ case05 = do
 
                 makeItem ""
                     >>= loadAndApplyTemplate "template-empty.html" footerCtx
-        
+
         create ["template-empty.html"] $ compile templateCompiler
 
-    ec @?= ExitSuccess 
+    ec @?= ExitSuccess
 
     cleanTestEnv
 
 
 --------------------------------------------------------------------------------
--- Test that dependency cycles are correctly identified in the presence of 
+-- Test that dependency cycles are correctly identified in the presence of
 -- snapshots. The test case below was presented as an example which invalidated
--- a previous approach to dependency cycle checking. 
+-- a previous approach to dependency cycle checking.
 -- See https://github.com/jaspervdj/hakyll/pull/880#discussion_r708650172
 case06 :: Assertion
 case06 = do
@@ -221,4 +239,48 @@ case06 = do
 
     ec @?= ExitSuccess
 
+    cleanTestEnv
+
+
+--------------------------------------------------------------------------------
+issue1000 :: Assertion
+issue1000 = do
+    (logger, inMemLog) <- Logger.newInMem
+    (ec, _)            <- run RunModeNormal testConfiguration logger $ do
+        match "*.md" $ do
+            route $ setExtension "html"
+            compile getResourceBody
+        match "*.md" $ version "nav" $ do
+            route $ setExtension "html"
+            compile $ getResourceBody >>= traverse (pure . reverse)
+
+    ec @?= ExitFailure 1
+    msgs <- inMemLog
+    assertBool "missing 'multiple writes' errors" $ not $ null $
+        [ msg
+        | (Logger.Error, msg) <- msgs, "multiple writes" `isInfixOf` msg
+        ]
+
+    cleanTestEnv
+
+
+--------------------------------------------------------------------------------
+issue1014 :: Assertion
+issue1014 = do
+    (logger, inMemLog) <- Logger.newInMem
+    (ec, _)            <- run RunModeNormal testConfiguration logger $ do
+        match "*.md" $ do
+            route $ setExtension "html"
+            -- This compiler will succeed due to laziness, but writing the
+            -- result will throw an exception.
+            compile $ makeItem ("hello" ++ error "lazyworld")
+
+    ec @?= ExitFailure 1
+    msgs <- inMemLog
+    assertBool "missing 'lazyworld' error" $ not $ null $
+        [ msg
+        | (Logger.Error, msg) <- msgs, "lazyworld" `isInfixOf` msg
+        ]
+    assertBool "unwanted 'Success' message" $ not $
+        (Logger.Message, "Success") `elem` msgs
     cleanTestEnv

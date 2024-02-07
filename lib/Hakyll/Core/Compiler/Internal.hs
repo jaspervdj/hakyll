@@ -44,9 +44,6 @@ import qualified Control.Monad.Fail             as Fail
 import           Control.Monad.Except           (MonadError (..))
 import           Data.List.NonEmpty             (NonEmpty (..))
 import qualified Data.List.NonEmpty             as NonEmpty
-#if MIN_VERSION_base(4,9,0)
-import           Data.Semigroup                 (Semigroup (..))
-#endif
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
 
@@ -97,7 +94,6 @@ data CompilerWrite = CompilerWrite
 
 
 --------------------------------------------------------------------------------
-#if MIN_VERSION_base(4,9,0)
 instance Semigroup CompilerWrite where
     (<>) (CompilerWrite d1 h1) (CompilerWrite d2 h2) =
         CompilerWrite (d1 ++ d2) (h1 + h2)
@@ -105,12 +101,6 @@ instance Semigroup CompilerWrite where
 instance Monoid CompilerWrite where
     mempty  = CompilerWrite [] 0
     mappend = (<>)
-#else
-instance Monoid CompilerWrite where
-    mempty = CompilerWrite [] 0
-    mappend (CompilerWrite d1 h1) (CompilerWrite d2 h2) =
-        CompilerWrite (d1 ++ d2) (h1 + h2)
-#endif
 
 
 --------------------------------------------------------------------------------
@@ -161,7 +151,7 @@ instance Functor Compiler where
 
 --------------------------------------------------------------------------------
 instance Monad Compiler where
-    return x = compilerResult $ CompilerDone x mempty
+    return = pure
     {-# INLINE return #-}
 
     Compiler c >>= f = Compiler $ \r -> do
@@ -195,7 +185,7 @@ instance Fail.MonadFail Compiler where
 
 --------------------------------------------------------------------------------
 instance Applicative Compiler where
-    pure x = return x
+    pure x = compilerResult $ CompilerDone x mempty
     {-# INLINE pure #-}
 
     f <*> x = f >>= \f' -> fmap f' x

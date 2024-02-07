@@ -64,14 +64,8 @@ Create the `my-site` directory with the project files inside:
 
     $ stack exec hakyll-init my-site
 
-Now, change into `my-site` directory and create a file `stack.yaml` here with
-the following content:
-
-    resolver: lts-14.16  # Adapt this as needed
-    packages:
-      - .
-    extra-deps:
-      - hakyll-4.13.0.1  # Or a later version you installed
+Now, change into `my-site` directory and run `stack init` to create the
+`stack.yaml` file.
 
 On NixOS you will probably have to add the following lines to this file:
 

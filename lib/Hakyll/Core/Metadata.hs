@@ -16,7 +16,9 @@ module Hakyll.Core.Metadata
 
 --------------------------------------------------------------------------------
 import           Control.Monad                  (forM)
+#if !MIN_VERSION_base(4,13,0)
 import           Control.Monad.Fail             (MonadFail)
+#endif
 import           Data.Binary                    (Binary (..), getWord8,
                                                  putWord8, Get)
 #if MIN_VERSION_aeson(2,0,0)

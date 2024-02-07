@@ -1,6 +1,5 @@
 -- | This internal module is mostly here to prevent CPP conflicting with Haskell
 -- comments.
-{-# LANGUAGE CPP #-}
 module Hakyll.Core.Identifier.Pattern.Internal
     ( GlobComponent (..)
     , Pattern (..)
@@ -10,12 +9,6 @@ module Hakyll.Core.Identifier.Pattern.Internal
 --------------------------------------------------------------------------------
 import           Data.Binary            (Binary (..), getWord8, putWord8)
 import           Data.Set               (Set)
-
-
---------------------------------------------------------------------------------
-#if MIN_VERSION_base(4,9,0)
-import           Data.Semigroup         (Semigroup (..))
-#endif
 
 
 --------------------------------------------------------------------------------
@@ -78,15 +71,9 @@ instance Binary Pattern where
 
 
 --------------------------------------------------------------------------------
-#if MIN_VERSION_base(4,9,0)
 instance Semigroup Pattern where
     (<>) = And
 
 instance Monoid Pattern where
     mempty  = Everything
     mappend = (<>)
-#else
-instance Monoid Pattern where
-    mempty  = Everything
-    mappend = And
-#endif
