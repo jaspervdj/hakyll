@@ -194,7 +194,7 @@ Library
     deepseq              >= 1.3      && < 1.6,
     directory            >= 1.2.7.0  && < 1.4,
     file-embed           >= 0.0.10.1 && < 0.0.17,
-    filepath             >= 1.0      && < 1.5,
+    filepath             >= 1.0      && < 1.6,
     hashable             >= 1.0      && < 2,
     lrucache             >= 1.1.1    && < 1.3,
     mtl                  >= 1        && < 2.4,
@@ -293,7 +293,7 @@ Test-suite hakyll-tests
     base                 >= 4.12     && < 5,
     bytestring           >= 0.9      && < 0.13,
     containers           >= 0.3      && < 0.7,
-    filepath             >= 1.0      && < 1.5,
+    filepath             >= 1.0      && < 1.6,
     tagsoup              >= 0.13.1   && < 0.15,
     text                 >= 0.11     && < 1.3 || >= 2.0 && < 2.2,
     unordered-containers >= 0.2      && < 0.3,
@@ -334,7 +334,7 @@ Executable hakyll-init
     hakyll,
     base      >= 4.12 && < 5,
     directory >= 1.0  && < 1.4,
-    filepath  >= 1.0  && < 1.5
+    filepath  >= 1.0  && < 1.6
 
 Executable hakyll-website
   Main-is:          site.hs
@@ -351,5 +351,5 @@ Executable hakyll-website
     hakyll,
     base      >= 4.12  && < 5,
     directory >= 1.0   && < 1.4,
-    filepath  >= 1.0   && < 1.5,
+    filepath  >= 1.0   && < 1.6,
     pandoc    >= 2.11  && < 2.20 || >= 3.0 && < 3.2
