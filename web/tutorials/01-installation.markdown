@@ -67,12 +67,6 @@ Create the `my-site` directory with the project files inside:
 Now, change into `my-site` directory and run `stack init` to create the
 `stack.yaml` file.
 
-On NixOS you will probably have to add the following lines to this file:
-
-    nix:
-      enable: true
-      packages: [zlib.dev, zlib.out]
-
 The file `site.hs` holds the configuration of your site, as an executable
 haskell program. We can compile and run it like this:
 
@@ -86,3 +80,24 @@ now use:
 
 and have a look at your site at
 [http://localhost:8000/](http://localhost:8000/).
+
+### NixOS
+
+Make sure stack knows how to access your system's locale (or you might run into errors when building):
+
+    stack --nix exec -- locale
+
+If the variables listed under this command are not set appropriately (i.e. `LANG="POSIX"`, etc.), make sure to run stack from a shell that does assign them as needed. For example in your project's `shell.nix`:
+
+```nix
+shellHook = ''
+  export LOCALE_ARCHIVE="${pkgs.glibcLocales}/lib/locale/locale-archive";
+  export LANG=en_US.UTF-8
+'';
+```
+
+Furthermore, even though stack's integration with Nix on NixOS is mostly reliable you might have to add the following lines to your `stack.yaml` file:
+
+    nix:
+      enable: true
+      packages: [zlib.dev, zlib.out]
