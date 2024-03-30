@@ -219,7 +219,7 @@ Library
   If flag(previewServer)
     Build-depends:
       wai             >= 3.2   && < 3.3,
-      warp            >= 3.2   && < 3.4,
+      warp            >= 3.2   && < 3.5,
       http-types      >= 0.9   && < 0.13,
       fsnotify        >= 0.2   && < 0.5
     Cpp-options:
