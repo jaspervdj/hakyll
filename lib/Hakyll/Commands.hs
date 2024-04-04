@@ -141,24 +141,30 @@ deploy conf = deploySite conf conf
 -- | Print a warning message about the preview serving not being enabled
 #ifndef PREVIEW_SERVER
 previewServerDisabled :: IO ()
-previewServerDisabled =
-    mapM_ putStrLn
-        [ "PREVIEW SERVER"
-        , ""
-        , "The preview server is not enabled in the version of Hakyll. To"
-        , "enable it, set the flag to True and recompile Hakyll."
-        , "Alternatively, use an external tool to serve your site directory."
-        ]
+previewServerDisabled = mapM_ putStrLn
+    [ "PREVIEW SERVER"
+    , ""
+    , "The preview server is not enabled in this version of Hakyll. To enable"
+    , "it, toggle the cabal configuration flag to True, for example by adding"
+    , "the following to your `cabal.project` file:"
+    , ""
+    , "    constraints: hakyll +previewServer"
+    , ""
+    , "Alternatively, use an external tool to serve your site directory."
+    ]
 #endif
 
 #ifndef WATCH_SERVER
 watchServerDisabled :: IO ()
-watchServerDisabled =
-    mapM_ putStrLn
-      [ "WATCH SERVER"
-      , ""
-      , "The watch server is not enabled in the version of Hakyll. To"
-      , "enable it, set the flag to True and recompile Hakyll."
-      , "Alternatively, use an external tool to serve your site directory."
-      ]
+watchServerDisabled = mapM_ putStrLn
+    [ "WATCH SERVER"
+    , ""
+    , "The watch server is not enabled in this version of Hakyll. To enable"
+    , "it, toggle the cabal configuration flag to True, for example by adding"
+    , "the following to your `cabal.project` file:"
+    , ""
+    , "    constraints: hakyll +watchServer"
+    , ""
+    , "Alternatively, use an external tool to serve your site directory."
+    ]
 #endif
