@@ -1,4 +1,4 @@
-resolver: 'lts-21.6' # If you change this, please update GHC version "stack / ghc" job in .github/workflows/main.yaml
+resolver: 'lts-21.25' # If you change this, please update GHC version "stack / ghc" job in .github/workflows/main.yaml
 save-hackage-creds: false
 system-ghc: true
 skip-ghc-check: true
