@@ -248,7 +248,9 @@ checkExternalUrl url = do
         -- Convert exception to a concise form
         showException e = case cast e of
             Just (Http.HttpExceptionRequest _ e') -> show e'
-            _                                     -> head $ words $ show e
+            _                                     -> case words $ show e of
+              w:_ -> w
+              []  -> error "Hakyll.Check.checkExternalUrl: impossible"
 
 requestExternalUrl :: URL -> Checker (Either SomeException Bool)
 requestExternalUrl url = liftIO $ try $ do
