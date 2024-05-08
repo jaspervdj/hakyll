@@ -85,7 +85,7 @@ blocks][pandoc-code-blocks] and [inline code][pandoc-inline-code].
 ## When should I rebuild and when should I build?
 
 If you execute a `./site build`, Hakyll will build your site incrementally.
-However, we can not detect if you edited `site.hs`. In this case, you first want
+However, we cannot detect if you edited `site.hs`. In this case, you first want
 to compile `site.hs` again, and then do a `./site rebuild`.
 
 After rebuilding your site, all files will look as "modified" to the filesystem.
