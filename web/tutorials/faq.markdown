@@ -18,6 +18,10 @@ or:
 It means that your Hakyll executable couldn't write to (in the former case) or
 read (in the latter) from an UTF-8 encoded file.
 
+Another possible encoding error is:
+
+    Store.set: invalid argument (cannot decode byte sequence starting from 197)
+
 On most linux distros, you can solve this by setting your `LANG` to use UTF-8,
 using something like:
 
