@@ -104,14 +104,17 @@ Source-Repository head
 Flag previewServer
   Description: Include the preview server
   Default:     True
+  Manual:      True
 
 Flag watchServer
   Description: Include the watch server
   Default:     True
+  Manual:      True
 
 Flag checkExternal
   Description: Include external link checking
   Default:     True
+  Manual:      True
 
 Flag buildWebsite
   Description: Build the hakyll website
