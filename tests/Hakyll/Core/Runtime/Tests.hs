@@ -78,13 +78,17 @@ case01 = do
     lines example @?=  ["<p>This is an example.</p>"]
 
     bodies <- readFile $ destinationDirectory testConfiguration </> "bodies.txt"
-    head (lines bodies) @?=  "This is an example."
+    head' (lines bodies) @?=  "This is an example."
 
     partial  <- readFile $ providerDirectory    testConfiguration </> "partial.html.out"
     partial' <- readFile $ destinationDirectory testConfiguration </> "partial.html.out"
     partial @?= partial'
 
     cleanTestEnv
+
+  where
+    head' (x:_) = x
+    head' []    = error "Hakyll.Core.Runtime.Tests.case01: impossible"
 
 
 --------------------------------------------------------------------------------
