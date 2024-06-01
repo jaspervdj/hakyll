@@ -5,8 +5,8 @@ It determines if and where the compilation result of the underlying
 (relative to the destination directory as configured in
 'Hakyll.Core.Configuration.destinationDirectory').
 
-* __If there is no route for an item, the compiled item won't be written
-out to a file__ and so won't appear in the destination (site) directory.
+* __If there is no route for an item, the compiled item won't be written__
+__out to a file__ and so won't appear in the destination (site) directory.
 
 * If an item matches multiple routes, the first route will be chosen.
 
@@ -32,8 +32,9 @@ If we do not want to change the extension, we can replace 'setExtension' with
 That will route the file @posts\/hakyll.md@ from the project directory to
 @posts\/hakyll.md@ in the destination directory.
 
-Note: __The extension of the destination filepath says nothing about the
-content!__ If you set the extension to @.html@, you have to ensure that the
+Note:
+__The extension of the destination filepath says nothing about the content!__
+If you set the extension to @.html@, you have to ensure that the
 compilation result is indeed HTML (for example with the
 'Hakyll.Web.Pandoc.pandocCompiler' to transform Markdown to HTML).
 
@@ -205,9 +206,9 @@ customRoute f = Routes $ const $ \id' -> return (Just (f id'), False)
 --------------------------------------------------------------------------------
 {- | Create a route that writes the compiled item to the given destination
 filepath (ignoring any identifier or other data about the item being processed).
-Warning: you should __use a specific destination path only for a single file in
-a single compilation rule__. Otherwise it's unclear which of the contents should
-be written to that route.
+Warning: you should __use a specific destination path only for a single file in__
+__a single compilation rule__. Otherwise it's unclear which of the contents
+should be written to that route.
 
 === __Examples__
 __Route to a specific filepath__
@@ -278,8 +279,8 @@ gsubRoute pattern replacement = customRoute $
 {- | Wrapper function around other route construction functions to get
 access to the metadata (of the underlying item being processed) and use that for
 the destination filepath construction.
-Warning: you have to __ensure that the accessed metadata fields actually
-exists__.
+Warning: you have to
+__ensure that the accessed metadata fields actually exist__.
 
 === __Examples__
 __Route that uses a custom slug markdown metadata field__
