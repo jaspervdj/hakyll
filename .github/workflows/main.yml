@@ -76,8 +76,8 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        stack: ["2.15.5"]
-        ghc: ["9.4.8"] # We want this to match the Stackage snapshot in stack.yaml
+        stack: ["2.15.7"]
+        ghc: ["9.6.5"] # We want this to match the Stackage snapshot in stack.yaml
 
     steps:
     - uses: actions/checkout@v4
