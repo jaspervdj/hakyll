@@ -4,6 +4,28 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.16.2.1 (2024-06-02)
+
+- Fix "thread blocked indefinitely in an MVar operation" errors caused by
+    exceptions produced by `Items` (#1014) (contribution by Jasper Van der Jeugt)
+- Improve `+watchServer` and `+previewServer` error messages: they now explain
+    *how* to enable the flag when the user tries to run `watch`/`preview`
+    without them (#1022) (contribution by Jasper Van der Jeugt)
+- Assorted fixes and improvements to documentation (contributions by Alexander
+    Batischev, Adrien, Tanya Bouman)
+- Bump `bytestring` upper bound to 0.13 (contribution by Alexander Batischev)
+- Bump `deepseq` upper bound to 1.6 (contribution by Laurent P. René de Cotret)
+- Bump `template-haskell` upper bound to 2.22 (contribution by Laurent P. René
+    de Cotret)
+- Bump `text` upper bound to 2.2 (contribution by Laurent P. René de Cotret)
+- Bump `file-embed` upper bound to 0.0.17 (contribution by Alexander Batischev)
+- Bump `warp` upper bound to 3.5 (contribution by Alexander Batischev)
+- Bump `filepath` upper bound to 1.6 (contribution by Alexander Batischev)
+- Bump `containers` upper bound to 0.8 (contribution by Andreas Abel)
+- Bump `time` upper bound to 1.15 (contribution by Andreas Abel)
+- Bump `QuickCheck` upper bound to 2.16 (contribution by Andreas Abel)
+- Bump `pandoc` upper bound to 3.3 (contribution by Alexander Batischev)
+
 ## Hakyll 4.16.2.0 (2023-09-20)
 
 - Add errors for multiple `match`es that are routed to the same file
