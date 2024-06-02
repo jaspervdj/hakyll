@@ -114,7 +114,7 @@ you to use:
 - `$body$` for the body of the page;
 - `$url$` for the destination URL of the page;
 - `$path$` for the original filepath of the page;
-- `$title` for the basename of the original filepath of the page;
+- `$title$` for the basename of the original filepath of the page;
 - `$foo$` where foo is specified in the metadata.
 
 All of the fields, except `$body$`,
