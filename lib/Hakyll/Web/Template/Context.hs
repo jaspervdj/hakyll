@@ -247,7 +247,7 @@ snippetField = functionField "snippet" f
 --------------------------------------------------------------------------------
 -- | A context that contains (in that order)
 --
---     1. A @$body$@ field
+--     1. A @$body$@ 'bodyField'
 --
 --     2. Metadata fields
 --
@@ -256,6 +256,17 @@ snippetField = functionField "snippet" f
 --     4. A @$path$@ 'pathField'
 --
 --     5. A @$title$@ 'titleField'
+--
+-- This order means that all of the fields, except @$body$@,
+-- can have their values replaced by metadata fields of the same name.
+-- For example, a context from a file at @posts/foo.markdown@ has a default title
+-- @foo@.  However, with a metadata field:
+--
+-- > ---
+-- > title: The Foo Story
+-- > ---
+--
+-- The @$title$@ will be replaced with @The Foo Story@.
 defaultContext :: Context String
 defaultContext =
     bodyField     "body"     `mappend`
@@ -271,7 +282,7 @@ teaserSeparator = "<!--more-->"
 
 
 --------------------------------------------------------------------------------
--- | Constructs a 'field' that contains the body of the item.
+-- | Body of the item, that is, the main content of the underlying file
 bodyField :: String -> Context String
 bodyField key = field key $ return . itemBody
 
@@ -288,7 +299,8 @@ metadataField = Context $ \k _ i -> do
 
 
 --------------------------------------------------------------------------------
--- | Absolute url to the resulting item
+-- | Absolute url to the resulting item.  For an example item that produces a
+-- file @posts/foo.html@, this field contains "posts/foo.html"
 urlField :: String -> Context a
 urlField key = field key $ \i -> do
     let id = itemIdentifier i
@@ -297,13 +309,16 @@ urlField key = field key $ \i -> do
 
 
 --------------------------------------------------------------------------------
--- | Filepath of the underlying file of the item
+-- | Filepath of the underlying file of the item.  For an example
+-- underlying file @posts/foo.markdown@, this field contains
+-- "posts/foo.markdown"
 pathField :: String -> Context a
 pathField key = field key $ return . toFilePath . itemIdentifier
 
 
 --------------------------------------------------------------------------------
--- | This title 'field' takes the basename of the underlying file by default
+-- | Basename of the underlying file of the item.  For an example
+-- underlying file @posts/foo.markdown@, this field contains "foo"
 titleField :: String -> Context a
 titleField = mapContext takeBaseName . pathField
 

@@ -114,7 +114,21 @@ you to use:
 - `$body$` for the body of the page;
 - `$url$` for the destination URL of the page;
 - `$path$` for the original filepath of the page;
+- `$title$` for the basename of the original filepath of the page;
 - `$foo$` where foo is specified in the metadata.
+
+All of the fields, except `$body$`,
+can have their values replaced by metadata fields of the same name.
+For example, a context from a file at `posts/foo.markdown` has a default `$title$`
+of `foo`.  However, with metadata:
+
+```
+---
+title: The Foo Story
+---
+```
+
+The `$title$` will be replaced with `The Foo Story`.
 
 `$date$` is not provided by default. In the scaffold, we use the convenience
 context function `dateField`, which will parse an `Item`'s filename to check if
