@@ -10,12 +10,14 @@ module Hakyll.Web.Pandoc
     , renderPandocWith
     , renderPandocWithTransform
     , renderPandocWithTransformM
+    , renderPandocItemWithTransformM
 
       -- * Derived compilers
     , pandocCompiler
     , pandocCompilerWith
     , pandocCompilerWithTransform
     , pandocCompilerWithTransformM
+    , pandocItemCompilerWithTransformM
 
       -- * Default options
     , defaultHakyllReaderOptions
@@ -133,6 +135,18 @@ renderPandocWithTransformM ropt wopt f i =
 
 
 --------------------------------------------------------------------------------
+-- | Like 'renderPandocWithTransformM', but work on an 'Item' 'Pandoc'
+-- instead of just a 'Pandoc'.
+renderPandocItemWithTransformM
+  :: ReaderOptions -> WriterOptions
+  -> (Item Pandoc -> Compiler (Item Pandoc))
+  -> Item String
+  -> Compiler (Item String)
+renderPandocItemWithTransformM ropt wopt f i =
+    writePandocWith wopt <$> (f =<< readPandocWith ropt i)
+
+
+--------------------------------------------------------------------------------
 -- | Read a page render using pandoc
 pandocCompiler :: Compiler (Item String)
 pandocCompiler =
@@ -168,6 +182,17 @@ pandocCompilerWithTransformM :: ReaderOptions -> WriterOptions
                     -> Compiler (Item String)
 pandocCompilerWithTransformM ropt wopt f =
     getResourceBody >>= renderPandocWithTransformM ropt wopt f
+
+
+--------------------------------------------------------------------------------
+-- | Like 'pandocCompilerWithTransformM', but work on an 'Item' 'Pandoc'
+-- instead of just a 'Pandoc'.
+pandocItemCompilerWithTransformM
+  :: ReaderOptions -> WriterOptions
+  -> (Item Pandoc -> Compiler (Item Pandoc))
+  -> Compiler (Item String)
+pandocItemCompilerWithTransformM ropt wopt f =
+    getResourceBody >>= renderPandocItemWithTransformM ropt wopt f
 
 
 --------------------------------------------------------------------------------
