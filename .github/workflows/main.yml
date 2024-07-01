@@ -23,6 +23,7 @@ jobs:
           - "9.4.8"
           - "9.6.5"
           - "9.8.2"
+          - "9.10.1"
         exclude:
           # fails to build: "can't load framework: Cocoa (not found)"
           - os: macOS-12
