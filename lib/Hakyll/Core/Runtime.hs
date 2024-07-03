@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 module Hakyll.Core.Runtime
     ( run
@@ -18,7 +19,10 @@ import           Data.Foldable                 (for_, traverse_)
 import qualified Data.Graph                    as Graph
 import           Data.IORef                    (IORef)
 import qualified Data.IORef                    as IORef
-import           Data.List                     (foldl', intercalate)
+import           Data.List                     (intercalate)
+#if !(MIN_VERSION_base(4,20,0))
+import           Data.List                     (foldl')
+#endif
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.Maybe                    (fromMaybe)

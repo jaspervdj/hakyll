@@ -1,4 +1,5 @@
 --------------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 module Main
     ( main
     ) where
@@ -8,7 +9,10 @@ module Main
 import           Control.Arrow         (first)
 import           Control.Monad         (forM, forM_)
 import           Data.Char             (isAlphaNum, isNumber)
-import           Data.List             (foldl', intercalate, isPrefixOf)
+import           Data.List             (intercalate, isPrefixOf)
+#if !(MIN_VERSION_base(4,20,0))
+import           Data.List             (foldl')
+#endif
 import           Data.Version          (Version (..))
 import           System.Directory      (canonicalizePath, copyFile,
                                         doesFileExist,
