@@ -4,6 +4,14 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.16.2.2 (2024-07-05)
+
+- Bump `tasty-quickcheck` upper bound to 0.12 (contribution by Alexander
+    Batischev)
+- GHC 9.10 compatibility: bump `template-haskell` upper bound to 0.23, fix
+    `foldl'` imports (as the function is now part of `Prelude`) (contribution by
+    David Binder and Alexander Batischev)
+
 ## Hakyll 4.16.2.1 (2024-06-02)
 
 - Fix "thread blocked indefinitely in an MVar operation" errors caused by
