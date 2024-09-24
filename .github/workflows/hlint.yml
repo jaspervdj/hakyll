@@ -1,0 +1,12 @@
+name: HLint
+on: [push, pull_request]
+
+jobs:
+  hlint:
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed to upload results to GitHub code scanning.
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: haskell-actions/hlint-scan@v1
