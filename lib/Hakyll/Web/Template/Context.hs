@@ -26,6 +26,7 @@ module Hakyll.Web.Template.Context
     , Context (..)
     , field
     , boolField
+    , boolFieldM
     , constField
     , listField
     , listFieldWith
@@ -147,7 +148,17 @@ boolField
     :: String
     -> (Item a -> Bool)
     -> Context a
-boolField name f = field' name (\i -> if f i
+boolField name f = boolFieldM name (pure . f)
+
+-- | Creates a 'field' to use with the @$if()$@ template macro, in the 'Compiler' monad.
+-- Attempting to substitute the field into the template will cause an error.
+boolFieldM
+    :: String
+    -> (Item a -> Compiler Bool)
+    -> Context a
+boolFieldM name f = field' name (\i -> do
+  b <- f i
+  if b
     then return EmptyField
     else noResult $ "Field " ++ name ++ " is false")
 
