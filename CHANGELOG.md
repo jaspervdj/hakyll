@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## unreleased
+
+- Bump `pandoc` upper bound to include up to version 3.5.
+
 ## Hakyll 4.16.2.2 (2024-07-05)
 
 - Bump `tasty-quickcheck` upper bound to 0.12 (contribution by Alexander
