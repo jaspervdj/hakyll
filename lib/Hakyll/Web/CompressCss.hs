@@ -42,14 +42,17 @@ compressSeparators =
     replaceAll " *[{};,>+~!] *" (take 1 . dropWhile isSpace) .
     replaceAll ": *" (take 1) -- not destroying pseudo selectors (#323)
 
--- | Uses `compressCalcExpression` on all parenthesised calc expressions
--- and applies `transform` to all parts outside of them
+-- | Uses `compressExpression` on all parenthesised calc and 
+-- clamp expressions, and applies `transform` to all parts 
+-- outside of them
 handleCalcExpressions :: (String -> String) -> String -> String
 handleCalcExpressions transform = top transform
   where
-    top f ""                             = f ""
-    top f str | "calc(" `isPrefixOf` str = f "calc" ++ nested 0 compressCalcExpression (drop 4 str)
-    top f (x:xs)                         = top (f . (x:)) xs
+    top f ""                              = f ""
+    top f str | "calc(" `isPrefixOf` str  = f "calc"  ++ nested 0 compressExpression (drop 4 str)
+              -- See issue #1021
+              | "clamp(" `isPrefixOf` str = f "clamp" ++ nested 0 compressExpression (drop 5 str) 
+    top f (x:xs)                          = top (f . (x:)) xs
     
     -- when called with depth=0, the first character must be a '('
     nested :: Int -> (String -> String) -> String -> String
@@ -62,9 +65,10 @@ handleCalcExpressions transform = top transform
                                                       _   -> depth
                                                     ) (f . (x:)) xs
 
--- | does not remove whitespace around + and -, which is important in calc() expressions
-compressCalcExpression :: String -> String
-compressCalcExpression =
+-- | does not remove whitespace around + and -, which is important 
+-- in calc() and clamp() expressions
+compressExpression :: String -> String
+compressExpression =
     replaceAll " *[*/] *| *\\)|\\( *" (take 1 . dropWhile isSpace)
 
 --------------------------------------------------------------------------------

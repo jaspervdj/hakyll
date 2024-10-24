@@ -4,6 +4,11 @@ title: Releases
 
 # Releases
 
+## Unreleased
+
+- Fixed an issue where compressing CSS with `clamp` expressions would 
+    result in invalid CSS (#1021) (contribution by Laurent P. René de Cotret)
+
 ## Hakyll 4.16.3.0 (2024-10-24)
 
 - Bump `pandoc` upper bound to include up to version 3.5
