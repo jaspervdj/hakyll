@@ -6,14 +6,16 @@ module Hakyll.Core.Identifier.Tests
 
 
 --------------------------------------------------------------------------------
+import qualified Test.QuickCheck                as Q
 import           Test.Tasty                     (TestTree, testGroup)
 import           Test.Tasty.HUnit               ((@=?))
+import           Test.Tasty.QuickCheck          (testProperty)
 
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
-import           System.FilePath                ((</>))
+import           System.FilePath                ((</>), isValid, equalFilePath, pathSeparators)
 import           TestSuite.Util
 
 
@@ -22,6 +24,7 @@ tests :: TestTree
 tests = testGroup "Hakyll.Core.Identifier.Tests" $ concat
     [ captureTests
     , matchesTests
+    , [ testProperty "toFilePath . fromFilePath" filepathConversionProp ]
     ]
 
 
@@ -59,3 +62,16 @@ matchesTests = fromAssertions "matches"
     , True  @=? matches ("foo" .||. "bar") "bar"
     , False @=? matches ("bar" .&&. hasNoVersion) (setVersion (Just "xz") "bar")
     ]
+
+
+--------------------------------------------------------------------------------
+-- Ensure that `fromFilePath` and `toFilePath` are inverses of each other (#791)
+filepathConversionProp :: Q.Property
+filepathConversionProp 
+    = Q.forAll genFilePath 
+    $ \fp -> toFilePath (fromFilePath fp) `equalFilePath` fp
+    where
+        genFilePath 
+            = Q.listOf1 (Q.elements $ ['a'..'z'] <> pathSeparators) 
+                `Q.suchThat` 
+                isValid
