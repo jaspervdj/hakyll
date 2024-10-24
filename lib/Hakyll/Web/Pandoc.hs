@@ -122,10 +122,12 @@ renderPandocWithTransform ropt wopt f =
 
 
 --------------------------------------------------------------------------------
--- | Similar to `renderPandocWithTransform`, but the Pandoc transformation is
+-- | Similar to 'renderPandocWithTransform', but the Pandoc transformation is
 -- monadic. This is useful when you want the pandoc
--- transformation to use the `Compiler` information such as routes,
+-- transformation to use the 'Compiler' information such as routes,
 -- metadata, etc. along with your own transformations beforehand.
+--
+-- @since 4.16.3.0
 renderPandocWithTransformM :: ReaderOptions -> WriterOptions
                     -> (Pandoc -> Compiler Pandoc)
                     -> Item String
@@ -135,11 +137,13 @@ renderPandocWithTransformM ropt wopt f i =
 
 
 --------------------------------------------------------------------------------
--- | Like 'renderPandocWithTransformM', but work on an 'Item' 'Pandoc' instead
+-- | Like 'renderPandocWithTransformM', but work on an @'Item' 'Pandoc'@ instead
 -- of just a 'Pandoc'. This allows for more seamless composition of functions
 -- that require the extra information that an 'Item' provides, like
 -- bibliographic transformations with
 -- 'Hakyll.Web.Pandoc.Biblio.processPandocBiblio'.
+--
+-- @since 4.16.3.0
 renderPandocItemWithTransformM
   :: ReaderOptions -> WriterOptions
   -> (Item Pandoc -> Compiler (Item Pandoc))

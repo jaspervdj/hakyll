@@ -4,9 +4,12 @@ title: Releases
 
 # Releases
 
-## unreleased
+## Hakyll 4.16.3.0 (2024-10-24)
 
-- Bump `pandoc` upper bound to include up to version 3.5.
+- Bump `pandoc` upper bound to include up to version 3.5
+    (#1041, #1042, #1047) (contributions by Alexander Batischev)
+- Add `renderPandocItemWithTransformM` and `pandocItemCompilerWithTransformM`
+    (#1020) (contribution by Tony Zorman)
 
 ## Hakyll 4.16.2.2 (2024-07-05)
 
