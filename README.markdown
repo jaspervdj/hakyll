@@ -16,4 +16,4 @@ Or using stack:
 
 If Stack fails, please [see which Stackage snapshots contain
 Hakyll](https://www.stackage.org/package/hakyll/snapshots) and specify one
-explicitly, e.g. `stack install --resolver=lts-19.0 hakyll`.
+explicitly, e.g. `stack install --resolver=lts-22.23 hakyll`.
