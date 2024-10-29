@@ -146,3 +146,5 @@ directly with the default Hakyll site.
   [source](https://github.com/slotThe/slotThe.github.io)
 - <https://sahel13.github.io/>,
   [source](https://github.com/Sahel13/Sahel13.github.io)
+- <https://www.cis.upenn.edu/~plclub/>,
+  [source](https://github.com/plclub/plclub-web)
