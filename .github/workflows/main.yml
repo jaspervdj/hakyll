@@ -11,6 +11,8 @@ jobs:
     name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
     runs-on: ${{ matrix.os }}
     strategy:
+      # We don't fail fast because we want to see version-specific errors
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, macOS-12, windows-2022]
         cabal: ["3.10.3.0"]
