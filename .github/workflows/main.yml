@@ -14,7 +14,7 @@ jobs:
       # We don't fail fast because we want to see version-specific errors
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macOS-12, windows-2022]
+        os: [ubuntu-22.04, macOS-14, windows-2022]
         cabal: ["3.10.3.0"]
         ghc:
           - "8.6.5"
@@ -27,12 +27,15 @@ jobs:
           - "9.8.2"
           - "9.10.1"
         exclude:
-          # fails to build: "can't load framework: Cocoa (not found)"
-          - os: macOS-12
+          # macOS-14 has LLVM 14 installed, which is only supported in GHC 9.2+
+          - os: macOS-14
             ghc: "8.6.5"
-          # fails to build: "can't load framework: Cocoa (not found)"
-          - os: macOS-12
+          - os: macOS-14
             ghc: "8.8.4"
+          - os: macOS-14
+            ghc: "8.10.7"
+          - os: macOS-14
+            ghc: "9.0.2"
 
     steps:
     - uses: actions/checkout@v4
@@ -63,7 +66,7 @@ jobs:
       name: Cache ~/.cabal/store
       with:
         path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('dependencies-versions') }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ matrix.os }}-${{ hashFiles('dependencies-versions') }}
 
     - name: Build
       run: |
