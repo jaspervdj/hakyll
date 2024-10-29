@@ -145,16 +145,22 @@ field key value = field' key (fmap StringField . value)
 -- | Creates a 'field' to use with the @$if()$@ template macro.
 -- Attempting to substitute the field into the template will cause an error.
 boolField
-    :: String
-    -> (Item a -> Bool)
+    :: String           -- ^ Key
+    -> (Item a -> Bool) -- ^ Extract value from an @'Item' a@
     -> Context a
 boolField name f = boolFieldM name (pure . f)
 
--- | Creates a 'field' to use with the @$if()$@ template macro, in the 'Compiler' monad.
--- Attempting to substitute the field into the template will cause an error.
+
+--------------------------------------------------------------------------------
+-- | Creates a 'field' to use with the @$if()$@ template macro, in the 
+-- 'Compiler' monad. Attempting to substitute the field into the template 
+-- will cause an error.
+--
+-- @since 4.16.4.0
 boolFieldM
-    :: String
-    -> (Item a -> Compiler Bool)
+    :: String                       -- ^ Key
+    -> (Item a -> Compiler Bool)    -- ^ Extract value from an @'Item' a@ 
+                                    --   from within the 'Compiler' monad
     -> Context a
 boolFieldM name f = field' name (\i -> do
   b <- f i

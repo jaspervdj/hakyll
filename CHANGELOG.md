@@ -4,10 +4,11 @@ title: Releases
 
 # Releases
 
-## Unreleased
+## Hakyll 4.16.4.0 (unreleased)
 
 - Fixed an issue where compressing CSS with `clamp` expressions would 
     result in invalid CSS (#1021) (contribution by Laurent P. René de Cotret)
+- Added `boolFieldM` (#1044) (contribution by 0xd34df00d)
 
 ## Hakyll 4.16.3.0 (2024-10-24)
 
