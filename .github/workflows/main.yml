@@ -70,7 +70,7 @@ jobs:
 
     - name: Build
       run: |
-        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal configure --disable-optimization --enable-tests --test-show-details=direct
         cabal build all
 
     - name: Test
@@ -103,7 +103,7 @@ jobs:
 
     - name: Build
       run: |
-        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --pedantic
+        stack build --fast --system-ghc --test --no-run-tests --pedantic
 
     - name: Test
       run: |
@@ -154,7 +154,7 @@ jobs:
     - name: Build
       run: |
         cd dist-newstyle/sdist/hakyll-*
-        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+        cabal configure --disable-optimization --enable-tests --test-show-details=direct
         cabal build all
 
     - name: Test
