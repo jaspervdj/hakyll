@@ -9,6 +9,7 @@ title: Releases
 - Fixed an issue where compressing CSS with `clamp` expressions would 
     result in invalid CSS (#1021) (contribution by Laurent P. René de Cotret)
 - Added `boolFieldM` (#1044) (contribution by 0xd34df00d)
+- Run HLint as part of GitHub Actions (#1045) (contribution by Yoo Chung)
 
 ## Hakyll 4.16.3.0 (2024-10-24)
 
