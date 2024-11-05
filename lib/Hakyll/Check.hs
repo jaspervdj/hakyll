@@ -259,7 +259,8 @@ requestExternalUrl url = liftIO $ try $ do
         request  <- Http.parseRequest url
         response <- Http.http (settings request) mgr
         let code = Http.statusCode (Http.responseStatus response)
-        return $ code >= 200 && code < 300
+        -- Recall that 3XX status codes are redirections, which aren't necessarily errors. 
+        return $ code >= 200 && code < 400
     where
         -- Add additional request info
         settings r = r

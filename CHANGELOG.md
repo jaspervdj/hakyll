@@ -10,6 +10,8 @@ title: Releases
     result in invalid CSS (#1021) (contribution by Laurent P. René de Cotret)
 - Added `boolFieldM` (#1044) (contribution by 0xd34df00d)
 - Run HLint as part of GitHub Actions (#1045) (contribution by Yoo Chung)
+- Running the `check` command will now consider URLs that respond with a 3XX code
+    (redirection) to be alive.
 
 ## Hakyll 4.16.3.0 (2024-10-24)
 
