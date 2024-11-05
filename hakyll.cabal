@@ -190,7 +190,6 @@ Library
     base                 >= 4.12     && < 5,
     binary               >= 0.5      && < 0.10,
     blaze-html           >= 0.5      && < 0.10,
-    blaze-markup         >= 0.5.1    && < 0.9,
     bytestring           >= 0.9      && < 0.13,
     containers           >= 0.3      && < 0.8,
     data-default         >= 0.4      && < 0.8,
@@ -214,7 +213,6 @@ Library
     text                 >= 0.11     && < 1.3 || >= 2.0 && < 2.2,
     time                 >= 1.8      && < 1.15,
     time-locale-compat   >= 0.1      && < 0.2,
-    unordered-containers >= 0.2      && < 0.3,
     vector               >= 0.11     && < 0.14,
     wai-app-static       >= 3.1      && < 3.2,
     yaml                 >= 0.8.11   && < 0.12
@@ -298,8 +296,6 @@ Test-suite hakyll-tests
     containers           >= 0.3      && < 0.8,
     filepath             >= 1.0      && < 1.6,
     tagsoup              >= 0.13.1   && < 0.15,
-    text                 >= 0.11     && < 1.3 || >= 2.0 && < 2.2,
-    unordered-containers >= 0.2      && < 0.3,
     yaml                 >= 0.8.11   && < 0.12
 
   If flag(previewServer)
