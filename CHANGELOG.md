@@ -12,6 +12,7 @@ title: Releases
 - Run HLint as part of GitHub Actions (#1045) (contribution by Yoo Chung)
 - Running the `check` command will now consider URLs that respond with a 3XX code
     (redirection) to be alive.
+- Bump `data-default` upper bound to include 0.8
 
 ## Hakyll 4.16.3.0 (2024-10-24)
 
