@@ -32,7 +32,7 @@ div#header a {
 
 div#main {
     margin: 0px auto 0px auto;
-    width: 860px;
+    max-width: 860px;
 }
 
 div#sidebar {
@@ -60,7 +60,7 @@ div#sidebar img {
 }
 
 div#content {
-    width: 670px;
+    max-width: 670px;
     float: right;
 }
 
@@ -107,6 +107,7 @@ img {
     border: none;
     display: block;
     margin: 6px auto 30px auto;
+    max-width: 100%;
 }
 
 ul {
@@ -130,4 +131,47 @@ pre code {
 
 p.caption {
     display: none;
+}
+
+@media all and (max-width: 900px) {
+    body {
+        padding: 0 0 1em 1em;
+    }
+
+    div#header {
+        margin: 24px 0px 12px 0px;
+    }
+
+    div#main {
+        max-width: 100%
+    }
+
+    div#sidebar {
+        margin-right: 0;
+        width: 100%;
+        float: none;
+        margin-bottom: 1em;
+        font-size: 75%;
+        opacity: 50%;
+    }
+
+    div#sidebar h1 {
+        float: none;
+    }
+
+    div#sidebar a {
+        display: inline;
+        float: none;
+        margin-bottom: initial;
+        padding-right: 2em;
+    }
+
+    div#sidebar img {
+        display: none;
+    }
+
+    div#content {
+        max-width: 100%;
+        float: none;
+    }
 }
