@@ -135,11 +135,11 @@ p.caption {
 
 @media all and (max-width: 900px) {
     body {
-        padding: 0 0 1em 1em;
+        padding: 0 1em 0 1em;
     }
 
     div#header {
-        margin: 24px 0px 12px 0px;
+        margin: 24px 0px 24px 0px;
     }
 
     div#main {
