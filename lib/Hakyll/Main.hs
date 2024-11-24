@@ -110,10 +110,11 @@ invokeCommands args conf check logger rules =
         Deploy         -> Commands.deploy conf
         Preview p      -> Commands.preview conf logger rules p >> ok
         Rebuild        -> Commands.rebuild conf logger rules
-        Server  _ _    -> Commands.server conf logger (host args) (port args) >> ok
-        Watch   _ p s  -> Commands.watch conf logger (host args) p (not s) rules >> ok
+        Server  _ _    -> Commands.server serverConf{Config.previewPort = port args} logger >> ok
+        Watch   _ p s  -> Commands.watch serverConf{Config.previewPort = p} logger (not s) rules >> ok
     where
         ok = return ExitSuccess
+        serverConf = conf{Config.previewHost = host args}
 
 
 --------------------------------------------------------------------------------

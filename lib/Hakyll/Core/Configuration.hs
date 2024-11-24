@@ -1,16 +1,23 @@
 --------------------------------------------------------------------------------
--- | Exports a datastructure for the top-level hakyll configuration
+-- | Exports a data structure for the top-level Hakyll configuration.
+{-# LANGUAGE OverloadedStrings #-}
 module Hakyll.Core.Configuration
-    ( Configuration (..)
+    ( -- * Configuration
+      defaultConfiguration
+    , Configuration (..)
+      -- * Utilities
     , shouldIgnoreFile
     , shouldWatchIgnore
-    , defaultConfiguration
+      -- * Middleware for the preview server
+    , middlewareRefresh
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Data.Default     (Default (..))
 import           Data.List        (isPrefixOf, isSuffixOf)
+import           Data.String      (fromString)
+import           Network.Wai      (Middleware, mapResponseHeaders)
 import qualified Network.Wai.Application.Static as Static
 import           System.Directory (canonicalizePath)
 import           System.Exit      (ExitCode)
@@ -21,6 +28,14 @@ import           System.Process   (system)
 
 
 --------------------------------------------------------------------------------
+-- | Specifies the configuration for a Hakyll application.
+--
+-- Prefer to update record fields from 'defaultConfiguration'
+-- instead of constructing a 'Configuration' value directly.
+-- For example,
+--
+-- >>> let config = defaultConfiguration { destinationDirectory = "..." }
+--
 data Configuration = Configuration
     { -- | Directory in which the output written
       destinationDirectory :: FilePath
@@ -96,6 +111,9 @@ data Configuration = Configuration
     , -- | Override other settings used by the preview server. Default is
       -- 'Static.defaultFileServerSettings'.
       previewSettings      :: FilePath -> Static.StaticSettings
+    , -- | WAI middleware which can sit between the preview server
+      -- and the file serving.  Default is to do nothing.
+      previewMiddleware    :: Middleware
     }
 
 --------------------------------------------------------------------------------
@@ -103,7 +121,7 @@ instance Default Configuration where
     def = defaultConfiguration
 
 --------------------------------------------------------------------------------
--- | Default configuration for a hakyll application
+-- | Default configuration for a Hakyll application.
 defaultConfiguration :: Configuration
 defaultConfiguration = Configuration
     { destinationDirectory = "_site"
@@ -119,6 +137,7 @@ defaultConfiguration = Configuration
     , previewHost          = "127.0.0.1"
     , previewPort          = 8000
     , previewSettings      = Static.defaultFileServerSettings
+    , previewMiddleware    = id
     }
   where
     ignoreFile' path
@@ -161,3 +180,23 @@ shouldWatchIgnore conf = do
     return (\path ->
               let path' = makeRelative fullProviderDir path
               in (|| watchIgnore conf path') <$> shouldIgnoreFile conf path)
+
+
+--------------------------------------------------------------------------------
+-- | WAI middleware which tells clients that they should refresh loaded content
+-- periodically.  Can be used to avoid having to manually reload content.
+--
+-- For example, the following can be used to have content reloaded
+-- every 10 seconds during preview:
+--
+-- >>> let config = defaultConfiguration { previewMiddleware = middlewareRefresh 10 }
+middlewareRefresh
+  -- | Seconds between refreshes.
+  :: Int
+  -- | Middleware which adds the @Refresh@ header to HTTP responses.
+  -> Middleware
+middlewareRefresh seconds app req respond = app req respond'
+  where
+    respond' = respond . autoRefresh
+    autoRefresh = mapResponseHeaders addRefresh
+    addRefresh rs = ("Refresh", fromString $ show seconds) : rs
