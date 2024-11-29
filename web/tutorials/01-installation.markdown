@@ -23,8 +23,8 @@ Hakyll.
 
     - [Debian](https://packages.debian.org/source/stable/haskell-hakyll)
     - [Fedora](https://packages.fedoraproject.org/pkgs/ghc-hakyll/ghc-hakyll/)
-    - [Nix]: `$ nix-env -iA nixos.haskellPackages.hakyll`
     - [Arch](https://archlinux.org/packages/extra/x86_64/haskell-hakyll/)
+    - [Nix]: `$ nix-env -iA nixos.haskellPackages.hakyll`
 
 [ghcup]: https://www.haskell.org/ghcup/
 [Nix]: https://nixos.org/nixos/packages.html#hakyll
