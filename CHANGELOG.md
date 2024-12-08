@@ -13,6 +13,7 @@ title: Releases
 - Running the `check` command will now consider URLs that respond with a 3XX code
     (redirection) to be alive.
 - Bump `data-default` upper bound to include 0.8
+- Bump `pandoc` upper bound to include 3.6
 
 ## Hakyll 4.16.3.0 (2024-10-24)
 
