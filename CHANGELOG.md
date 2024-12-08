@@ -4,7 +4,7 @@ title: Releases
 
 # Releases
 
-## Hakyll 4.16.4.0 (unreleased)
+## Hakyll 4.16.4.0 (2024-12-08)
 
 - Fixed an issue where compressing CSS with `clamp` expressions would 
     result in invalid CSS (#1021) (contribution by Laurent P. René de Cotret)
