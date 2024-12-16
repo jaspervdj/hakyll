@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll (unreleased)
+
+- GHC 9.12 compatibility: bump `template-haskell` upper bound to include 2.23
+
 ## Hakyll 4.16.4.0 (2024-12-08)
 
 - Fixed an issue where compressing CSS with `clamp` expressions would 
