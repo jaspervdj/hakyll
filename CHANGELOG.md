@@ -7,10 +7,12 @@ title: Releases
 ## Hakyll (unreleased)
 
 - GHC 9.12 compatibility: bump `template-haskell` upper bound to include 2.23
+- Add support for `nocite` metadata field to `processPandocBiblio` and
+    `processPandocBiblios` (#1058) (contribution by Tony Zorman)
 
 ## Hakyll 4.16.4.0 (2024-12-08)
 
-- Fixed an issue where compressing CSS with `clamp` expressions would 
+- Fixed an issue where compressing CSS with `clamp` expressions would
     result in invalid CSS (#1021) (contribution by Laurent P. René de Cotret)
 - Added `boolFieldM` (#1044) (contribution by 0xd34df00d)
 - Run HLint as part of GitHub Actions (#1045) (contribution by Yoo Chung)
@@ -118,7 +120,7 @@ title: Releases
     Alexander Batischev)
 - Allow `pandoc` 3.0. Note that the behavior of Hakyll's `readPandocBiblios` and
     `readPandocBiblio` is different whether pandoc 2 or 3 is installed
-    (contribution by Laurent P. René de Cotret) 
+    (contribution by Laurent P. René de Cotret)
 - Bump `mtl` upper bound to allow 2.3 (contribution by Alexander Batischev)
 - Bump `pandoc` upper bound to allow 3.1 (contribution by Laurent P. René de
     Cotret)
