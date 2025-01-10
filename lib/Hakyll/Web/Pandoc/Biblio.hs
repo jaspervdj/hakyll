@@ -110,12 +110,42 @@ readPandocBiblios ropt csl biblios item = do
 
 
 --------------------------------------------------------------------------------
+
+-- | Process a bibliography file with the given style.
+--
+-- This function supports pandoc's
+-- <https://pandoc.org/chunkedhtml-demo/9.6-including-uncited-items-in-the-bibliography.html nocite>
+-- functionality when there is a @nocite@ metadata field present.
+--
+-- ==== __Example__
+--
+-- In your main function, first compile the respective files:
+--
+-- > main = hakyll $ do
+-- >   …
+-- >   match "style.csl" $ compile cslCompiler
+-- >   match "bib.bib"   $ compile biblioCompiler
+--
+-- Then, create a function like the following:
+--
+-- > processBib :: Item Pandoc -> Compiler (Item Pandoc)
+-- > processBib pandoc = do
+-- >   csl <- load @CSL    "bib/style.csl"
+-- >   bib <- load @Biblio "bib/bibliography.bib"
+-- >   processPandocBiblio csl bib pandoc
+--
+-- Now, feed this function to your pandoc compiler:
+--
+-- > myCompiler :: Compiler (Item String)
+-- > myCompiler = pandocItemCompilerWithTransformM myReader myWriter processBib
 processPandocBiblio :: Item CSL
                     -> Item Biblio
                     -> (Item Pandoc)
                     -> Compiler (Item Pandoc)
 processPandocBiblio csl biblio = processPandocBiblios csl [biblio]
 
+-- | Like 'processPandocBiblio', which see, but support multiple bibliography
+-- files.
 processPandocBiblios :: Item CSL
                      -> [Item Biblio]
                      -> (Item Pandoc)
