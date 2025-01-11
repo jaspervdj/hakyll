@@ -4,7 +4,7 @@ title: Releases
 
 # Releases
 
-## Hakyll (unreleased)
+## Hakyll 4.16.5.0 (2025-01-11)
 
 - GHC 9.12 compatibility: bump `template-haskell` upper bound to include 2.23
 - Add support for `nocite` metadata field to `processPandocBiblio` and
