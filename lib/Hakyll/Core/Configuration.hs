@@ -135,7 +135,9 @@ defaultConfiguration = Configuration
 -- | Check if a file should be ignored
 shouldIgnoreFile :: Configuration -> FilePath -> IO Bool
 shouldIgnoreFile conf path = orM
-    [ inDir (destinationDirectory conf)
+    [ inDir ("dist-newstyle") -- build directory for cabal-install
+    , inDir (".stack-work")   -- build directory for stack
+    , inDir (destinationDirectory conf)
     , inDir (storeDirectory conf)
     , inDir (tmpDirectory conf)
     , return (ignoreFile conf path')

@@ -7,6 +7,8 @@ title: Releases
 - Do not crawl directories for which we do not have permissions 
   with `Hakyll.Core.Util.File.getRecursiveContents`. This used to 
   throw an exception.
+- Ignore files in `dist-newstyle` and `.stack-work` directories, which
+  are Haskell build directories.
 
 # Releases
 
