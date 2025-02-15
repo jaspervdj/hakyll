@@ -6,14 +6,17 @@ module Hakyll.Core.Util.File
     ( makeDirectories
     , getRecursiveContents
     , removeDirectory
+    , withPermissions
     ) where
 
 
 --------------------------------------------------------------------------------
+import           Control.Exception   (throw)
 import           Control.Monad       (filterM, forM)
 import           System.Directory    (createDirectoryIfMissing,
                                       doesDirectoryExist, getDirectoryContents)
 import           System.FilePath     (takeDirectory, (</>))
+import           System.IO.Error     (catchIOError, isPermissionError)
 #ifndef mingw32_HOST_OS
 import           Control.Monad       (when)
 import           System.Directory    (removeDirectoryRecursive)
@@ -33,9 +36,13 @@ makeDirectories = createDirectoryIfMissing True . takeDirectory
 
 --------------------------------------------------------------------------------
 -- | Get all contents of a directory.
+--
+-- If a directory is encountered for which you do now have
+-- permission, the directory will be skipped instead of
+-- an exception being thrown.
 getRecursiveContents :: (FilePath -> IO Bool)  -- ^ Ignore this file/directory
                      -> FilePath               -- ^ Directory to search
-                     -> IO [FilePath]          -- ^ List of files found
+                     -> IO [FilePath]          -- ^ List of files found for which you have permissions
 getRecursiveContents ignore top = go ""
   where
     isProper x
@@ -47,7 +54,7 @@ getRecursiveContents ignore top = go ""
         if not dirExists
             then return []
             else do
-                names <- filterM isProper =<< getDirectoryContents (top </> dir)
+                names <- filterM isProper =<< withPermissions (getDirectoryContents (top </> dir)) []
                 paths <- forM names $ \name -> do
                     let rel = dir </> name
                     isDirectory <- doesDirectoryExist (top </> rel)
@@ -85,3 +92,17 @@ retryWithDelay i x
     | i == 1    = x
     | otherwise = catch x $ \(_::SomeException) -> threadDelay 100 >> retryWithDelay (i-1) x
 #endif
+
+--------------------------------------------------------------------------------
+-- Perform an IO action. In case this action raises a permission error,
+-- return some default value. 
+--
+-- All other types of exceptions are rethrown
+withPermissions :: IO a 
+                -> a  -- ^ Default value to return in case of a permission error
+                -> IO a
+withPermissions act onError 
+    = act `catchIOError` \e -> 
+        if isPermissionError e
+            then pure onError
+            else throw e

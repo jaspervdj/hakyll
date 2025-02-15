@@ -2,6 +2,12 @@
 title: Releases
 ---
 
+# Unreleased
+
+- Do not crawl directories for which we do not have permissions 
+  with `Hakyll.Core.Util.File.getRecursiveContents`. This used to 
+  throw an exception.
+
 # Releases
 
 ## Hakyll 4.16.5.0 (2025-01-11)
