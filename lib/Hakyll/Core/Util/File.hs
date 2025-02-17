@@ -37,7 +37,7 @@ makeDirectories = createDirectoryIfMissing True . takeDirectory
 --------------------------------------------------------------------------------
 -- | Get all contents of a directory.
 --
--- If a directory is encountered for which you do now have
+-- If a directory is encountered for which you do not have
 -- permission, the directory will be skipped instead of
 -- an exception being thrown.
 getRecursiveContents :: (FilePath -> IO Bool)  -- ^ Ignore this file/directory
@@ -94,15 +94,13 @@ retryWithDelay i x
 #endif
 
 --------------------------------------------------------------------------------
--- Perform an IO action. In case this action raises a permission error,
--- return some default value. 
---
--- All other types of exceptions are rethrown
-withPermissions :: IO a 
+-- | Perform an IO action, catching any permission errors and returning
+--   a default value in their place.  All other exceptions are rethrown.
+withPermissions :: IO a
                 -> a  -- ^ Default value to return in case of a permission error
                 -> IO a
-withPermissions act onError 
-    = act `catchIOError` \e -> 
+withPermissions act onError
+    = act `catchIOError` \e ->
         if isPermissionError e
             then pure onError
             else throw e
