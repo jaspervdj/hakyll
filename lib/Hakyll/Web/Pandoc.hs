@@ -67,6 +67,7 @@ readPandocWith ropt item =
         MediaWiki          -> readMediaWiki ro
         OrgMode            -> readOrg ro
         Rst                -> readRST ro
+        Typst              -> readTypst ro
         Textile            -> readTextile ro
         _                  -> error $
             "Hakyll.Web.readPandocWith: I don't know how to read a file of " ++

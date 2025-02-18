@@ -33,6 +33,7 @@ data FileType
     | PlainText
     | Rst
     | Textile
+    | Typst
     deriving (Eq, Ord, Show, Read)
 
 
@@ -66,6 +67,7 @@ fileType = uncurry fileType' . splitExtension
     fileType' _ ".text"      = PlainText
     fileType' _ ".textile"   = Textile
     fileType' _ ".txt"       = PlainText
+    fileType' _ ".typ"       = Typst
     fileType' _ ".wiki"      = MediaWiki
     fileType' _ _            = Binary  -- Treat unknown files as binary
 
