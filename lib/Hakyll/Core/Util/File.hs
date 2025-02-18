@@ -13,7 +13,7 @@ module Hakyll.Core.Util.File
 --------------------------------------------------------------------------------
 import           Control.Exception   (throw)
 import           Control.Monad       (filterM, forM)
-import           System.Directory    (createDirectoryIfMissing,
+import           System.Directory    (createDirectoryIfMissing, doesPathExist,
                                       doesDirectoryExist, getDirectoryContents)
 import           System.FilePath     (takeDirectory, (</>))
 import           System.IO.Error     (catchIOError, isPermissionError)
@@ -40,6 +40,9 @@ makeDirectories = createDirectoryIfMissing True . takeDirectory
 -- If a directory is encountered for which you do not have
 -- permission, the directory will be skipped instead of
 -- an exception being thrown.
+--
+-- If a dangling\/broken symbolic link is encountered, then it will
+-- be skipped (since returning it may cause callers to throw exceptions).
 getRecursiveContents :: (FilePath -> IO Bool)  -- ^ Ignore this file/directory
                      -> FilePath               -- ^ Directory to search
                      -> IO [FilePath]          -- ^ List of files found for which you have permissions
@@ -49,20 +52,25 @@ getRecursiveContents ignore top = go ""
         | x `elem` [".", ".."] = return False
         | otherwise            = not <$> ignore x
 
-    go dir     = do
-        dirExists <- doesDirectoryExist (top </> dir)
+    getProperDirectoryContents absDir =
+        filterM isProper =<< withPermissions (getDirectoryContents absDir) []
+
+    go relDir = do
+        let absDir = top </> relDir
+        dirExists <- doesDirectoryExist absDir
         if not dirExists
             then return []
             else do
-                names <- filterM isProper =<< withPermissions (getDirectoryContents (top </> dir)) []
-                paths <- forM names $ \name -> do
-                    let rel = dir </> name
-                    isDirectory <- doesDirectoryExist (top </> rel)
+                names <- getProperDirectoryContents absDir
+                concat <$> forM names $ \name -> do
+                    let relPath = relDir </> name
+                        absPath = top </> relPath
+                    isDirectory <- doesDirectoryExist absPath
                     if isDirectory
-                        then go rel
-                        else return [rel]
-
-                return $ concat paths
+                        then go relPath
+                        else do
+                            pathExists <- doesPathExist absPath
+                            return $ if pathExists then [relPath] else []
 
 
 --------------------------------------------------------------------------------

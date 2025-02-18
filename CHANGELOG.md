@@ -9,6 +9,10 @@ title: Releases
   throw an exception.
 - Ignore files in `dist-newstyle` and `.stack-work` directories, which
   are Haskell build directories.
+- Do not return broken symbolic links from
+  `Hakyll.Core.Util.File.getRecursiveContents`.  This used to cause
+  subsequent code to throw exceptions (e.g., when it attempts to
+  `getModificationTime`).
 
 # Releases
 
