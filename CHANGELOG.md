@@ -2,19 +2,19 @@
 title: Releases
 ---
 
-# Unreleased
+# Releases
+
+## Hakyll 4.16.6.0 (2025-02-18)
 
 - Do not crawl directories for which we do not have permissions 
   with `Hakyll.Core.Util.File.getRecursiveContents`. This used to 
   throw an exception.
-- Ignore files in `dist-newstyle` and `.stack-work` directories, which
-  are Haskell build directories.
 - Do not return broken symbolic links from
   `Hakyll.Core.Util.File.getRecursiveContents`.  This used to cause
   subsequent code to throw exceptions (e.g., when it attempts to
-  `getModificationTime`).
-
-# Releases
+  `getModificationTime`) (#1065) (Contribution by Wren Romano).
+- Ignore files in `dist-newstyle` and `.stack-work` directories, which
+  are Haskell build directories.
 
 ## Hakyll 4.16.5.0 (2025-01-11)
 
