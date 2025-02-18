@@ -62,7 +62,7 @@ getRecursiveContents ignore top = go ""
             then return []
             else do
                 names <- getProperDirectoryContents absDir
-                concat <$> forM names $ \name -> do
+                fmap concat . forM names $ \name -> do
                     let relPath = relDir </> name
                         absPath = top </> relPath
                     isDirectory <- doesDirectoryExist absPath
