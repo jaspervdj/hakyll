@@ -4,10 +4,14 @@ title: Releases
 
 # Releases
 
+## Unreleased
+
+- Bump `containers` upper bound to include 0.8.
+
 ## Hakyll 4.16.6.0 (2025-02-18)
 
-- Do not crawl directories for which we do not have permissions 
-  with `Hakyll.Core.Util.File.getRecursiveContents`. This used to 
+- Do not crawl directories for which we do not have permissions
+  with `Hakyll.Core.Util.File.getRecursiveContents`. This used to
   throw an exception.
 - Do not return broken symbolic links from
   `Hakyll.Core.Util.File.getRecursiveContents`.  This used to cause
