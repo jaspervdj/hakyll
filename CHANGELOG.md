@@ -7,6 +7,7 @@ title: Releases
 ## Unreleased
 
 - Bump `containers` upper bound to include 0.8.
+- Add support for Typst (#1067).
 
 ## Hakyll 4.16.6.0 (2025-02-18)
 

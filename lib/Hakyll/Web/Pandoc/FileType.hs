@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------------------
 -- | A module dealing with pandoc file extensions and associated file types
 module Hakyll.Web.Pandoc.FileType
@@ -33,7 +34,11 @@ data FileType
     | PlainText
     | Rst
     | Textile
+-- This preprocessing instruction can be dropped
+-- once the minimum supported GHC version is 8.10
+#if MIN_VERSION_pandoc(3,1,3)
     | Typst
+#endif
     deriving (Eq, Ord, Show, Read)
 
 
@@ -67,7 +72,11 @@ fileType = uncurry fileType' . splitExtension
     fileType' _ ".text"      = PlainText
     fileType' _ ".textile"   = Textile
     fileType' _ ".txt"       = PlainText
+-- This preprocessing instruction can be dropped
+-- once the minimum supported GHC version is 8.10
+#if MIN_VERSION_pandoc(3,1,3)
     fileType' _ ".typ"       = Typst
+#endif
     fileType' _ ".wiki"      = MediaWiki
     fileType' _ _            = Binary  -- Treat unknown files as binary
 

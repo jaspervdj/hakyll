@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------------------
 -- | Module exporting convenient pandoc bindings
 module Hakyll.Web.Pandoc
@@ -67,7 +68,11 @@ readPandocWith ropt item =
         MediaWiki          -> readMediaWiki ro
         OrgMode            -> readOrg ro
         Rst                -> readRST ro
+-- This preprocessing instruction can be dropped
+-- once the minimum supported GHC version is 8.10
+#if MIN_VERSION_pandoc(3,1,3)
         Typst              -> readTypst ro
+#endif
         Textile            -> readTextile ro
         _                  -> error $
             "Hakyll.Web.readPandocWith: I don't know how to read a file of " ++
