@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
 --------------------------------------------------------------------------------
 -- | Miscellaneous string manipulation functions.
 module Hakyll.Core.Util.String
@@ -13,7 +13,6 @@ module Hakyll.Core.Util.String
 --------------------------------------------------------------------------------
 import Data.Char (isSpace)
 import Data.List (isPrefixOf)
-import Data.Maybe (listToMaybe)
 import Text.Regex.TDFA ((=~~))
 
 
@@ -33,12 +32,9 @@ replaceAll :: String              -- ^ Pattern
            -> String              -- ^ Result
 replaceAll pattern f source = replaceAll' source
   where
-    replaceAll' src = case listToMaybe (src =~~ pattern) of
-        Nothing     -> src
-        Just (o, l) ->
-            let (before, tmp) = splitAt o src
-                (capture, after) = splitAt l tmp
-            in before ++ f capture ++ replaceAll' after
+    replaceAll' src = case src =~~ pattern of
+        Nothing                       -> src
+        Just (before, capture, after) -> before ++ f capture ++ replaceAll' after
 
 
 --------------------------------------------------------------------------------
@@ -49,11 +45,9 @@ splitAll :: String    -- ^ Pattern
          -> [String]  -- ^ Result
 splitAll pattern = filter (not . null) . splitAll'
   where
-    splitAll' src = case listToMaybe (src =~~ pattern) of
-        Nothing     -> [src]
-        Just (o, l) ->
-            let (before, tmp) = splitAt o src
-            in before : splitAll' (drop l tmp)
+    splitAll' src = case src =~~ pattern of
+        Nothing                         -> [src]
+        Just (before, _::String, after) -> before : splitAll' after
 
 
 
