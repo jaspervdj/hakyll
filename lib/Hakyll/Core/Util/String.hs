@@ -32,6 +32,7 @@ replaceAll :: String              -- ^ Pattern
            -> String              -- ^ Result
 replaceAll pattern f source = replaceAll' source
   where
+    replaceAll' ""  = ""
     replaceAll' src = case src =~~ pattern of
         Nothing                       -> src
         Just (before, capture, after) -> before ++ f capture ++ replaceAll' after
@@ -45,6 +46,7 @@ splitAll :: String    -- ^ Pattern
          -> [String]  -- ^ Result
 splitAll pattern = filter (not . null) . splitAll'
   where
+    splitAll' ""  = []
     splitAll' src = case src =~~ pattern of
         Nothing                         -> [src]
         Just (before, _::String, after) -> before : splitAll' after
