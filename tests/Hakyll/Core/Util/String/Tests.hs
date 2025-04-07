@@ -22,11 +22,23 @@ tests = testGroup "Hakyll.Core.Util.String.Tests" $ concat
         ]
 
     , fromAssertions "replaceAll"
-        [ "32 & 131" @=? replaceAll "0x[0-9]+" (show . readInt) "0x20 & 0x83"
+        [ "foo-end"       @=? replaceAll "begin"       (const "foo")    "begin-end"
+        , "begin-foo"     @=? replaceAll "end"         (const "foo")    "begin-end"
+        , "no match"      @=? replaceAll "abc"         (const "foo")    "no match"
+        , "foo"           @=? replaceAll ".*"          (const "foo")    "full match"
+        , "empty pattern" @=? replaceAll ""            (const "foo")    "empty pattern"
+        , ""              @=? replaceAll "empty input" (const "foo")    ""
+        , "32 & 131"      @=? replaceAll "0x[0-9]+"    (show . readInt) "0x20 & 0x83"
         ]
 
     , fromAssertions "splitAll"
-        [ ["λ", "∀x.x", "hi"] @=? splitAll ", *" "λ, ∀x.x,  hi"
+        [ ["a", "b", "c"]     @=? splitAll ","           "a,,b,,,c,,"
+        , ["abc", "def"]      @=? splitAll "[0-9]+"      "abc123def456"
+        , ["no match"]        @=? splitAll ","           "no match"
+        , []                  @=? splitAll ".*"          "full match"
+        , ["empty pattern"]   @=? splitAll ""            "empty pattern"
+        , []                  @=? splitAll "empty input" ""
+        , ["λ", "∀x.x", "hi"] @=? splitAll ", *"         "λ, ∀x.x,  hi"
         ]
 
     , fromAssertions "needlePrefix"
