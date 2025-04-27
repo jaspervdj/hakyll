@@ -69,11 +69,12 @@ import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
+import           Hakyll.Core.Provider.Metadata (loadMetadataFile)
 import           Hakyll.Core.Util.String       (needlePrefix, splitAll)
 import           Hakyll.Web.Html
 import           Prelude                       hiding (id)
 import           System.FilePath               (dropExtension, splitDirectories,
-                                                takeBaseName)
+                                                takeBaseName, takeDirectory, (</>))
 
 
 --------------------------------------------------------------------------------
@@ -498,6 +499,23 @@ teaserFieldWithSeparator separator key snapshot = field key $ \item -> do
             "Hakyll.Web.Template.Context: no teaser defined for " ++
             show (itemIdentifier item)
         Just t -> return t
+
+
+--------------------------------------------------------------------------------
+-- | If an "import" field can be found in the metadata which contains
+-- a file path, parse the file as metadata and map any field to it.
+importField :: Context a
+importField = Context $ \k _ i -> do
+    let id = itemIdentifier i
+    metadata <- getMetadata id 
+    case lookupString "import" metadata of
+      Just fileName -> do
+        let fileDir = takeDirectory $ toFilePath id
+            fp      = fileDir </> fileName
+            empty'  =  noResult $ "No '" ++ k ++ "' field in imported metadata of " ++ show (fromFilePath fp)
+        metadata' <- unsafeCompiler $ loadMetadataFile fp
+        maybe empty' (return . StringField) (lookupString k metadata')
+      Nothing -> noResult $ "No 'import' field found in " ++ show id
 
 
 --------------------------------------------------------------------------------
