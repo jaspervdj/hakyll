@@ -12,7 +12,7 @@ mostly aimed at small-to-medium sites and personal blogs. It is written in a
 very configurable way and uses an [xmonad](http://xmonad.org)-like DSL for
 configuration.
 
-Integration with [pandoc](http://johnmacfarlane.net/pandoc/) gives us markdown
+Integration with [pandoc](https://pandoc.org/) gives us markdown
 and TeX support, including syntax highlighting and other goodies.
 
 # The Hakyll System
