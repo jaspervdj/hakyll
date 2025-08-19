@@ -4,6 +4,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Hakyll.Core.Provider.Metadata
     ( loadMetadata
+    , loadMetadataFile
     , parsePage
 
     , MetadataException (..)
