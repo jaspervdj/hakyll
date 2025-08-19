@@ -102,7 +102,7 @@ case02 = do
 
         match "images/**" $ do
             route   idRoute
-            compile copyFileCompiler
+            compile hardlinkFileCompiler
 
     favicon <- readFile $
         destinationDirectory testConfiguration </> "favicon.ico"
