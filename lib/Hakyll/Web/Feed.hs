@@ -32,17 +32,22 @@ module Hakyll.Web.Feed
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Compiler.Internal (compilerThrow)
 import           Hakyll.Core.Item
-import           Hakyll.Core.Util.String     (replaceAll)
+import           Hakyll.Core.Util.String       (replaceAll)
 import           Hakyll.Web.Template
 import           Hakyll.Web.Template.Context
 import           Hakyll.Web.Template.List
 
 
 --------------------------------------------------------------------------------
-import           Data.FileEmbed              (makeRelativeToProject)
-import           System.FilePath             ((</>))
-import Text.Printf (printf)
+import           Data.FileEmbed                (makeRelativeToProject)
+import           System.FilePath               ((</>))
+import           Text.Printf                   (printf)
+import           Control.Monad                 (when)
+import           Control.Exception             (displayException)
+import           Text.XML                      (parseText, def)
+import qualified Data.Text.Lazy as T
 
 
 --------------------------------------------------------------------------------
@@ -119,7 +124,12 @@ renderFeed feedType feedTpl itemTpl config itemContext items = do
           JsonFeed -> ", "
 
     body <- makeItem =<< applyJoinTemplateList itemDelim itemTpl itemContext' protectedItems
-    applyTemplate feedTpl feedContext body
+    rendered <- applyTemplate feedTpl feedContext body
+    when (feedType == XmlFeed) $ case parseText def $ T.pack (itemBody rendered) of
+      Right _ -> pure ()
+      Left err -> compilerThrow ["Generated feed contains invalid XML (perhaps you id not escape a metadata field?)",
+                                 displayException err]
+    pure rendered
   where
     applyFilter :: (Monad m,Functor f) => (String -> String) -> f String -> m (f String)
     applyFilter tr str = return $ fmap tr str
