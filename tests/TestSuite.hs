@@ -30,6 +30,7 @@ import qualified Hakyll.Web.Pandoc.FileType.Tests
 import qualified Hakyll.Web.Template.Context.Tests
 import qualified Hakyll.Web.Template.Tests
 import qualified Hakyll.Web.Tags.Tests
+import qualified Hakyll.Web.Feed.Tests
 
 
 --------------------------------------------------------------------------------
@@ -55,4 +56,5 @@ main = defaultMain $ testGroup "Hakyll"
     , Hakyll.Web.Tags.Tests.tests
     , Hakyll.Web.Template.Context.Tests.tests
     , Hakyll.Web.Template.Tests.tests
+    , Hakyll.Web.Feed.Tests.tests
     ]
