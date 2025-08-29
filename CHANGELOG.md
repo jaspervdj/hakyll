@@ -4,7 +4,7 @@ title: Releases
 
 # Releases
 
-## Unreleased
+## Hakyll 4.16.7.0 (2025-08-29)
 
 - Validate the output of XML-based feed functions such as `renderRss` by default (#1078).
 - Bump `containers` upper bound to include 0.8.
