@@ -230,7 +230,14 @@ defaultHakyllWriterOptions = def
       writerExtensions = enableExtension Ext_smart pandocExtensions
     , -- We want to have hightlighting by default, to be compatible with earlier
       -- Hakyll releases
+#if MIN_VERSION_pandoc(3,8,0)
+      -- Starting with pandoc 3.8, the highlighting
+      -- system was overhauled to have more than just Skylighting
+      -- styles
+      writerHighlightMethod = Skylighting pygments
+#else
       writerHighlightStyle = Just pygments
+#endif
     , -- Do not word-wrap produced HTML, and do not undo any word-wrapping
       -- that's already present in the markup. This is how Pandoc operated
       -- prior to 2.17, but the behaviour was changed for consistency with

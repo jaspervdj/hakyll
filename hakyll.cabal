@@ -253,7 +253,7 @@ Library
     Other-Modules:
       Hakyll.Web.Pandoc.Binary
     Build-Depends:
-      pandoc >= 2.11 && < 2.20 || >= 3.0 && < 3.8,
+      pandoc >= 2.11 && < 2.20 || >= 3.0 && < 3.9,
       pandoc-types >= 1.22 && < 1.24
     Cpp-options:
       -DUSE_PANDOC
@@ -320,7 +320,7 @@ Test-suite hakyll-tests
     Cpp-options:
       -DUSE_PANDOC
     Build-Depends:
-      pandoc >= 2.11 && < 2.20 || >= 3.0 && < 3.8,
+      pandoc >= 2.11 && < 2.20 || >= 3.0 && < 3.9,
       pandoc-types >= 1.22 && < 1.24
 
 
@@ -355,5 +355,5 @@ Executable hakyll-website
     base      >= 4.12  && < 5,
     directory >= 1.0   && < 1.4,
     filepath  >= 1.0   && < 1.6,
-    pandoc    >= 2.11  && < 2.20 || >= 3.0 && < 3.8,
+    pandoc    >= 2.11  && < 2.20 || >= 3.0 && < 3.9,
     pandoc-types >= 1.22 && < 1.24
