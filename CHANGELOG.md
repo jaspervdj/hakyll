@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Hakyll 4.16.7.1 (2025-09-06)
+
+- Added support for pandoc 3.8 (#1080).
+
 ## Hakyll 4.16.7.0 (2025-08-29)
 
 - Validate the output of XML-based feed functions such as `renderRss` by default (#1078).
