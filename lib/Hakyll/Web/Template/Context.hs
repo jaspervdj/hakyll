@@ -119,7 +119,7 @@ instance Contravariant Context where
     contramap f ctx = Context (\s ss -> unContext ctx s ss . fmap f)
 
 instance Divisible Context where
-    divide f (Context c1) (Context c2) = Context (\s ss i -> c1 s ss (fmap (fst . f) i) <|> c2 s ss (fmap (snd . f) i))
+    divide f c1 c2 = contramap (fst . f) c1 <> contramap (snd . f) c2
     conquer = missingField
 
 instance Decidable Context where
