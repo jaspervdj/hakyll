@@ -54,27 +54,28 @@ module Hakyll.Web.Template.Context
 
 
 --------------------------------------------------------------------------------
-import           Control.Applicative           (Alternative (..))
-import           Control.Monad                 (msum)
+import           Control.Applicative                  (Alternative (..))
+import           Control.Monad                        (msum)
 #if !MIN_VERSION_base(4,13,0)
-import           Control.Monad.Fail            (MonadFail)
+import           Control.Monad.Fail                   (MonadFail)
 #endif
-import           Data.List                     (intercalate, tails)
-import           Data.Time.Clock               (UTCTime (..))
-import           Data.Time.Format              (formatTime, parseTimeM)
-import           Data.Time.Locale.Compat       (TimeLocale, defaultTimeLocale)
+import           Data.Functor.Contravariant           (Contravariant (..))
+import           Data.Functor.Contravariant.Divisible (Divisible (..), Decidable (..))
+import           Data.List                            (intercalate, tails)
+import           Data.Time.Clock                      (UTCTime (..))
+import           Data.Time.Format                     (formatTime, parseTimeM)
+import           Data.Time.Locale.Compat              (TimeLocale, defaultTimeLocale)
 import           Hakyll.Core.Compiler
 import           Hakyll.Core.Compiler.Internal
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Item
 import           Hakyll.Core.Metadata
 import           Hakyll.Core.Provider
-import           Hakyll.Core.Util.String       (needlePrefix, splitAll)
+import           Hakyll.Core.Util.String              (needlePrefix, splitAll)
 import           Hakyll.Web.Html
-import           Prelude                       hiding (id)
-import           System.FilePath               (dropExtension, splitDirectories,
-                                                takeBaseName)
-
+import           Prelude                              hiding (id)
+import           System.FilePath                      (dropExtension, splitDirectories,
+                                                       takeBaseName)
 
 --------------------------------------------------------------------------------
 -- | Mostly for internal usage
@@ -114,6 +115,17 @@ instance Monoid (Context a) where
     mempty  = missingField
     mappend = (<>)
 
+instance Contravariant Context where
+    contramap f ctx = Context (\s ss -> unContext ctx s ss . fmap f)
+
+instance Divisible Context where
+    divide f c1 c2 = contramap (fst . f) c1 <> contramap (snd . f) c2
+    conquer = missingField
+
+instance Decidable Context where
+    choose f (Context c1) (Context c2) = Context (\s ss (Item i e) ->
+        either (c1 s ss . Item i) (c2 s ss . Item i) (f e))
+    lose f = contramap f missingField
 
 --------------------------------------------------------------------------------
 field' :: String -> (Item a -> Compiler ContextField) -> Context a
@@ -152,14 +164,14 @@ boolField name f = boolFieldM name (pure . f)
 
 
 --------------------------------------------------------------------------------
--- | Creates a 'field' to use with the @$if()$@ template macro, in the 
--- 'Compiler' monad. Attempting to substitute the field into the template 
+-- | Creates a 'field' to use with the @$if()$@ template macro, in the
+-- 'Compiler' monad. Attempting to substitute the field into the template
 -- will cause an error.
 --
 -- @since 4.16.4.0
 boolFieldM
     :: String                       -- ^ Key
-    -> (Item a -> Compiler Bool)    -- ^ Extract value from an @'Item' a@ 
+    -> (Item a -> Compiler Bool)    -- ^ Extract value from an @'Item' a@
                                     --   from within the 'Compiler' monad
     -> Context a
 boolFieldM name f = field' name (\i -> do
