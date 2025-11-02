@@ -48,8 +48,10 @@ newTestStore = Store.new True $ storeDirectory testConfiguration
 
 --------------------------------------------------------------------------------
 newTestProvider :: Store -> IO Provider
-newTestProvider store = newProvider store (const $ return False) $
-    providerDirectory testConfiguration
+newTestProvider store = do
+  let dir = providerDirectory testConfiguration
+  (p, _) <- newProvider store (const $ return False) dir
+  pure p
 
 
 --------------------------------------------------------------------------------

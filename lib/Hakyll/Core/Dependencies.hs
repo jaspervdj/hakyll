@@ -56,11 +56,12 @@ type DependencyFacts = Map Identifier [Dependency]
 --------------------------------------------------------------------------------
 outOfDate
     :: [Identifier]     -- ^ All known identifiers
-    -> Set Identifier   -- ^ Initially out-of-date resources
+    -> Set Identifier   -- ^ Changed content
+    -> Set Identifier   -- ^ Changed metadata
     -> DependencyFacts  -- ^ Old dependency facts
     -> (Set Identifier, DependencyFacts, [String])
-outOfDate universe ood oldFacts =
-    let (_, state, logs) = runRWS rws universe (DependencyState oldFacts ood)
+outOfDate universe ood oodMeta oldFacts =
+    let (_, state, logs) = runRWS rws universe (DependencyState oldFacts ood oodMeta)
     in (dependencyOod state, dependencyFacts state, logs)
   where
     rws = do
@@ -71,8 +72,9 @@ outOfDate universe ood oldFacts =
 
 --------------------------------------------------------------------------------
 data DependencyState = DependencyState
-    { dependencyFacts :: DependencyFacts
-    , dependencyOod   :: Set Identifier
+    { dependencyFacts   :: DependencyFacts
+    , dependencyOod     :: Set Identifier
+    , dependencyOodMeta :: Set Identifier
     } deriving (Show)
 
 
@@ -90,8 +92,11 @@ markOod id' = State.modify $ \s ->
 -- | Collection of dependencies that should be checked to determine
 -- if an identifier needs rebuilding.
 data Dependencies
-  = DependsOn [Identifier]
+  = DependsOn [(DependencyKind, Identifier)]
   | MustRebuild
+  deriving (Show)
+
+data DependencyKind = KindContent | KindMetadata
   deriving (Show)
 
 instance Semigroup Dependencies where
@@ -108,8 +113,8 @@ dependenciesFor id' = do
     facts <- dependencyFacts <$> State.get
     return $ foldMap dependenciesFor' $ fromMaybe [] $ M.lookup id' facts
   where
-    dependenciesFor' (IdentifierDependency i) = DependsOn [i]
-    dependenciesFor' (PatternDependency _ is) = DependsOn $ S.toList is
+    dependenciesFor' (IdentifierDependency i) = DependsOn [(KindContent, i)]
+    dependenciesFor' (PatternDependency _ is) = DependsOn $ map (\i -> (KindContent, i)) (S.toList is)
     dependenciesFor' AlwaysOutOfDate          = MustRebuild
 
 
@@ -155,12 +160,19 @@ bruteForce = do
         (todo', changed) <- foldM check ([], False) todo
         when changed (go todo')
 
+    findOod oodContent oodMetadata (k, i)
+      = S.member i $
+          case k of
+            KindContent  -> oodContent
+            KindMetadata -> oodMetadata
+
     check (todo, changed) id' = do
         deps <- dependenciesFor id'
         case deps of
           DependsOn depList -> do
-            ood  <- dependencyOod <$> State.get
-            case find (`S.member` ood) depList of
+            ood     <- dependencyOod <$> State.get
+            oodMeta <- dependencyOodMeta <$> State.get
+            case find (findOod ood oodMeta) depList of
                 Nothing -> return (id' : todo, changed)
                 Just d  -> do
                     tell [show id' ++ " is out-of-date because " ++

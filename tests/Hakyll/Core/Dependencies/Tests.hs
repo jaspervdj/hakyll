@@ -51,7 +51,7 @@ oldFacts = M.fromList
 case01 :: Assertion
 case01 = S.fromList ["posts/02.md", "index.md"] @=? ood
   where
-    (ood, _, _) = outOfDate oldUniverse (S.singleton "posts/02.md") oldFacts
+    (ood, _, _) = outOfDate oldUniverse (S.singleton "posts/02.md") S.empty oldFacts
 
 
 --------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ case01 = S.fromList ["posts/02.md", "index.md"] @=? ood
 case02 :: Assertion
 case02 = S.singleton "about.md" @=? ood
   where
-    (ood, _, _) = outOfDate ("about.md" : oldUniverse) S.empty oldFacts
+    (ood, _, _) = outOfDate ("about.md" : oldUniverse) S.empty S.empty oldFacts
 
 
 --------------------------------------------------------------------------------
@@ -68,4 +68,4 @@ case03 :: Assertion
 case03 = S.singleton "index.md" @=? ood
   where
     (ood, _, _) =
-        outOfDate ("posts/01.md" `delete` oldUniverse) S.empty oldFacts
+        outOfDate ("posts/01.md" `delete` oldUniverse) S.empty S.empty oldFacts
