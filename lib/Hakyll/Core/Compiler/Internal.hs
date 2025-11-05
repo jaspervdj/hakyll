@@ -346,7 +346,7 @@ compilerTellCacheHits ch = compilerTell mempty {compilerCacheHits = ch}
 compilerGetMetadata :: Identifier -> Compiler Metadata
 compilerGetMetadata identifier = do
     provider <- compilerProvider <$> compilerAsk
-    compilerTellDependencies [IdentifierDependency identifier]
+    compilerTellDependencies [metadataDependency $ IdentifierDependency identifier]
     compilerUnsafeIO $ resourceMetadata provider identifier
 
 
@@ -355,5 +355,5 @@ compilerGetMatches :: Pattern -> Compiler [Identifier]
 compilerGetMatches pattern = do
     universe <- compilerUniverse <$> compilerAsk
     let matching = S.filter (matches pattern) universe
-    compilerTellDependencies [PatternDependency pattern matching]
+    compilerTellDependencies [contentDependency $ PatternDependency pattern matching]
     pure $ S.toList matching

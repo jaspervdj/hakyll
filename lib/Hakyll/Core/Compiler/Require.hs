@@ -105,7 +105,7 @@ loadSnapshotCollection ids = do
             when (id' `S.notMember` universe) (fail $ notFound id' snap)
     traverse_ checkMember ids
 
-    compilerTellDependencies $ IdentifierDependency . fst <$> toList ids
+    compilerTellDependencies $ contentDependency . IdentifierDependency . fst <$> toList ids
     let go (id', snap) = do
             result <- compilerUnsafeIO $ Store.get store (key id' snap)
             case result of

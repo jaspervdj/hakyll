@@ -37,10 +37,19 @@ resourceBody p r = do
 
 
 --------------------------------------------------------------------------------
-resourceInvalidateMetadataCache :: Provider -> Identifier -> IO ()
+resourceInvalidateMetadataCache :: Provider -> Identifier -> IO (Metadata)
 resourceInvalidateMetadataCache p r = do
+    result <- Store.get (providerStore p)
+        [name, toFilePath r, "metadata"]
+    let md = case result of
+          Store.Found (BinaryMetadata m) -> m
+          Store.NotFound -> mempty
+          Store.WrongType _ _ -> error "unexpected WrongType"
+
     Store.delete (providerStore p) [name, toFilePath r, "metadata"]
     Store.delete (providerStore p) [name, toFilePath r, "body"]
+
+    pure md
 
 
 --------------------------------------------------------------------------------

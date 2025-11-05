@@ -71,7 +71,7 @@ run mode config logger rules = do
     Logger.message logger "Creating store..."
     store <- Store.new (inMemoryCache config) $ storeDirectory config
     Logger.message logger "Creating provider..."
-    provider <- newProvider store (shouldIgnoreFile config) $
+    (provider, modifiedMeta) <- newProvider store (shouldIgnoreFile config) $
         providerDirectory config
     Logger.message logger "Running rules..."
     ruleSet  <- runRules rules provider
@@ -88,6 +88,7 @@ run mode config logger rules = do
             { runtimeConfiguration = config
             , runtimeLogger        = logger
             , runtimeProvider      = provider
+            , runtimeModifiedMeta  = Set.fromList modifiedMeta
             , runtimeStore         = store
             , runtimeRoutes        = rulesRoutes ruleSet
             , runtimeUniverse      = Map.fromList compilers
@@ -116,6 +117,7 @@ data RuntimeRead = RuntimeRead
     { runtimeConfiguration :: Configuration
     , runtimeLogger        :: Logger
     , runtimeProvider      :: Provider
+    , runtimeModifiedMeta  :: Set Identifier
     , runtimeStore         :: Store
     , runtimeRoutes        :: Routes
     , runtimeUniverse      :: Map Identifier (Compiler SomeItem)
@@ -185,9 +187,10 @@ schedulerError i e s = (s {schedulerErrors = (i, e) : schedulerErrors s}, ())
 schedulerMarkOutOfDate
     :: Map Identifier (Compiler SomeItem)
     -> Set Identifier
+    -> Set Identifier
     -> Scheduler
     -> (Scheduler, [String])
-schedulerMarkOutOfDate universe modified scheduler@Scheduler {..} =
+schedulerMarkOutOfDate universe modifiedC modifiedM scheduler@Scheduler {..} =
     ( scheduler
         { schedulerQueue = schedulerQueue <> Seq.fromList (Map.keys todo)
         , schedulerDone  = schedulerDone <>
@@ -198,7 +201,7 @@ schedulerMarkOutOfDate universe modified scheduler@Scheduler {..} =
     , msgs
     )
   where
-    (ood, facts', msgs) = outOfDate (Map.keys universe) modified schedulerFacts
+    (ood, facts', msgs) = outOfDate (Map.keys universe) modifiedC modifiedM schedulerFacts
     todo = Map.filterWithKey (\id' _ -> id' `Set.member` ood) universe
 
 
@@ -396,13 +399,14 @@ build mode = do
 --------------------------------------------------------------------------------
 scheduleOutOfDate :: ReaderT RuntimeRead IO ()
 scheduleOutOfDate = do
-    logger       <- runtimeLogger    <$> ask
-    provider     <- runtimeProvider  <$> ask
-    universe     <- runtimeUniverse  <$> ask
-    schedulerRef <- runtimeScheduler <$> ask
-    let modified  = Set.filter (resourceModified provider) (Map.keysSet universe)
+    logger       <- runtimeLogger       <$> ask
+    provider     <- runtimeProvider     <$> ask
+    modifiedMeta <- runtimeModifiedMeta <$> ask
+    universe     <- runtimeUniverse     <$> ask
+    schedulerRef <- runtimeScheduler    <$> ask
+    let modifiedContent = Set.filter (resourceModified provider) (Map.keysSet universe)
     msgs <- liftIO . IORef.atomicModifyIORef' schedulerRef $
-        schedulerMarkOutOfDate universe modified
+        schedulerMarkOutOfDate universe modifiedContent modifiedMeta
 
     -- Print messages
     mapM_ (Logger.debug logger) msgs

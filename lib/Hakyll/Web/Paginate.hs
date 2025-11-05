@@ -19,6 +19,7 @@ import qualified Data.Set                       as S
 
 --------------------------------------------------------------------------------
 import           Hakyll.Core.Compiler
+import           Hakyll.Core.Dependencies
 import           Hakyll.Core.Identifier
 import           Hakyll.Core.Identifier.Pattern
 import           Hakyll.Core.Item
@@ -68,7 +69,7 @@ buildPaginateWith grouper pattern makeId = do
     return Paginate
         { paginateMap        = M.fromList (zip [1 ..] idGroups)
         , paginateMakeId     = makeId
-        , paginateDependency = PatternDependency pattern idsSet
+        , paginateDependency = contentDependency $ PatternDependency pattern idsSet
         }
 
 

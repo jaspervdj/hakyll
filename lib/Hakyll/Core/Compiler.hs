@@ -82,7 +82,7 @@ getRoute identifier = do
     -- Note that this makes us dependend on that identifier: when the metadata
     -- of that item changes, the route may change, hence we have to recompile
     (mfp, um) <- compilerUnsafeIO $ runRoutes routes provider identifier
-    when um $ compilerTellDependencies [IdentifierDependency identifier]
+    when um $ compilerTellDependencies [metadataDependency $ IdentifierDependency identifier]
     return mfp
 
 
