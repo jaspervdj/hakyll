@@ -4,6 +4,10 @@ title: Releases
 
 # Releases
 
+## Unreleased
+
+- Added support for declaring metadata-only dependencies (#1084).
+
 ## Hakyll 4.16.7.1 (2025-09-06)
 
 - Added support for pandoc 3.8 (#1080).
