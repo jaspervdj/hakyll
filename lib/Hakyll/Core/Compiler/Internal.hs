@@ -39,7 +39,7 @@ module Hakyll.Core.Compiler.Internal
 --------------------------------------------------------------------------------
 import           Control.Applicative            (Alternative (..))
 import           Control.Exception              (SomeException, handle)
-import           Control.Monad                  (forM_)
+import           Control.Monad                  (forM, forM_)
 import qualified Control.Monad.Fail             as Fail
 import           Control.Monad.Except           (MonadError (..))
 import           Data.List.NonEmpty             (NonEmpty (..))
@@ -196,7 +196,12 @@ instance Applicative Compiler where
 -- | Access provided metadata from anywhere
 instance MonadMetadata Compiler where
     getMetadata = compilerGetMetadata
-    getMatches  = compilerGetMatches
+    getMatches  = compilerGetMatches KindContent
+    getAllMetadata pattern = do
+        matches' <- compilerGetMatches KindMetadata pattern
+        forM matches' $ \id' -> do
+            metadata <- getMetadata id'
+            return (id', metadata)
 
 
 --------------------------------------------------------------------------------
@@ -351,9 +356,9 @@ compilerGetMetadata identifier = do
 
 
 --------------------------------------------------------------------------------
-compilerGetMatches :: Pattern -> Compiler [Identifier]
-compilerGetMatches pattern = do
+compilerGetMatches :: DependencyKind -> Pattern -> Compiler [Identifier]
+compilerGetMatches kind pattern = do
     universe <- compilerUniverse <$> compilerAsk
     let matching = S.filter (matches pattern) universe
-    compilerTellDependencies [contentDependency $ PatternDependency pattern matching]
+    compilerTellDependencies [Dependency kind $ PatternDependency pattern matching]
     pure $ S.toList matching
