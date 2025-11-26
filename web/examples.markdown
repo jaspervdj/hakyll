@@ -147,3 +147,5 @@ this list. This list has no particular ordering.
   [source](https://github.com/falgon/roki-web)
 - <https://julesh.com/>,
   [source](https://github.com/jules-hedges/jules-hedges.github.io)
+- <https://notes.8pit.net/>
+  [source](https://git.8pit.net/site/)
