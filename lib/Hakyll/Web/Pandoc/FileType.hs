@@ -48,8 +48,6 @@ data FileType
 fileType :: FilePath -> FileType
 fileType = uncurry fileType' . splitExtension
   where
-    fileType' _ ".asciidoc"  = AsciiDoc
-    fileType' _ ".adoc"      = AsciiDoc
     fileType' _ ".css"       = Css
     fileType' _ ".dbk"       = DocBook
     fileType' _ ".ipynb"     = Jupyter
@@ -77,6 +75,11 @@ fileType = uncurry fileType' . splitExtension
     fileType' _ ".txt"       = PlainText
 -- This preprocessing instruction can be dropped
 -- once the minimum supported GHC version is 8.10
+#if MIN_VERSION_pandoc(3,8,3)
+    fileType' _ ".asciidoc"  = AsciiDoc
+    fileType' _ ".adoc"      = AsciiDoc
+#endif
+
 #if MIN_VERSION_pandoc(3,1,3)
     fileType' _ ".typ"       = Typst
 #endif
