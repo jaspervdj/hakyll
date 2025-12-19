@@ -68,6 +68,7 @@ readPandocWith ropt item =
         MediaWiki          -> readMediaWiki ro
         OrgMode            -> readOrg ro
         Rst                -> readRST ro
+        AsciiDoc           -> readAsciiDoc ro
 -- This preprocessing instruction can be dropped
 -- once the minimum supported GHC version is 8.10
 #if MIN_VERSION_pandoc(3,1,3)
