@@ -34,7 +34,9 @@ data FileType
     | PlainText
     | Rst
     | Textile
+#if MIN_VERSION_pandoc(3,8,3)
     | AsciiDoc
+#endif
 -- This preprocessing instruction can be dropped
 -- once the minimum supported GHC version is 8.10
 #if MIN_VERSION_pandoc(3,1,3)
@@ -73,13 +75,12 @@ fileType = uncurry fileType' . splitExtension
     fileType' _ ".text"      = PlainText
     fileType' _ ".textile"   = Textile
     fileType' _ ".txt"       = PlainText
--- This preprocessing instruction can be dropped
--- once the minimum supported GHC version is 8.10
 #if MIN_VERSION_pandoc(3,8,3)
     fileType' _ ".asciidoc"  = AsciiDoc
     fileType' _ ".adoc"      = AsciiDoc
 #endif
-
+-- This preprocessing instruction can be dropped
+-- once the minimum supported GHC version is 8.10
 #if MIN_VERSION_pandoc(3,1,3)
     fileType' _ ".typ"       = Typst
 #endif
