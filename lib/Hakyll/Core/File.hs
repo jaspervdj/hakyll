@@ -1,6 +1,5 @@
 --------------------------------------------------------------------------------
--- | Exports simple compilers to just copy files
-{-# LANGUAGE CPP                        #-}
+-- | Exports simple compilers to copy files or create links
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Hakyll.Core.File
@@ -8,17 +7,15 @@ module Hakyll.Core.File
     , copyFileCompiler
     , TmpFile (..)
     , newTmpFile
+    , HardlinkFile (..)
+    , hardlinkFileCompiler
     ) where
 
 
 --------------------------------------------------------------------------------
 import           Data.Binary                   (Binary (..))
 import           Data.Typeable                 (Typeable)
-#if MIN_VERSION_directory(1,2,6)
 import           System.Directory              (copyFileWithMetadata)
-#else
-import           System.Directory              (copyFile)
-#endif
 import           System.Directory              (doesFileExist,
                                                 renameFile)
 import           System.FilePath               ((</>))
@@ -33,6 +30,7 @@ import           Hakyll.Core.Item
 import           Hakyll.Core.Provider
 import qualified Hakyll.Core.Store             as Store
 import           Hakyll.Core.Util.File
+import qualified Hakyll.Core.Util.File.Hardlink as Hardlink (createHardLink)
 import           Hakyll.Core.Writable
 
 
@@ -44,12 +42,12 @@ newtype CopyFile = CopyFile FilePath
 
 --------------------------------------------------------------------------------
 instance Writable CopyFile where
-#if MIN_VERSION_directory(1,2,6)
     write dst (Item _ (CopyFile src)) = copyFileWithMetadata src dst
-#else
-    write dst (Item _ (CopyFile src)) = copyFile src dst
-#endif
+
 --------------------------------------------------------------------------------
+-- | Compile an item by copying its underlying file.
+--
+-- To create a hardlink instead, see `hardlinkFileCompiler`.
 copyFileCompiler :: Compiler (Item CopyFile)
 copyFileCompiler = do
     identifier <- getUnderlying
@@ -91,3 +89,45 @@ newTmpFile suffix = do
         let path = tmp </> Store.hash [show rand] ++ "-" ++ suffix
         exists <- compilerUnsafeIO $ doesFileExist path
         if exists then mkPath else return path
+
+
+--------------------------------------------------------------------------------
+-- | This will not copy a file but create a hardlink, which can save space and
+-- time for static sites with many large static files which would normally be
+-- handled by `copyFileCompiler`.
+--
+-- Note that if you use hardlinks, you will need to make sure your sync method
+-- handles hard links correctly. For example, if you use @rsync@, you will
+-- need to provide the @--hard-links@ flag.
+--
+-- Moreover, if you use windows, creating hardlinks may not be supported by
+-- your filesystem. Currently, only NTFS supports hardlinks on Windows.
+newtype HardlinkFile = HardlinkFile FilePath
+    deriving (Binary, Eq, Ord, Show, Typeable)
+
+
+--------------------------------------------------------------------------------
+instance Writable HardlinkFile where
+    write dst (Item _ (HardlinkFile src))
+        -- We use our own definition of `createHardLink` because
+        -- it is not exposed for Windows in `directory`.
+        = Hardlink.createHardLink src dst
+
+
+--------------------------------------------------------------------------------
+-- Compile an item by creating a hard link. This is useful when compiling
+-- items which are large (e.g. PDFs or images).
+--
+-- Note that if you use hardlinks, you will need to make sure your sync method
+-- handles hard links correctly. For example, if you use @rsync@, you will
+-- need to provide the @--hard-links@ flag.
+--
+-- Moreover, if you use windows, creating hardlinks may not be supported by
+-- your filesystem. Currently, only NTFS supports hardlinks on Windows.
+--
+-- To copy an item instead, see `copyFileCompiler`.
+hardlinkFileCompiler :: Compiler (Item HardlinkFile)
+hardlinkFileCompiler = do
+    identifier <- getUnderlying
+    provider   <- compilerProvider <$> compilerAsk
+    makeItem $ HardlinkFile (resourceFilePath provider identifier)
