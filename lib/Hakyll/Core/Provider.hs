@@ -23,6 +23,7 @@ module Hakyll.Core.Provider
     ) where
 
 --------------------------------------------------------------------------------
+import           Control.Monad                      (forM)
 import qualified Hakyll.Core.Provider.Internal      as Internal
 import qualified Hakyll.Core.Provider.MetadataCache as Internal
 import           Hakyll.Core.Store                  (Store)
@@ -46,11 +47,13 @@ newProvider store ignore directory = do
   -- Delete metadata cache where necessary and extract identifiers for which the
   -- metadata was actually modified. That is, exclude identifiers where the body
   -- was modified but the metadata wasn't.
-  mayModifiedMetadata <- mapM (Internal.resourceInvalidateMetadataCache p) modified
-  newMetadata <- mapM (Internal.resourceMetadata p) modified
-  let modifiedMetadata =
-        map (\(i, _, _) -> i) $
-          filter (\(_, nm, om) -> nm /= om) $
-            zip3 modified mayModifiedMetadata newMetadata
+  modifiedMetadata <- fmap concat $ forM modified $ \identifier -> do
+    mbCachedMetadata <- Internal.resourceLookupMetadataCache p identifier
+    case mbCachedMetadata of
+      Nothing -> pure []
+      Just oldMeta -> do
+        Internal.resourceInvalidateMetadataCache p identifier
+        newMeta <- Internal.resourceMetadata p identifier
+        pure $ if oldMeta == newMeta then [] else [identifier]
 
   return (p, modifiedMetadata)
