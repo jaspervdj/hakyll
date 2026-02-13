@@ -6,6 +6,7 @@ title: Releases
 
 ## Unreleased
 
+- Added support for pandoc 3.9 (#1095)
 - Added support for declaring metadata-only dependencies (#1084).
 - Added support for AsciiDoc for pandoc 3.8.3+ (#1089).
 
