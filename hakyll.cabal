@@ -75,6 +75,7 @@ Extra-source-files:
   tests/data/embed.html
   tests/data/example.md
   tests/data/example.md.metadata
+  tests/data/hardlink.rst
   tests/data/images/favicon.ico
   tests/data/just-meta.html
   tests/data/just-meta.html.out
@@ -182,6 +183,7 @@ Library
     Hakyll.Core.Item.SomeItem
     Hakyll.Core.Provider.Internal
     Hakyll.Core.Provider.MetadataCache
+    Hakyll.Core.Util.File.Hardlink
     Hakyll.Core.Util.Parser
     Paths_hakyll
 
@@ -218,6 +220,14 @@ Library
     wai-app-static       >= 3.1      && < 3.2,
     yaml                 >= 0.8.11   && < 0.12,
     xml-conduit          >= 1.0      && < 1.11
+
+  If os(windows)
+    Build-depends:
+      Win32              >= 2.5      && < 3
+  If !os(windows)
+    Build-depends:
+      unix               >= 2.5      && < 3
+
 
   If flag(previewServer)
     Build-depends:
