@@ -50,10 +50,13 @@ renderJson :: FeedConfiguration
 ```
 
 As you can see, they have exactly the same signature: we're going to use
-`renderAtom` in this tutorial, but it's trivial to change this to an RSS or JSON feed.
+`renderAtom` in this tutorial, but it's trivial to change this to an RSS feed. 
+We are going to consume this function from the context of the `create` combinator,
+which lets us define our own rules to register against the `hakyll` combinator: 
 
 ```haskell
-create ["atom.xml"] $ do
+makeFeed :: Rules () 
+makeFeed = create ["atom.xml"] $ do
     route idRoute
     compile $ do
         let feedCtx = postCtx `mappend`
@@ -91,6 +94,7 @@ match "posts/*" $ do
         >>= loadAndApplyTemplate "templates/post.html"    postCtx
         >>= loadAndApplyTemplate "templates/default.html" postCtx
         >>= relativizeUrls
+    makeFeed -- using the new rule defined
 ```
 
 now becomes:
@@ -100,9 +104,10 @@ match "posts/*" $ do
     route $ setExtension "html"
     compile $ pandocCompiler
         >>= loadAndApplyTemplate "templates/post.html"    postCtx
-        >>= saveSnapshot "content"
+        >>= saveSnapshot "content" -- new
         >>= loadAndApplyTemplate "templates/default.html" postCtx
         >>= relativizeUrls
+    makeFeed
 ```
 
 The `saveSnapshot` function is really simple: it takes an item and returns the
@@ -123,7 +128,7 @@ Including the post body
 With this modification, we can update our Atom code. Instead of loading the
 compiled posts, we just load their content (i.e. the snapshot we just took).
 
-We update the `Context` to map `$description$` to the post body, and we're done!
+We update the `Context` to map `$description$` to the post body:
 
 ```haskell
 create ["atom.xml"] $ do
@@ -134,3 +139,5 @@ create ["atom.xml"] $ do
             loadAllSnapshots "posts/*" "content"
         renderAtom myFeedConfiguration feedCtx posts
 ```
+
+Now whenever we (re)build our site, a corresponding `rss.xml` or `atom.xml` file is generated.
