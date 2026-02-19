@@ -43,6 +43,7 @@ module Hakyll.Web.Template.Context
     , snippetField
     , dateField
     , dateFieldWith
+    , formatDateFieldValue
     , getItemUTC
     , getItemModificationTime
     , modificationTimeField
@@ -415,6 +416,29 @@ dateFieldWith locale key format = field key $ \i -> do
     time <- getItemUTC locale $ itemIdentifier i
     return $ formatTime locale format time
 
+-- | Replace metadata date format with a new formatted date or do nothing
+formatDateFieldValue :: String    -- ^ Field name
+                     -> String    -- ^ Current format string
+                     -> String    -- ^ New format string
+                     -> Context a -- ^ Resulting context
+formatDateFieldValue name currFmt newFmt = Context $ \k _ i ->
+  if k == name
+  then (do value <- getMetadataField (itemIdentifier i) k
+           maybe empty (\v -> do
+                           let mSDate = parseAndFormat newFmt v
+                           case mSDate of
+                             (Just sDate) -> (return . StringField) sDate
+                             Nothing  -> empty
+                       ) value
+       )
+  else empty
+  where
+    parseAndFormat :: String -> String -> Maybe String
+    parseAndFormat fmt' v' = do
+      let timeV = parseTimeM True defaultTimeLocale currFmt v' :: Maybe UTCTime
+      case timeV of
+        (Just t) -> Just $ formatTime defaultTimeLocale fmt' t
+        Nothing   -> Nothing
 
 --------------------------------------------------------------------------------
 -- | Parser to try to extract and parse the time from the @published@

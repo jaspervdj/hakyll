@@ -50,6 +50,12 @@ testDateField = do
         "posts/2019/05/10/tomorrow.md" "date" $
             dateField "date" "%B %e, %Y"
     date4 @=? "May 10, 2019"
+
+    date5 <- testContextDone store provider
+      "posts/2018-09-28-fall-prep.md" "modified" $
+      formatDateFieldValue "modified" "%Y-%m-%d %H:%M:%S" "%B %e, %Y - %r"
+    date5 @=? "September 29, 2018 - 06:58:15 PM"
+
     cleanTestEnv
 
 
