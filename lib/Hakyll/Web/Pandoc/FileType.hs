@@ -37,6 +37,9 @@ data FileType
 #if MIN_VERSION_pandoc(3,8,3)
     | AsciiDoc
 #endif
+#if MIN_VERSION_pandoc(3,1,12)
+    | Djot
+#endif
 -- This preprocessing instruction can be dropped
 -- once the minimum supported GHC version is 8.10
 #if MIN_VERSION_pandoc(3,1,3)
@@ -78,6 +81,10 @@ fileType = uncurry fileType' . splitExtension
 #if MIN_VERSION_pandoc(3,8,3)
     fileType' _ ".asciidoc"  = AsciiDoc
     fileType' _ ".adoc"      = AsciiDoc
+#endif
+#if MIN_VERSION_pandoc(3,1,12)
+    fileType' _ ".dj"        = Djot
+    fileType' _ ".djot"      = Djot
 #endif
 -- This preprocessing instruction can be dropped
 -- once the minimum supported GHC version is 8.10
