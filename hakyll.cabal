@@ -1,5 +1,5 @@
 Name:    hakyll
-Version: 4.16.7.1
+Version: 4.16.8.0
 
 Synopsis: A static website compiler library
 Description:
@@ -263,7 +263,10 @@ Test-suite hakyll-tests
   Type:             exitcode-stdio-1.0
   Hs-source-dirs:   tests
   Main-is:          TestSuite.hs
-  Ghc-options:      -Wall -threaded
+  -- Note that tests are purposefully run without
+  -- -threaded because of their side-effects. Test
+  -- failures became apparent with tasty-1.5.4
+  Ghc-options:      -Wall
   Default-language: Haskell2010
 
   Other-modules:

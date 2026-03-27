@@ -4,12 +4,13 @@ title: Releases
 
 # Releases
 
-## Unreleased
+## 4.15.8.0
 
 - Added support for djot for pandoc 3.1.12+ (#1096)
 - Added support for pandoc 3.9 (#1095)
 - Added support for declaring metadata-only dependencies (#1084).
 - Added support for AsciiDoc for pandoc 3.8.3+ (#1089).
+- Added support for tasty-1.5.4+ by disabling threaded tests.
 
 ## Hakyll 4.16.7.1 (2025-09-06)
 
