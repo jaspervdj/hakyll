@@ -151,3 +151,5 @@ this list. This list has no particular ordering.
   [source](https://git.8pit.net/site/)
 - <https://jrrom.com/>,
   [source](https://github.com/jrrom/website)
+- <https://huangxindong.github.io/>,
+  [source](https://github.com/HuangxinDong/HuangxinDong.github.io)
