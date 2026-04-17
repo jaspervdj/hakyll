@@ -4,7 +4,11 @@ title: Releases
 
 # Releases
 
-## 4.15.8.0
+## Unreleased
+
+- Added support for QuickCheck 2.17 and 2.18 (#1099).
+
+## 4.16.8.0
 
 - Added support for djot for pandoc 3.1.12+ (#1096)
 - Added support for pandoc 3.9 (#1095)
