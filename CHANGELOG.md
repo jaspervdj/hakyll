@@ -4,7 +4,11 @@ title: Releases
 
 # Releases
 
-## Unreleased
+## 4.17.0.0
+
+This release is nearly identical to 4.16.8.0. However, 4.16.8.0 contains a breaking change
+which was not caught. Therefore, release 4.16.8.0 is deprecated on Hackage, and 4.17.0.0 should
+be preferred
 
 - Added support for QuickCheck 2.17 and 2.18 (#1099).
 
