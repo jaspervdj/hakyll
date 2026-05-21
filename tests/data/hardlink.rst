@@ -1,0 +1,1 @@
+This post is for testing hardlinks
