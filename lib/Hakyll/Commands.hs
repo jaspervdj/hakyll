@@ -77,7 +77,7 @@ preview :: Configuration -> Logger -> Rules a -> Int -> IO ()
 #ifdef PREVIEW_SERVER
 preview conf logger rules port  = do
     deprecatedMessage
-    watch conf logger "0.0.0.0" port True rules
+    watch conf{previewHost = "0.0.0.0", previewPort = port} logger True rules
   where
     deprecatedMessage = mapM_ putStrLn [ "The preview command has been deprecated."
                                        , "Use the watch command for recompilation and serving."
@@ -90,9 +90,9 @@ preview _ _ _ _ = previewServerDisabled
 --------------------------------------------------------------------------------
 -- | Watch and recompile for changes
 
-watch :: Configuration -> Logger -> String -> Int -> Bool -> Rules a -> IO ()
+watch :: Configuration -> Logger -> Bool -> Rules a -> IO ()
 #ifdef WATCH_SERVER
-watch conf logger host port runServer rules = do
+watch conf logger runServer rules = do
 #ifndef mingw32_HOST_OS
     _ <- forkIO $ watchUpdates conf update
 #else
@@ -108,7 +108,7 @@ watch conf logger host port runServer rules = do
         (_, ruleSet) <- run RunModeNormal conf logger rules
         return $ rulesPattern ruleSet
     loop = threadDelay 100000 >> loop
-    server' = if runServer then server conf logger host port else loop
+    server' = if runServer then server conf logger else loop
 #else
 watch _ _ _ _ _ _ = watchServerDisabled
 #endif
@@ -121,11 +121,9 @@ rebuild conf logger rules =
 
 --------------------------------------------------------------------------------
 -- | Start a server
-server :: Configuration -> Logger -> String -> Int -> IO ()
+server :: Configuration -> Logger -> IO ()
 #ifdef PREVIEW_SERVER
-server conf logger host port = do
-    let settings = previewSettings conf $ destinationDirectory conf
-    staticServer logger settings host port
+server conf logger = staticServer conf logger
 #else
 server _ _ _ _ = previewServerDisabled
 #endif
