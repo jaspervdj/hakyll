@@ -8,6 +8,9 @@ title: Releases
 
 - Added support for `aeson` 2.3
 - Re-export `Hakyll.Core.Dependencies` from `Hakyll` (#1104)
+- Strip URL fragments before external link checking to avoid
+  `InvalidUrlException` on URIs whose fragment contains `#` (#1050)
+- Add `hakyll-diagrams` to the libraries page (#1100)
 
 ## 4.17.0.0
 
