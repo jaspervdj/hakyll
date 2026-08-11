@@ -68,7 +68,10 @@ unixFilterError :: H.Assertion
 unixFilterError = do
     store    <- newTestStore
     provider <- newTestProvider store
-    testCompilerError store provider testMarkdown compiler "option"
+    testCompilerErrorMany store provider testMarkdown compiler [
+      "option", -- gnu coreutils
+      "unexpected argument" -- uutils
+      ]
     cleanTestEnv
   where
     compiler = getResourceString >>= withItemBody (unixFilter "head" ["-#"])

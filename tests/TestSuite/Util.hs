@@ -7,6 +7,7 @@ module TestSuite.Util
     , testCompiler
     , testCompilerDone
     , testCompilerError
+    , testCompilerErrorMany
     , testConfiguration
     , cleanTestEnv
     , renderParagraphs
@@ -96,6 +97,15 @@ testCompilerError store provider underlying compiler expectedMessage = do
         CompilerError e ->
             any (expectedMessage `isInfixOf`) (compilerErrorMessages e) @?
            "Expecting '" ++ expectedMessage ++ "' error"
+        _               -> assertFailure "Expecting CompilerError"
+
+testCompilerErrorMany :: Store -> Provider -> Identifier -> Compiler a -> [String] -> IO ()
+testCompilerErrorMany store provider underlying compiler expectedMessages = do
+    result   <- testCompiler store provider underlying compiler
+    case result of
+        CompilerError e ->
+            any (\err -> any (`isInfixOf` err) expectedMessages) (compilerErrorMessages e) @?
+           "Expecting one of " ++ show expectedMessages ++ " in error"
         _               -> assertFailure "Expecting CompilerError"
 
 --------------------------------------------------------------------------------
