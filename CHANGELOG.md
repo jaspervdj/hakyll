@@ -7,6 +7,7 @@ title: Releases
 ## 4.17.1.0
 
 - Added support for `aeson` 2.3
+- Added support for `pandoc` 3.11 (#1110)
 - Re-export `Hakyll.Core.Dependencies` from `Hakyll` (#1104)
 
 ## 4.17.0.0
