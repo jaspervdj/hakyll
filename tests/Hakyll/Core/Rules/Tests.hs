@@ -44,6 +44,7 @@ case01 = do
     -- Test that we have some identifiers and that the routes work out
     S.fromList expected @=? identifiers
     checkRoute "example.html"    "example.md"
+    checkRoute "hardlink.html"   "hardlink.rst"
     checkRoute "example.md"      (sv "raw" "example.md")
     checkRoute "example.md"      (sv "nav" "example.md")
     checkRoute "example.mv1"     (sv "mv1" "example.md")
@@ -61,6 +62,8 @@ case01 = do
         , sv "mv1"           "example.md"
         , sv "mv2"           "example.md"
 
+        ,          "hardlink.rst"
+
         ,          "russian.md"
         , sv "raw" "russian.md"
         , sv "mv1" "russian.md"
@@ -75,6 +78,11 @@ rules01 ioref = do
     match "*.md" $ do
         route $ setExtension "html"
         compile copyFileCompiler
+
+    -- Hardlink some posts
+    match "*.rst" $ do
+        route $ setExtension "html"
+        compile hardlinkFileCompiler
 
     -- Yeah. I don't know how else to test this stuff?
     preprocess $ writeIORef ioref True
