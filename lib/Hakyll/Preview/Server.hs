@@ -14,19 +14,23 @@ import qualified Network.Wai                    as Wai
 import           Network.HTTP.Types.Status      (Status)
 
 --------------------------------------------------------------------------------
-import           Hakyll.Core.Logger    (Logger)
-import qualified Hakyll.Core.Logger    as Logger
+import           Hakyll.Core.Configuration (Configuration(..))
+import           Hakyll.Core.Logger        (Logger)
+import qualified Hakyll.Core.Logger        as Logger
 
-staticServer :: Logger               -- ^ Logger
-             -> Static.StaticSettings -- ^ Static file server settings
-             -> String               -- ^ Host to bind on
-             -> Int                  -- ^ Port to listen on
-             -> IO ()                -- ^ Blocks forever
-staticServer logger settings host port = do
+staticServer :: Configuration         -- ^ Hakyll configuration
+             -> Logger                -- ^ Logger
+             -> IO ()                 -- ^ Blocks forever
+staticServer config logger = do
     Logger.header logger $ "Listening on http://" ++ host ++ ":" ++ show port
     Logger.flush logger -- ensure this line is logged before Warp errors
-    Warp.runSettings warpSettings $ Static.staticApp settings
+    Warp.runSettings warpSettings app
   where
+    host = previewHost config
+    port = previewPort config
+    settings = previewSettings config $ destinationDirectory config
+    app = previewMiddleware config $ serverApp
+    serverApp = Static.staticApp settings
     warpSettings = Warp.setLogger noLog
         $ Warp.setHost (fromString host)
         $ Warp.setPort port Warp.defaultSettings
