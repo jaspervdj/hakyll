@@ -8,7 +8,7 @@ module Hakyll.Web.CompressCss
 
 
 --------------------------------------------------------------------------------
-import           Data.Char               (isSpace)
+import           Data.Char               (isAlphaNum, isSpace)
 import           Data.List               (dropWhileEnd, isPrefixOf)
 
 
@@ -42,17 +42,18 @@ compressSeparators =
     replaceAll " *[{};,>+~!] *" (take 1 . dropWhile isSpace) .
     replaceAll ": *" (take 1) -- not destroying pseudo selectors (#323)
 
--- | Uses `compressExpression` on all parenthesised calc and 
--- clamp expressions, and applies `transform` to all parts 
--- outside of them
+-- | Uses `compressExpression` on all parenthesised math function
+-- expressions, and applies `transform` to all parts outside of them
 handleCalcExpressions :: (String -> String) -> String -> String
 handleCalcExpressions transform = top transform
   where
     top f ""                              = f ""
-    top f str | "calc(" `isPrefixOf` str  = f "calc"  ++ nested 0 compressExpression (drop 4 str)
-              -- See issue #1021
-              | "clamp(" `isPrefixOf` str = f "clamp" ++ nested 0 compressExpression (drop 5 str) 
-    top f (x:xs)                          = top (f . (x:)) xs
+    top f str@(x:xs)
+      | isAlphaNum x = case span isAlphaNum str of
+          (name, rest@('(':_)) | name `elem` mathFunctions
+                                          -> f name ++ nested 0 compressExpression rest
+          (name, rest)                    -> top (f . (name ++)) rest
+      | otherwise                         = top (f . (x:)) xs
     
     -- when called with depth=0, the first character must be a '('
     nested :: Int -> (String -> String) -> String -> String
@@ -65,8 +66,17 @@ handleCalcExpressions transform = top transform
                                                       _   -> depth
                                                     ) (f . (x:)) xs
 
--- | does not remove whitespace around + and -, which is important 
--- in calc() and clamp() expressions
+-- | CSS math functions, in which whitespace around + and - is significant
+-- (issue #1021)
+mathFunctions :: [String]
+mathFunctions =
+    [ "calc", "clamp", "min", "max", "round", "mod", "rem", "abs", "sign"
+    , "sin", "cos", "tan", "asin", "acos", "atan", "atan2"
+    , "pow", "sqrt", "hypot", "log", "exp"
+    ]
+
+-- | does not remove whitespace around + and -, which is important
+-- in math function expressions
 compressExpression :: String -> String
 compressExpression =
     replaceAll " *[*/] *| *\\)|\\( *" (take 1 . dropWhile isSpace)
