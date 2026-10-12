@@ -57,7 +57,7 @@ module Hakyll.Core.Routes
 
 
 --------------------------------------------------------------------------------
-import           System.FilePath                (replaceExtension, normalise)
+import           System.FilePath                ((</>), dropExtension, replaceExtension, normalise)
 
 
 --------------------------------------------------------------------------------
@@ -223,6 +223,15 @@ __Route to a specific filepath__
 -}
 constRoute :: FilePath -> Routes
 constRoute = customRoute . const
+
+
+--------------------------------------------------------------------------------
+{- | Create a route that routes an item to a index.html file within a folder of
+the name of the item. This is useful for serving files without any extension,
+as most HTTP servers support accessing 'foo/index.html' at 'foo'.
+-}
+indexRoute :: Routes
+indexRoute = customRoute $ (</> "index.html") . dropExtension . toFilePath
 
 
 --------------------------------------------------------------------------------
