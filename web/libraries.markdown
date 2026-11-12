@@ -19,3 +19,5 @@ Here is a list of the ones I know of (I would be happy to hear about others).
 - [hakyll-elm](https://hackage.haskell.org/package/hakyll-elm),
   Hakyll wrapper for the Elm compiler.
 - [hakyll-sass](http://hackage.haskell.org/package/hakyll-sass), a compiler for SASS templates.
+- [hakyll-diagrams](https://hackage.haskell.org/package/hakyll-diagrams),
+  a Hakyll plugin for rendering diagrams figures from embedded Haskell code.
