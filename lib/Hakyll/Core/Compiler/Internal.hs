@@ -106,7 +106,7 @@ instance Monoid CompilerWrite where
 --------------------------------------------------------------------------------
 -- | Distinguishes reasons in a 'CompilerError'
 data CompilerErrors a
-    -- | One or more exceptions occured during compilation
+    -- | One or more exceptions occurred during compilation
     = CompilationFailure (NonEmpty a)
     -- | Absence of any result, most notably in template contexts.  May still
     -- have error messages.

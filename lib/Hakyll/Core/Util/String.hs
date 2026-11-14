@@ -25,7 +25,7 @@ trim = reverse . trim' . reverse . trim'
 
 
 --------------------------------------------------------------------------------
--- | A simple (but inefficient) regex replace funcion
+-- | A simple (but inefficient) regex replace function
 replaceAll :: String              -- ^ Pattern
            -> (String -> String)  -- ^ Replacement (called on match)
            -> String              -- ^ Source string

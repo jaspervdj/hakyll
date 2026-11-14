@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- | Module for trimming whitespace from tempaltes.
+-- | Module for trimming whitespace from templates.
 module Hakyll.Web.Template.Internal.Trim
     ( trim
     ) where

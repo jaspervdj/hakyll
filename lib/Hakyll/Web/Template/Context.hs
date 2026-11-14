@@ -455,7 +455,7 @@ getItemUTC locale id' = do
 
 --------------------------------------------------------------------------------
 -- | Get the time on which the actual file was last modified. This only works if
--- there actually is an underlying file, of couse.
+-- there actually is an underlying file, of course.
 getItemModificationTime
     :: Identifier
     -> Compiler UTCTime
