@@ -211,7 +211,7 @@ capture _        _ = Nothing
 
 
 --------------------------------------------------------------------------------
--- | Internal verion of 'capture'
+-- | Internal version of 'capture'
 capture' :: [GlobComponent] -> String -> Maybe [String]
 capture' [] [] = Just []  -- An empty match
 capture' [] _  = Nothing  -- No match

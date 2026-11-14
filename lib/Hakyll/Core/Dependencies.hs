@@ -77,7 +77,7 @@ instance Binary Dependency where
     put (Dependency k s) = putWord8 3 >> put k >> put s
 
     get = getWord8 >>= \t -> case t of
-        -- XXX: Backwards compatability with Hakyll <=4.16.7.1.
+        -- XXX: Backwards compatibility with Hakyll <=4.16.7.1.
         0 -> (\p i -> contentDependency $ PatternDependency p i) <$> get <*> get
         1 -> contentDependency . IdentifierDependency <$> get
 

@@ -75,7 +75,7 @@ data Configuration = Configuration
       --
       -- By default, this command executes the shell command stored in
       -- 'deployCommand'. If you override it, 'deployCommand' will not
-      -- be used implicitely.
+      -- be used implicitly.
       --
       -- The 'Configuration' object is passed as a parameter to this
       -- function.

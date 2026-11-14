@@ -79,7 +79,7 @@ getRoute :: Identifier -> Compiler (Maybe FilePath)
 getRoute identifier = do
     provider <- compilerProvider <$> compilerAsk
     routes   <- compilerRoutes <$> compilerAsk
-    -- Note that this makes us dependend on that identifier: when the metadata
+    -- Note that this makes us dependent on that identifier: when the metadata
     -- of that item changes, the route may change, hence we have to recompile
     (mfp, um) <- compilerUnsafeIO $ runRoutes routes provider identifier
     when um $ compilerTellDependencies [metadataDependency $ IdentifierDependency identifier]
@@ -149,7 +149,7 @@ saveSnapshot snapshot item = do
 -- | Turn on caching for a compilation value to avoid recomputing it
 -- on subsequent Hakyll runs.
 -- The storage key consists of the underlying identifier of the compiled
--- ressource and the given name.
+-- resource and the given name.
 cached :: (Binary a, Typeable a)
        => String
        -> Compiler a

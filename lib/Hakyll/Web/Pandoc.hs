@@ -234,7 +234,7 @@ defaultHakyllWriterOptions = def
     { -- This option causes literate haskell to be written using '>' marks in
       -- html, which I think is a good default.
       writerExtensions = enableExtension Ext_smart pandocExtensions
-    , -- We want to have hightlighting by default, to be compatible with earlier
+    , -- We want to have highlighting by default, to be compatible with earlier
       -- Hakyll releases
 #if MIN_VERSION_pandoc(3,8,0)
       -- Starting with pandoc 3.8, the highlighting
