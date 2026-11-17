@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- | A store for storing and retreiving items
+-- | A store for storing and retrieving items
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 module Hakyll.Core.Store

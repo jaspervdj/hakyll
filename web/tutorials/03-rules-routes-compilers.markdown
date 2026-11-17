@@ -105,7 +105,7 @@ some common examples:
 
 - `copyFileCompiler` is self-explanatory, the output is exactly the same as the
   input;
-- `compressCssCompiler` performs some simple build-in compression
+- `compressCssCompiler` performs some simple built-in compression
   transformations for CSS;
 - `pandocCompiler` reads markdown, reStructuredText, or another input format and
   renders it as HTML (if you want to pass specific options to pandoc, use
