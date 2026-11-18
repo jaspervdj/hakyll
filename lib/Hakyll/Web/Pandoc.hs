@@ -53,10 +53,7 @@ readPandocWith
     -> Item String             -- ^ String to read
     -> Compiler (Item Pandoc)  -- ^ Resulting document
 readPandocWith ropt item =
-    case runPure $ traverse (reader ropt (itemFileType item)) (fmap T.pack item) of
-        Left err    -> fail $
-            "Hakyll.Web.Pandoc.readPandocWith: parse failed: " ++ show err
-        Right item' -> return item'
+    unsafeCompiler $ runIO (traverse (reader ropt (itemFileType item)) (fmap T.pack item)) >>= unwrap
   where
     reader ro t = case t of
         DocBook            -> readDocBook ro
@@ -85,6 +82,8 @@ readPandocWith ropt item =
             "the type " ++ show t ++ " for: " ++ show (itemIdentifier item)
 
     addExt ro e = ro {readerExtensions = enableExtension e $ readerExtensions ro}
+    unwrap (Left err) = fail $ "Hakyll.Web.Pandoc.readPandocWith: parse failed: " ++ show err
+    unwrap (Right val) = return val
 
 
 --------------------------------------------------------------------------------
