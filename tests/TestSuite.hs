@@ -11,6 +11,7 @@ import           Test.Tasty                           (defaultMain, testGroup)
 
 --------------------------------------------------------------------------------
 import qualified Hakyll.Core.Dependencies.Tests
+import qualified Hakyll.Check.Tests
 import qualified Hakyll.Core.Identifier.Tests
 import qualified Hakyll.Core.Provider.Metadata.Tests
 import qualified Hakyll.Core.Provider.Tests
@@ -37,6 +38,7 @@ import qualified Hakyll.Web.Feed.Tests
 main :: IO ()
 main = defaultMain $ testGroup "Hakyll"
     [ Hakyll.Core.Dependencies.Tests.tests
+    , Hakyll.Check.Tests.tests
     , Hakyll.Core.Identifier.Tests.tests
     , Hakyll.Core.Provider.Metadata.Tests.tests
     , Hakyll.Core.Provider.Tests.tests

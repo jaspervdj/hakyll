@@ -4,6 +4,7 @@
 module Hakyll.Check
     ( Check (..)
     , check
+    , stripFragments
     ) where
 
 
@@ -237,7 +238,7 @@ checkInternalUrl base url = case url' of
 checkExternalUrl :: URL -> Checker ()
 #ifdef CHECK_EXTERNAL
 checkExternalUrl url = do
-    result <- requestExternalUrl url
+    result <- requestExternalUrl (stripFragments url)
     case result of
         Left (SomeException e) ->
             case (cast e :: Maybe SomeAsyncException) of
