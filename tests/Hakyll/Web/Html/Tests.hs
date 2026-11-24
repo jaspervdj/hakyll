@@ -50,6 +50,15 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
         -- Invalid srcset specification means no URLs are extracted
         , [] @=?
             getUrls [ TS.TagOpen "img" [("srcset", "/image1.png 10wide, /image2.jpeg, /image3.bmp 1.3px")] ]
+        , [] @=? concatMap srcsetUrls
+            ["/a 0w", "/a 100w 0h", "/a 2147483648w", "/a 50h", "/a 1x 2x", "/a 100w50h"]
+
+        -- Commas inside URLs, and descriptors as browsers read them
+        , ["/lake,summer.png", "/b.png"] @=? srcsetUrls "/lake,summer.png 1x, /b.png 2x"
+        , ["/a.png,/b.png"] @=? srcsetUrls "/a.png,/b.png"
+        , ["/a", "/b", "/c"] @=? srcsetUrls "/a\t.5x,/b 100w 50h,/c 050h 200w"
+        , ["/a&Tab;b", "/b"] @=?
+            getUrls (TS.parseTags "<img srcset=\"/a&amp;Tab;b 1x, /b 2x\">")
         ]
 
     , fromAssertions "withUrls"
@@ -75,6 +84,15 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
             withUrls (const "foo") "<img srcset=\"/path/to/image.png 200w\" />"
         , "<img srcset=\"bar 200w, bar 400w\" />" @=?
             withUrls (const "bar") "<img srcset=\"/small.jpeg 200w, /img/large.jpeg 400w\" />"
+
+        , "<img srcset=\"/LAKE,SUMMER.PNG 1x, /B.PNG 2x\" />" @=?
+            withUrls (map toUpper) "<img srcset=\"/lake,summer.png 1x, /b.png 2x\" />"
+        , "<img srcset=\"/A 1.5x, /B 2x, /C\" />" @=?
+            withUrls (map toUpper) "<img srcset=\"/a&Tab;1&period;5x,/b&NewLine;2x&comma;/c\" />"
+
+        -- Signs in a density descriptor are kept as written
+        , "<img srcset=\"foo 1e+1x, foo 1e+1x\" />" @=?
+            withUrls (const "foo") "<img srcset=\"/a 1e+1x, /b 1e&plus;1x\" />"
 
         -- Invalid srcsets are left unchanged
         , "<img srcset=\"/image1.png 200px\" />" @=?
@@ -122,3 +140,8 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
         , "&lt;img&gt;"   @=? escapeHtml "<img>"
         ]
     ]
+
+
+--------------------------------------------------------------------------------
+srcsetUrls :: String -> [String]
+srcsetUrls srcset = getUrls [TS.TagOpen "img" [("srcset", srcset)]]
