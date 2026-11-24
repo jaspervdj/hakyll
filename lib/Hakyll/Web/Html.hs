@@ -24,13 +24,15 @@ module Hakyll.Web.Html
 
 
 --------------------------------------------------------------------------------
-import           Control.Monad                   (void)
+import           Control.Monad                   (unless, void, when)
 import           Control.Monad.Identity          (Identity(runIdentity))
 import           Data.Char                       (digitToInt, intToDigit,
                                                   isDigit, toLower)
 import           Data.Either                     (fromRight)
-import           Data.List                       (isPrefixOf, intercalate)
-import           Data.Maybe                      (fromMaybe)
+import           Data.List                       (dropWhileEnd, intercalate,
+                                                  isPrefixOf, isSuffixOf,
+                                                  stripPrefix)
+import           Data.Maybe                      (fromMaybe, isNothing)
 import qualified Data.Set                        as S
 import           System.FilePath                 (joinPath, splitPath,
                                                   takeDirectory)
@@ -109,13 +111,27 @@ withUrls f = withTags tag
     tag x                = x
 
     attr input@("srcset", v)   =
-      case fmap unSrcset $ P.parse srcsetParser "" v of
+      case fmap unSrcset $ P.parse srcsetParser "" (decodeSrcsetReferences v) of
         Right srcset ->
           let srcset' = map (\i -> i { srcsetImageCandidateUrl = f $ srcsetImageCandidateUrl i }) srcset
               srcset'' = show $ Srcset srcset'
           in ("srcset", srcset'')
         Left _ -> input
     attr (k, v)          = (k, if isUrlAttribute k then f v else v)
+
+
+--------------------------------------------------------------------------------
+-- | parseTags' keeps named references; decode those for characters that
+-- srcset's syntax uses.
+decodeSrcsetReferences :: String -> String
+decodeSrcsetReferences ('&' : s)
+    | Just rest <- stripPrefix "Tab;" s     = '\t' : decodeSrcsetReferences rest
+    | Just rest <- stripPrefix "NewLine;" s = '\n' : decodeSrcsetReferences rest
+    | Just rest <- stripPrefix "comma;" s   = ',' : decodeSrcsetReferences rest
+    | Just rest <- stripPrefix "period;" s  = '.' : decodeSrcsetReferences rest
+    | Just rest <- stripPrefix "plus;" s    = '+' : decodeSrcsetReferences rest
+decodeSrcsetReferences (c : s)              = c : decodeSrcsetReferences s
+decodeSrcsetReferences []                   = []
 
 
 --------------------------------------------------------------------------------
@@ -260,43 +276,80 @@ instance Show SrcsetImageCandidate where
 -- HTML spec: https://html.spec.whatwg.org/#srcset-attributes
 srcsetParser :: P.Parsec String () Srcset
 srcsetParser = do
-  result <- candidate `P.sepBy1` (PC.char ',')
+  P.skipMany separator
+  result <- P.many1 $ candidate <* P.skipMany separator
   P.eof
   return $ Srcset result
   where
+  separator :: P.Parsec String () ()
+  separator = ascii_whitespace P.<|> void (PC.char ',')
+
   candidate :: P.Parsec String () SrcsetImageCandidate
   candidate = do
-    P.skipMany ascii_whitespace
     u <- url
-    P.skipMany ascii_whitespace
-    desc <- P.optionMaybe $ P.choice $ fmap P.try [width_descriptor, px_density_descriptor]
-    P.skipMany ascii_whitespace
-    return $ SrcsetImageCandidate {
-        srcsetImageCandidateUrl = u
-      , srcsetImageCandidateDescriptor = desc
-      }
+    -- A URL may contain commas; trailing commas end the candidate
+    if "," `isSuffixOf` u
+      then return $ SrcsetImageCandidate {
+          srcsetImageCandidateUrl = dropWhileEnd (== ',') u
+        , srcsetImageCandidateDescriptor = Nothing
+        }
+      else do
+        P.skipMany ascii_whitespace
+        descs <- P.many $ descriptor <* P.skipMany ascii_whitespace
+        unless (valid_descriptors $ map fst descs) $ P.parserFail "descriptors"
+        P.eof P.<|> void (PC.char ',')
+        return $ SrcsetImageCandidate {
+            srcsetImageCandidateUrl = u
+          , srcsetImageCandidateDescriptor =
+              if null descs then Nothing else Just (unwords $ map snd descs)
+          }
 
-  -- This is an over-simplification, but should be good enough for our purposes
+  descriptor :: P.Parsec String () (Char, String)
+  descriptor = P.choice $ fmap (\(k, d) -> P.try $ (,) k <$> d <* token_end)
+    [('w', width_descriptor), ('x', px_density_descriptor), ('h', height_descriptor)]
+
+  token_end :: P.Parsec String () ()
+  token_end = P.lookAhead $ ascii_whitespace P.<|> void (PC.char ',') P.<|> P.eof
+
+  -- At most one of each; a width or a density, and a height only with a width
+  valid_descriptors :: String -> Bool
+  valid_descriptors ks =
+    all (\k -> length (filter (== k) ks) <= 1) "wxh" &&
+    not ('w' `elem` ks && 'x' `elem` ks) &&
+    ('h' `notElem` ks || 'w' `elem` ks)
+
   url :: P.Parsec String () String
-  url = P.many1 $ PC.noneOf " ,"
+  url = P.many1 $ PC.noneOf ascii_whitespace_chars
 
   ascii_whitespace :: P.Parsec String () ()
-  ascii_whitespace = void $ P.oneOf "\x09\x0A\x0C\x0D\x20"
+  ascii_whitespace = void $ P.oneOf ascii_whitespace_chars
+
+  ascii_whitespace_chars :: String
+  ascii_whitespace_chars = "\x09\x0A\x0C\x0D\x20"
 
   width_descriptor :: P.Parsec String () String
   width_descriptor = do
     number <- P.many1 PC.digit
     void $ PC.char 'w'
+    unless (positive_int number) $ P.parserFail "width"
     return $ concat [number, "w"]
+
+  height_descriptor :: P.Parsec String () String
+  height_descriptor = do
+    number <- P.many1 PC.digit
+    void $ PC.char 'h'
+    unless (positive_int number) $ P.parserFail "height"
+    return $ concat [number, "h"]
 
   px_density_descriptor :: P.Parsec String () String
   px_density_descriptor = do
     sign <- P.optionMaybe $ PC.char '-'
-    int <- P.many1 PC.digit
+    int <- P.many PC.digit
     frac <- P.optionMaybe $ do
       void $ PC.char '.'
       frac <- P.many1 PC.digit
       return $ concat [".", frac]
+    when (null int && isNothing frac) $ P.parserFail "density"
     expon <- P.optionMaybe $ do
       letter <- P.oneOf "eE"
       e_sign <- P.optionMaybe $ PC.oneOf "-+"
@@ -307,3 +360,9 @@ srcsetParser = do
 
   mb :: Maybe String -> String
   mb = fromMaybe ""
+
+  -- Positive, and within 32 bits as browsers require
+  positive_int :: String -> Bool
+  positive_int number = case dropWhile (== '0') number of
+    []     -> False
+    digits -> length digits < 10 || (length digits == 10 && digits <= "2147483647")
