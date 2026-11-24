@@ -90,6 +90,10 @@ tests = testGroup "Hakyll.Web.Html.Tests" $ concat
         , "<img srcset=\"/A 1.5x, /B 2x, /C\" />" @=?
             withUrls (map toUpper) "<img srcset=\"/a&Tab;1&period;5x,/b&NewLine;2x&comma;/c\" />"
 
+        -- Signs in a density descriptor are kept as written
+        , "<img srcset=\"foo 1e+1x, foo 1e+1x\" />" @=?
+            withUrls (const "foo") "<img srcset=\"/a 1e+1x, /b 1e&plus;1x\" />"
+
         -- Invalid srcsets are left unchanged
         , "<img srcset=\"/image1.png 200px\" />" @=?
             withUrls (const "bar") "<img srcset=\"/image1.png 200px\" />"

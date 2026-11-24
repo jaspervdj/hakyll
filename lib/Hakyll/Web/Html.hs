@@ -354,9 +354,9 @@ srcsetParser = do
       letter <- P.oneOf "eE"
       e_sign <- P.optionMaybe $ PC.oneOf "-+"
       number <- P.many1 PC.digit
-      return $ concat [[letter], mb $ fmap show e_sign, number]
+      return $ concat [[letter], mb $ fmap pure e_sign, number]
     void $ PC.char 'x'
-    return $ concat [mb $ fmap show sign, int, mb frac, mb expon, "x"]
+    return $ concat [mb $ fmap pure sign, int, mb frac, mb expon, "x"]
 
   mb :: Maybe String -> String
   mb = fromMaybe ""
